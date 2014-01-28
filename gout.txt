@@ -1,0 +1,13 @@
+ 
+================================================================================
+ 
+Toolkit version: N0064
+ 
+Insufficient ephemeris data has been loaded to compute the state of 10 (SUN)
+relative to -226 (ROSETTA ORBITER) at the ephemeris epoch 9999 DEC 30
+00:01:07.182.
+ 
+A traceback follows.  The name of the highest level module is first.
+main --> do_list --> do_times --> spkezr_c --> SPKEZR --> SPKEZ --> SPKGEO
+ 
+================================================================================
