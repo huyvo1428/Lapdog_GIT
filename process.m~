@@ -16,11 +16,17 @@ v321 = [];
 t322 = [];
 v322 = [];
 
+    
+derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-4');
+derivedpath = strrep(derivedpath,'CALIB','DERIV');
+
+
 for b = 1:nob   % Loop through all ops blocks
     
     day = datestr(index(obs(b)).t0,'YYYYMMDD');  % convert block start time index to time string, convert to yyyymmdd format 
     
     ob = obs(b):obe(b); %ob goes from start time index to end time index
+    ob2 = obs(2):obe(2);
     
     t321 = []; %?
     v321 = [];
@@ -28,99 +34,49 @@ for b = 1:nob   % Loop through all ops blocks
     v322 = [];
     
     
-    derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-4');
-    derivedpath = strrep(derivedpath,'CALIB','DERIV');
-
+    % ob contains all operation blocks, the finding function is flawed
+    
+    
+    
     % Find sweeps:
     p1s = find([index(ob).sweep] & ([index(ob).probe] == 1)); %%returns indices of all sweeps for probe 1 for macro operation block 
-        if(~isempty(p1s)) %% Create filename according to convention, start TAB//LBL file genesis
-            
-                
-    %After Discussion 24/1 2014
-    %%FILE CONVENTION: RPCLAP_YYMMDD_hhmmss_MMM_APC
-    %%MMM = MacroID, A= Measured quantity (B/I/V)%% , P=Probe number
-    %%(1/2/3), C = Mode (H/L/S)
-    % B = probe bias voltage file
-    % I = Current file, static Vb
-    % V = potential
-    
-    % File should contain Time, spacecraft time, current, bias potential, Qualityfactor 
-    % 2011-09-05T13:45:20.026075 
-    %YYYY-MM-DDThh:mm:ss.ffffff % double[s],double[A],double [V],int
-   
-           filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p1s(1)).t0,'yyyymmdd'),datestr(index(p1s(1)).t0,'HHMMSS'),index(p1s(1)).macro,'B1S'); %%
-           createTABLBL(filename,p1s,index);
-        end
-    
     p2s = find([index(ob).sweep] & ([index(ob).probe] == 2));
-
-        if(~isempty(p2s))
-            filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p2s(1)).t0,'yyyymmdd'),datestr(index(p2s(1)).t0,'HHMMSS'),index(p2s(1)).macro,'B2S'); %%
-            createTABLBL(filename,p2s,index);
-        end
-
+    
     % Find E data:
-    
-    
     p1el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 1)); 
-        if(~isempty(p1el)) %% Create filename, start TAB//LBL file genesis.
-            filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p1el(1)).t0,'yyyymmdd'),datestr(index(p1el(1)).t0,'HHMMSS'),index(p1el(1)).macro,'V1L'); %%
-            createTABLBL(filename,p1el,index);
-        end
-    
     p2el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 2));
-    
-        if(~isempty(p2el)) %% Create filename, start TAB//LBL file genesis.
-            filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p2el(1)).t0,'yyyymmdd'),datestr(index(p2el(1)).t0,'HHMMSS'),index(p2el(1)).macro,'V2L'); %%
-            createTABLBL(filename,p2el,index);
-        end
-    
-    
     p1eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 1));
-        
-        if(~isempty(p1eh)) %% Create filename, start TAB//LBL file genesis.
-            filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p1eh(1)).t0,'yyyymmdd'),datestr(index(p1eh(1)).t0,'HHMMSS'),index(p1eh(1)).macro,'V1H'); %%
-            createTABLBL(filename,p1eh,index);
-        end
-    
     p2eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 2));
-        if(~isempty(p2eh))
-            filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p2eh(1)).t0,'yyyymmdd'),datestr(index(p2eh(1)).t0,'HHMMSS'),index(p2eh(1)).macro,'V2H'); %%
-            createTABLBL(filename,p2eh,index);
-        end
-        
         
     % Find N data:
-    
-    
-    
-    
-    
     p1nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 1));
-        if(~isempty(p1nl)) 
-            filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p1nl(1)).t0,'yyyymmdd'),datestr(index(p1nl(1)).t0,'HHMMSS'),index(p1nl(1)).macro,'I1L'); %%
-            createTABLBL(filename,p1nl,index);
-        end
+    testagsfgsaf = [index(ob).lf];
+        
     p2nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 2));
-        if(~isempty(p2nl))
-            filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p2nl(1)).t0,'yyyymmdd'),datestr(index(p2nl(1)).t0,'HHMMSS'),index(p2nl(1)).macro,'I2L'); %%
-            createTABLBL(filename,p2nl,index);
-        end
     p1nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 1));
-        if(~isempty(p1nh))
-            filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p1nh(1)).t0,'yyyymmdd'),datestr(index(p1nh(1)).t0,'HHMMSS'),index(p1nh(1)).macro,'I1H'); %%
-            createTABLBL(filename,p1nh,index);
-        end
     p2nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 2));
-        if(~isempty(p2nh))
-            filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(p2nh(1)).t0,'yyyymmdd'),datestr(index(p2nh(1)).t0,'HHMMSS'),index(p2nh(1)).macro,'I2H'); %%
-            createTABLBL(filename,p2nh,index);
-        end
 
-          
-
+    % Find does not preserve label indices, but only the new indices. so
+    % index(ob) where ob = 5:10, gives results in the range 1:5
     
     
+    %%%% Start TAB/LBL genesis
+    
+    %Generate sweep files
+    if(~isempty(p1s)) p1s = p1s + obs(b) -1; createTABLBL(derivedpath,p1s,index,'B1S'); end
+    if(~isempty(p2s)) p2s = p2s + obs(b) -1; createTABLBL(derivedpath,p2s,index,'B2S'); end
+    
+    %Generate E data files
+    if(~isempty(p1el)) p1el = p1el + obs(b) -1; createTABLBL(derivedpath,p1el,index,'V1L'); end
+    if(~isempty(p2el)) p2el = p2el + obs(b) -1; createTABLBL(derivedpath,p2el,index,'V2L'); end
+    if(~isempty(p1eh)) p1eh = p1eh + obs(b) -1; createTABLBL(derivedpath,p1eh,index,'V1H'); end
+    if(~isempty(p2eh)) p2eh = p2eh + obs(b) -1; createTABLBL(derivedpath,p2eh,index,'V2H'); end
+    %Generate N data files
+    if(~isempty(p1nl)) p1nl = p1nl + obs(b) -1; createTABLBL(derivedpath,p1nl,index,'I1L');end
+    if(~isempty(p2nl)) p2nl = p2nl + obs(b) -1; createTABLBL(derivedpath,p2nl,index,'I2L');end
+    if(~isempty(p1nh)) p1nh = p1nh + obs(b) -1; createTABLBL(derivedpath,p1nh,index,'I1H');end
+    if(~isempty(p2nh)) p2nh = p2nh + obs(b) -1; createTABLBL(derivedpath,p2nh,index,'I2H');end
+
     % Mill sweeps in this ob:
     
 %     if(~isempty(p1s))
