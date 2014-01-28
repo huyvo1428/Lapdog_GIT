@@ -33,11 +33,6 @@ for b = 1:nob   % Loop through all ops blocks
     t322 = [];
     v322 = [];
     
-    
-    % ob contains all operation blocks, the finding function is flawed
-    
-    
-    
     % Find sweeps:
     p1s = find([index(ob).sweep] & ([index(ob).probe] == 1)); %%returns indices of all sweeps for probe 1 for macro operation block 
     p2s = find([index(ob).sweep] & ([index(ob).probe] == 2));
@@ -49,9 +44,7 @@ for b = 1:nob   % Loop through all ops blocks
     p2eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 2));
         
     % Find N data:
-    p1nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 1));
-    testagsfgsaf = [index(ob).lf];
-        
+    p1nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 1));        
     p2nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 2));
     p1nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 1));
     p2nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 2));
@@ -63,6 +56,8 @@ for b = 1:nob   % Loop through all ops blocks
     %%%% Start TAB/LBL genesis
     
     %Generate sweep files
+    % the obs(b) -1 is needed since find will not give answers in the range
+    % of all indices, but only relative to obs(b).
     if(~isempty(p1s)) p1s = p1s + obs(b) -1; createTABLBL(derivedpath,p1s,index,'B1S'); end
     if(~isempty(p2s)) p2s = p2s + obs(b) -1; createTABLBL(derivedpath,p2s,index,'B2S'); end
     

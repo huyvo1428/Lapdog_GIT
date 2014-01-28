@@ -41,24 +41,24 @@ for(i=1:len);
     tabID = fopen(index(tabind(i)).tabfile);
     scantemp = textscan(tabID,'%s%f%f%f','delimiter',',');
     
-    %fours = daysact(datenum(strrep(scantemp{1,1},'T',' ')),datenum(strrep(scantemp{:,1},'T',' ')));
-    %if this function is too time consuming, do it only when absolutely necessary:
-    fives = daysact(datenum(strrep(scantemp{end,1},'T',' ')),datenum(strrep(scantemp{1,1},'T',' '))); %actual day difference between final and first date inside .TAB file.
-    if (fives) %if a day has passed, do:
-        fours = daysact(datenum(strrep(scantemp{1,1},'T',' ')),datenum(strrep(scantemp{:,1},'T',' '))); % every day difference compared to first date, stored in array
-        firstdiffrow = find(-diff(fours)); %diff(fours) is 0 or -1 for all rows, find() finds the row index of the n-1 diff array
-        yday = filename; %store old filename
-        filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(addtodate(tday,1,'day'),'yyyymmdd'),'000000',index(tabind(1)).macro,fileflag);
-        %add a day to timer, set HHMMSS to 000000 (may be useful for
-        %now). important to change filename inside loop, such that next
-        %i counter remembers the new filename
-        
-        
-        dlmcell(yday,scantemp{1:firstdiffrow,:},'-a',',') %finish old file with data from "yesterday"
-        dlmcell(filename,scantemp{firstdiffrow+1:end,:},'-a',',') % start new file with data from "today"
-    else
+%     %fours = daysact(datenum(strrep(scantemp{1,1},'T',' ')),datenum(strrep(scantemp{:,1},'T',' ')));
+%     %if this function is too time consuming, do it only when absolutely necessary:
+%     fives = daysact(datenum(strrep(scantemp{end,1},'T',' ')),datenum(strrep(scantemp{1,1},'T',' '))); %actual day difference between final and first date inside .TAB file.
+%     if (fives) %if a day has passed, do:
+%         fours = daysact(datenum(strrep(scantemp{1,1},'T',' ')),datenum(strrep(scantemp{:,1},'T',' '))); % every day difference compared to first date, stored in array
+%         firstdiffrow = find(-diff(fours)); %diff(fours) is 0 or -1 for all rows, find() finds the row index of the n-1 diff array
+%         yday = filename; %store old filename
+%         filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(addtodate(tday,1,'day'),'yyyymmdd'),'000000',index(tabind(1)).macro,fileflag);
+%         %add a day to timer, set HHMMSS to 000000 (may be useful for
+%         %now). important to change filename inside loop, such that next
+%         %i counter remembers the new filename
+%         
+%         
+%         dlmcell(yday,scantemp{1:firstdiffrow,:},'-a',',') %finish old file with data from "yesterday"
+%         dlmcell(filename,scantemp{firstdiffrow+1:end,:},'-a',',') % start new file with data from "today"
+%     else
         dlmcell(filename,scantemp,'-a',',')
-    end
+%     end
     clear scantemp tstr sct ip vb
     fclose(tabID);
 end
