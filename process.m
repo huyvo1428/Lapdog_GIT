@@ -23,7 +23,7 @@ derivedpath = strrep(derivedpath,'CALIB','DERIV');
 
 for b = 1:nob   % Loop through all ops blocks
     
-    day = datestr(index(obs(b)).t0,'YYYYMMDD');  % convert block start time index to time string, convert to yyyymmdd format 
+    day = datestr(index(obs(b)).t0,'yyyymmdd');  % convert block start time index to time string, convert to yyyymmdd format 
     
     ob = obs(b):obe(b); %ob goes from start time index to end time index
     ob2 = obs(2):obe(2);
@@ -57,7 +57,7 @@ for b = 1:nob   % Loop through all ops blocks
     p2nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 2));
 
     % Find does not preserve label indices, but only the new indices. so
-    % index(ob) where ob = 5:10, gives results in the range 1:5
+    % index(ob) where ob = 6:10, gives results in the range 1:5
     
     
     %%%% Start TAB/LBL genesis

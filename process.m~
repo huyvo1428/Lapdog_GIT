@@ -23,7 +23,7 @@ derivedpath = strrep(derivedpath,'CALIB','DERIV');
 
 for b = 1:nob   % Loop through all ops blocks
     
-    day = datestr(index(obs(b)).t0,'YYYYMMDD');  % convert block start time index to time string, convert to yyyymmdd format 
+    day = datestr(index(obs(b)).t0,'yyyymmss');  % convert block start time index to time string, convert to yyyymmdd format 
     
     ob = obs(b):obe(b); %ob goes from start time index to end time index
     ob2 = obs(2):obe(2);
