@@ -33,11 +33,6 @@ for b = 1:nob   % Loop through all ops blocks
     t322 = [];
     v322 = [];
     
-    
-    % ob contains all operation blocks, the finding function is flawed
-    
-    
-    
     % Find sweeps:
     p1s = find([index(ob).sweep] & ([index(ob).probe] == 1)); %%returns indices of all sweeps for probe 1 for macro operation block 
     p2s = find([index(ob).sweep] & ([index(ob).probe] == 2));
@@ -63,19 +58,22 @@ for b = 1:nob   % Loop through all ops blocks
     %Generate sweep files
     % the obs(b) -1 is needed since find will not give answers in the range
     % of all indices, but only relative to obs(b).
-    if(~isempty(p1s)) p1s = p1s + obs(b) -1; createTABLBL(derivedpath,p1s,index,'B1S'); end
-    if(~isempty(p2s)) p2s = p2s + obs(b) -1; createTABLBL(derivedpath,p2s,index,'B2S'); end
+    
+    global tabindex = {}; %start an index of all file names, need to be remembered inside functions
+    
+    if(~isempty(p1s)) p1s = p1s + obs(b) -1; createTAB(derivedpath,p1s,index,'B1S'); end
+    if(~isempty(p2s)) p2s = p2s + obs(b) -1; createTAB(derivedpath,p2s,index,'B2S'); end
     
     %Generate E data files
-    if(~isempty(p1el)) p1el = p1el + obs(b) -1; createTABLBL(derivedpath,p1el,index,'V1L'); end
-    if(~isempty(p2el)) p2el = p2el + obs(b) -1; createTABLBL(derivedpath,p2el,index,'V2L'); end
-    if(~isempty(p1eh)) p1eh = p1eh + obs(b) -1; createTABLBL(derivedpath,p1eh,index,'V1H'); end
-    if(~isempty(p2eh)) p2eh = p2eh + obs(b) -1; createTABLBL(derivedpath,p2eh,index,'V2H'); end
+    if(~isempty(p1el)) p1el = p1el + obs(b) -1; createTAB(derivedpath,p1el,index,'V1L'); end
+    if(~isempty(p2el)) p2el = p2el + obs(b) -1; createTAB(derivedpath,p2el,index,'V2L'); end
+    if(~isempty(p1eh)) p1eh = p1eh + obs(b) -1; createTAB(derivedpath,p1eh,index,'V1H'); end
+    if(~isempty(p2eh)) p2eh = p2eh + obs(b) -1; createTAB(derivedpath,p2eh,index,'V2H'); end
     %Generate N data files
-    if(~isempty(p1nl)) p1nl = p1nl + obs(b) -1; createTABLBL(derivedpath,p1nl,index,'I1L');end
-    if(~isempty(p2nl)) p2nl = p2nl + obs(b) -1; createTABLBL(derivedpath,p2nl,index,'I2L');end
-    if(~isempty(p1nh)) p1nh = p1nh + obs(b) -1; createTABLBL(derivedpath,p1nh,index,'I1H');end
-    if(~isempty(p2nh)) p2nh = p2nh + obs(b) -1; createTABLBL(derivedpath,p2nh,index,'I2H');end
+    if(~isempty(p1nl)) p1nl = p1nl + obs(b) -1; createTAB(derivedpath,p1nl,index,'I1L');end
+    if(~isempty(p2nl)) p2nl = p2nl + obs(b) -1; createTAB(derivedpath,p2nl,index,'I2L');end
+    if(~isempty(p1nh)) p1nh = p1nh + obs(b) -1; createTAB(derivedpath,p1nh,index,'I1H');end
+    if(~isempty(p2nh)) p2nh = p2nh + obs(b) -1; createTAB(derivedpath,p2nh,index,'I2H');end
 
     % Mill sweeps in this ob:
     

@@ -356,9 +356,9 @@ for d = 1:ndays % Create daily geometry files
       ptht = sprintf('cp %s %s/DATA/%s%s/%s',strcat(gpath,gtname),archivepath,levstr,pth,gtname);
       pthl = sprintf('cp %s %s/DATA/%s%s/%s',strcat(gpath,glname),archivepath,levstr,pth,glname);
       unix(ptht);
-      unix(pthl);
-    end
+          unix(pthl);
+        end
 
-end  % End of day loop
+    end  % End of day loop
 
-% End of geometry.m
+    % End of geometry.m

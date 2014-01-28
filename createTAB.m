@@ -1,12 +1,15 @@
-function [] = createTABLBL(derivedpath,tabind,index,fileflag)
+function []= createTAB(derivedpath,tabind,index,fileflag)
   
+
+
+
+
+
 %dereivedpath   =  filepath 
 %tabind         = data block indices for each measurement type, array
 %index          = index array from earlier creation - Ugly way to remember index
 %inside function.
 %fileflag       = identifier for type of data
-
-%will not handle macros that last longer than a day
 
 %    FILE GENESIS
 %After Discussion 24/1 2014
@@ -29,9 +32,12 @@ function [] = createTABLBL(derivedpath,tabind,index,fileflag)
 
 tday = index(tabind(1)).t0;
 filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(tabind(1)).t0,'yyyymmdd'),datestr(index(tabind(1)).t0,'HHMMSS'),index(tabind(1)).macro,fileflag); %%
-
-%need function to check if file exists already and delete it, since
+mkdir(derivedpath) %
+delete(filename)  %remove old files already created since
 %code appends to existing file whenever possible (duplicates!)
+
+tabindex{end+1} = filename; %% Let's remember all TABfiles we create
+
 
 
 
@@ -66,4 +72,6 @@ end
 
 
 end
+
+
 

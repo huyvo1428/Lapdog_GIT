@@ -1,0 +1,360 @@
+%createLBL.m
+
+% 
+% PDS_VERSION_ID = PDS3
+% RECORD_TYPE = FIXED_LENGTH
+% RECORD_BYTES = 75
+% FILE_RECORDS = 28
+% FILE_NAME = "RPCLAP100707_0A0T_CEB28NS.LBL"
+% ^TABLE = "RPCLAP100707_0A0T_CEB28NS.TAB"
+% DATA_SET_ID = "RO-A-RPCLAP-3-AST2-CALIB-V2.0"
+% DATA_SET_NAME = "ROSETTA-ORBITER LUTETIA RPCLAP 3 AST2 CALIB V2.0"
+% DATA_QUALITY_ID = "1"
+% MISSION_ID = ROSETTA
+% MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"
+% MISSION_PHASE_NAME = "LUTETIA FLY-BY"
+% PRODUCER_INSTITUTION_NAME = "SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"
+% PRODUCER_ID = RG
+% PRODUCER_FULL_NAME = "REINE GILL"
+% LABEL_REVISION_NOTE = "2012-09-28T08:38:24, Reine Gill (IRFU), first release"
+% PRODUCT_ID = "RPCLAP100707_0A0T_CEB28NS"
+% PRODUCT_TYPE = "RDR"
+% PRODUCT_CREATION_TIME = 2012-09-28T08:38:24
+% INSTRUMENT_HOST_ID = RO
+% INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"
+% INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"
+% INSTRUMENT_ID = RPCLAP
+% INSTRUMENT_TYPE = "PLASMA INSTRUMENT"
+% INSTRUMENT_MODE_ID = MCID0X0503
+% INSTRUMENT_MODE_DESC = "EE Cont. 20 bit down 64, Every 160s 16 Bit P1"
+% TARGET_NAME = "21 LUTETIA"
+% TARGET_TYPE = "ASTEROID"
+% PROCESSING_LEVEL_ID = "3"
+% START_TIME = 2010-07-07T23:44:27.596
+% STOP_TIME = 2010-07-07T23:44:56.396
+% SPACECRAFT_CLOCK_START_COUNT = "1/0237167026.42944"
+% SPACECRAFT_CLOCK_STOP_COUNT = "1/0237167055.29837"
+% DESCRIPTION = "E_P1P2INTRL_TRNC_20BIT_RAW_BIP"
+% ROSETTA:LAP_TM_RATE = "NORMAL"
+% ROSETTA:LAP_BOOTSTRAP = "ON"
+% ROSETTA:LAP_FEEDBACK_P2 = "E-FIELD"
+% ROSETTA:LAP_P2_ADC20 = "E-FIELD"
+% ROSETTA:LAP_P2_ADC16 = "E-FIELD"
+% ROSETTA:LAP_P2_RANGE_DENS_BIAS = "+-32"
+% ROSETTA:LAP_P2_STRATEGY_OR_RANGE = "BIAS"
+% ROSETTA:LAP_P2_RX_OR_TX = "ANALOG INPUT"
+% ROSETTA:LAP_P2_ADC16_FILTER = "8 KHz"
+% ROSETTA:LAP_IBIAS2 = "0x00d6"
+% ROSETTA:LAP_P2_BIAS_MODE = "E-FIELD"
+% ROSETTA:LAP_FEEDBACK_P1 = "E-FIELD"
+% ROSETTA:LAP_P1_ADC20 = "E-FIELD"
+% ROSETTA:LAP_P1_ADC16 = "E-FIELD"
+% ROSETTA:LAP_P1_RANGE_DENS_BIAS = "+-32"
+% ROSETTA:LAP_P1_STRATEGY_OR_RANGE = "BIAS"
+% ROSETTA:LAP_P1_RX_OR_TX = "ANALOG INPUT"
+% ROSETTA:LAP_P1_ADC16_FILTER = "8 KHz"
+% ROSETTA:LAP_IBIAS1 = "0x0077"
+% ROSETTA:LAP_P1_BIAS_MODE = "E-FIELD"
+% ROSETTA:LAP_P1P2_ADC20_STATUS = "P1T & P2T"
+% ROSETTA:LAP_P1P2_ADC20_MA_LENGTH = "0x0040"
+% ROSETTA:LAP_P1P2_ADC20_DOWNSAMPLE = "0x0040"
+% OBJECT     = TABLE
+% INTERCHANGE_FORMAT = ASCII
+% ROWS               = 28
+% COLUMNS            = 4
+% ROW_BYTES          = 75
+% DESCRIPTION        = "E_P1P2INTRL_TRNC_20BIT_RAW_BIP"
+% OBJECT     = COLUMN
+% NAME        = UTC_TIME
+% DATA_TYPE   = TIME
+% START_BYTE  = 1
+% BYTES       = 26
+% DESCRIPTION = "UTC TIME"
+% END_OBJECT = COLUMN
+% OBJECT     = COLUMN
+% NAME        = OBT_TIME
+% START_BYTE  = 28
+% BYTES       = 16
+% DATA_TYPE   = ASCII_REAL
+% UNIT        = SECONDS
+% FORMAT      = "F16.6"
+% DESCRIPTION = "SPACE CRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"
+% END_OBJECT = COLUMN
+% OBJECT     = COLUMN
+% NAME        = P2_CURRENT
+% DATA_TYPE   = ASCII_REAL
+% START_BYTE  = 45
+% BYTES       = 14
+% UNIT        = AMPERE
+% FORMAT      = "E14.7"
+% DESCRIPTION = "CALIBRATED CURRENT BIAS"
+% END_OBJECT = COLUMN
+% OBJECT     = COLUMN
+% NAME        = P2_VOLTAGE
+% DATA_TYPE   = ASCII_REAL
+% START_BYTE  = 60
+% BYTES       = 14
+% UNIT        = VOLT
+% FORMAT      = "E14.7"
+% DESCRIPTION = "MEASURED CALIBRATED VOLTAGE"
+% END_OBJECT = COLUMN
+% END_OBJECT = TABLE
+% END
+
+ % Write label file:
+ lname=strrep(tname,'TAB','LBL');
+ 
+    dl = fopen(LBLfile,'w');
+    fprintf(dl,'PDS_VERSION_ID = PDS3\n');
+    fprintf(dl,'RECORD_TYPE = FIXED_LENGTH\n');
+    fprintf(dl,'RECORD_BYTES = 422\n');  % Now counting linefeed
+    fprintf(dl,'FILE_RECORDS = %d\n',ir);%%dummy variable, not sure what to put here
+    fprintf(dl,'FILE_NAME = "%s"\n',lname);
+    fprintf(dl,'^TABLE = "%s"\n',tname);
+    fprintf(dl,'DATA_SET_ID = "%s"\n',datasetid);
+    fprintf(dl,'DATA_SET_NAME = "%s"\n',datasetname);
+    fprintf(dl,'DATA_QUALITY_ID = 1\n');
+    fprintf(dl,'MISSION_ID = ROSETTA\n');
+    fprintf(dl,'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\n');
+    fprintf(dl,'MISSION_PHASE_NAME = "%s"\n',missionphase);
+    fprintf(dl,'PRODUCER_INSTITUTION_NAME = "SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"\n');
+    fprintf(dl,'PRODUCER_ID = RG\n');
+    fprintf(dl,'PRODUCER_FULL_NAME = "REINE GILL"\n');
+    fprintf(dl,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
+    mm = length(gtname);
+    fprintf(dl,'PRODUCT_ID = "%s"\n',gtname(1:(mm-4)));
+    fprintf(dl,'PRODUCT_TYPE = "EDR"\n');  % No idea what this means...
+    fprintf(dl,'PRODUCT_CREATION_TIME = %s\n',datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
+    fprintf(dl,'INSTRUMENT_HOST_ID = RO\n');
+    fprintf(dl,'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\n');
+    fprintf(dl,'INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\n');
+    fprintf(dl,'INSTRUMENT_ID = RPCLAP\n');
+    fprintf(dl,'INSTRUMENT_TYPE = "PLASMA INSTRUMENT"\n');
+    fprintf(dl,'INSTRUMENT_MODE_ID = "N/A"\n');
+    fprintf(dl,'TARGET_NAME = "%s"\n',targetfullname);
+    fprintf(dl,'TARGET_TYPE = "%s"\n',targettype);
+    fprintf(dl,'PROCESSING_LEVEL_ID = %d\n',processlevel);
+    fprintf(dl,'START_TIME = %s\n',gtime0); 
+    fprintf(dl,'STOP_TIME = %s\n',gtime1);
+    fprintf(dl,'SPACECRAFT_CLOCK_START_COUNT = %s\n',sct0);
+    fprintf(dl,'SPACECRAFT_CLOCK_STOP_COUNT =  %s\n',sct1);
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = TABLE\n');
+    fprintf(dl,'NAME = "RPCLAP-%d-%s-GEOM"\n',processlevel,shortphase);
+    fprintf(dl,'INTERCHANGE_FORMAT = ASCII\n');
+    fprintf(dl,'ROWS = %d\n',ir);
+    fprintf(dl,'COLUMNS = 23\n');
+    fprintf(dl,'ROW_BYTES = 422\n');
+    fprintf(dl,'DESCRIPTION = "GEOMETRY DATA. TIME AND 22 GEOMETRY PARAMETERS."\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = TIME_UTC\n');
+    fprintf(dl,'DATA_TYPE = TIME\n');
+    fprintf(dl,'START_BYTE = 1\n');
+    fprintf(dl,'BYTES = 23\n');
+    fprintf(dl,'UNIT = SECONDS\n');
+    fprintf(dl,'DESCRIPTION = "TIME OF GEOMETRY DATA YYYY-MM-DDTHH:MM:SS.sss"\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_SUN_POS_X\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 26\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km"\n');
+    fprintf(dl,'DESCRIPTION = "HELIOCENTRIC ECLIPJ2000 POSITION X"\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_SUN_POS_Y\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 44\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km"\n');
+    fprintf(dl,'DESCRIPTION = "HELIOCENTRIC ECLIPJ2000 POSITION Y"\n'); 
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_SUN_POS_Z\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 62\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km"\n');
+    fprintf(dl,'DESCRIPTION = "HELIOCENTRIC ECLIPJ2000 POSITION Z"\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_TGT_POS_X\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 80\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km"\n');
+    fprintf(dl,'DESCRIPTION = "TARGET CENTRED ECLIPJ2000 POSITION X. ZERO WHEN NO TARGET."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_TGT_POS_Y\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 98\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km"\n');
+    fprintf(dl,'DESCRIPTION = "TARGET CENTRED ECLIPJ2000 POSITION Y. ZERO WHEN NO TARGET."\n'); 
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_TGT_POS_Z\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 116\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km"\n');
+    fprintf(dl,'DESCRIPTION = "TARGET CENTRED ECLIPJ2000 POSITION Z. ZERO WHEN NO TARGET."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_TGT_VEL_X\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 134\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km/s"\n');
+    fprintf(dl,'DESCRIPTION = "ECLIPJ2000 VELOCITY X RELATIVE TO TARGET. ZERO WHEN NO TARGET."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_TGT_VEL_Y\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 152\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km/s"\n');
+    fprintf(dl,'DESCRIPTION = "ECLIPJ2000 VELOCITY Y RELATIVE TO TARGET. ZERO WHEN NO TARGET."\n'); 
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_TGT_VEL_Z\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 170\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km/s"\n');
+    fprintf(dl,'DESCRIPTION = "ECLIPJ2000 VELOCITY Z RELATIVE TO TARGET. ZERO WHEN NO TARGET."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = ALTITUDE\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 188\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km"\n');
+    fprintf(dl,'DESCRIPTION = "DISTANCE TO SURFACE OF CURRENT TARGET. ZERO WHEN NO TARGET."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = LATITUDE\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 206\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "degrees"\n');
+    fprintf(dl,'DESCRIPTION = "LATITUDE ON SURFACE OF CURRENT TARGET. ZERO WHEN NO TARGET."\n'); 
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = LONGITUDE\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 224\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "degrees"\n');
+    fprintf(dl,'DESCRIPTION = "LONGITUDE ON SURFACE OF CURRENT TARGET. ZERO WHEN NO TARGET."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_TGT_SPEED\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 242\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "km/s"\n');
+    fprintf(dl,'DESCRIPTION = "SPEED RELATIVE TO CURRENT TARGET. ZERO WHEN NO TARGET."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_X_ECLIPJ2000FR_X\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 260\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "N/A"\n');
+    fprintf(dl,'DESCRIPTION = "SPACECRAFT FRAME X EXPRESSED IN ECLIPTIC J2000 FRAME X."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_X_ECLIPJ2000FR_Y\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 278\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "N/A"\n');
+    fprintf(dl,'DESCRIPTION = "SPACECRAFT FRAME X EXPRESSED IN ECLIPTIC J2000 FRAME Y."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_X_ECLIPJ2000FR_Z\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 296\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "N/A"\n');
+    fprintf(dl,'DESCRIPTION = "SPACECRAFT FRAME X EXPRESSED IN ECLIPTIC J2000 FRAME Z."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_Y_ECLIPJ2000FR_X\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 314\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "N/A"\n');
+    fprintf(dl,'DESCRIPTION = "SPACECRAFT FRAME Y EXPRESSED IN ECLIPTIC J2000 FRAME X."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_Y_ECLIPJ2000FR_Y\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 332\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "N/A"\n');
+    fprintf(dl,'DESCRIPTION = "SPACECRAFT FRAME Y EXPRESSED IN ECLIPTIC J2000 FRAME Y."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_Y_ECLIPJ2000FR_Z\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 350\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "N/A"\n');
+    fprintf(dl,'DESCRIPTION = "SPACECRAFT FRAME Y EXPRESSED IN ECLIPTIC J2000 FRAME Z."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_Z_ECLIPJ2000FR_X\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 368\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "N/A"\n');
+    fprintf(dl,'DESCRIPTION = "SPACECRAFT FRAME Z EXPRESSED IN ECLIPTIC J2000 FRAME X."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_Z_ECLIPJ2000FR_Y\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 386\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "N/A"\n');
+    fprintf(dl,'DESCRIPTION = "SPACECRAFT FRAME Z EXPRESSED IN ECLIPTIC J2000 FRAME Y."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = SC_Z_ECLIPJ2000FR_Z\n');
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'START_BYTE = 404\n');
+    fprintf(dl,'BYTES = 16\n');
+    fprintf(dl,'UNIT = "N/A"\n');
+    fprintf(dl,'DESCRIPTION = "SPACECRAFT FRAME Z EXPRESSED IN ECLIPTIC J2000 FRAME Z."\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'END_OBJECT = TABLE\n');
+    fprintf(dl,'\n');
+    fprintf(dl,'END');
+    fclose(dl);

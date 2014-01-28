@@ -41,8 +41,7 @@ opsblocks;
 if(do_mill)
 'lapdog: calling process...'
   process;
-'lapdog: generate LBL files....'
-%  createLBL;
+  createLAB;
 
 end
 
