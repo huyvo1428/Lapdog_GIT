@@ -26,8 +26,6 @@ for(i=1:length(tabindex))
     fprintf(dl,'DATA_SET_ID = "%s"\n',datasetid);
     fprintf(dl,'DATA_SET_NAME = "%s"\n',datasetname);
     fprintf(dl,'DATA_QUALITY_ID = 1\n'); % NEEDS A VALUE. inside tabindex?
-
-   
     fprintf(dl,'MISSION_ID = ROSETTA\n');
     fprintf(dl,'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\n');
     fprintf(dl,'MISSION_PHASE_NAME = "%s"\n',missionphase);
@@ -39,8 +37,7 @@ for(i=1:length(tabindex))
     % PRODUCT_ID = "RPCLAP100707_0A0T_CEB28NS"
 
     % PRODUCT_TYPE = "RDR"
-    fprintf(dl,'PRODUCT_ID = "RDR"\n');
-
+    fprintf(dl,'PRODUCT_ID = "RDR"\n'); 
 %    fprintf(dl,'PRODUCT_ID = "%s"\n',gtname(1:(mm-4)));
     fprintf(dl,'PRODUCT_TYPE = "EDR"\n');  % No idea what this means...
     fprintf(dl,'PRODUCT_CREATION_TIME = %s\n',datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
@@ -53,14 +50,15 @@ for(i=1:length(tabindex))
     fprintf(dl,'INSTRUMENT_MODE_ID = "%s"\n',index(tabindex{i,2}).macro);
     % INSTRUMENT_MODE_DESC = "EE Cont. 20 bit down 64, Every 160s 16 Bit P1"
     fprintf(dl,'INSTRUMENT_MODE_DESC = "N/A"\n');
-    
     fprintf(dl,'TARGET_NAME = "%s"\n',targetfullname);
     fprintf(dl,'TARGET_TYPE = "%s"\n',targettype);
     fprintf(dl,'PROCESSING_LEVEL_ID = 4\n');
     fprintf(dl,'START_TIME = %s\n',index(tabindex{i,2}).t0str); 
-    fprintf(dl,'STOP_TIME = %f\n',tabindex{i,3});
-    fprintf(dl,'SPACECRAFT_CLOCK_START_COUNT = %s\n',index(tabindex{i,2}).sct0str);
-    fprintf(dl,'SPACECRAFT_CLOCK_STOP_COUNT =  %s\n',tabindex{i,4});
+    fprintf(dl,'STOP_TIME = %s\n',tabindex{i,3});
+    tmpsct0 = index(tabindex{i,2}).sct0str(5:end-1);
+    
+    fprintf(dl,'SPACECRAFT_CLOCK_START_COUNT = %s\n',tmpsct0);
+    fprintf(dl,'SPACECRAFT_CLOCK_STOP_COUNT =  %s\n',sprintf('%f',tabindex{i,4}));
     fprintf(dl,'\n');
 
     

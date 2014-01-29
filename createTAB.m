@@ -65,8 +65,8 @@ for(i=1:len);
         dlmcell(filename,scantemp,'-a',',')
 %     end
         if (i==len)
-            tabindex{end,3}= scantemp{end,1}{1,1}; %%remember stop time in universal time and spaceclock time
-            tabindex{end,4}= scantemp{end,1}{2,1};
+            tabindex{end,3}= scantemp{1,1}{end,1}; %%remember stop time in universal time and spaceclock time
+            tabindex{end,4}= scantemp{1,2}(end); %subset scantemp{1,1} is a cell array, but scantemp{1,2} is a normal array
             tabindex{end,5}= counttemp;
             
         end

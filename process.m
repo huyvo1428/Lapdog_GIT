@@ -25,8 +25,7 @@ derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-4');
 derivedpath = strrep(derivedpath,'CALIB','DERIV');
 mkdir(derivedpath);
 
-b = 1
-%for b = 1:nob   % Loop through all ops blocks
+for b = 1:nob   % Loop through all ops blocks
     
     day = datestr(index(obs(b)).t0,'yyyymmdd');  % convert block start time index to time string, convert to yyyymmdd format 
     
@@ -82,20 +81,7 @@ b = 1
 
     % Mill sweeps in this ob:
     
-%     if(~isempty(p1s))
-%         
-%     len = length(p1s);
-%     row = 1;
-%     tstraray = zeros(len*ob(end));
-%     n = 4;
-% 
-% % Create array to save extended index in:
-% % index(n).lblfile = [];
-% % index(n).tabfile = [];
-% % index(n).t0str = [];
-% % index(n).t1str = [];
-% % index(n).sct0str = [];
-% % index(n).sct1str = [];
+
 % 
 %     for(i=1:len);
 %         tabID = fopen(index(ob(p1s(i))).tabfile)
@@ -103,9 +89,7 @@ b = 1
 %          [tstr sct ip vb] = textread(index(ob(p1s(i))).tabfile,'%s%f%f%f','delimiter',',');
 %          tstrarray(row,:) = [ts,sct,ip,vb];
 %          row = row + length(sct);
-%          
-%          textread(
-%     end
+
 %     end
     
     
@@ -471,4 +455,4 @@ b = 1
 % 
 
 
-%end  % End of this obs block
+end  % End of this obs block
