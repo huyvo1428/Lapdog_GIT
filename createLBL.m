@@ -20,7 +20,7 @@ for(i=1:length(tabindex))
     % RECORD_BYTES = 75
     fprintf(dl,'RECORD_BYTES = 422\n');  % Now counting linefeed. Count lines later! What?
     % FILE_RECORDS = 28
-    fprintf(dl,'FILE_RECORDS = %d\n',tabindex{i,6});%%number of rows??
+    fprintf(dl,'FILE_RECORDS = %d\n',tabindex{i,5});%%number of rows??
     fprintf(dl,'FILE_NAME = "%s"\n',lname);
     fprintf(dl,'^TABLE = "%s"\n',tname);
     fprintf(dl,'DATA_SET_ID = "%s"\n',datasetid);
@@ -37,8 +37,11 @@ for(i=1:length(tabindex))
     fprintf(dl,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
     mm = length(tname);
     % PRODUCT_ID = "RPCLAP100707_0A0T_CEB28NS"
+
     % PRODUCT_TYPE = "RDR"
-    fprintf(dl,'PRODUCT_ID = "%s"\n',gtname(1:(mm-4)));
+    fprintf(dl,'PRODUCT_ID = "RDR"\n');
+
+%    fprintf(dl,'PRODUCT_ID = "%s"\n',gtname(1:(mm-4)));
     fprintf(dl,'PRODUCT_TYPE = "EDR"\n');  % No idea what this means...
     fprintf(dl,'PRODUCT_CREATION_TIME = %s\n',datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
     fprintf(dl,'INSTRUMENT_HOST_ID = RO\n');
@@ -55,7 +58,7 @@ for(i=1:length(tabindex))
     fprintf(dl,'TARGET_TYPE = "%s"\n',targettype);
     fprintf(dl,'PROCESSING_LEVEL_ID = 4\n');
     fprintf(dl,'START_TIME = %s\n',index(tabindex{i,2}).t0str); 
-    fprintf(dl,'STOP_TIME = %s\n',tabindex{i,3});
+    fprintf(dl,'STOP_TIME = %f\n',tabindex{i,3});
     fprintf(dl,'SPACECRAFT_CLOCK_START_COUNT = %s\n',index(tabindex{i,2}).sct0str);
     fprintf(dl,'SPACECRAFT_CLOCK_STOP_COUNT =  %s\n',tabindex{i,4});
     fprintf(dl,'\n');
@@ -95,7 +98,7 @@ for(i=1:length(tabindex))
     %only for geometry?
     
     fprintf(dl,'INTERCHANGE_FORMAT = ASCII\n');
-    fprintf(dl,'ROWS = %d\n',tabindex{i,6});
+    fprintf(dl,'ROWS = %d\n',tabindex{i,5});
     fprintf(dl,'COLUMNS = 5\n'); % usually two timers, two data rows, 1 quality factor
     fprintf(dl,'ROW_BYTES = 422\n'); % god damn Byte counter again
     fprintf(dl,'DESCRIPTION = "SPACECRAFT DATA: UTC TIME, S/C TIME, MEASURED CURRENT, BIAS VOLTAGE, QUALITY."\n');
@@ -126,7 +129,7 @@ for(i=1:length(tabindex))
    
     fprintf(dl,'OBJECT = COLUMN\n');
     % NAME        = P2_CURRENT
-    fprintf(dl,'NAME = %d_CURRENT\n',index(tabindex(i,2)).probe);   % NEED probe value.
+    fprintf(dl,'NAME = %d_CURRENT\n',index(tabindex{i,2}).probe);   % NEED probe value.
     
     fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
     fprintf(dl,'START_BYTE = 1\n');
@@ -139,7 +142,7 @@ for(i=1:length(tabindex))
     
     
     fprintf(dl,'OBJECT = COLUMN\n');
-    fprintf(dl,'NAME = %d_VOLTAGE\n',index(tabindex(i,2)).probe);   % NEED probe value.
+    fprintf(dl,'NAME = %d_VOLTAGE\n',index(tabindex{i,2}).probe);   % NEED probe value.
     fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
     fprintf(dl,'START_BYTE = 1\n');
     fprintf(dl,'BYTES = 23\n'); %goddamn byte

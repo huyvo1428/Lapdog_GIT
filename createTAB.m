@@ -43,7 +43,7 @@ for(i=1:len);
     tabID = fopen(index(tabind(i)).tabfile);
     scantemp = textscan(tabID,'%s%f%f%f','delimiter',',');
     
-    countemp = counttemp + length(scantemp);
+    counttemp = counttemp + length(scantemp);
     
     
 %     %fours = daysact(datenum(strrep(scantemp{1,1},'T',' ')),datenum(strrep(scantemp{:,1},'T',' ')));
@@ -54,7 +54,7 @@ for(i=1:len);
 %         firstdiffrow = find(-diff(fours)); %diff(fours) is 0 or -1 for all rows, find() finds the row index of the n-1 diff array
 %         yday = filename; %store old filename
 %         filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(addtodate(tday,1,'day'),'yyyymmdd'),'000000',index(tabind(1)).macro,fileflag);
-%         %add a day to timer, set HHMMSS to 000000 (may be useful for
+%         %add a day to timer, set HHMMSS to 000000, (may be useful for
 %         %now). important to change filename inside loop, such that next
 %         %i counter remembers the new filename
 %         
@@ -65,8 +65,8 @@ for(i=1:len);
         dlmcell(filename,scantemp,'-a',',')
 %     end
         if (i==len)
-            tabindex{end,3}= scantemp{end,1}; %%remember stop time in universal time and spaceclock time
-            tabindex{end,4}= scantemp{end,2};
+            tabindex{end,3}= scantemp{end,1}{1,1}; %%remember stop time in universal time and spaceclock time
+            tabindex{end,4}= scantemp{end,1}{2,1};
             tabindex{end,5}= counttemp;
             
         end

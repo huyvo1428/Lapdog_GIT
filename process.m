@@ -15,13 +15,18 @@ t321 = [];
 v321 = [];
 t322 = [];
 v322 = [];
+    
+    global tabindex;
+    tabindex = {};
+%Do i need this?
 
     
 derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-4');
 derivedpath = strrep(derivedpath,'CALIB','DERIV');
 mkdir(derivedpath);
 
-for b = 1:nob   % Loop through all ops blocks
+b = 1
+%for b = 1:nob   % Loop through all ops blocks
     
     day = datestr(index(obs(b)).t0,'yyyymmdd');  % convert block start time index to time string, convert to yyyymmdd format 
     
@@ -54,10 +59,7 @@ for b = 1:nob   % Loop through all ops blocks
     
     
     %%%% Start TAB/LBL genesis
-    
-    global tabindex;
-    tabindex = {};
-%Do i need this?
+
     
     
     
@@ -469,4 +471,4 @@ for b = 1:nob   % Loop through all ops blocks
 % 
 
 
-end  % End of this obs block
+%end  % End of this obs block
