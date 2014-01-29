@@ -26,7 +26,7 @@ function []= createTAB(derivedpath,tabind,index,fileflag)
 
 tday = index(tabind(1)).t0;
 filename = sprintf('%s/RPCLAP_%s_%s_%d_%s.TAB',derivedpath,datestr(index(tabind(1)).t0,'yyyymmdd'),datestr(index(tabind(1)).t0,'HHMMSS'),index(tabind(1)).macro,fileflag); %%
-%mutewarning = mkdir(derivedpath); %
+mutewarning = mkdir(derivedpath); %
 delete(filename)  %remove old files already created since
 %code appends to existing file whenever possible (duplicates!)
 

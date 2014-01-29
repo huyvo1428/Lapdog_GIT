@@ -42,7 +42,7 @@ if(do_mill)
 'lapdog: calling process...'
   process;
 'lapdog: generate LBL files....'
-%  createLBL;
+createLBL;
 
 end
 

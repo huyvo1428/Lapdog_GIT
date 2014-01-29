@@ -19,7 +19,7 @@ v322 = [];
     
 derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-4');
 derivedpath = strrep(derivedpath,'CALIB','DERIV');
-
+mkdir(derivedpath);
 
 for b = 1:nob   % Loop through all ops blocks
     
@@ -55,22 +55,28 @@ for b = 1:nob   % Loop through all ops blocks
     
     %%%% Start TAB/LBL genesis
     
+    global tabindex;
+    tabindex = {};
+%Do i need this?
+    
+    
+    
     %Generate sweep files
     % the obs(b) -1 is needed since find will not give answers in the range
     % of all indices, but only relative to obs(b).
-    if(~isempty(p1s)) p1s = p1s + obs(b) -1; createTABLBL(derivedpath,p1s,index,'B1S'); end
-    if(~isempty(p2s)) p2s = p2s + obs(b) -1; createTABLBL(derivedpath,p2s,index,'B2S'); end
+    if(~isempty(p1s)) p1s = p1s + obs(b) -1; createTAB(derivedpath,p1s,index,'B1S'); end
+    if(~isempty(p2s)) p2s = p2s + obs(b) -1; createTAB(derivedpath,p2s,index,'B2S'); end
     
     %Generate E data files
-    if(~isempty(p1el)) p1el = p1el + obs(b) -1; createTABLBL(derivedpath,p1el,index,'V1L'); end
-    if(~isempty(p2el)) p2el = p2el + obs(b) -1; createTABLBL(derivedpath,p2el,index,'V2L'); end
-    if(~isempty(p1eh)) p1eh = p1eh + obs(b) -1; createTABLBL(derivedpath,p1eh,index,'V1H'); end
-    if(~isempty(p2eh)) p2eh = p2eh + obs(b) -1; createTABLBL(derivedpath,p2eh,index,'V2H'); end
+    if(~isempty(p1el)) p1el = p1el + obs(b) -1; createTAB(derivedpath,p1el,index,'V1L'); end
+    if(~isempty(p2el)) p2el = p2el + obs(b) -1; createTAB(derivedpath,p2el,index,'V2L'); end
+    if(~isempty(p1eh)) p1eh = p1eh + obs(b) -1; createTAB(derivedpath,p1eh,index,'V1H'); end
+    if(~isempty(p2eh)) p2eh = p2eh + obs(b) -1; createTAB(derivedpath,p2eh,index,'V2H'); end
     %Generate N data files
-    if(~isempty(p1nl)) p1nl = p1nl + obs(b) -1; createTABLBL(derivedpath,p1nl,index,'I1L');end
-    if(~isempty(p2nl)) p2nl = p2nl + obs(b) -1; createTABLBL(derivedpath,p2nl,index,'I2L');end
-    if(~isempty(p1nh)) p1nh = p1nh + obs(b) -1; createTABLBL(derivedpath,p1nh,index,'I1H');end
-    if(~isempty(p2nh)) p2nh = p2nh + obs(b) -1; createTABLBL(derivedpath,p2nh,index,'I2H');end
+    if(~isempty(p1nl)) p1nl = p1nl + obs(b) -1; createTAB(derivedpath,p1nl,index,'I1L');end
+    if(~isempty(p2nl)) p2nl = p2nl + obs(b) -1; createTAB(derivedpath,p2nl,index,'I2L');end
+    if(~isempty(p1nh)) p1nh = p1nh + obs(b) -1; createTAB(derivedpath,p1nh,index,'I1H');end
+    if(~isempty(p2nh)) p2nh = p2nh + obs(b) -1; createTAB(derivedpath,p2nh,index,'I2H');end
 
     % Mill sweeps in this ob:
     
@@ -115,7 +121,7 @@ for b = 1:nob   % Loop through all ops blocks
 %          p1s_raw(i,:) = [ts,sct,ip,vb];
 %          p1s_params(i,:) = an_swp(ts,vb,ip,1);
 %       end
-%       createTABLBL(derivedpath,p1s_raw,len,b,B1S);
+%       createTAB(derivedpath,p1s_raw,len,b,B1S);
 %     end
     %%%%%%
 % 
