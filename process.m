@@ -8,7 +8,7 @@
 nfft = 128;
 outdir = 'data/';
 
-sweeps = 0;
+%sweeps = 0;
 % lf = 0;
 % hf = 0;
 t321 = [];
@@ -16,17 +16,20 @@ v321 = [];
 t322 = [];
 v322 = [];
     
-    global tabindex;
-    tabindex = {};
+
 %Do i need this?
 
     
 derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-4');
 derivedpath = strrep(derivedpath,'CALIB','DERIV');
-mkdir(derivedpath);
+if (exist('derivedpath', 'dir')~=7)
+    mkdir(derivedpath);
+end
+
+global tabindex;
+tabindex = {};
 
 for b = 1:nob   % Loop through all ops blocks
-    
     day = datestr(index(obs(b)).t0,'yyyymmdd');  % convert block start time index to time string, convert to yyyymmdd format 
     
     ob = obs(b):obe(b); %ob goes from start time index to end time index
