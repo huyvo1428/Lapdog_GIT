@@ -3,7 +3,7 @@
 
 
 for(i=1:length(tabindex))
-    tname = tabindex{i,2};
+    tname = tabindex{i,1};
     
 
     %tabindex cell array = {tab file name, first index number of batch,
@@ -12,14 +12,15 @@ for(i=1:length(tabindex))
     
     % Write label file:
     lname=strrep(tname,'TAB','LBL');
-    dl = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');
+    dl = fopen(lname,'w');
+    
     % 
     fprintf(dl,'PDS_VERSION_ID = PDS3\n');
     fprintf(dl,'RECORD_TYPE = FIXED_LENGTH\n');
     % RECORD_BYTES = 75
     fprintf(dl,'RECORD_BYTES = 422\n');  % Now counting linefeed. Count lines later! What?
     % FILE_RECORDS = 28
-    fprintf(dl,'FILE_RECORDS = %d\n',tabindex{i,6});%%number of rows??
+    fprintf(dl,'FILE_RECORDS = %d\n',tabindex{i,5});%%number of rows??
     fprintf(dl,'FILE_NAME = "%s"\n',lname);
     fprintf(dl,'^TABLE = "%s"\n',tname);
     fprintf(dl,'DATA_SET_ID = "%s"\n',datasetid);
@@ -57,7 +58,7 @@ for(i=1:length(tabindex))
     tmpsct0 = index(tabindex{i,3}).sct0str(5:end-1);
     
     fprintf(dl,'SPACECRAFT_CLOCK_START_COUNT = %s\n',tmpsct0);
-    fprintf(dl,'SPACECRAFT_CLOCK_STOP_COUNT =  %s\n',sprintf('%f',tabindex{i,5}));
+    fprintf(dl,'SPACECRAFT_CLOCK_STOP_COUNT =  %s\n',sprintf('%f',tabindex{i,4}));
     fprintf(dl,'\n');
 
     
@@ -139,7 +140,7 @@ for(i=1:length(tabindex))
     
     
     fprintf(dl,'OBJECT = COLUMN\n');
-    fprintf(dl,'NAME = %d_VOLTAGE\n',index(tabindex{i,3}).probe);   % NEED probe value.
+    fprintf(dl,'NAME = %d_VOLTAGE\n',index(tabindex{i,2}).probe);   % NEED probe value.
     fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
     fprintf(dl,'START_BYTE = 1\n');
     fprintf(dl,'BYTES = 23\n'); %goddamn byte
