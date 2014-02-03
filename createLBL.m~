@@ -1,9 +1,93 @@
 %createLBL.m
 
 
+len= length(tabindex(:,3));
+for(i=1:len)
+    
+    
+    
+    %tabindex cell array = {tab file name, first index number of batch,
+    % UTC time of last row, S/C time of last row, row counter}
+    %    units: [cell array] =  {[string],[double],[string],[float],[integer]
+    
+    % Write label file:
+    tname = tabindex{i,2};
+    lname=strrep(tname,'TAB','LBL');
+    
+    [fp,errmess] = fopen(index(tabindex{i,3}).lblfile,'r');
+    tempfp = textscan(fp,'%s %s','Delimiter','=');
+    
+    dl = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');
+    
+    
+    fileinfo = dir(tabindex{i,1});
+    tempfp{1,2}{3,1} = sprintf('%d',fileinfo.bytes);
+    tempfp{1,2}{4,1} = sprintf('%d',tabindex{i,6});
+    tempfp{1,2}{5,1} = lname;
+    tempfp{1,2}{6,1} = tname;
+    tempfp{1,2}{16,1} = sprintf('"%s, %s, %s"',lbltime,lbleditor,lblrev);
+    tempfp{1,2}(17:18) = [];
+    tempfp{1,1}(17:18) =[]; % should be deleted?
+    tempfp{1,2}{17,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %lbl revision date
+    tempfp{1,2}{27,1} = '"4"'; %% processing level ID
+    tempfp{1,2}{28,1} = index(tabindex{i,3}).t0str; %UTC start time
+    tempfp{1,2}{29,1} = tabindex{i,4};             % UTC stop time
+    tmpsct0 = index(tabindex{i,3}).sct0str(5:end-1);
+    tempfp{1,2}{30,1} = tmpsct0;                    %% sc start time
+    tempfp{1,2}{31,1} = sprintf('%f',tabindex{i,5}); %% sc stop time
+    tempfp{1,2}{54,1} = sprintf('%d',tabindex{i,6}); %% rows
+    
+    a =    tname(30);
+    if (tname(30)=='S')
+        
+        if (tname(28)=='B')
+            tempfp{1,2}(58:82) = [];
+            tempfp{1,1}(58:82) = []; % should be deleted?
+            tempfp{1,1}(67:77) = tempfp{1,1}(58:68);
+            tempfp{1,2}(67:77) = tempfp{1,2}(58:68);
+            tempfp{1,2}{68,1} = 'SWEEP_TIME';
+            tempfp{1,2}{69,1} = 'ASCII_REAL';
+            tempfp{1,2}{70,1} = '15';
+            tempfp{1,2}{71,1} = '23';
+            tempfp{1,2}{72,1} = 'SECONDS';
+            tempfp{1,2}{73,1} = 'SECONDS';
+            
+            
+            
+               
+    fprintf(dl,'OBJECT = COLUMN\n');
+    fprintf(dl,'NAME = OBT_TIME\n');   
+    fprintf(dl,'START_BYTE = 1\n');
+    fprintf(dl,'BYTES = 23\n'); %goddamn byte
+    fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
+    fprintf(dl,'UNIT = SECONDS\n');
+    fprintf(dl,'DESCRIPTION = "SPACE CRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
+    fprintf(dl,'END_OBJECT  = COLUMN\n');
+    fprintf(dl,'\n');
+   
+        elseif (tname(28)=='I')
+            
+            
+        else
+            fprintf(1,'  BAD IDENTIFIER FOUND, %s\n',tname);
+        end
+        
+        
+    end
+    
+    
+    
+    for i=1:length(tempfp{1,1})
+        fprintf(dl,'%s=%s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
+    end
+    fclose(dl);
+end
+
+
+
 
 for(i=1:length(tabindex))
-    tname = tabindex{i,1};
+    tname = tabindex{i,2};
     
 
     %tabindex cell array = {tab file name, first index number of batch,
@@ -12,15 +96,14 @@ for(i=1:length(tabindex))
     
     % Write label file:
     lname=strrep(tname,'TAB','LBL');
-    dl = fopen(lname,'w');
-    
+    dl = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');
     % 
     fprintf(dl,'PDS_VERSION_ID = PDS3\n');
     fprintf(dl,'RECORD_TYPE = FIXED_LENGTH\n');
-    % RECORD_BYTES = 75
-    fprintf(dl,'RECORD_BYTES = 422\n');  % Now counting linefeed. Count lines later! What?
+    fileinfo = dir(tabindex{i,1});
+    fprintf(dl,'RECORD_BYTES = %d',fileinfo.bytes);  % Now counting linefeed. Count lines later! What?
     % FILE_RECORDS = 28
-    fprintf(dl,'FILE_RECORDS = %d\n',tabindex{i,5});%%number of rows??
+    fprintf(dl,'FILE_RECORDS = %d\n',tabindex{i,6});%%number of rows??
     fprintf(dl,'FILE_NAME = "%s"\n',lname);
     fprintf(dl,'^TABLE = "%s"\n',tname);
     fprintf(dl,'DATA_SET_ID = "%s"\n',datasetid);
@@ -58,7 +141,7 @@ for(i=1:length(tabindex))
     tmpsct0 = index(tabindex{i,3}).sct0str(5:end-1);
     
     fprintf(dl,'SPACECRAFT_CLOCK_START_COUNT = %s\n',tmpsct0);
-    fprintf(dl,'SPACECRAFT_CLOCK_STOP_COUNT =  %s\n',sprintf('%f',tabindex{i,4}));
+    fprintf(dl,'SPACECRAFT_CLOCK_STOP_COUNT =  %s\n',sprintf('%f',tabindex{i,5}));
     fprintf(dl,'\n');
 
     
@@ -140,7 +223,7 @@ for(i=1:length(tabindex))
     
     
     fprintf(dl,'OBJECT = COLUMN\n');
-    fprintf(dl,'NAME = %d_VOLTAGE\n',index(tabindex{i,2}).probe);   % NEED probe value.
+    fprintf(dl,'NAME = %d_VOLTAGE\n',index(tabindex{i,3}).probe);   % NEED probe value.
     fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
     fprintf(dl,'START_BYTE = 1\n');
     fprintf(dl,'BYTES = 23\n'); %goddamn byte

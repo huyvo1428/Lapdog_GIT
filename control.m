@@ -21,9 +21,9 @@ fix_geom_bug = 1;  % To change signs of position and velocity coordinates
 % =============
 
 % Info for geometry labels
-lbltime = '2012-04-25T12:00:00';  % label revision time
-lbleditor = 'AIE';
-lblrev = '3rd draft after review by Maud';
+lbltime = '2013-02-03T12:00:00';  % label revision time
+lbleditor = 'FJ';
+lblrev = '4th draft';
 
 % 4. Dataset selection and description
 % ====================================

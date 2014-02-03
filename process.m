@@ -84,7 +84,8 @@ for b = 1:nob   % Loop through all ops blocks
     if(~isempty(p2nh)) p2nh = p2nh + obs(b) -1; createTAB(derivedpath,p2nh,index,'I2H');end
 
     
-  end
+end
+  save(tabindexfile,'tabindex');
     
     % Mill sweeps in this ob:
     

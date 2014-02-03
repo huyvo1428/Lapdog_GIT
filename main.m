@@ -39,8 +39,18 @@ end
 opsblocks;
 
 if(do_mill)
+tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
+fp = fopen(tabindexfile,'r');
+if(fp > 0)
+    fclose(fp);
+    load(tabindexfile);
+    'lapdog: succesfully loaded tabfiles'
+    
+else
 'lapdog: calling process...'
   process;
+end
+
 'lapdog: generate LBL files....'
 createLBL;
 
