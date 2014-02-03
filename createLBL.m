@@ -4,8 +4,6 @@
 len= length(tabindex(:,3));
 for(i=1:len)
     
-    
-    
     %tabindex cell array = {tab file name, first index number of batch,
     % UTC time of last row, S/C time of last row, row counter}
     %    units: [cell array] =  {[string],[double],[string],[float],[integer]
