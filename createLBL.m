@@ -14,6 +14,7 @@ for(i=1:len)
     
     [fp,errmess] = fopen(index(tabindex{i,3}).lblfile,'r');
     tempfp = textscan(fp,'%s %s','Delimiter','=');
+    fclose(fp);
     
     dl = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');
     
@@ -69,47 +70,40 @@ for(i=1:len)
             tempfp{1,1}(65:71) = tempfp{1,1}(58:64);
             
             %edit some lines
-            tempfp{1,2}{55,1} = '199';
-            tempfp{1,2}{56,1} = '3212';
-            tempfp{1,2}{69,1} = '26';
-            tempfp{1,2}{74,1} = '56';
-            tempfp{1,2}{83,1} = '74';
-            tempfp{1,2}{93,1} = '92';
+            tempfp{1,2}{55,1} = '199';  %number of columns
+            tempfp{1,2}{56,1} = '3212'; %row byte size
+            tempfp{1,2}{69,1} = '26';   %first column start byte
+            tempfp{1,2}{74,1} = '56';   %second column start byte
+            tempfp{1,2}{83,1} = '74';   %third column start byte
+            tempfp{1,2}{93,1} = '92';   %fourth column start byte
             tempfp{1,2}{59,1} = '"SWEEP_START_TIME_UTC"';
             tempfp{1,2}{63,1} = '"START TIME OF SWEEP DATA ROW (UTC)"';
-            
             tempfp{1,2}{66,1} = '"SWEEP_END_TIME_UTC"';
             tempfp{1,2}{70,1} = '"END TIME OF SWEEP DATA ROW (UTC)"';
-            
             tempfp{1,2}{73,1} = '"SWEEP_START_TIME_OBT"';
             tempfp{1,2}{79,1} = '"START TIME OF SWEEP DATA ROW (SPACE CRAFT ONBOARD TIME)"';
-            
             tempfp{1,2}{82,1} = '"SWEEP_END_TIME_OBT"';
             tempfp{1,2}{88,1} = '"END TIME OF SWEEP DATA ROW (SPACE CRAFT ONBOARD TIME)"';
-
             tempfp{1,2}{90,1} = 'ROW';
             tempfp{1,2}{97,1} = '"FULL MEASURED CALIBRATED CURRENT SWEEP (COLUMNS 5-199)"';
             tempfp{1,2}{98,1} = 'ROW';
-            
-            
             tempfp{1,1}{99,1} = 'END_OBJECT';
             tempfp{1,2}{99,1} = 'TABLE';
             tempfp{1,1}{100,1} = 'END'; % Ends file, this line is never printed, but we need something on last row 
             %tempfp{1,2}{100,1} = '';%
-            %current data is harder
             
         else
             fprintf(1,'  BAD IDENTIFIER FOUND, %s\n',tname);
         end
     end
-    
-    
-    
+
     for (i=1:length(tempfp{1,1})-1) %skip last row
         fprintf(dl,'%s=%s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
     end
+    
     fprintf(dl,'END');% Ends file
     fclose(dl);
+    
 end
              
               %  number of cols(4 timers, 195 current values)
