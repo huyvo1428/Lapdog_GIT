@@ -36,12 +36,11 @@ for(i=1:len)
     tempfp{1,2}{54,1} = sprintf('%i',tabindex{i,6}); %% rows
     
     a =    tname(30);
-    if (tname(30)=='S') % special format for sweep files...
-        
+    if (tname(30)=='S') % special format for sweep files...   
         if (tname(28)=='B')
             
-            tempfp{1,2}{55,1} = 2;  %number of rows
-            tempfp{1,2}{56,1} = 41; % number of cols
+            tempfp{1,2}{55,1} = '2';  %number of rows
+            tempfp{1,2}{56,1} = '41'; % number of cols
             tempfp{1,2}(58:82) = []; % everything except Voltage column deleted
             tempfp{1,1}(58:82) = [];
             tempfp{1,1}(67:77) = tempfp{1,1}(58:68);
@@ -55,30 +54,116 @@ for(i=1:len)
             tempfp{1,2}{73,1} = '"F16.6"';
             tempfp{1,2}{74,1} = '"RELATIVE TIME BETWEEN SWEEP SSSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"';
             
-            
-           
-   
         elseif (tname(28)=='I')
             
-            %current data is harder
-           
+            tempfp{1,2}(90:98) = tempfp{1,2}(74:82); % move sweep current column
+            tempfp{1,1}(90:98) = tempfp{1,1}(74:82);
             
+            tempfp{1,2}(81:89) = tempfp{1,2}(65:73); %move S/C time column twice
+            tempfp{1,1}(81:89) = tempfp{1,1}(65:73);
+            
+            tempfp{1,2}(72:80) = tempfp{1,2}(65:73);
+            tempfp{1,1}(72:80) = tempfp{1,1}(65:73);
+            
+            tempfp{1,2}(65:71) = tempfp{1,2}(58:64); %copy UTC time column
+            tempfp{1,1}(65:71) = tempfp{1,1}(58:64);
+            
+            %edit some lines
+            tempfp{1,2}{55,1} = '199';
+            tempfp{1,2}{56,1} = '3212';
+            tempfp{1,2}{69,1} = '26';
+            tempfp{1,2}{74,1} = '56';
+            tempfp{1,2}{83,1} = '74';
+            tempfp{1,2}{93,1} = '92';
+            tempfp{1,2}{59,1} = '"SWEEP_START_TIME_UTC"';
+            tempfp{1,2}{63,1} = '"START TIME OF SWEEP DATA ROW (UTC)"';
+            
+            tempfp{1,2}{66,1} = '"SWEEP_END_TIME_UTC"';
+            tempfp{1,2}{70,1} = '"END TIME OF SWEEP DATA ROW (UTC)"';
+            
+            tempfp{1,2}{73,1} = '"SWEEP_START_TIME_OBT"';
+            tempfp{1,2}{79,1} = '"START TIME OF SWEEP DATA ROW (SPACE CRAFT ONBOARD TIME)"';
+            
+            tempfp{1,2}{82,1} = '"SWEEP_END_TIME_OBT"';
+            tempfp{1,2}{88,1} = '"END TIME OF SWEEP DATA ROW (SPACE CRAFT ONBOARD TIME)"';
+
+            tempfp{1,2}{90,1} = 'ROW';
+            tempfp{1,2}{97,1} = '"FULL MEASURED CALIBRATED CURRENT SWEEP (COLUMNS 5-199)"';
+            tempfp{1,2}{98,1} = 'ROW';
+            
+            
+            tempfp{1,1}{99,1} = 'END_OBJECT';
+            tempfp{1,2}{99,1} = 'TABLE';
+            tempfp{1,1}{100,1} = 'END'; % Ends file, this line is never printed, but we need something on last row 
+            %tempfp{1,2}{100,1} = '';%
+            %current data is harder
             
         else
             fprintf(1,'  BAD IDENTIFIER FOUND, %s\n',tname);
         end
-        
-        
     end
     
     
     
-    for i=1:length(tempfp{1,1})
+    for (i=1:length(tempfp{1,1})-1) %skip last row
         fprintf(dl,'%s=%s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
     end
+    fprintf(dl,'END');% Ends file
     fclose(dl);
 end
-
+             
+              %  number of cols(4 timers, 195 current values)
+%             tempfp{1,2}(58:82) = []; % everything except Voltage column deleted
+%             tempfp{1,1}(58:82) = [];
+%             tempfp{1,1}(67:77) = tempfp{1,1}(58:68);
+%             tempfp{1,2}(67:77) = tempfp{1,2}(58:68);
+%             tempfp{1,2}{61,1} = '1';
+%             tempfp{1,2}{68,1} = 'SWEEP_TIME';
+%             tempfp{1,2}{69,1} = 'ASCII_REAL';
+%             tempfp{1,2}{70,1} = '16';
+%             tempfp{1,2}{71,1} = '23';
+%             tempfp{1,2}{72,1} = 'SECONDS';
+%             tempfp{1,2}{73,1} = '"F16.6"';
+%             tempfp{1,2}{74,1} = '"RELATIVE TIME BETWEEN SWEEP SSSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"';
+%             
+%            
+% OBJECT     =COLUMN
+% NAME        =UTC_TIME
+% DATA_TYPE   =TIME
+% START_BYTE  =1
+% BYTES       =26
+% DESCRIPTION ="UTC TIME"
+% END_OBJECT =COLUMN
+% OBJECT     =COLUMN
+% NAME        =OBT_TIME
+% START_BYTE  =28
+% BYTES       =16
+% DATA_TYPE   =ASCII_REAL
+% UNIT        =SECONDS
+% FORMAT      ="F16.6"
+% DESCRIPTION ="SPACE CRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"
+% END_OBJECT =COLUMN
+% OBJECT     =COLUMN
+% NAME        =P1_CURRENT
+% DATA_TYPE   =ASCII_REAL
+% START_BYTE  =45
+% BYTES       =14
+% UNIT        =AMPERE
+% FORMAT      ="E14.7"
+% DESCRIPTION ="MEASURED CALIBRATED CURRENT"
+% END_OBJECT =COLUMN
+% OBJECT     =COLUMN
+% NAME        =P1_VOLTAGE
+% DATA_TYPE   =ASCII_REAL
+% START_BYTE  =60
+% BYTES       =14
+% UNIT        =VOLT
+% FORMAT      ="E14.7"
+% DESCRIPTION ="CALIBRATED VOLTAGE BIAS"
+% END_OBJECT =COLUMN
+% END_OBJECT =TABLE
+% END=
+      
 
 
 
