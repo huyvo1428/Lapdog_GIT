@@ -24,6 +24,11 @@ tabindex = {};
 for b = 1:nob   % Loop through all ops blocks
     
     
+    dirY = datestr(index(tabind(1)).t0,'YYYY');
+    dirM = upper(datestr(index(tabind(1)).t0,'mmm'));
+    dirD = strcat('D',datestr(index(tabind(1)).t0,'dd'));
+    tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
+    
     
     %b=nob;
 %    blist = fopen(
@@ -70,19 +75,6 @@ for b = 1:nob   % Loop through all ops blocks
     if(~isempty(p1s)) createTAB(derivedpath,ob(p1s),index,'B1S'); end
     if(~isempty(p2s)) createTAB(derivedpath,ob(p2s),index,'B2S'); end
     
-    
-%     %Generate E data files
-%     if(~isempty(p1el)) createTAB(derivedpath,ob(p1el),index,'V1L'); end
-%     if(~isempty(p2el)) createTAB(derivedpath,ob(p2el),index,'V2L'); end
-%     if(~isempty(p1eh)) createTAB(derivedpath,ob(p1eh),index,'V1H'); end
-%     if(~isempty(p2eh)) createTAB(derivedpath,ob(p2eh),index,'V2H'); end
-%     %Generate N data files
-%     if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,'I1L');end
-%     if(~isempty(p2nl)) createTAB(derivedpath,ob(p2nl),index,'I2L');end
-%     if(~isempty(p1nh)) createTAB(derivedpath,ob(p1nh),index,'I1H');end
-%     if(~isempty(p2nh)) createTAB(derivedpath,ob(p2nh),index,'I2H');end
-
-% 
 %     %Generate E data files
 %     if(~isempty(p1el)) p1el = p1el + obs(b) -1; createTAB(derivedpath,ob(p1el),index,'V1L'); end
 %     if(~isempty(p2el)) p2el = p2el + obs(b) -1; createTAB(derivedpath,ob(p2el),index,'V2L'); end
@@ -93,8 +85,8 @@ for b = 1:nob   % Loop through all ops blocks
 %     if(~isempty(p2nl)) p2nl = p2nl + obs(b) -1; createTAB(derivedpath,ob(p2nl),index,'I2L');end
 %     if(~isempty(p1nh)) p1nh = p1nh + obs(b) -1; createTAB(derivedpath,ob(p1nh),index,'I1H');end
 %     if(~isempty(p2nh)) p2nh = p2nh + obs(b) -1; createTAB(derivedpath,ob(p2nh),index,'I2H');end
-% 
-%     
+
+    
 
 end
 % 

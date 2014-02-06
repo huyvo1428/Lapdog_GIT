@@ -129,7 +129,7 @@ else %% if sweep, do:
         filename3(end-6) = 'A'; %A for derived  analysis
         
         derived = an_swp(potbias,curtemp,scantemp{1,2}(1,1),filename(end-5));
-        dlmwrite(filename3,derived,-append,'precision','%14,7e');
+       % dlmwrite(filename3,derived,-append,'precision','%14,7e');
         dlmwrite(filename3,derived,-append);            
       	
         
