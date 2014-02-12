@@ -23,6 +23,7 @@ tabindex = {};
 
 for b = 1:nob   % Loop through all ops blocks
     
+
     
     
     %b=nob;
@@ -67,60 +68,59 @@ for b = 1:nob   % Loop through all ops blocks
     %Generate sweep files
     % the obs(b) -1 is needed since find will not give answers in the range
     % of all indices, but only relative to obs(b).
-    if(~isempty(p1s)) createTAB(derivedpath,ob(p1s),index,'B1S'); end
-    if(~isempty(p2s)) createTAB(derivedpath,ob(p2s),index,'B2S'); end
+    if(~isempty(p1s)) createTAB(derivedpath,ob(p1s),index,index(obs(b)).t0,'B1S'); end
+    if(~isempty(p2s)) createTAB(derivedpath,ob(p2s),index,index(obs(b)).t0,'B2S'); end
     
     
-%     %Generate E data files
-%     if(~isempty(p1el)) createTAB(derivedpath,ob(p1el),index,'V1L'); end
-%     if(~isempty(p2el)) createTAB(derivedpath,ob(p2el),index,'V2L'); end
-%     if(~isempty(p1eh)) createTAB(derivedpath,ob(p1eh),index,'V1H'); end
-%     if(~isempty(p2eh)) createTAB(derivedpath,ob(p2eh),index,'V2H'); end
-%     %Generate N data files
-%     if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,'I1L');end
-%     if(~isempty(p2nl)) createTAB(derivedpath,ob(p2nl),index,'I2L');end
-%     if(~isempty(p1nh)) createTAB(derivedpath,ob(p1nh),index,'I1H');end
-%     if(~isempty(p2nh)) createTAB(derivedpath,ob(p2nh),index,'I2H');end
+    %Generate E data files
+    if(~isempty(p1el)) createTAB(derivedpath,ob(p1el),index,index(obs(b)).t0,'V1L'); end
+    if(~isempty(p2el)) createTAB(derivedpath,ob(p2el),index,index(obs(b)).t0,'V2L'); end
+    if(~isempty(p1eh)) createTAB(derivedpath,ob(p1eh),index,index(obs(b)).t0,'V1H'); end
+    if(~isempty(p2eh)) createTAB(derivedpath,ob(p2eh),index,index(obs(b)).t0,'V2H'); end
+    %Generate N data files
+    if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,index(obs(b)).t0,'I1L');end
+    if(~isempty(p2nl)) createTAB(derivedpath,ob(p2nl),index,index(obs(b)).t0,'I2L');end
+    if(~isempty(p1nh)) createTAB(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H');end
+    if(~isempty(p2nh)) createTAB(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H');end
 
 % 
 %     %Generate E data files
-%     if(~isempty(p1el)) p1el = p1el + obs(b) -1; createTAB(derivedpath,ob(p1el),index,'V1L'); end
-%     if(~isempty(p2el)) p2el = p2el + obs(b) -1; createTAB(derivedpath,ob(p2el),index,'V2L'); end
-%     if(~isempty(p1eh)) p1eh = p1eh + obs(b) -1; createTAB(derivedpath,ob(p1eh),index,'V1H'); end
-%     if(~isempty(p2eh)) p2eh = p2eh + obs(b) -1; createTAB(derivedpath,ob(p2eh),index,'V2H'); end
+%     if(~isempty(p1el)); createTAB(derivedpath,ob(p1el),index,'V1L'); end
+%     if(~isempty(p2el)); createTAB(derivedpath,ob(p2el),index,'V2L'); end
+%     if(~isempty(p1eh)); createTAB(derivedpath,ob(p1eh),index,'V1H'); end
+%     if(~isempty(p2eh)); createTAB(derivedpath,ob(p2eh),index,'V2H'); end
 %     %Generate N data files
-%     if(~isempty(p1nl)) p1nl = p1nl + obs(b) -1; createTAB(derivedpath,ob(p1nl),index,'I1L');end
-%     if(~isempty(p2nl)) p2nl = p2nl + obs(b) -1; createTAB(derivedpath,ob(p2nl),index,'I2L');end
-%     if(~isempty(p1nh)) p1nh = p1nh + obs(b) -1; createTAB(derivedpath,ob(p1nh),index,'I1H');end
-%     if(~isempty(p2nh)) p2nh = p2nh + obs(b) -1; createTAB(derivedpath,ob(p2nh),index,'I2H');end
-% 
-%     
+%     if(~isempty(p1nl)); createTAB(derivedpath,ob(p1nl),index,'I1L');end
+%     if(~isempty(p2nl)); createTAB(derivedpath,ob(p2nl),index,'I2L');end
+%     if(~isempty(p1nh)); createTAB(derivedpath,ob(p1nh),index,'I1H');end
+%     if(~isempty(p2nh)); createTAB(derivedpath,ob(p2nh),index,'I2H');end
 
-end
+    
+end %observation block for loop
+
+%    Mill sweeps in this ob:
+    
+
 % 
-%     Mill sweeps in this ob:
-%     
+%     for(i=1:len);
+%         tabID = fopen(index(ob(p1s(i))).tabfile)
+%         fopen(
+%          [tstr sct ip vb] = textread(index(ob(p1s(i))).tabfile,'%s%f%f%f','delimiter',',');
+%          tstrarray(row,:) = [ts,sct,ip,vb];
+%          row = row + length(sct);
 % 
-% % 
-% %     for(i=1:len);
-% %         tabID = fopen(index(ob(p1s(i))).tabfile)
-% %         fopen(
-% %          [tstr sct ip vb] = textread(index(ob(p1s(i))).tabfile,'%s%f%f%f','delimiter',',');
-% %          tstrarray(row,:) = [ts,sct,ip,vb];
-% %          row = row + length(sct);
-% % 
-% %     end
-%     
-%     
+%     end
+    
+    
 %     if(p1s) 
 %       len = length(p1s);
 %       p1s_params = zeros(len,16); %% returns a zero matrix of len x 16
 %       for(i=1:len)
-%          [tstr sct ip vb] = textread(index(ob(p1s(i))).tabfile,'%s%*f%f%f','delimiter',','); %
+%          [tstr ip vb] = textread(index(ob(p1s(i))).tabfile,'%s%*f%f%f','delimiter',','); %
 %          %converts index of p1s to the filepath of tabfile, read
 %          %string(time), IGNORES float(S/C seconds),float(I),float(V) seperated by comma.
 %          %so tstr = time, ip=current, vb =bias voltage)
-%          ts = datenum(tstr,'yyyy-mm-ddTHH:MM:SS.FFFFFF');
+%          ts = datenum(tstr,'yyyy-mm-ddTHH:MM:SS.FFF');
 %          p1s_params(i,:) = an_swp(ts,vb,ip,1);
 %       end
 %       
@@ -139,7 +139,7 @@ end
 %     end
 %     % params = [t len vb(lastneg) vb(firstpos) vx poli(1) poli(2) pole(1) pole(2) p vbinf diinf d2iinf Tph If0 vs]; 
 %     figure(158);
-% 
+
 %     subplot(4,1,1);
 %     plot(p1s_params(:,1),1e9*p1s_params(:,15),'k.',p2s_params(:,1),1e9*p2s_params(:,15)+7,'r.');
 %     ylim([-15 0])
@@ -183,8 +183,8 @@ end
 %     
 %     samexaxis('join');
 %     drawnow;
-%     
-%     % Mill the HF data in this ob:
+    
+    % Mill the HF data in this ob:
 %     psd_p1eh = [];
 %     psd_p2eh = [];
 %     psd_p1nh = [];
@@ -229,47 +229,47 @@ end
 %         drawnow;
 %     end % End of spectral processing -- note that density mode is not implemented
 %     
-%     % Save spectra:
-%     if(~isempty(psd_p1eh))
-%         fprintf(1,'Saving V1H spectra...\n',i,len)
-%         tabfile = sprintf('%sRPCLAP_VH1_SPEC_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
-%         matfile = strrep(tabfile,'TAB','mat');
-%         [len,cols] = size(psd_p1eh);
-%         fp = fopen(tabfile,'w');
-%         for(j=2:cols)
-%            fprintf(fp,' %f',f1eh(j-1));
-%         end
-%         fprintf(fp,'\n');
-%         for(i=1:len)
-%             fprintf(fp,'%sT%s ',datestr(psd_p1eh(i,1),29),datestr(psd_p1eh(i,1),'HH:MM:SS.FFF'));
-%             for(j=2:cols)
-%                 fprintf(fp,' %f',psd_p1eh(i,j));
-%             end
-%             fprintf(fp,'\n');
-%         end;
-%         fclose(fp);
-%         save(matfile,'f1eh','psd_p1eh');
-%     end
-%     if(~isempty(psd_p2eh))
-%         fprintf(1,'Saving V2H spectra...\n',i,len)
-%         tabfile = sprintf('%sRPCLAP_VH2_SPEC_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
-%         matfile = strrep(tabfile,'TAB','mat');
-%         [len,cols] = size(psd_p2eh);
-%         fp = fopen(tabfile,'w');
-%         for(j=2:cols)
-%            fprintf(fp,' %f',f2eh(j-1));
-%         end
-%         fprintf(fp,'\n');
-%         for(i=1:len)
-%             fprintf(fp,'%sT%s ',datestr(psd_p2eh(i,1),29),datestr(psd_p2eh(i,1),'HH:MM:SS.FFF'));
-%             for(j=2:cols)
-%                 fprintf(fp,' %f',psd_p2eh(i,j));
-%             end
-%             fprintf(fp,'\n');
-%         end;
-%         fclose(fp);
-%         save(matfile,'f1eh','psd_p1eh');
-%     end
+% %     % Save spectra:
+% %     if(~isempty(psd_p1eh))
+% %         fprintf(1,'Saving V1H spectra...\n',i,len)
+% %         tabfile = sprintf('%sRPCLAP_VH1_SPEC_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
+% %         matfile = strrep(tabfile,'TAB','mat');
+% %         [len,cols] = size(psd_p1eh);
+% %         fp = fopen(tabfile,'w');
+% %         for(j=2:cols)
+% % %           fprintf(fp,' %f',f1eh(j-1));
+% %         end
+% %         fprintf(fp,'\n');
+% %         for(i=1:len)
+% %             fprintf(fp,'%sT%s ',datestr(psd_p1eh(i,1),29),datestr(psd_p1eh(i,1),'HH:MM:SS.FFF'));
+% %             for(j=2:cols)
+% %                 fprintf(fp,' %f',psd_p1eh(i,j));
+% %             end
+% %             fprintf(fp,'\n');
+% %         end;
+% %         fclose(fp);
+% %         save(matfile,'f1eh','psd_p1eh');
+% %     end
+% %     if(~isempty(psd_p2eh))
+% %         fprintf(1,'Saving V2H spectra...\n',i,len)
+% %         tabfile = sprintf('%sRPCLAP_VH2_SPEC_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
+% %         matfile = strrep(tabfile,'TAB','mat');
+% %         [len,cols] = size(psd_p2eh);
+% %         fp = fopen(tabfile,'w');
+% %         for(j=2:cols)
+% %            fprintf(fp,' %f',f2eh(j-1));
+% %         end
+% %         fprintf(fp,'\n');
+% %         for(i=1:len)
+% %             fprintf(fp,'%sT%s ',datestr(psd_p2eh(i,1),29),datestr(psd_p2eh(i,1),'HH:MM:SS.FFF'));
+% %             for(j=2:cols)
+% %                 fprintf(fp,' %f',psd_p2eh(i,j));
+% %             end
+% %             fprintf(fp,'\n');
+% %         end;
+% %         fclose(fp);
+% %         save(matfile,'f1eh','psd_p1eh');
+% %     end
 %          
 %     % Mill the V1L data in this ob:
 %     if(p1el)
@@ -343,25 +343,25 @@ end
 % 
 %         % Save data products:
 % 
-%         tabfile = sprintf('%sRPCLAP_VL1_8S_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
-%         matfile = strrep(tabfile,'TAB','mat');
-%         len = length(t81);
-%         fp = fopen(tabfile,'w');
-%         for(i=1:len)
-%             fprintf(fp,'%sT%s,%.6f,%.7e,%.7e,%.0f\n',datestr(t81(i),29),datestr(t81(i),'HH:MM:SS.FFF'),ts81(i),i81(i),v81(i),q81(i));
-%         end;
-%         fclose(fp);
-%         save(matfile,'t81','i81','v81','q81');
-% 
-%         tabfile = sprintf('%sRPCLAP_VL1_32S_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
-%         matfile = strrep(tabfile,'TAB','mat');
-%         len = length(t321);     
-%         fp = fopen(tabfile,'w');
-%         for(i=1:len)
-%             fprintf(fp,'%sT%s,%.6f,%.7e,%.7e,%.0f\n',datestr(t321(i),29),datestr(t321(i),'HH:MM:SS.FFF'),ts321(i),i321(i),v321(i),q321(i));
-%         end;
-%         fclose(fp);
-%         save(matfile,'t321','i321','v321','q321');
+% %         tabfile = sprintf('%sRPCLAP_VL1_8S_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
+% %         matfile = strrep(tabfile,'TAB','mat');
+% %         len = length(t81);
+% %         fp = fopen(tabfile,'w');
+% %         for(i=1:len)
+% %             fprintf(fp,'%sT%s,%.6f,%.7e,%.7e,%.0f\n',datestr(t81(i),29),datestr(t81(i),'HH:MM:SS.FFF'),ts81(i),i81(i),v81(i),q81(i));
+% %         end;
+% %         fclose(fp);
+% %         save(matfile,'t81','i81','v81','q81');
+% % 
+%          tabfile = sprintf('%sRPCLAP_VL1_32S_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
+%          matfile = strrep(tabfile,'TAB','mat');
+% %         len = length(t321);     
+% %         fp = fopen(tabfile,'w');
+% %         for(i=1:len)
+% %             fprintf(fp,'%sT%s,%.6f,%.7e,%.7e,%.0f\n',datestr(t321(i),29),datestr(t321(i),'HH:MM:SS.FFF'),ts321(i),i321(i),v321(i),q321(i));
+% %         end;
+% %         fclose(fp);
+%  %       save(matfile,'t321','i321','v321','q321');
 % 
 %     end % End of V1L processing
 % 
@@ -439,24 +439,24 @@ end
 % 
 %         % Save data products:
 % 
-%         tabfile = sprintf('%sRPCLAP_VL2_8S_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
-%         matfile = strrep(tabfile,'TAB','mat');
-%         len = length(t82);       
-%         fp = fopen(tabfile,'w');
-%         for(i=1:len)
-%             fprintf(fp,'%sT%s,%.6f,%.7e,%.7e,%.0f\n',datestr(t82(i),29),datestr(t82(i),'HH:MM:SS.FFF'),ts82(i),i82(i),v82(i),q82(i));
-%         end;
-%         fclose(fp);
-%         save(matfile,'t82','i82','v82','q82');
-% 
-%         tabfile = sprintf('%sRPCLAP_VL2_32S_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
-%         matfile = strrep(tabfile,'TAB','mat');
-%         len = length(t322);       
-%         fp = fopen(tabfile,'w'); %%w=write
-%         for(i=1:len)
-%             fprintf(fp,'%sT%s,%.6f,%.7e,%.7e,%.0f\n',datestr(t322(i),29),datestr(t322(i),'HH:MM:SS.FFF'),ts322(i),i322(i),v322(i),q322(i));
-%         end;
-%         fclose(fp);
+% %         tabfile = sprintf('%sRPCLAP_VL2_8S_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
+% %         matfile = strrep(tabfile,'TAB','mat');
+% %         len = length(t82);       
+% %         fp = fopen(tabfile,'w');
+% %         for(i=1:len)
+% %             fprintf(fp,'%sT%s,%.6f,%.7e,%.7e,%.0f\n',datestr(t82(i),29),datestr(t82(i),'HH:MM:SS.FFF'),ts82(i),i82(i),v82(i),q82(i));
+% %         end;
+% %         fclose(fp);
+% %         save(matfile,'t82','i82','v82','q82');
+% % 
+% %         tabfile = sprintf('%sRPCLAP_VL2_32S_%s_%s.TAB',outdir,day,datestr(index(obs(b)).t0,'HHMMSS'));
+% %         matfile = strrep(tabfile,'TAB','mat');
+% %         len = length(t322);       
+% %         fp = fopen(tabfile,'w'); %%w=write
+% %         for(i=1:len)
+% %             fprintf(fp,'%sT%s,%.6f,%.7e,%.7e,%.0f\n',datestr(t322(i),29),datestr(t322(i),'HH:MM:SS.FFF'),ts322(i),i322(i),v322(i),q322(i));
+% %         end;
+% %         fclose(fp);
 %         save(matfile,'t322','i322','v322','q322');
 %         
 %     end  % End of V2L processing
@@ -472,4 +472,4 @@ end
 % 
 % 
 % end  % End of this obs block
-  save(tabindexfile,'tabindex');
+ save(tabindexfile,'tabindex');

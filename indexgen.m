@@ -125,8 +125,10 @@ for ii=1:n  % Loop the label files
 
           % Collect index:
           
+          
+          
           index(i).lblfile = lname;
-%           index(i).tabfile = tname;
+          index(i).tabfile = tname;
           index(i).t0str = t0str;
           index(i).t1str = t1str;
           index(i).sct0str = sct0str;

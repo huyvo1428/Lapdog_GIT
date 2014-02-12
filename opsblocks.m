@@ -56,7 +56,7 @@ for j=1:nob
         
         %append to file
         bf = fopen(blockfile,'a');
-        fprintf(bf,'%s   %s   %.0f\n',datestr(tmac0(j),'yyyy-mm-dd HH:MM:SS.FFF'),datestr(tmac1(j),'yyyy-mm-dd HH:MM:SS.FFF'),mac(j));
+        fprintf(bf,'%s,%s,%.0f\n',datestr(tmac0(j),'yyyy-mm-ddTHH:MM:SS.FFF'),datestr(tmac1(j),'yyyy-mm-ddTHH:MM:SS.FFF'),mac(j));
         rcount = rcount + 1; %number of rows
         blockTAB{end,3}=rcount; %change value of rcount of last blockfile
         
@@ -67,6 +67,13 @@ for j=1:nob
         dirY = datestr(tmac0(j),'YYYY');
         dirM = upper(datestr(tmac0(j),'mmm'));
         dirD = strcat('D',datestr(tmac0(j),'dd'));
+        
+        bfolder=strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD);
+        
+   if exist(bfolder,'dir')~=7 %this doesn't work!
+        mkdir(bfolder);
+     end
+        
         
         bfshort = strcat('RPCLAP_',datestr(tmac0(j),'yyyymmdd'),'_000000_BLKLIST.TAB');
         blockfile = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/',bfshort);

@@ -1,4 +1,4 @@
-function []= createTAB(derivedpath,tabind,index,fileflag)
+function []= createTAB(derivedpath,tabind,index,macrotime,fileflag)
 %derivedpath   =  filepath
 %tabind         = data block indices for each measurement type, array
 %index          = index array from earlier creation - Ugly way to remember index
@@ -6,19 +6,23 @@ function []= createTAB(derivedpath,tabind,index,fileflag)
 %fileflag       = identifier for type of data
 
 %    FILE GENESIS
+
 %After Discussion 24/1 2014
-%%FILE CONVENTION: RPCLAP_YYMMDD_hhmmss_MMM_APC
-%%MMM = MacroID, A= Measured quantity (B/I/V)%% , P=Probe number
-%%(1/2/3), C = Mode (H/L/S)
-% B = probe bias voltage file
-% I = Current file, static Vb
-% V = potential
+%FILE CONVENTION: RPCLAP_YYMMDD_hhmmss_MMM_QPO
+% MMM = MacroID,
+% Q= Measured quantity (B/I/V/A)
+% P=Probe number(1/2/3),
+% O = Mode (H/L/S)
 %
-% H = High frequency data
-% L = Low frequency data
-% S = Voltage sweep data (bias voltage file or current file)
-% File should contain Time, spacecraft time, current, bias potential
-%Qualityfactor
+% B = probe bias voltage, exists only for mode = S
+% I = Current , all modes
+% V = Potential , only for mode = H/L
+% A = Derived (analysed) variables results, all modes
+%
+% H = High frequency measurements
+% L = Low frequency measurements
+% S = Voltage sweep measurements 
+
 % TIME STAMP example : 2011-09-05T13:45:20.026075
 %YYYY-MM-DDThh:mm:ss.ffffff % double[s],double[A],double [V],int
 
@@ -30,7 +34,7 @@ tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 
 
 
-filename = sprintf('%sRPCLAP_%s_%s_%d_%s.TAB',tabfolder,datestr(index(tabind(1)).t0,'yyyymmdd'),datestr(index(tabind(1)).t0,'HHMMSS'),index(tabind(1)).macro,fileflag); %%
+filename = sprintf('%sRPCLAP_%s_%s_%d_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),index(tabind(1)).macro,fileflag); %%
 filenamep = strrep(filename,tabfolder,'');
 twID = fopen(filename,'w');
 
@@ -79,15 +83,23 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
 else %% if sweep, do:
     
     filename2 = filename;
-    filename2(end-6) = 'I'; %current data file name according to convention
-%    
+    filename2(end-6) = 'I'; %current data file name according to convention%   
+    filename3 = filename;
+    filename3(end-6) = 'A'; %A for derived  analysis
+    
 %     if exist(filename2,'file')==2 %this doesn't work!
 %         delete('filename2');
 %     end
-    condfile = fopen(filename2,'w');
-    fclose(condfile); %ugly way of deleting if it exists, we need appending filewrite
-    potbias = [];
+    tmpf = fopen(filename2,'w');
+    fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
+    
+    tmpf = fopen(filename3,'w');
+    fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
     condfile = fopen(filename2,'a');
+ 
+    
+    
+    
     for(i=1:len); %read&write loop
         trID = fopen(index(tabind(i)).tabfile);
         scantemp = textscan(trID,'%s%f%f%f','delimiter',',');  
@@ -96,42 +108,77 @@ else %% if sweep, do:
         %potential values change during 4-5 time periods
         step1 = find(diff(scantemp{1,4}(1:end)),1,'first');       
 
-%        scantemp{1,:}(1:step1)    = []; didnt work..., do seperate:
+%         scantemp{1,:}(1:step1)    = []; didnt work..., do separate:
         scantemp{1,1}(1:step1)    = []; 
         scantemp{1,2}(1:step1)    = [];
         scantemp{1,3}(1:step1)    = [];
+        scantemp{1,4}(1:step1)    = [];
 
 
-
-        if (i==1)
-            scantemp{1,4}(1:step1)    = [];
-            potbias = scantemp{1,4}(1:end);
-            reltime = scantemp{1,2}(:)-scantemp{1,2}(1);
-            pottemp = [reltime(:),potbias]; 
+        
+        
+        
+        if (i==1) %do this only once
+            stepnr= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
+            
+            
+            %downsample sweep
+            
+            scan2temp =downsample(scantemp{1,2},stepnr); %needed once
+            potbias =downsample(scantemp{1,4},stepnr); %needed once
+            
+            potlength=length(potbias);
+%             potbias = scan2temp{1,4}(1:end);
+            reltime = scan2temp(:)-scan2temp(1);
+            pottemp = [reltime(:),potbias];
             dlmwrite(filename,pottemp,'-append','precision', '%14.7e'); %also writes \n
             
-        end %end if
+        end
         
+        %due to a bug, the first deleted measurements will lead to a shortage of measurements on the final sweep step 
+        %also, the first erroneous measurements + the number of measurements on
+        %the final step is equal to 8.
+        
+        
+        leee = length(scantemp{1,3});
+        
+        if mod(leee,stepnr)~=0 %if bug didn't end after step completion
+            
+        %otherwise pad matrix with mean value of last row
+            mooo=mod(leee,stepnr);
+            meee = scantemp{1,3}(end-mooo+1:end);
+            scantemp{1,3}(end+1:end+stepnr-mooo) = mean(meee);
+            
+        end
 
- 
-        curtemp = scantemp{1,3}(:).'; %transpose..
+
+        %let's reshape and downsample by mean
+        %        B = reshape(scantemp{1,3}.',stepnr,potlength)';    %do you see those transposes? I need all of them!
+        %        curtemp = mean(B,2);
+        %        clear B mooo meee
+        
+        B = reshape(scantemp{1,3}.',stepnr,potlength);    %I need only one transpose!
+        curtemp = mean(B); %curtemp is now a row vector
+        clear B mooo meee 
+%        scantemp{1,3}(:) = [];
+        
+        
+        %     curtemp = curtemp.'; %transpose..
         fprintf(condfile,'%s,%s,%16.6f,%16.6f,',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
-
-        %fprintf(condfile,'%s,%s,%16.6f,%16.6f,',scantemp{1,1}{1,1}(1:23),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(1),scantemp{1,2}(end));
         dlmwrite(filename2,curtemp,'-append','precision', '%14.7e'); %appends to end of row, column 4. pretty neat.
         
         
         
         
         %excellent time for some analysis!
-        
-        filename3 = filename;
-        filename3(end-6) = 'A'; %A for derived  analysis
-        
+        %
+        %         filename3 = filename;
+        %         filename3(end-6) = 'A'; %A for derived  analysis
+        %
         derived = an_swp(potbias,curtemp,scantemp{1,2}(1,1),filename(end-5));
-        dlmwrite(filename3,derived,-append,'precision','%14,7e');
-        dlmwrite(filename3,derived,-append);            
-      	
+        % dlmwrite(filename3,derived,'-append','precision','%14,7e');
+        dlmwrite(filename3,derived,'-append');
+        
         
         
         
@@ -141,8 +188,8 @@ else %% if sweep, do:
             scanlength = length(scantemp{1,1});
 
             tabindex(end,4:6)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),scanlength}; %one index for bias voltages
-            tabindex(end+1,1:7)={filename2,strrep(filename2,tabfolder,''),tabind(1), scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len,scanlength};
-            tabindex(end+1,1:6)={filename3,sttrep(filenam2,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len};
+            tabindex(end+1,1:7)={filename2,strrep(filename2,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len,scanlength};
+ %           tabindex(end+1,1:6)={filename3,strrep(filename3,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len};
             %one index for currents and two timestamps
             
             %remember stop time in universal time and spaceclock time
@@ -152,6 +199,7 @@ else %% if sweep, do:
             %rows & no of columns (+4)
         end
         fclose(trID); %close read file, terminated each new read iteration
+        clear scantemp;
     end
     fclose(condfile); %write file nr 2, condensed data, terminated asap
     
