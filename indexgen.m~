@@ -142,7 +142,9 @@ for ii=1:n  % Loop the label files
           index(i).sweep = sweep;
           index(i).efield = efield;
           index(i).probe = probe;
-         
+          
+          if(daysact(to,t1)==1
+              e
           
           
       end %end of fopen error message constraint

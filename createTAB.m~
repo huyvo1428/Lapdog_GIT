@@ -113,6 +113,7 @@ else %% if sweep, do:
 %     end
     tmpf = fopen(filename2,'w');
     fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
+    
     tmpf = fopen(filename3,'w');
     fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
     condfile = fopen(filename2,'a');
@@ -172,6 +173,10 @@ else %% if sweep, do:
         end
 
 
+        %let's reshape and downsample by mean
+        %        B = reshape(scantemp{1,3}.',stepnr,potlength)';    %do you see those transposes? I need all of them!
+        %        curtemp = mean(B,2);
+        %        clear B mooo meee
         
         B = reshape(scantemp{1,3}.',stepnr,potlength);    %I need only one transpose!
         curtemp = mean(B); %curtemp is now a row vector
@@ -195,7 +200,11 @@ else %% if sweep, do:
         % dlmwrite(filename3,derived,'-append','precision','%14,7e');
         dlmwrite(filename3,derived,'-append');
         
-    
+        
+        
+        
+        
+        
         if (i==len)
             scanlength = length(scantemp{1,1});
 
