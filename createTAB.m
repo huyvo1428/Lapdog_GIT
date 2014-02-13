@@ -60,21 +60,6 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
        % bytes = 0;
         
        
-        if(i==len) %check if new calendar day
-             for (j=1:scanlength)  
-                   linet1 = datenum(strrep(scantemp{1,1}{j,1},'T',' ')); %fix format of timestring, and get time
-            
-            
-            
-               if (daysact(index(tabind(1)).t0, linet1)==1;
-                   flag = 1;
-                   flagarray = 
-                   
-               end
-             end
-        end
-        
-       
        
         for (j=1:scanlength)        
 

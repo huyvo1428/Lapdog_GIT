@@ -28,6 +28,13 @@ else
     indexgen;
 end
 
+
+indexcorr;
+
+indexfile = strrep(indexfile,'/index','/indexcorr');
+save(indexfile,'index');
+
+
 % Generate daily geometry files:
 if(do_geom)
   'lapdog: calling geometry...'
