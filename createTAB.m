@@ -64,7 +64,7 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
         for (j=1:scanlength)        
 
             %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-            fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+            fprintf(twID,'%s,%16.6f,%14.7e,%14.7e\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
             %fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
         end
         
@@ -165,7 +165,7 @@ else %% if sweep, do:
         
         
         %     curtemp = curtemp.'; %transpose..
-        fprintf(condfile,'%s,%s,%16.6f,%16.6f,',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
+        fprintf(condfile,'%s,%s,%16.6f,%16.6f',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
         dlmwrite(filename2,curtemp,'-append','precision', '%14.7e'); %appends to end of row, column 4. pretty neat.
         
         

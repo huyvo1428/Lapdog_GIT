@@ -12,7 +12,7 @@ for(i=1:len)
     tname = tabindex{i,2};
     lname=strrep(tname,'TAB','LBL');
     
-    [fp,errmess] = fopen(index(tabindex{i,3}).lblfile,'r');
+    [fp,errmess] = fopen(index(tabindex{i,3}).lblfile,'r'); %Problematic for indexes created in indexcorr )Files split at midnight)
     tempfp = textscan(fp,'%s %s','Delimiter','=');
     fclose(fp);
     

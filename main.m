@@ -31,7 +31,7 @@ end
 
 indexcorr;
 
-indexfile = strrep(indexfile,'/index','/indexcorr');
+%indexfile = strrep(indexfile,'/index','/indexcorr');
 save(indexfile,'index');
 
 
