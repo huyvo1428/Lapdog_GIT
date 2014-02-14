@@ -26,13 +26,15 @@ if(fp > 0)
 else
     'lapdog: calling indexgen...'
     indexgen;
+    'lapdog: splitting files at midnight..'
+    indexcorr;
+    save(indexfile,'index');
+    
 end
 
-
-indexcorr;
-
-%indexfile = strrep(indexfile,'/index','/indexcorr');
-save(indexfile,'index');
+%indexcorr;
+%indexcorr
+%save(indexfile,'index');
 
 
 % Generate daily geometry files:

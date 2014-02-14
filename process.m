@@ -24,9 +24,7 @@ tabindex = {};
 for b = 1:nob   % Loop through all ops blocks
     
 
-    
-    
-    %b=nob;
+   
 %    blist = fopen(
     
     day = datestr(index(obs(b)).t0,'yyyymmdd');  % convert block start time index to time string, convert to yyyymmdd format 

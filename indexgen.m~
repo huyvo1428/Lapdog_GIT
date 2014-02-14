@@ -152,7 +152,7 @@ end
 % The number of filled index entries are now i, while n was the number
 % allocated. Remove the unfilled ones.
 if(n > i)
-    index((i+1):n) = [];
+    index((i):n) = [];
 end
 
 

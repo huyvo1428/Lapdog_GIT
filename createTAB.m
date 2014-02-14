@@ -49,8 +49,11 @@ len = length(tabind);
 counttemp = 0;
 %tot_bytes = 0;
 if(~index(tabind(1)).sweep); %% if not a sweep, do:
+    
     for(i=1:len);
         trID = fopen(index(tabind(i)).tabfile);
+    
+        
         
         scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
         scanlength = length(scantemp{1,1});
