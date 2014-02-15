@@ -45,6 +45,9 @@ tabindex{end,3} = tabind(1); %% and the first index number
 
 
 
+t=[];
+
+
 len = length(tabind);
 counttemp = 0;
 %tot_bytes = 0;
@@ -70,11 +73,9 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
             fprintf(twID,'%s,%16.6f,%14.7e,%14.7e\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
             %fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
         end
-        
-        
-        
-        
-        
+
+
+
         
         if (i==len)
             tabindex{end,4}= scantemp{1,1}{end,1}; %%remember stop time in universal time and spaceclock time
@@ -207,6 +208,10 @@ end
 fclose(twID); %write file nr 1
 
 
+                    
+                    
+                    
+                    
 end
 
 
