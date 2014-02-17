@@ -1,5 +1,5 @@
 
-%% analysis
+% analysis
 
 
 
@@ -20,7 +20,6 @@ andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));
 
 ind_I1H= find(strcmp('I1H', antype));
 ind_I2H= find(strcmp('I2H', antype));
-
 ind_I1L= find(strcmp('I1L', antype));
 ind_I2L= find(strcmp('I2L', antype));
 
@@ -42,7 +41,7 @@ end
 if(~isempty(ind_I2L))
     
     an_daily(ind_I2L,'I',2,'L',tabindex,8)
-     an_daily(ind_I2L,'I',2,'L',tabindex,32)
+    an_daily(ind_I2L,'I',2,'L',tabindex,32)
 end
 
 if(~isempty(ind_V1L))
