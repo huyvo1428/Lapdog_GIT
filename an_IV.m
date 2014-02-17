@@ -44,7 +44,52 @@ ind_V2H= find(strcmp('V2H', antype));
 if(~isempty(ind_I1L))
     
     an_daily(ind_I1L,'I',1,'L',tabindex,8)
+    an_daily(ind_I1L,'I',1,'L',tabindex,32)
+end
+
+if(~isempty(ind_I2L))
+    
+    an_daily(ind_I2L,'I',1,'L',tabindex,8)
+     an_daily(ind_I2L,'I',1,'L',tabindex,32)
+end
+
+if(~isempty(ind_V1L))
+    
+    an_daily(ind_V1L,'I',1,'L',tabindex,8)
+    an_daily(ind_V1L,'I',1,'L',tabindex,32)
+end
+
+if(~isempty(ind_V2L))
+    
+    an_daily(ind_V2L,'I',1,'L',tabindex,8)
+    an_daily(ind_V2L,'I',1,'L',tabindex,32)
+end
+
+
+if(~isempty(ind_V2H))
+    
+    an_daily(ind_V2H,'I',1,'L',tabindex,8)
+    an_daily(ind_V2H,'I',1,'L',tabindex,32)
+end
+
+if(~isempty(ind_V1H))
+    
+    an_daily(ind_V1H,'I',1,'L',tabindex,8)
+    an_daily(ind_V1H,'I',1,'L',tabindex,32)
     
 end
 
+
+if(~isempty(ind_I1H))
+    
+    an_daily(ind_I1H,'I',1,'L',tabindex,8)
+    an_daily(ind_I1H,'I',1,'L',tabindex,32)
+    
+end
+if(~isempty(ind_I2H))
+    
+    an_daily(ind_I2H,'I',1,'L',tabindex,8)
+    an_daily(ind_I2H,'I',1,'L',tabindex,32)
+    
+end
 
