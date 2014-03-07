@@ -23,7 +23,7 @@ foutarr=cell(1,7);
 for i=1:length(an_ind)
     
     arID = fopen(tabindex{an_ind(i),1},'r');
-    scantemp=textscan(arID,'%s%f%f%f','delimiter',',');
+    scantemp=textscan(arID,'%s%f%f%f%i','delimiter',',');
     fclose(arID);
     
     UTCpart1 = scantemp{1,1}{1,1}(1:11);
@@ -35,7 +35,7 @@ for i=1:length(an_ind)
        
         %For LBL file genesis later, we need an index with name, shortname,
         %original file  
-        an_tabindex{end+1,1} = afname;
+        an_tabindex{end+1,1} = afname; %#ok<*AGROW>
         an_tabindex{end,2} = strrep(afname,affolder,'');
         an_tabindex{end,3} = tabindex{an_ind(i-count),3}; %first calib data file index of first derived file in this set
         an_tabindex{end,4} = length(foutarr{1,3}); %number of rows
@@ -216,7 +216,7 @@ for i=1:length(an_ind)
     
 
     
-end%for main for loops
+end%for main loop
 end%function
 
 
