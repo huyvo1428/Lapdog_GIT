@@ -50,8 +50,10 @@ len = length(vb);
 [vb,ind] = sort(vb);
 ip = ip(ind);
 
+
+
 % Look for zero crossing interval:
-if((min(ip) >= 0) | (max(ip) <= 0))
+if((min(ip) >= 0) || (max(ip) <= 0))
     % No zero crossing in this case
 	lastneg = NaN;
 	firstpos = NaN;
@@ -59,7 +61,7 @@ else
 	lastneg = max(find(ip<0));
 	firstpos = min(find(ip>0));
 end
-if(isnan(lastneg) | isnan(firstpos))
+if(isnan(lastneg) || isnan(firstpos))
 	par = 2;
 	return;
 end
