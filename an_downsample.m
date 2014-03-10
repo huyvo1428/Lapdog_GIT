@@ -23,7 +23,8 @@ foutarr=cell(1,7);
 for i=1:length(an_ind)
     
     arID = fopen(tabindex{an_ind(i),1},'r');
-    scantemp=textscan(arID,'%s%f%f%f%i','delimiter',',');
+%    scantemp=textscan(arID,'%s%f%f%f%i','delimiter',',');
+    scantemp=textscan(arID,'%s%f%f%f','delimiter',',');
     fclose(arID);
     
     UTCpart1 = scantemp{1,1}{1,1}(1:11);
@@ -40,15 +41,19 @@ for i=1:length(an_ind)
         an_tabindex{end,3} = tabindex{an_ind(i-count),3}; %first calib data file index of first derived file in this set
         an_tabindex{end,4} = length(foutarr{1,3}); %number of rows
         an_tabindex{end,5} = 6; %number of columns
-        
-        
-        
-        for j=0:count
-            antemp = sprintf('%s,%i',antemp,an_ind(i-count+j));
+
+        for j=(i-count):i
+            
+            antemp = sprintf('%s,%i',antemp,an_ind(j));
             
         end
+        antemp = antemp(2:end); %trim the first comma.
         
         an_tabindex{end,6} = antemp; %all tabindex indicies of this set.
+        
+        an_tabindex{end,7} = 'downsample'; %type
+        
+        
         
         
         
@@ -56,7 +61,7 @@ for i=1:length(an_ind)
         
         awID= fopen(afname,'w');
         
-        for j =1:length(foutarr{1,3})
+        for j =1:length(foutarr{1,3}) %PRINT LOOP #1
             
             if foutarr{1,7}(j)~=1 %check if measurement data exists on row
                 
@@ -96,7 +101,7 @@ for i=1:length(an_ind)
         %afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-6:end),sprintf('%s%i%s%iSEC.TAB',flag1,p,flag3,intval));
         
        
-        afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-17:end-8),sprintf('DWNSMPL_%03i',intval));
+        afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-17:end-8),sprintf('DWNSMP_%02iS',intval));
         affolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
         
         
@@ -171,13 +176,20 @@ for i=1:length(an_ind)
         an_tabindex{end,4} = length(foutarr{1,3}); %number of rows
         an_tabindex{end,5} = 6; %number of columns
         
-         
-        for j=0:count
-            antemp = sprintf('%s,%i',antemp,an_ind(i-count+j));
+
+        for j=(i-count):i
+            
+            antemp = sprintf('%s,%i',antemp,an_ind(j));
             
         end
         
+        antemp = antemp(2:end); %trim the first comma.
+        
+        
         an_tabindex{end,6} = antemp; %all tabindex indicies of this set.
+        an_tabindex{end,7} = 'downsample'; %type
+        
+        
         
                   
         
@@ -187,11 +199,10 @@ for i=1:length(an_ind)
         for j =1:length(foutarr{1,3})
             
             if foutarr{1,7}(j)~=1 %check if measurement data exists on row
-                fprintf(awID,'%s, %16.6f,,,,\n',foutarr{1,1}{j,1},foutarr{1,2}(j));
-                
+                %fprintf(awID,'%s, %16.6f,,,,\n',foutarr{1,1}{j,1},foutarr{1,2}(j));
+                % Don't print zero values.
             else
                 fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',foutarr{1,1}{j,1},foutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
-                
             end%if
             
         end%for

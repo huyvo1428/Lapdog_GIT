@@ -12,7 +12,7 @@ for(i=1:len)
     tname = tabindex{i,2};
     lname=strrep(tname,'TAB','LBL');
     
-    [fp,errmess] = fopen(index(tabindex{i,3}).lblfile,'r'); %Problematic for indexes created in indexcorr )Files split at midnight)
+    [fp,errmess] = fopen(index(tabindex{i,3}).lblfile,'r'); %Problematic for indexes created in indexcorr (Files split at midnight)
     tempfp = textscan(fp,'%s %s','Delimiter','=');
     fclose(fp);
     
@@ -194,3 +194,114 @@ end
 %% Derived results .LBL files
 
 
+
+len=length(an_tabindex(:,1));
+
+for(i=1:len)
+     
+    %tabindex cell array = {tab file name, first index number of batch,
+    % UTC time of last row, S/C time of last row, row counter}
+    %    units: [cell array] =  {[string],[double],[string],[float],[integer]
+    
+    % Write label file:
+
+    
+    %[fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r'); %Problematic for indices created in indexcorr (Files split at midnight)
+    %tempfp = textscan(fp,'%s %s','Delimiter','=');
+    %fclose(fp);
+
+    tname = an_tabindex{i,2};
+        tabi0 = str2double(an_tabindex{i,6}{1,1}(1:2)); %%tabindex index of first tabfilein
+    tabi1 = str2double(an_tabindex{i,6}{1,1}(end-1:end)); %%tabindex of last tabfile
+    lname=strrep(tname,'TAB','LBL');
+    
+    al = fopen(strrep(an_tabindex{i,1},'TAB','LBL'),'w');
+    
+    
+    fprintf(al,'PDS_VERSION_ID = PDS3\n');
+    fprintf(al,'RECORD_TYPE = FIXED_LENGTH\n');
+      fileinfo = dir(an_tabindex{i,1});
+    fprintf(al,'RECORD_BYTES = %d\n',fileinfo.bytes);
+    fprintf(al,'FILE_RECORDS = %d\n',an_tabindex{i,6});
+    fprintf(al,'FILE_NAME = "%s"\n',lname);
+    fprintf(al,'^TABLE = "%s"\n',tname);
+    fprintf(al,'DATA_SET_ID = "%s"\n',datasetid);
+    fprintf(al,'DATA_SET_NAME = "%s"\n',datasetname);
+    fprintf(al,'DATA_QUALITY_ID = 1\n');
+    fprintf(al,'MISSION_ID = ROSETTA\n');
+    fprintf(al,'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\n');
+    fprintf(al,'MISSION_PHASE_NAME = "%s"\n',missionphase);
+    fprintf(al,'PRODUCER_INSTITUTION_NAME = "SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"\n');
+    fprintf(al,'PRODUCER_ID = FJ\n');
+    fprintf(al,'PRODUCER_FULL_NAME = "Fredrik Johansson"\n');
+    fprintf(al,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
+    mm = length(tname);
+    fprintf(al,'PRODUCT_ID = "%s"\n',tname(1:(mm-4)));
+    fprintf(al,'PRODUCT_TYPE = "EDR"\n');  % No idea what this means...
+    fprintf(al,'PRODUCT_CREATION_TIME = %s\n',datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
+    fprintf(al,'INSTRUMENT_HOST_ID = RO\n');
+    fprintf(al,'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\n');
+    fprintf(al,'INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\n');
+    fprintf(al,'INSTRUMENT_ID = RPCLAP\n');
+    fprintf(al,'INSTRUMENT_TYPE = "PLASMA INSTRUMENT"\n');
+    fprintf(al,'TARGET_NAME = "%s"\n',targetfullname);
+    fprintf(al,'TARGET_TYPE = "%s"\n',targettype);
+    fprintf(al,'PROCESSING_LEVEL_ID = %d\n',4);
+
+    %looks messy, but I'm finding the first original index used in this
+    %file, and outputting it's start time, as well as the index of the
+    %last file used, to output the stop time. There are easier ways, but
+    %not as accurate.
+    fprintf(al,'START_TIME  = %s\n',index(tabindex{tabi0,3}).t0str);
+    fprintf(al,'STOP_TIME  = %s\n',tabindex{tabi1,4});
+    fprintf(al,'SPACECRAFT_CLOCK_START_COUNT  = %s\n',index(tabindex{tabi0,3}).sct0str(5:end-1);
+    fprintf(al,'SPACECRAFT_CLOCK_STOP_COUNT  = %16.6f\n',tabindex{tabi1,5});
+    fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
+    fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
+    fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
+    
+
+    
+%     tempfp{1,2}{28,1} = index(tabindex{tabi0,3}).t0str; %UTC start time
+%     tempfp{1,2}{29,1} = tabindex{tabi1,4};             % UTC stop time
+%     tmpsct0 = index(tabindex{tabi0,3}).sct0str(5:end-1);
+%     tempfp{1,2}{30,1} = tmpsct0;                    %% sc start time
+%     tempfp{1,2}{31,1} = sprintf('%16.6f',tabindex{tabi1,5}); %% sc stop time
+    
+    if strcmp(an_tabindex{i,7}{1,1},'downsample')
+        
+%  fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',foutarr{1,1}{j,1},foutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
+%      23, 16, 14, 14, 14, 14
+%      = 2*5+23+16+14*4 = 105
+        
+        fprintf(al,'ROW_BYTES = 105\n');   %%row_bytes here!!!
+        
+        fprintf(al,'DESCRIPTION = "BLOCKLIST DATA. START & STOP TIME OF MACROBLOCK AND MACROID."\n');
+        
+        
+        fprintf(al,'OBJECT = COLUMN\n');
+        fprintf(al,'NAME = TIME_UTC\n');
+        fprintf(al,'DATA_TYPE = TIME\n');
+        fprintf(al,'START_BYTE = 1\n');
+        fprintf(al,'BYTES = 23\n');
+        fprintf(al,'UNIT = SECONDS\n');
+        fprintf(al,'DESCRIPTION = "START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss"\n');
+        fprintf(al,'END_OBJECT  = COLUMN\n');
+        
+
+        
+        
+        
+        fprintf(al,'OBJECT = COLUMN\n');
+        fprintf(al,'NAME = MACRO_ID\n');
+        fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+        fprintf(al,'START_BYTE = 48\n');
+        fprintf(al,'BYTES = 3\n');
+        fprintf(al,'DESCRIPTION = "MACRO IDENTIFICATION NUMBER"\n');
+        fprintf(al,'END_OBJECT  = COLUMN\n');
+        fprintf(al,'END');
+        fclose(al);
+        
+    end
+    
+end
