@@ -2,8 +2,10 @@
 % analysis
 
 
-global an_tabindex;
 
+
+global an_tabindex;
+an_tabindex = [];
 
 %for i=1:length(tabindex);
 
@@ -38,25 +40,25 @@ ind_V2H= find(strcmp('V2H', antype));
 
 %send mode datatasets to downsampler function
 if(~isempty(ind_I1L))
-    an_downsample(ind_I1L,tabindex,8)
+    %an_downsample(ind_I1L,tabindex,8)
     an_downsample(ind_I1L,tabindex,32)
 end
 
 if(~isempty(ind_I2L))
 
-    an_downsample(ind_I2L,tabindex,8)
+   % an_downsample(ind_I2L,tabindex,8)
     an_downsample(ind_I2L,tabindex,32)
 end
 
 if(~isempty(ind_V1L))
 
-    an_downsample(ind_V1L,tabindex,8)
+   % an_downsample(ind_V1L,tabindex,8)
     an_downsample(ind_V1L,tabindex,32)
 end
 
 if(~isempty(ind_V2L))
 
-    an_downsample(ind_V2L,tabindex,8)
+  %  an_downsample(ind_V2L,tabindex,8)
     an_downsample(ind_V2L,tabindex,32)
 end
 

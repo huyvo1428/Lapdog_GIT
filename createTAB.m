@@ -197,7 +197,7 @@ else %% if sweep, do:
         
         
         fprintf(condfile,'%s, %s, %16.6f, %16.6f',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
-        dlmwrite(filename2,curtemp,'-append','precision', '%14.7e', 'delimiter', ', '); %appends to end of row, column 4. pretty neat.
+        dlmwrite(filename2,curtemp,'-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 4. pretty neat.
         
         curtemp = curtemp.'; %transpose..
         
@@ -209,6 +209,8 @@ else %% if sweep, do:
         %
         
        
+        
+        
         
         [Vb,ind]=sort(potbias);
         

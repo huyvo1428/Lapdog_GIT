@@ -26,7 +26,7 @@ for(i=1:len)
     
     fileinfo = dir(tabindex{i,1});
     tempfp{1,2}{3,1} = sprintf('%d',fileinfo.bytes);
-    tempfp{1,2}{4,1} = sprintf('%d',tabindex{i,6});
+    tempfp{1,2}{4,1} = sprintf('%d',tabindex{i,4});
     tempfp{1,2}{5,1} = lname;
     tempfp{1,2}{6,1} = tname;
     tempfp{1,2}{16,1} = sprintf('"%s, %s, %s"',lbltime,lbleditor,lblrev);
@@ -198,21 +198,21 @@ end
 len=length(an_tabindex(:,1));
 
 for(i=1:len)
-     
+    
     %tabindex cell array = {tab file name, first index number of batch,
     % UTC time of last row, S/C time of last row, row counter}
     %    units: [cell array] =  {[string],[double],[string],[float],[integer]
     
     % Write label file:
-
+    
     
     %[fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r'); %Problematic for indices created in indexcorr (Files split at midnight)
     %tempfp = textscan(fp,'%s %s','Delimiter','=');
     %fclose(fp);
-
+    
     tname = an_tabindex{i,2};
-        tabi0 = str2double(an_tabindex{i,6}{1,1}(1:2)); %%tabindex index of first tabfilein
-    tabi1 = str2double(an_tabindex{i,6}{1,1}(end-1:end)); %%tabindex of last tabfile
+    tabi0 = str2double(an_tabindex{i,6}(1:2)); %%tabindex index of first tabfilein
+    tabi1 = str2double(an_tabindex{i,6}(end-1:end)); %%tabindex of last tabfile
     lname=strrep(tname,'TAB','LBL');
     
     al = fopen(strrep(an_tabindex{i,1},'TAB','LBL'),'w');
@@ -220,7 +220,7 @@ for(i=1:len)
     
     fprintf(al,'PDS_VERSION_ID = PDS3\n');
     fprintf(al,'RECORD_TYPE = FIXED_LENGTH\n');
-      fileinfo = dir(an_tabindex{i,1});
+    fileinfo = dir(an_tabindex{i,1});
     fprintf(al,'RECORD_BYTES = %d\n',fileinfo.bytes);
     fprintf(al,'FILE_RECORDS = %d\n',an_tabindex{i,6});
     fprintf(al,'FILE_NAME = "%s"\n',lname);
@@ -247,36 +247,39 @@ for(i=1:len)
     fprintf(al,'TARGET_NAME = "%s"\n',targetfullname);
     fprintf(al,'TARGET_TYPE = "%s"\n',targettype);
     fprintf(al,'PROCESSING_LEVEL_ID = %d\n',4);
-
+    
     %looks messy, but I'm finding the first original index used in this
     %file, and outputting it's start time, as well as the index of the
     %last file used, to output the stop time. There are easier ways, but
     %not as accurate.
     fprintf(al,'START_TIME  = %s\n',index(tabindex{tabi0,3}).t0str);
     fprintf(al,'STOP_TIME  = %s\n',tabindex{tabi1,4});
-    fprintf(al,'SPACECRAFT_CLOCK_START_COUNT  = %s\n',index(tabindex{tabi0,3}).sct0str(5:end-1);
+    fprintf(al,'SPACECRAFT_CLOCK_START_COUNT  = %s\n',index(tabindex{tabi0,3}).sct0str(5:end-1));
     fprintf(al,'SPACECRAFT_CLOCK_STOP_COUNT  = %16.6f\n',tabindex{tabi1,5});
+    fprintf(al,'OBJECT = TABLE\n');
     fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
     fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
     fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
     
-
     
-%     tempfp{1,2}{28,1} = index(tabindex{tabi0,3}).t0str; %UTC start time
-%     tempfp{1,2}{29,1} = tabindex{tabi1,4};             % UTC stop time
-%     tmpsct0 = index(tabindex{tabi0,3}).sct0str(5:end-1);
-%     tempfp{1,2}{30,1} = tmpsct0;                    %% sc start time
-%     tempfp{1,2}{31,1} = sprintf('%16.6f',tabindex{tabi1,5}); %% sc stop time
     
-    if strcmp(an_tabindex{i,7}{1,1},'downsample')
+    %     tempfp{1,2}{28,1} = index(tabindex{tabi0,3}).t0str; %UTC start time
+    %     tempfp{1,2}{29,1} = tabindex{tabi1,4};             % UTC stop time
+    %     tmpsct0 = index(tabindex{tabi0,3}).sct0str(5:end-1);
+    %     tempfp{1,2}{30,1} = tmpsct0;                    %% sc start time
+    %     tempfp{1,2}{31,1} = sprintf('%16.6f',tabindex{tabi1,5}); %% sc stop time
+    
+    if strcmp(an_tabindex{i,7},'downsample')
         
-%  fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',foutarr{1,1}{j,1},foutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
-%      23, 16, 14, 14, 14, 14
-%      = 2*5+23+16+14*4 = 105
+        mode = tname(end-6:end-4);
+        Pnum = tname(end-5);
+        %  fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',foutarr{1,1}{j,1},foutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
+        %      23, 16+1, 14+1, 14+1, 14+1, 14+1
+        %      = 2*5+23+17+15*4 = 110
         
-        fprintf(al,'ROW_BYTES = 105\n');   %%row_bytes here!!!
+        fprintf(al,'ROW_BYTES = 110\n');   %%row_bytes here!!!
         
-        fprintf(al,'DESCRIPTION = "BLOCKLIST DATA. START & STOP TIME OF MACROBLOCK AND MACROID."\n');
+        fprintf(al,'DESCRIPTION = "DOWNSAMPLED MEASUREMENT"\n');
         
         
         fprintf(al,'OBJECT = COLUMN\n');
@@ -287,18 +290,60 @@ for(i=1:len)
         fprintf(al,'UNIT = SECONDS\n');
         fprintf(al,'DESCRIPTION = "START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss"\n');
         fprintf(al,'END_OBJECT  = COLUMN\n');
-        
+                
+        fprintf(al,'OBJECT = COLUMN\n');
+        fprintf(al,'NAME = OBT_TIME\n');
+        fprintf(al,'START_BYTE = 26\n');
+        fprintf(al,'BYTES = 16\n'); %
+        fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+        fprintf(al,'UNIT = SECONDS\n');
+        fprintf(al,'DESCRIPTION = "SPACE CRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
+        fprintf(al,'END_OBJECT  = COLUMN\n');
+        fprintf(al,'\n');
 
-        
-        
+        fprintf(al,'OBJECT = COLUMN\n');
+        fprintf(al,'NAME = P%s_CURRENT\n',Pnum);
+        fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+        fprintf(al,'START_BYTE = 45\n');
+        fprintf(al,'BYTES = 13\n');
+        fprintf(al,'UNIT = AMPERE\n');
+        fprintf(al,'FORMAT = E14.7\n');
+        fprintf(al,'DESCRIPTION = "AVERAGED CURRENT"\n');
+        fprintf(al,'END_OBJECT  = COLUMN\n');
+        fprintf(al,'\n');
         
         fprintf(al,'OBJECT = COLUMN\n');
-        fprintf(al,'NAME = MACRO_ID\n');
+        fprintf(al,'NAME = P%s_CURRENT_STDDEV\n',Pnum);
         fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-        fprintf(al,'START_BYTE = 48\n');
-        fprintf(al,'BYTES = 3\n');
-        fprintf(al,'DESCRIPTION = "MACRO IDENTIFICATION NUMBER"\n');
+        fprintf(al,'START_BYTE = 61\n');
+        fprintf(al,'BYTES = 13\n');
+        fprintf(al,'UNIT = AMPERE\n');
+        fprintf(al,'FORMAT = E14.7\n');
+        fprintf(al,'DESCRIPTION = "CURRENT STANDARD DEVIATION"\n');
         fprintf(al,'END_OBJECT  = COLUMN\n');
+        fprintf(al,'\n');
+        
+        fprintf(al,'OBJECT = COLUMN\n');
+        fprintf(al,'NAME = P%s_VOLT\n',Pnum);
+        fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+        fprintf(al,'START_BYTE = 77\n');
+        fprintf(al,'BYTES = 13\n');
+        fprintf(al,'UNIT = VOLT\n');
+        fprintf(al,'FORMAT = E14.7\n');
+        fprintf(al,'DESCRIPTION = "AVERAGED MEASURED VOLTAGE"\n');
+        fprintf(al,'END_OBJECT  = COLUMN\n');       
+                
+        fprintf(al,'OBJECT = COLUMN\n');
+        fprintf(al,'NAME = P%s_VOLT_STDDEV\n',Pnum);
+        fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+        fprintf(al,'START_BYTE = 93\n');
+        fprintf(al,'BYTES = 13\n');
+        fprintf(al,'UNIT = VOLT\n');
+        fprintf(al,'FORMAT = E14.7\n');
+        fprintf(al,'DESCRIPTION = "VOLTAGE STANDARD DEVIATION"\n');
+        fprintf(al,'END_OBJECT  = COLUMN\n');
+        
+        fprintf(al,'END_OBJECT  = TABLE\n');
         fprintf(al,'END');
         fclose(al);
         

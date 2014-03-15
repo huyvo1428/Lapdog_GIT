@@ -49,8 +49,8 @@ for i=1:length(an_ind)
         end
         antemp = antemp(2:end); %trim the first comma.
         
-        an_tabindex{end,6} = antemp; %all tabindex indicies of this set.
-        
+        an_tabindex{end,6} = antemp; %all tabindex indicies of this set.   
+        antemp = '';
         an_tabindex{end,7} = 'downsample'; %type
         
         
@@ -141,7 +141,12 @@ for i=1:length(an_ind)
      %intervals specified from beginning of day, in intervals of intval,
      %and the variable inter marks which interval the data in the file is related to
    
-    
+     
+ 
+     
+     
+     
+     
     
     imu = accumarray(inter,scantemp{1,3}(:),[],@mean); %select measurements during specific intervals, accumulate mean to array and print zero otherwise
     isd = accumarray(inter,scantemp{1,3}(:),[],@std); %select measurements during specific intervals, accumulate standard deviation to array and print zero otherwise
@@ -149,6 +154,11 @@ for i=1:length(an_ind)
     vmu = accumarray(inter,scantemp{1,4}(:),[],@mean);
     vsd = accumarray(inter,scantemp{1,4}(:),[],@std);
     
+    dimu = accumarray(inter,scantemp{1,5}(:),[],@mean);
+    disd = accumarray(inter,scantemp{1,5}(:),[],@std);
+    dvmu = accumarray(inter,scantemp{1,6}(:),[],@mean);
+    dvmu = accumarray(inter,scantemp{1,6}(:),[],@std);
+
     
     
     
@@ -157,6 +167,52 @@ for i=1:length(an_ind)
     foutarr{1,5}(inter(1):inter(end),1)=vmu(inter(1):inter(end));
     foutarr{1,6}(inter(1):inter(end),1)=vsd(inter(1):inter(end));
     foutarr{1,7}(inter(1):inter(end),1)=1; %%flag to determine if row should be written.
+    
+    
+    
+    
+        
+     if intval ==32 %%analysis if
+         
+         for j = 2: length(scantemp{1,2})-1
+             
+             %leapfrog derivative method
+             scantemp{1,5}(j)=scantemp{1,3}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%di/dt
+             scantemp{1,6}(j)=scantemp{1,4}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dV/dt
+
+         end%for
+         
+         dimu = accumarray(inter,scantemp{1,5}(:),[],@mean);
+         disd = accumarray(inter,scantemp{1,5}(:),[],@std);
+         dvmu = accumarray(inter,scantemp{1,6}(:),[],@mean);
+         dvsd = accumarray(inter,scantemp{1,6}(:),[],@std);
+         
+         
+         afoutarr=foutarr;
+         
+         afoutarr{1,8}(inter(1):inter(end),1)=dimu(inter(1):inter(end));
+         afoutarr{1,9}(inter(1):inter(end),1)=disd(inter(1):inter(end));
+         afoutarr{1,10}(inter(1):inter(end),1)=dvmu(inter(1):inter(end));
+         afoutarr{1,11}(inter(1):inter(end),1)=dvsd(inter(1):inter(end));
+         
+         
+         
+         mode = afname(end-6);
+         
+         if mode == 'V' %analyse electric field mode
+             
+             
+             an_Emode(afoutarr);
+             
+         elseif mode == 'I' %analyse density mode
+             
+             an_Nmode(afoutarr);
+             
+         end%if
+         
+     end%if
+    
+        
     
     
     
@@ -187,6 +243,7 @@ for i=1:length(an_ind)
         
         
         an_tabindex{end,6} = antemp; %all tabindex indicies of this set.
+        antemp = '';
         an_tabindex{end,7} = 'downsample'; %type
         
         
@@ -214,7 +271,7 @@ for i=1:length(an_ind)
         
       
         fclose(awID);
-        %clear foutarr %not really needed, will not exist outside of function anyway.
+        %clear foutarr  %not really needed, will not exist outside of function anyway.
     end%if
     
     
