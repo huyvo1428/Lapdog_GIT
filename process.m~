@@ -132,12 +132,13 @@ for b = 1:nob   % Loop through all ops blocks
                  lens = 128;
            end
            [psd,f1eh] = pwelch(vp,[],[],nfft,18750);
-           psd_p1eh2 = [f1eh; mean(ts) (128/lens)^2 * psd'];
            
-
-           pwelch(
-           
+           plot(f1eh,psd)
+           psd_p1eh2 = [psd_p1eh2; mean(ts) (128/lens)^2 * psd'];
+           % send f1eh to file % psd_pleh2 to other file.
         end
+        
+        
         
         
 %         figure(156);
