@@ -4,30 +4,17 @@
 
 function []= an_downsample(an_ind,tabindex,intval)
 count = 0;
-%oldUTCpart1 ='shirley,you must be joking';
+oldUTCpart1 ='shirley,you must be joking';
 
 global an_tabindex;
 
-%antemp ='';
+antemp ='';
 
 foutarr=cell(1,7);
 
 %fprintf(awID,'%s,%16.6f,,,,\n',UTC_time,(0.5*intval+tday0+(j-1)*intval));
 %outputarr =
 %
-
-
-%%no longer needed inside loop
-        for j=1:3600*24/intval;
-            
-            UTCpart2= datestr((0.5*intval+(j-1)*intval)/(24*60*60), 'HH:MM:SS.FFF'); %calculate time of each interval, as fraction of a day
-            UTC_time =sprintf('%s%s',UTCpart1,UTCpart2); %collect date and time in one variable
-           
-            
-            tfoutarr{1,1}{j,1} = UTC_time;
-            tfoutarr{1,2}(j) = tday0+ 0.5*intval+(j-1)*intval; %spaceclock time of measurement mean ( 
-            
-        end
 
 
 
@@ -45,7 +32,58 @@ for i=1:length(an_ind)
     
  
     
-  
+    if count ~= 0 && ~strcmp(UTCpart1,oldUTCpart1) %%not the first time, and we have a new file going, let's print!
+       
+        %For LBL file genesis later, we need an index with name, shortname,
+        %original file  
+        an_tabindex{end+1,1} = afname; %#ok<*AGROW>
+        an_tabindex{end,2} = strrep(afname,affolder,'');
+        an_tabindex{end,3} = tabindex{an_ind(i-count),3}; %first calib data file index of first derived file in this set
+        an_tabindex{end,4} = length(foutarr{1,3}); %number of rows
+        an_tabindex{end,5} = 6; %number of columns
+
+        for j=(i-count):i
+            
+            antemp = sprintf('%s,%i',antemp,an_ind(j));
+            
+        end
+        antemp = antemp(2:end); %trim the first comma.
+        
+        an_tabindex{end,6} = antemp; %all tabindex indicies of this set.   
+        antemp = '';
+        an_tabindex{end,7} = 'downsample'; %type
+        
+        
+        
+        
+        
+        
+        
+        awID= fopen(afname,'w');
+        
+        for j =1:length(foutarr{1,3}) %PRINT LOOP #1
+            
+            if foutarr{1,7}(j)~=1 %check if measurement data exists on row
+                
+                %fprintf(awID,'%s, %16.6f,,,,\n',foutarr{1,1}{j,1},foutarr{1,2}(j));     
+                % Don't print zero values.
+                
+            else
+                fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',foutarr{1,1}{j,1},foutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
+                
+            end%if
+            
+            
+        end%for
+        fclose(awID);
+        count = 0; %reset counter
+        clear foutarr
+        foutarr=cell(1,7);
+        
+        
+        
+   %     tabindex
+    end%if print new file
     
 
     
@@ -56,53 +94,29 @@ for i=1:length(an_ind)
     hms = ah*3600 + am*60 + as;
     tday0=scantemp{1,2}(1)-hms; %%UTC and Spaceclock must be correctly defined
     
-
-         for j = 2: length(scantemp{1,2})-1
-             
-             %leapfrog derivative method
-             scantemp{1,5}(j)=scantemp{1,3}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dI/dt
-             scantemp{1,6}(j)=scantemp{1,4}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dV/dt
-
-         end%for
     
-         scantemp{1,5}(1)=scantemp{1,3}(1)-scantemp{1,3}(1+1)/(scantemp{1,2}(1)-scantemp{1,2}(1+1));  %%dI/dt  %forward differentiation, larger error
-	 scantemp{1,5}(j+1)=scantemp{1,3}(j)-scantemp{1,3}(j+1)/(scantemp{1,2}(j)-scantemp{1,2}(j+1)); %%dI/dt %backward differentiation, larger error
-         scantemp{1,6}(1)=scantemp{1,4}(1)-scantemp{1,4}(1+1)/(scantemp{1,2}(1)-scantemp{1,2}(1+1));  %%dV/dt  %forward differentiation, larger error
-	 scantemp{1,6}(j+1)=scantemp{1,4}(j)-scantemp{1,4}(j+1)/(scantemp{1,2}(j)-scantemp{1,2}(j+1)); %%dV/dt %backward differentiation,  larger error
-
-
+    
         
-  %  if count == 0 %first time going through loop! initialise things!
+    if count == 0 %first time going through loop! initialise things!
         %afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-6:end),sprintf('%s%i%s%iSEC.TAB',flag1,p,flag3,intval));
         
-      %no longer good,  
-%After Discussion 24/1 2014
-%FILE CONVENTION: RPCLAP_YYMMDD_hhmmss_MMM_QPO
-% MMM = MacroID, or if downsampled (O='D'), then MMM =XXS, where X is number of seconds.
-% Q= Measured quantity (B/I/V/A)
-% P=Probe number(1/2/3),
-% O = Mode (H/L/S)
-%
-% B = probe bias voltage, exists only for mode = S
-% I = Current , all modes
-% V = Potential , only for mode = H/L
-% A = Derived (analysed) variables results, all modes
-%
-% H = High frequency measurements
-% L = Low frequency measurements
-% S = Voltage sweep measurements 
-% D = low frequency downsampled measurements, if O=D, then MMM = XXS, where XX = downsampling period (in seconds)
-
-%RPCLAP_YYMMDD_hhmmss_MMM_V1D
-%collect files of same macro? or skip macro information, but contain inside LBL file
-%RPCLAP_YYMMDD_DWNSMP_32S_V1L
-%RPCLAP_YYMMDD_hhmmss_32S_V1D
-
-        afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-10:end-8),sprintf('%02iS',intval));
-	afname(end-4) = 'D';
-	%afname = strrep(afname,afname(end-4),'D');
+       
+        afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-17:end-8),sprintf('DWNSMP_%02iS',intval));
         affolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
-
+        
+        
+        for j=1:3600*24/intval;
+            
+            UTCpart2= datestr((0.5*intval+(j-1)*intval)/(24*60*60), 'HH:MM:SS.FFF'); %calculate time of each interval, as fraction of a day
+            UTC_time =sprintf('%s%s',UTCpart1,UTCpart2); %collect date and time in one variable
+           
+            
+            foutarr{1,1}{j,1} = UTC_time;
+            foutarr{1,2}(j) = tday0+ 0.5*intval+(j-1)*intval; %spaceclock time of measurement mean ( 
+            
+        end
+        
+    end
     
     
     
@@ -160,7 +174,13 @@ for i=1:length(an_ind)
         
      if intval ==32 %%analysis if
          
+         for j = 2: length(scantemp{1,2})-1
+             
+             %leapfrog derivative method
+             scantemp{1,5}(j)=scantemp{1,3}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%di/dt
+             scantemp{1,6}(j)=scantemp{1,4}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dV/dt
 
+         end%for
          
          dimu = accumarray(inter,scantemp{1,5}(:),[],@mean);
          disd = accumarray(inter,scantemp{1,5}(:),[],@std);
@@ -199,18 +219,12 @@ for i=1:length(an_ind)
     
     clear imu isd vmu vsd inter %save electricity kids!
 
-       
-        
-        
-        
-   %     tabindex
-    end%if print new file
   
     
-   % if i ==length(an_ind) %only print if this is last file of the loop, otherwise perform print check at beginning of loop
+    if i ==length(an_ind) %only print if  this is last file of the loop, otherwise perform print check at beginning of loop
         
 
-        %For LBL file genesis, we need an index with name, shortname,
+        %For LBL file genesis later, we need an index with name, shortname,
         %original file  
         an_tabindex{end+1,1} = afname;%start new line of an_tabindex, and record file name
         an_tabindex{end,2} = strrep(afname,affolder,''); %shortfilename
@@ -219,30 +233,51 @@ for i=1:length(an_ind)
         an_tabindex{end,5} = 6; %number of columns
         
 
-        	
-	an_tabindex{end,6} = an_ind(i);
-	an_tabindex{end,7} = 'downsample'; %type
+        for j=(i-count):i
+            
+            antemp = sprintf('%s,%i',antemp,an_ind(j));
+            
+        end
         
-    
+        antemp = antemp(2:end); %trim the first comma.
+        
+        
+        an_tabindex{end,6} = antemp; %all tabindex indicies of this set.
+        antemp = '';
+        an_tabindex{end,7} = 'downsample'; %type
+        
+        
+        
+                  
+        
+        
+        
         awID= fopen(afname,'w');
         for j =1:length(foutarr{1,3})
             
             if foutarr{1,7}(j)~=1 %check if measurement data exists on row
-                %fprintf(awID,'%s, %16.6f,,,,\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j));
+                %fprintf(awID,'%s, %16.6f,,,,\n',foutarr{1,1}{j,1},foutarr{1,2}(j));
                 % Don't print zero values.
             else
-                fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
+                fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',foutarr{1,1}{j,1},foutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
             end%if
             
-        end%for        
+        end%for
+        
+        
+        
+        
+        
+        
       
         fclose(awID);
-        clear foutarr  %not really needed, will not exist outside of function anyway.
-
+        %clear foutarr  %not really needed, will not exist outside of function anyway.
+    end%if
     
     
-%    oldUTCpart1 = UTCpart1; %stuff to remember next loop iteration
- %   count = count +1; %increment counter
+    
+    oldUTCpart1 = UTCpart1; %stuff to remember next loop iteration
+    count = count +1; %increment counter
     
         
 
