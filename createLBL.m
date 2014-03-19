@@ -6,6 +6,7 @@ if(~isempty(tabindex));
     len= length(tabindex(:,3));
     
     
+
     
     for(i=1:len)
         
@@ -16,6 +17,7 @@ if(~isempty(tabindex));
         % Write label file:
         tname = tabindex{i,2};
         lname=strrep(tname,'TAB','LBL');
+
         
         [fp,errmess] = fopen(index(tabindex{i,3}).lblfile,'r'); %Problematic for indexes created in indexcorr (Files split at midnight)
         tempfp = textscan(fp,'%s %s','Delimiter','=');
@@ -46,7 +48,7 @@ if(~isempty(tabindex));
         tempfp{1,2}{16,1} = sprintf('"%s, %s, %s"',lbltime,lbleditor,lblrev);
         tempfp{1,2}(17:18) = [];
         tempfp{1,1}(17:18) =[]; % should be deleted?
-        tempfp{1,2}{17,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %lbl revision date
+        tempfp{1,2}{17,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %product creation time
         tempfp{1,2}{27,1} = '"4"'; %% processing level ID
         tempfp{1,2}{28,1} = index(tabindex{i,3}).t0str; %UTC start time
         tempfp{1,2}{29,1} = tabindex{i,4};             % UTC stop time
@@ -217,6 +219,190 @@ if(~isempty(an_tabindex));
     len=length(an_tabindex(:,1));
     
     for(i=1:len)
+
+%%some need-to-know things  
+        tname = an_tabindex{i,2};
+        lname=strrep(tname,'TAB','LBL');
+
+            mode = tname(end-6:end-4);
+            Pnum = tname(end-5);
+
+
+%%%%%HEADER 
+	%steal header(line 1:55) from existing LBL file, edit smaller things and write the rest customised by analysis file type.
+	 [fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r'); 
+        tempfp = textscan(fp,'%s %s','Delimiter','=');
+        fclose(fp);
+
+
+
+    
+	fileinfo = dir(an_tabindex{i,1});
+        tempfp{1,2}{3,1} = sprintf('%d',fileinfo.bytes);
+        tempfp{1,2}{4,1} = sprintf('%d',an_tabindex{i,4};
+        tempfp{1,2}{5,1} = lname;
+        tempfp{1,2}{6,1} = tname;
+        tempfp{1,2}{17,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %product creation time
+
+
+%28START_TIME =2007-11-07T02:32:42.861                                        
+%29STOP_TIME =2007-11-07T23:59:59.141888
+%30SPACECRAFT_CLOCK_START_COUNT =153023530.1600
+%31SPACECRAFT_CLOCK_STOP_COUNT =153100766.291081
+
+   
+  	  al = fopen(strrep(an_tabindex{i,1},'TAB','LBL'),'w');
+
+%%% TAB FILE TYPE CUSTOMISATION
+
+	  if strcmp(an_tabindex{i,7},'downsample') %%%%%%%%DOWNSAMPLED FILE%%%%%%%%%%%%%%%
+
+		 tempfp{1,2}{32,1} = sprintf('"%s SECONDS DOWNSAMPLED MEASUREMENT"',lname(end-10:end-9));
+
+	           %%%%%PRINT HEADER
+		 for (i=1:55) %print header of analysis file 
+  	     	     fprintf(al,'%s=%s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
+       		 end
+		%% Customise the rest!
+
+
+
+ 	       fprintf(al,'OBJECT = TABLE\n');
+ 	       fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
+      	  fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
+    	    fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
+
+	    fprintf(al,'ROW_BYTES = 110\n');   %%row_bytes here!!!
+
+            fprintf(al,'OBJECT = COLUMN\n');
+            fprintf(al,'NAME = TIME_UTC\n');
+            fprintf(al,'DATA_TYPE = TIME\n');
+            fprintf(al,'START_BYTE = 1\n');
+            fprintf(al,'BYTES = 23\n');
+            fprintf(al,'UNIT = SECONDS\n');
+            fprintf(al,'DESCRIPTION = "UTC TIME YYYY-MM-DD HH:MM:SS.FFF"\n');
+            fprintf(al,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(al,'OBJECT = COLUMN\n');
+            fprintf(al,'NAME = OBT_TIME\n');
+            fprintf(al,'START_BYTE = 26\n');
+            fprintf(al,'BYTES = 16\n'); %
+            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(al,'UNIT = SECONDS\n');
+            fprintf(al,'DESCRIPTION = "SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
+            fprintf(al,'END_OBJECT  = COLUMN\n');
+       
+            fprintf(al,'OBJECT = COLUMN\n');
+            fprintf(al,'NAME = P%s_CURRENT\n',Pnum);
+            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(al,'START_BYTE = 45\n');
+            fprintf(al,'BYTES = 13\n');
+            fprintf(al,'UNIT = AMPERE\n');
+            fprintf(al,'FORMAT = E14.7\n');
+            fprintf(al,'DESCRIPTION = "AVERAGED CURRENT"\n');
+            fprintf(al,'END_OBJECT  = COLUMN\n');
+         
+            fprintf(al,'OBJECT = COLUMN\n');
+            fprintf(al,'NAME = P%s_CURRENT_STDDEV\n',Pnum);
+            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(al,'START_BYTE = 61\n');
+            fprintf(al,'BYTES = 13\n');
+            fprintf(al,'UNIT = AMPERE\n');
+            fprintf(al,'FORMAT = E14.7\n');
+            fprintf(al,'DESCRIPTION = "CURRENT STANDARD DEVIATION"\n');
+            fprintf(al,'END_OBJECT  = COLUMN\n');
+          
+            fprintf(al,'OBJECT = COLUMN\n');
+            fprintf(al,'NAME = P%s_VOLT\n',Pnum);
+            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(al,'START_BYTE = 77\n');
+            fprintf(al,'BYTES = 13\n');
+            fprintf(al,'UNIT = VOLT\n');
+            fprintf(al,'FORMAT = E14.7\n');
+            fprintf(al,'DESCRIPTION = "AVERAGED MEASURED VOLTAGE"\n');
+            fprintf(al,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(al,'OBJECT = COLUMN\n');
+            fprintf(al,'NAME = P%s_VOLT_STDDEV\n',Pnum);
+            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(al,'START_BYTE = 93\n');
+            fprintf(al,'BYTES = 13\n');
+            fprintf(al,'UNIT = VOLT\n');
+            fprintf(al,'FORMAT = E14.7\n');
+            fprintf(al,'DESCRIPTION = "VOLTAGE STANDARD DEVIATION"\n');
+            fprintf(al,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(al,'END_OBJECT  = TABLE\n');
+            fprintf(al,'END');
+            fclose(al);
+
+
+
+	elseif strcmp(an_tabindex{i,7},'spectra') %%%%%%%%%%%%%%%%SPECTRA FILE%%%%%%%%%%
+
+
+		 tempfp{1,2}{32,1} = sprintf('"%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT"',lname(end-10:end-9));
+
+	           %%%%%PRINT HEADER
+		 for (i=1:66) %print header of analysis file 
+  	     	     fprintf(al,'%s=%s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
+       		 end
+		%% Customise the rest!
+
+
+        fprintf(al,'OBJECT = TABLE\n');
+        fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
+        fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
+        fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
+
+
+	elseif  strcmp(an_tabindex{i,7},'frequency') %%%%%%%%%%%%FREQUENCY FILE%%%%%%%%%
+
+		 tempfp{1,2}{32,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
+
+	           %%%%%PRINT HEADER
+		 for (i=1:66) %print header of analysis file 
+  	     	     fprintf(al,'%s=%s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
+       		 end
+		%%%%% Customise the rest!
+
+
+       	    fprintf(al,'OBJECT = TABLE\n');
+       	    fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
+       	    fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
+     	    fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
+
+
+	    fprintf(al,'OBJECT = COLUMN\n');
+            fprintf(al,'NAME = FREQUENCY LIST\n',Pnum);
+            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(al,'START_BYTE = 0\n');
+            fprintf(al,'BYTES = 13\n');
+            fprintf(al,'UNIT = kHz\n');
+            fprintf(al,'FORMAT = E14.7\n');
+            fprintf(al,'DESCRIPTION = "FREQUENCY LIST FOR CORRESPONDING PSD SPECTRA FILE"\n');
+            fprintf(al,'END_OBJECT  = COLUMN\n');
+
+	    fprintf(al,'END_OBJECT  = TABLE\n');
+            fprintf(al,'END');
+            fclose(al);
+
+	else
+	'error'
+	fclose(al);
+	end
+        
+        
+end
+end
+
+
+
+
+if(~isempty(an_tabindex));
+    len=length(an_tabindex(:,1));
+    
+    for(i=1:len)
         
         %tabindex cell array = {tab file name, first index number of batch,
         % UTC time of last row, S/C time of last row, row counter}
@@ -299,7 +485,11 @@ if(~isempty(an_tabindex));
             
             fprintf(al,'ROW_BYTES = 110\n');   %%row_bytes here!!!
             
-            fprintf(al,'DESCRIPTION = "DOWNSAMPLED MEASUREMENT"\n');
+            fprintf(al,'DESCRIPTION = "%s SECONDS DOWNSAMPLED MEASUREMENT"\n',lname(end-10:end-9));
+
+
+        
+%%Varför finns det två "DESCRIPTION" i LBL filerna?
             
             
             fprintf(al,'OBJECT = COLUMN\n');
@@ -308,7 +498,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'START_BYTE = 1\n');
             fprintf(al,'BYTES = 23\n');
             fprintf(al,'UNIT = SECONDS\n');
-            fprintf(al,'DESCRIPTION = "START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss"\n');
+            fprintf(al,'DESCRIPTION = "START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.FFF"\n');
             fprintf(al,'END_OBJECT  = COLUMN\n');
             
             fprintf(al,'OBJECT = COLUMN\n');
@@ -319,8 +509,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'UNIT = SECONDS\n');
             fprintf(al,'DESCRIPTION = "SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
             fprintf(al,'END_OBJECT  = COLUMN\n');
-            fprintf(al,'\n');
-            
+       
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = P%s_CURRENT\n',Pnum);
             fprintf(al,'DATA_TYPE = ASCII_REAL\n');
@@ -330,8 +519,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'FORMAT = E14.7\n');
             fprintf(al,'DESCRIPTION = "AVERAGED CURRENT"\n');
             fprintf(al,'END_OBJECT  = COLUMN\n');
-            fprintf(al,'\n');
-            
+         
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = P%s_CURRENT_STDDEV\n',Pnum);
             fprintf(al,'DATA_TYPE = ASCII_REAL\n');
@@ -341,8 +529,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'FORMAT = E14.7\n');
             fprintf(al,'DESCRIPTION = "CURRENT STANDARD DEVIATION"\n');
             fprintf(al,'END_OBJECT  = COLUMN\n');
-            fprintf(al,'\n');
-            
+          
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = P%s_VOLT\n',Pnum);
             fprintf(al,'DATA_TYPE = ASCII_REAL\n');
