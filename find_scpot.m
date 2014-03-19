@@ -13,7 +13,7 @@
 % z is used as a first location of the vicinity in which Vsc should be,
 % then the maximum of the absolute of the second derivative of the
 % current is taken as Vsc, i.e. Vsc = max(abs((d2I))
-function [Vsc1,Vsc2,Vsc3] = find_scpot(Vb,Ib,z)
+function [Vsc1,Vsc2,Vplasma] = find_scpot(Vb,Ib,z)
 Vsc1 = [];
 Vsc2 = [];
 Vsc3 = [];
@@ -27,6 +27,7 @@ if lV == lI
 %taken. %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 points = length(Vb);
+
 lgolay = max([(2*floor(points/12)+1) 5]);
 Ib_smooth = smooth(Ib,lgolay,'sgolay');
 Vb2 = Vb;
@@ -34,6 +35,36 @@ Ib2 = Ib_smooth;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Taking the second derivative%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%one way to find Vplasma (?Vsc)
+vbzero= find(le(Vb,0));
+[lfvb,d2i]= leapfd(Ib,Vb,lgolay);
+
+
+d2i=(abs(d2i)+d2i)/2;
+
+ind0= find(~d2i,1,'first');
+ind1 = find(~d2i,1,'last');
+
+%nd2i = d2i(ind0:ind1)/(sum(d2i(ind0:ind1)));
+
+[gsd,gmu] =gaussfit(Vb(ind0:ind1),d2i(ind0:ind1));
+
+% tind= find(le(d2i,0));
+% d2i(tind) =0;
+% 
+% %temp = d2lfvb/mean(d2lfvb);
+% 
+% 
+% [gsd,gmu] =gaussfit(Vb(10:end-10),d2i(10:end-10));
+
+Vplasma = gmu;
+
+
+
+
+
 d2Ib = d2(Vb2,Ib2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %"Global" Vsc as the maximum of the second derivative%

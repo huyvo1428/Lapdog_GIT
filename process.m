@@ -78,82 +78,29 @@ for b = 1:nob   % Loop through all ops blocks
 %     
     
     %Generate sweep files
-% 
-%     if(~isempty(p1s)) createTAB(derivedpath,ob(p1s),index,index(obs(b)).t0,'B1S',sweept1); end
-%     if(~isempty(p2s)) createTAB(derivedpath,ob(p2s),index,index(obs(b)).t0,'B2S',sweept1); end
-%     
-%     %Generate E data files
-%     if(~isempty(p1el)) createTAB(derivedpath,ob(p1el),index,index(obs(b)).t0,'V1L',sweept1); end
-%     if(~isempty(p2el)) createTAB(derivedpath,ob(p2el),index,index(obs(b)).t0,'V2L',sweept2); end
-%     if(~isempty(p1eh)) createTAB(derivedpath,ob(p1eh),index,index(obs(b)).t0,'V1H',sweept1); end
-%     if(~isempty(p2eh)) createTAB(derivedpath,ob(p2eh),index,index(obs(b)).t0,'V2H',sweept2); end
-%     %Generate N data files
-%     if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,index(obs(b)).t0,'I1L',sweept1); end
-%     if(~isempty(p2nl)) createTAB(derivedpath,ob(p2nl),index,index(obs(b)).t0,'I2L',sweept2); end
-%     if(~isempty(p1nh)) createTAB(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H',sweept1); end
-%     if(~isempty(p2nh)) createTAB(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H',sweept2); end
-%     
-%     
-%     %Generate E data files
-%     if(~isempty(p1el)); createTAB(derivedpath,ob(p1el),index,'V1L',sweept1); end
-%     if(~isempty(p2el)); createTAB(derivedpath,ob(p2el),index,'V2L',sweept1); end
-%     if(~isempty(p1eh)); createTAB(derivedpath,ob(p1eh),index,'V1H',sweept1); end
-%     if(~isempty(p2eh)); createTAB(derivedpath,ob(p2eh),index,'V2H',sweept1); end
-%     %Generate N data files
-%     if(~isempty(p1nl)); createTAB(derivedpath,ob(p1nl),index,'I1L',sweept1); end
-%     if(~isempty(p2nl)); createTAB(derivedpath,ob(p2nl),index,'I2L',sweept1); end
-%     if(~isempty(p1nh)); createTAB(derivedpath,ob(p1nh),index,'I1H',sweept1); end
-%     if(~isempty(p2nh)); createTAB(derivedpath,ob(p2nh),index,'I2H',sweept1); end
 
+    if(~isempty(p1s)) createTAB(derivedpath,ob(p1s),index,index(obs(b)).t0,'B1S',sweept1); end
+    if(~isempty(p2s)) createTAB(derivedpath,ob(p2s),index,index(obs(b)).t0,'B2S',sweept1); end
+    
+    %Generate E data files
+    if(~isempty(p1el)) createTAB(derivedpath,ob(p1el),index,index(obs(b)).t0,'V1L',sweept1); end
+    if(~isempty(p2el)) createTAB(derivedpath,ob(p2el),index,index(obs(b)).t0,'V2L',sweept2); end
+    if(~isempty(p1eh)) createTAB(derivedpath,ob(p1eh),index,index(obs(b)).t0,'V1H',sweept1); end
+    if(~isempty(p2eh)) createTAB(derivedpath,ob(p2eh),index,index(obs(b)).t0,'V2H',sweept2); end
+    %Generate N data files
+    if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,index(obs(b)).t0,'I1L',sweept1); end
+    if(~isempty(p2nl)) createTAB(derivedpath,ob(p2nl),index,index(obs(b)).t0,'I2L',sweept2); end
+    if(~isempty(p1nh)) createTAB(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H',sweept1); end
+    if(~isempty(p2nh)) createTAB(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H',sweept2); end
+    
     
 %    Mill the HF data in this ob:
-    psd_p1eh = [];
+   % psd_p1eh = [];
 
-    if(p1eh)
-        len = length(p1eh);
-        for(i=1:len)
-          %  fprintf(1,'Calculating V1H spectrum #%.0f of %.0f\n',i,len)
-          % [tstr ib vp] = textread(index(ob(p1eh(i))).tabfile,'%s%*f%f%f','delimiter',',');
-          % ts = datenum(tstr,'yyyy-mm-ddTHH:MM:SS.FFF');
-          % [psd,f1eh] = pwelch(vp,[],[],nfft,18750);
-          % psd_p1eh = [psd_p1eh; mean(ts) psd'];
-           
-           
-           
-           fprintf(1,'Calculating V1H spectrum #%.0f of %.0f\n',i,len)
-           [tstr ib vp] = textread(index(ob(p1eh(i))).tabfile,'%s%*f%f%f','delimiter',',');
-           ts = datenum(tstr,'yyyy-mm-ddTHH:MM:SS.FFF');
-           lens = length(vp);
-           pad = 0;
-           if(lens < 128)
-               pad = 128-lens;
-               vp = [vp; zeros(pad,1)];
-           elseif(lens > 128)
-                 lens = 128;
-           end
-           [psd,f1eh] = pwelch(vp,[],[],nfft,18750);
-           
-           plot(f1eh,psd)
-           psd_p1eh2 = [psd_p1eh2; mean(ts) (128/lens)^2 * psd'];
-           % send f1eh to file % psd_pleh2 to other file.
-
-           
-        end
-        
-        
-%         figure(156);
-%         surf(psd_p1eh(:,1)',f1eh/1e3,10*log10(psd_p1eh(:,2:(2+nfft/2))'),'edgecolor','none'); 
-%         view(0,90); 
-%         datetick('x','HH:MM');
-%         xlabel('HH:MM (UT)');
-%         ylabel('Frequency [kHz]');
-%         titstr = sprintf('LAP V1H spectrogram %s',datestr(psd_p1eh(1,1),29));
-%         title(titstr);
-%         drawnow;
-    end
-
-
-
+    if(p1eh)        an_hf(derivedpath,ob(p1eh),index,'V1H'); end
+    if(p2eh)        an_hf(derivedpath,ob(p2eh),index,'V2H'); end
+    if(p1nh)        an_hf(derivedpath,ob(p1nh),index,'I1H'); end
+    if(p2nh)        an_hf(derivedpath,ob(p2nh),index,'I2H'); end
     
 end %observation block for loop
 

@@ -168,6 +168,21 @@ else %% if sweep, do:
             stepnr= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
             %downsample sweep
             
+            
+           % for k=1:length(scantemp{1,2})
+            
+            inter = 1+ floor(0:1:length(scantemp{1,2}/stepnr));
+            
+                
+                
+            
+           % inter = 
+            
+            scan2temp=accumarray(inter,scantemp{1,2}(:),[],@mean);
+            potbias = accumarray(inter,scantemp{1,4}(:),[],@mean);
+            curtemp = accumarray(inter,scantemp{1,4}(:),[],@mean);
+_            
+            
             scan2temp =downsample(scantemp{1,2},stepnr); %needed once
             potbias =downsample(scantemp{1,4},stepnr); %needed once
             
@@ -221,8 +236,8 @@ else %% if sweep, do:
        % Vb=potbias(ind);
         Is=curtemp(ind);
         
-        
-        Weyderived = preliminaries(Vb,Is);
+        sweepooo = find_scpot(Vb,Is,0);
+   %     Weyderived = preliminaries(Vb,Is);
         
         
         

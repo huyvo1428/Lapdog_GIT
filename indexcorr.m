@@ -37,7 +37,7 @@ for i=1:length(index)
             t1line = datenum(strrep(scantemp{1,1}{j,1},'T',' ')); %time of suspicious line
             
    %         if (daysact(index(i).t0, t1line)==0)
-             if (strcmp(datestr(index(i).t0,'yymmdd'),datestr(t1line,'yymmdd'))==1) %if line is same calendar day than t0
+             if (strcmp(datestr(index(i).t0,'yymmdd'),datestr(t1line,'yymmdd'))==1) %if line is same calendar day as t0
 
                 %so this line is okay, print it to same file unchanged.
                 %%will this 

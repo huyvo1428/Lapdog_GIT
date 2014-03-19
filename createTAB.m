@@ -112,14 +112,12 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
 
             %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
             
-            if isempty(scantemp{1,5}{j,1})
+%             if isempty(scantemp{1,5}{j,1})
                 fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, 000\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-            else
-                fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %3i\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j));
-                
-                
-            end
-            
+%             else
+%                 fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %3i\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j));                   
+%             end
+%             
         end
         
         if (i==len) %finalisation
@@ -168,8 +166,21 @@ else %% if sweep, do:
             stepnr= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
             %downsample sweep
             
-            scan2temp =downsample(scantemp{1,2},stepnr); %needed once
-            potbias =downsample(scantemp{1,4},stepnr); %needed once
+            
+           % for k=1:length(scantemp{1,2})
+            
+            inter = 1+ floor((0:1:length(scantemp{1,2})-1)/stepnr);
+            inter=inter.';
+           % inter = 
+            
+            scan2temp=accumarray(inter,scantemp{1,2}(:),[],@mean);
+            curtemp = accumarray(inter,scantemp{1,3}(:),[],@mean);
+            potbias = accumarray(inter,scantemp{1,4}(:),[],@mean);
+
+            
+            
+%            scan2temp =downsample(scantemp{1,2},stepnr); %needed once
+ %           potbias =downsample(scantemp{1,4},stepnr); %needed once
             
             potlength=length(potbias);
 %             potbias = scan2temp{1,4}(1:end);
@@ -179,31 +190,32 @@ else %% if sweep, do:
             
         end
   
+%         
+%         %due to a bug, the first deleted measurements will lead to a shortage of measurements on the final sweep step 
+%         leee = length(scantemp{1,3});
+%         if mod(leee,stepnr)~=0 %if bug didn't end after step completion 
+%         %pad matrix with mean value of last row
+%             mooo=mod(leee,stepnr);
+%             meee = scantemp{1,3}(end-mooo+1:end);
+%             scantemp{1,3}(end+1:end+stepnr-mooo) = mean(meee);
+%         end
+%         B = reshape(scantemp{1,3}.',stepnr,potlength);    %I need only one transpose!
+     %   curtemp = mean(B); %curtemp is now a row vector
+%        clear B mooo meee leee
         
-        %due to a bug, the first deleted measurements will lead to a shortage of measurements on the final sweep step 
-        leee = length(scantemp{1,3});
-        if mod(leee,stepnr)~=0 %if bug didn't end after step completion 
-        %pad matrix with mean value of last row
-            mooo=mod(leee,stepnr);
-            meee = scantemp{1,3}(end-mooo+1:end);
-            scantemp{1,3}(end+1:end+stepnr-mooo) = mean(meee);
-        end
-        B = reshape(scantemp{1,3}.',stepnr,potlength);    %I need only one transpose!
-        curtemp = mean(B); %curtemp is now a row vector
-        clear B mooo meee leee
-        
+     %   curtemp=curtemp.';
         
         
         
         
         fprintf(condfile,'%s, %s, %16.6f, %16.6f',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
-        dlmwrite(filename2,curtemp,'-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 4. pretty neat.
+        dlmwrite(filename2,curtemp.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 4. pretty neat.
        
         
         
         %        dlmwrite(filename2,curtemp,'-append','precision', '%14.7e', 'delimiter', ', '); %
 
-        curtemp = curtemp.'; %transpose..
+     %   curtemp = curtemp.'; %transpose..
         
         
         %excellent time for some analysis!
@@ -216,17 +228,17 @@ else %% if sweep, do:
         
         
         
-        [Vb,ind]=sort(potbias);
-        
-       % Vb=potbias(ind);
-        Is=curtemp(ind);
-        
-        
-        Weyderived = preliminaries(Vb,Is);
-        
-        
-        
-        derived = an_swp(potbias,curtemp,scantemp{1,2}(1,1),filename(end-5));
+%         [Vb,ind]=sort(potbias);
+%         
+%        % Vb=potbias(ind);
+%         Is=curtemp(ind);
+%         
+%   %      sweepooo = find_scpot(Vb,Is,0);
+%    %     Weyderived = preliminaries(Vb,Is);
+%         
+%         
+%         
+%         derived = an_swp(potbias,curtemp,scantemp{1,2}(1,1),filename(end-5));
         
         
 %    %     p2s_params= derived;

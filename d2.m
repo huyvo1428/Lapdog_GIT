@@ -16,7 +16,6 @@ lx = length(x); %checking sizes
 ly = length(y);
 lgolay = max([(2*floor(lx/12)+1) 5]);
 y = smooth(y,lgolay,'sgolay');
-gradient(
 % if (lx == ly && lx >= 5)
 % h = x(2)-x(1); %the steplength is the same throughout
 % %%%%%%%%%%%%%%%%%%%%%%%

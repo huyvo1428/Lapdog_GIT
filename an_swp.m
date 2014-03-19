@@ -138,6 +138,7 @@ if((poli(2) < -5e-9) & (poli(1) < 1e-9));
     title('Log photoemission');
     grid on;
     subplot(2,2,4)
+    
   end
 
   % Do log fit to first 4 V:
@@ -197,6 +198,7 @@ else  % End of sunlit case, start no photoemission case:
     subplot(2,2,4)
   end
 end   % Case of no photoemission
+
 
 % Collect parameters:
 params = [t len vb(lastneg) vb(firstpos) vx poli(1) poli(2) pole(1) pole(2) p vbinf diinf d2iinf Tph If0 vs];
