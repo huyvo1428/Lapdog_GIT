@@ -1,0 +1,135 @@
+KPL/PCK
+
+Comet Churyumov-Gerasimenko -- RSOC Solution
+===========================================================================
+
+ 
+Version and Date
+--------------------------------------------------------
+
+     Version 0.1 -- January 26, 2011 -- M. Kueppers, SRE-OSR/ESA 
+                    Corrected spin axis direction
+
+     Version 0.0 -- September 9, 2010 -- J. Vazquez, PSA, SRE-OS/ESA
+     
+ 
+ 
+Organization
+--------------------------------------------------------
+ 
+     The sections of this file are as follows.
+ 
+     Introductory Information:
+ 
+         --   Version description
+ 
+         --   Disclaimer
+ 
+         --   Sources
+ 
+     Pck Data:
+ 
+         --   Orientation constants for Comet 67P/Churyumov-Gerasimenko
+ 
+         --   Radii for Comet 67P/Churyumov-Gerasimenko
+ 
+ 
+Version description
+--------------------------------------------------------
+ 
+     This is a PCK containing values for the pole orientation, 
+     rotation period and shape obtained from [2] and [3].
+     
+ 
+Disclaimer
+--------------------------------------------------------
+ 
+     This constants file may not contain the parameter values that you
+     prefer. Note that this file may be readily modified by you or
+     anyone else. PSA suggests that you inspect this file visually
+     before proceeding with any critical or extended data processing.
+ 
+     PSA requests that you update the version section if you modify
+     the file.
+ 
+ 
+Sources
+--------------------------------------------------------
+ 
+     The sources for the constants listed in this file are:
+ 
+        1) ESA Science and Technology Server, Rosetta area,
+           http://sci.esa.int/science-e/www/object/index.cfm?
+           fobjectid=34849
+
+        2) Hubble Space Telescope observations of the nucleus and inner
+           coma of comet 67P/Churyumov-Gerasimenko, Lamy et al., A & A 458,
+           669, June 2006
+        
+        
+        3) Comet 67P/Churyumov-Gerasimenko at a large heliocentric distance,
+           Tubiana et al., A & A 490, 377, 2008
+
+        4) Lamy et al., Rosetta book, P. 21ff, 2009.
+
+Orientation constants for Comet Churyumov-Gerasimenko.
+------------------------------------------------------
+ 
+     The inertial reference frame for these constants is J2000; this is
+     the default reference frame for PCK orientation data.
+ 
+     The epoch of the constants is J2000; this is Julian ephemeris date
+     (JED) 2451545.0.
+ 
+     The NAIF integer code for Comet Churyumov-Gerasimenko is 1000012. See 
+     the NAIF_IDs required reading for further information on NAIF integer
+     codes.
+ 
+     According to [2] the comet pole direction is specified by the 
+     following right ascension (RA) and declination (DEC):
+
+        RA  =  40 deg.
+        DEC =  70 deg.
+
+    
+
+     The W1 term was set to correspond to the period of 12.7 hours, taken 
+     from [3], and the W0 term is arbitrarily set to 0.
+     
+     \begindata
+ 
+        BODY1000012_POLE_RA             = (  40.0        0.0         0.0 )
+        BODY1000012_POLE_DEC            = (  70.0        0.0         0.0 )
+        BODY1000012_PM                  = (   0.0      680.315       0.0 )
+ 
+     \begintext
+
+
+Radii for Comet 67P/Churyumov-Gerasimenko 
+--------------------------------------------------------
+     
+     The radii provided in the keyword below correspond to the 
+     following comet shape
+
+          a/b/c = 2.28km/1.905km/1.72km
+
+     provided in [2].
+ 
+     \begindata
+ 
+        BODY1000012_RADII               = ( 2.28  1.905  1.72 )
+ 
+     \begintext
+
+
+Albedo Values for Comet 67P/Churyumov-Gerasimenko
+--------------------------------------------------------
+
+     The value for the albedo is provided in [4].
+
+     \begindata
+
+        BODY1000012_ALBEDO  = 0.04
+
+     \begintext
+

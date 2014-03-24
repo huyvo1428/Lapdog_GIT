@@ -3,7 +3,7 @@
 
 
 function []= an_downsample(an_ind,tabindex,intval)
-count = 0;
+%count = 0;
 %oldUTCpart1 ='shirley,you must be joking';
 
 global an_tabindex;

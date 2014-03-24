@@ -1,0 +1,443 @@
+KPL/IK
+
+ROSINA Instrument kernel
+===========================================================================
+
+   This instrument kernel (I-kernel) contains ROSINA sensor parameters
+   and field-of-view definitions.
+
+
+Version and Date
+---------------------------------------------------------------------------
+
+   Version 1.1 -- April 26, 2008 -- T. Riesen, PI/UOB, J. Vazquez, ESAC/ESA
+
+      Corrected FOVs, minor changes to drawings and text
+      Added field of view for the COPS Ram Gauge
+
+   Version 1.0 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Version number change for the first official release.
+
+   Version 0.1 -- September 2, 2004 -- Boris Semenov, NAIF/JPL
+
+      Filled in instrument overview section (copied from [6]).
+
+   Version 0.0 -- August 5, 2004 -- Boris Semenov, NAIF/JPL
+
+      Initial release.
+
+
+References
+---------------------------------------------------------------------------
+
+   1. ``Kernel Pool Required Reading''
+
+   2. ``C-kernel Required Reading''
+
+   3. ``ROSINA EID, Part B'', ROS-EST-RS-3011/EID B, 2001-05-15
+
+   4. Rosetta Frames Definition Kernel (FK), latest version.
+
+   5. ``ROSINA Users Manual'', RO-ROS-MAN-1009, 2002-12-18 
+
+   6. ESA Science and Technology Web Server, Rosetta Instruments Area,
+      http://sci.esa.int/science-e/www/object/index.cfm?fobjectid=35061
+      
+
+Implementation Notes
+--------------------------------------------------------
+
+   Applications that need SPICE I-kernel data must ``load'' the I-kernel
+   file, normally during program initialization.
+
+   Loading the kernel using the SPICELIB routine FURNSH causes the data
+   items and their associated values present in the kernel to become
+   associated with a data structure called the ``kernel pool''. The
+   application program may then obtain the value(s) for any IK data
+   item using the SPICELIB routines GDPOOL, GIPOOL, GCPOOL. Routine
+   GETFOV may be used if the file contains instrument field-of-view
+   (FOV) specification. See [1] for details.
+
+   This file was created with, and can be updated with a text editor or
+   word processor.
+
+
+Conventions for Specifying Data
+--------------------------------------------------------
+
+   Data items are specified using ``keyword=value'' assignments [1].
+   All keywords referencing values in this I-kernel start with the
+   characters `INS' followed by the NAIF Rosetta instrument ID code,
+   constructed using the spacecraft ID number (-226) followed by the
+   NAIF three digit ID number for ROSINA sensor or structure. The 
+   IDs for ROSINA are defined in [4] as follows:
+
+               Instrument name          ID
+               --------------------   -------
+               ROS_ROSINA             -226300
+               ROS_ROSINA_DFMS        -226310
+               ROS_ROSINA_DFMS_WA     -226311
+               ROS_ROSINA_DFMS_NA     -226312
+               ROS_ROSINA_DFMS_URF    -226319
+               ROS_ROSINA_RTOF        -226320
+               ROS_ROSINA_RTOF_URF    -226329
+               ROS_ROSINA_COPS        -226330
+               ROS_ROSINA_COPS_G0     -226331
+               ROS_ROSINA_COPS_G1     -226332
+               ROS_ROSINA_COPS_URF    -226339
+
+   The remainder of the keyword is an underscore character followed by
+   the unique name of the data item. For example, the boresight of the
+   ROSINA DFMS WA FOV is specified by
+
+               INS-226311_BORESIGHT
+
+   The upper bound on the length of all keywords is 32 characters.
+
+   If a keyword is included in more than one file, or if the same
+   keyword appears more than once within a single file, the last
+   assignment supersedes any earlier assignments.
+
+
+Overview
+--------------------------------------------------------
+
+   From [6]:
+
+      ROSINA (Rosetta Orbiter Spectrometer for Ion and Neutral
+      Analysis) consists of two mass spectrometers, since no single
+      technique is able to achieve the resolution and accuracy required
+      to fulfill the ROSETTA mission goals over the range of molecular
+      masses under analysis. In addition, two pressure gauges (the gauges
+      G0 and G1 that make up the sensor COPS) provide density and velocity 
+      data for the cometary gas.
+
+      The two mass analysers are:
+
+         *  A double focusing magnetic mass spectrometer with a mass
+            range of 1 - 100 amu and a mass resolution of 3000 at 1 %
+            peak height, optimised for very high mass resolution and
+            large dynamic range
+
+         *  A reflectron type time-of-flight mass spectrometer with a
+            mass range of 1 - 300 amu and a mass resolution better than
+            500 at 1 % peak height, optimised for high sensitivity over
+            a very broad mass range
+
+      Summary of ROSINA Characteristics
+
+         Mass (including harnesses, kg):
+            36
+
+         Power consumption (maximum, depending on operating mode, W):
+            53.0
+
+
+Mounting Alignment
+--------------------------------------------------------
+
+   Refer to the latest version of the Rosetta Frames Definition Kernel
+   (FK) [4] for the ROSINA reference frame definitions and mounting
+   alignment information.
+
+
+Apparent FOV Layout
+--------------------------------------------------------
+
+   This section provides a diagram illustrating the DFMS Wide Angle
+   (WA) FOV, DFMS Narrow Angle (NA) FOV, RTOF, and COPS FOV layouts in 
+   the corresponding unit reference frames (URF). Note that these frames
+   are the same as the sensor frames, except for the RTOF sensor (see
+   Rosetta Frames kernel for more information).
+   
+DFMS WA FOV
+
+                                  ^
+                                  |
+                                  |
+                                  |
+
+                                  ^ +Xdfms
+                                  |
+                                  |
+       ---              +---------|---------+ 
+        ^               | WA FOV  |         |
+        |               |         |         |
+        |               |         |         |
+        |               |         |         |
+        | 40 deg        |         x-------------> +Ydfms
+        |               |      +Zdfms       |
+        |               |                   |
+        |               |                   |
+        V               |                   |
+       ---              +-------------------+
+
+                        |       40 deg      |      Boresight (+Z axis)
+                        |<----------------->|       is into the page
+                        |                   |
+
+
+DFMS NA FOV
+
+                                  ^
+                                  |
+                                  |
+                                  |
+                                  ^ +Zdfms
+                                  |
+                                  |
+       ---              +---------|---------+
+        ^               | NA FOV  |         |
+        |               |         |         |
+        |               |         |         |
+        |               |         |         |
+        | 4 deg         |         x-------------> +Xdfms
+        |               |      +Ydfms       |
+        |               |                   |
+        |               |                   |
+        V               |                   |
+       ---              +-------------------+
+
+                        |        4 deg      |      Boresight (+Y axis)
+                        |<----------------->|       is into the page
+                        |                   |
+
+
+
+RTOF FOV
+
+                                  ^
+                                  |
+                                  |
+                                  |
+
+                                  ^ +Xrtof
+                                  |
+                                  |
+       ---              +---------|---------+
+        ^               |RTOF FOV |         |
+        | 10 deg        |         x-------------> +Zrtof
+        V               |      -Yrtof       |
+       ---              +-------------------+
+
+                        |       40 deg      |      Boresight (-Y axis)
+                        |<----------------->|       is into the page
+                        |                   |
+
+
+
+COPS G0 FOV
+
+                                  ^
+                                  |
+                                  |
+                                  |
+                                  ^ +Ycops
+                                  |
+                                  |
+             ---        +---------|---------+
+              ^         |COPS G0  | FOV     |
+              |         |         |         |
+              |         |         |         |
+              |         |         |         |
+              | 305 deg |         x------------------> -Zcops
+              |         |       -Xcops      | 
+              |         |                   |      Boresight (-X axis)
+              |         |                   |       is into the page
+              V         |                   |
+             ---        +---------|---------+
+
+                        |       305 deg     |
+                        |<----------------->|
+                        |                   |
+
+
+COPS G1 FOV
+
+                                  ^
+                                  |
+                                  |
+                                  |
+                                  ^ +Xcops
+                                  |
+                                  |
+             ---        +---------|---------+
+              ^         |         |         |
+              |         |         |         |
+              |         |         |         |
+              |         |         |         |
+              | 180 deg |         X------------------> +Ycops
+              |         |       +Zcops      | 
+              |         |                   |      Boresight (+Zaxis)
+              |         |                   |       is into the page
+              V         |                   |
+             ---        +---------|---------+
+
+                        |      180 deg      |
+                        |<----------------->|
+                        |                   |
+
+
+FOV Parameters
+--------------------------------------------------------
+
+   The following DFMS WA, DFMS NA, RTOF FOV, and COPS parameters are 
+   included in the data section below, from [3]:
+
+    --------------------------------------------------------------------
+          parameter       DFMS WA   DFMS NA   RTOF  COPS G0   COPS G1
+    --------------------------------------------------------------------
+    Field of view (deg)
+      Cross-track         20.0       2.0      20.0  155.0     90.0
+      Along-track         20.0       2.0       5.0  155.0     90.0
+    --------------------------------------------------------------------
+
+   The keywords below provide FOV angular size in radians, with the
+   cross-track size being the first value and the along-track size
+   being the second value in each pair. Since each FOV is just a single
+   pixel IFOV is equal to the FOV in size and the pixel size parameters
+   are set accordingly.
+
+      \begindata
+
+         INS-226311_FOV_ANGULAR_SIZE   = ( 0.69813170, 0.69813170 )
+         INS-226311_IFOV               = ( 0.69813170 )
+         INS-226311_PIXEL_SAMPLES      = ( 1 )
+         INS-226311_PIXEL_LINES        = ( 1 )
+         INS-226311_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226312_FOV_ANGULAR_SIZE   = ( 0.069813170, 0.069813170 )
+         INS-226312_IFOV               = ( 0.069813170 )
+         INS-226312_PIXEL_SAMPLES      = ( 1 )
+         INS-226312_PIXEL_LINES        = ( 1 )
+         INS-226312_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226320_FOV_ANGULAR_SIZE   = ( 0.69813170, 0.17453293 )
+         INS-226320_IFOV               = ( 0.69813170, 0.17453293 )
+         INS-226320_PIXEL_SAMPLES      = ( 1 )
+         INS-226320_PIXEL_LINES        = ( 1 )
+         INS-226320_CCD_CENTER         = ( 0.5, 0.5 )
+         
+         INS-226331_FOV_ANGULAR_SIZE   = ( 5.4105207, 5.4105207 )
+         INS-226331_IFOV               = ( 5.4105207 )
+         INS-226331_PIXEL_SAMPLES      = ( 1 )
+         INS-226331_PIXEL_LINES        = ( 1 )
+         INS-226331_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226332_FOV_ANGULAR_SIZE   = ( 3.1415927, 3.1415927 )
+         INS-226332_IFOV               = ( 3.1415927 )
+         INS-226332_PIXEL_SAMPLES      = ( 1 )
+         INS-226332_PIXEL_LINES        = ( 1 )
+         INS-226332_CCD_CENTER         = ( 0.5, 0.5 )
+
+      \begintext
+
+
+FOV Definitions
+---------------------------------------------------------------------------
+
+   This section contains definitions for the ROSINA DFMS WA, DFMS NA,
+   RTOF, and COPS FOVs. These definitions are provided in the format required
+   by the SPICE (CSPICE) function GETFOV (getfov_c).
+   
+   The set of assignments in the data section below defines the DFMS WA
+   FOV, DFMS NA FOV, RTOF FOV, and COPS with respect to the corresponding
+   instrument frames as a rectangles of the size provided in the
+   section above and the boresight along the +Z axis (for DFMS WA and
+   RTOF) or +X axis (for DFMS NA.)
+
+      \begindata
+
+         INS-226311_FOV_FRAME                 = 'ROS_ROSINA_DFMS'
+         INS-226311_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226311_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226311_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226311_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226311_FOV_REF_ANGLE             = ( 10.0 )
+         INS-226311_FOV_CROSS_ANGLE           = ( 10.0 )
+         INS-226311_FOV_ANGLE_UNITS           = 'DEGREES'
+
+
+         INS-226312_FOV_FRAME                 = 'ROS_ROSINA_DFMS'
+         INS-226312_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226312_BORESIGHT                 = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226312_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226312_FOV_REF_VECTOR            = (
+                                            0.000000     1.000000     0.000000
+                                                )
+         INS-226312_FOV_REF_ANGLE             = ( 1.000 )
+         INS-226312_FOV_CROSS_ANGLE           = ( 1.000 )
+         INS-226312_FOV_ANGLE_UNITS           = 'DEGREES'
+
+
+         INS-226320_FOV_FRAME                 = 'ROS_ROSINA_RTOF'
+         INS-226320_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226320_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226320_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226320_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226320_FOV_REF_ANGLE             = (  5.000 )
+         INS-226320_FOV_CROSS_ANGLE           = ( 20.000 )
+         INS-226320_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226331_FOV_FRAME                 = 'ROS_ROSINA_COPS'
+         INS-226331_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226331_BORESIGHT                 = (
+                                            0.000000    -1.000000     0.000000
+                                                )
+         INS-226331_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226331_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226331_FOV_REF_ANGLE             = ( 77.500 )
+         INS-226331_FOV_CROSS_ANGLE           = ( 77.500 )
+         INS-226331_FOV_ANGLE_UNITS           = 'DEGREES'
+
+
+         INS-226332_FOV_FRAME                 = 'ROS_ROSINA_COPS'
+         INS-226332_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226332_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226332_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226332_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226332_FOV_REF_ANGLE             = ( 45.000 )
+         INS-226332_FOV_CROSS_ANGLE           = ( 45.000 )
+         INS-226332_FOV_ANGLE_UNITS           = 'DEGREES'
+
+
+      \begintext
+
+
+Platform ID
+---------------------------------------------------------------------------
+
+   This number is the NAIF instrument ID of the platform on which the
+   sensors are mounted. For all ROSINA sensors this platform is the
+   spacecraft.
+
+      \begindata
+
+      INS-226310_PLATFORM_ID  = ( -226000 )
+      INS-226311_PLATFORM_ID  = ( -226000 )
+      INS-226312_PLATFORM_ID  = ( -226000 )
+      INS-226320_PLATFORM_ID  = ( -226000 )
+      INS-226330_PLATFORM_ID  = ( -226000 )
+      INS-226331_PLATFORM_ID  = ( -226000 )
+      INS-226332_PLATFORM_ID  = ( -226000 )
+
+      \begintext
+
+

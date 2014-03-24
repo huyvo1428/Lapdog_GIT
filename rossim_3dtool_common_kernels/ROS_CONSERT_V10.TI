@@ -1,0 +1,233 @@
+KPL/IK
+
+CONSERT Instrument kernel
+===========================================================================
+
+   This instrument kernel (I-kernel) contains CONSERT parameters and
+   field-of-view definition.
+
+
+Version and Date
+---------------------------------------------------------------------------
+
+   Version 1.0 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Version number change for the first official release.
+
+   Version 0.1 -- September 2, 2004 -- Boris Semenov, NAIF/JPL
+
+      Filled in instrument overview section (copied from [6]).
+
+   Version 0.0 -- September 1, 2004 -- Boris Semenov, NAIF/JPL
+
+      Initial release.
+
+
+References
+---------------------------------------------------------------------------
+
+   1. ``Kernel Pool Required Reading''
+
+   2. ``C-kernel Required Reading''
+
+   3. ``CONSERT EID, Part B'', ROS-EST-RS-3007/EID B, 2001-02-15
+
+   4. Rosetta Frames Definition Kernel (FK), latest version.
+
+   5. ``CONSERT User Manual'', RO-OCN-TN-3044, 2002-10-17 
+
+   6. ESA Science and Technology Web Server, Rosetta Instruments Area,
+      http://sci.esa.int/science-e/www/object/index.cfm?fobjectid=35061
+
+
+Implementation Notes
+--------------------------------------------------------
+
+   Applications that need SPICE I-kernel data must ``load'' the I-kernel
+   file, normally during program initialization.
+
+   Loading the kernel using the SPICELIB routine FURNSH causes the data
+   items and their associated values present in the kernel to become
+   associated with a data structure called the ``kernel pool''. The
+   application program may then obtain the value(s) for any IK data
+   item using the SPICELIB routines GDPOOL, GIPOOL, GCPOOL. Routine
+   GETFOV may be used if the file contains instrument field-of-view
+   (FOV) specification. See [1] for details.
+
+   This file was created with, and can be updated with a text editor or
+   word processor.
+
+
+Conventions for Specifying Data
+--------------------------------------------------------
+
+   Data items are specified using ``keyword=value'' assignments [1].
+   All keywords referencing values in this I-kernel start with the
+   characters `INS' followed by the NAIF Rosetta instrument ID code,
+   constructed using the spacecraft ID number (-226) followed by the
+   NAIF three digit ID number for CONSERT (160).
+
+   The remainder of the keyword is an underscore character followed by
+   the unique name of the data item. For example, the boresight of the
+   CONSERT FOV is specified by
+
+               INS-226160_BORESIGHT
+
+   The upper bound on the length of all keywords is 32 characters.
+
+   If a keyword is included in more than one file, or if the same
+   keyword appears more than once within a single file, the last
+   assignment supersedes any earlier assignments.
+
+
+Overview
+--------------------------------------------------------
+
+   From [6]:
+ 
+      CONSERT (Comet Nucleus Sounding Experiment by Radio wave
+      Transmission) will perform tomography of the comet nucleus.
+      CONSERT operates as a time domain transponder between one module
+      which will land on the comet surface and another that will orbit
+      the comet. A radio signal passes from the orbiting component of
+      the instrument to the component on the comet surface and is then
+      immediately transmitted back to its source. The varying
+      propagation delay as the radio waves pass through different parts
+      of the cometary nucleus will be used to determine the dielectric
+      properties of the nuclear material.
+
+      Summary of CONSERT Characteristics
+
+         Centre frequency (MHz):
+            90
+
+         Bandwidth (MHz):
+            10
+
+         Mass (kg):
+            3.1
+
+         Dimensions - electronics (l x w x h, mm):
+            160 x 300 x 46
+
+         Dimensions - antenna, deployed (l x w x h, mm):
+            1528 x 1837 x 1035
+
+         Power consumption (average, W):
+            2.5
+
+
+Mounting Alignment
+--------------------------------------------------------
+
+   Refer to the latest version of the Rosetta Frames Definition Kernel
+   (FK) [4] for the CONSERT reference frame definitions and mounting
+   alignment information.
+
+
+Apparent FOV Layout
+--------------------------------------------------------
+
+   WARNING -- the description/diagram is this section have not been
+   verified
+
+   This section provides a diagram illustrating the CONSERT FOV layout
+   in the CONSERT reference frame.
+
+
+                                  ^
+                                  |  direction of 
+                                  |    flight
+                                  |
+
+                                  ^ +Xconsert (down-track)
+                                  |
+                                  |
+       ---                     .__|__.
+        ^                    .'   |   `. 
+        |                   /     |     \
+        |                  .      |      .          
+        | 80 deg           |      x-------------> +Yconsert (cross-track)
+        |                  .   +Zconsert .
+        |                   \           /
+        v                    `.       .' 
+       ---                     ` --- '
+
+
+                           |    80 deg   |        Boresight (+Z axis)
+                           |<----------->|         is into the page
+                           |             |
+
+
+FOV Parameters
+--------------------------------------------------------
+
+   The following CONSERT FOV parameters are included in the data section
+   below, from [3]:
+
+      -----------------------------------------------------------------
+             parameter             value
+      -----------------------------------------------------------------
+      Field of view (deg)
+          Cross-track              80.0
+          Along-track              80.0
+      -----------------------------------------------------------------
+
+   The keywords below provide FOV angular size in radians, with the
+   cross-track size being the first value and the along-track size
+   being the second value in each pair. Since the FOV is just a single
+   pixel, IFOV is equal to the FOV in size and the pixel size parameters
+   are set accordingly.
+
+      \begindata
+
+         INS-226160_FOV_ANGULAR_SIZE   = ( 1.39626340, 1.39626340 )
+         INS-226160_IFOV               = ( 1.39626340, 1.39626340 )
+         INS-226160_PIXEL_SAMPLES      = ( 1 )
+         INS-226160_PIXEL_LINES        = ( 1 )
+         INS-226160_CCD_CENTER         = ( 0.5, 0.5 )
+
+      \begintext
+
+
+FOV Definitions
+---------------------------------------------------------------------------
+
+   This section contains definition for the CONSERT FOV. This
+   definition is provided in the format required by the SPICE (CSPICE)
+   function GETFOV (getfov_c).
+   
+   The set of assignments in the data section below defines the CONSERT
+   FOV with respect to the CONSERT instrument frame as a circle of
+   the size provided in the section above and the boresight along the
+   +Z axis.
+
+      \begindata
+
+         INS-226160_FOV_FRAME                 = 'ROS_CONSERT'
+         INS-226160_FOV_SHAPE                 = 'CIRCLE'
+         INS-226160_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226160_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226160_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226160_FOV_REF_ANGLE             = ( 40.000 )
+         INS-226160_FOV_ANGLE_UNITS           = 'DEGREES'
+
+      \begintext
+
+
+Platform ID
+---------------------------------------------------------------------------
+
+   This number is the NAIF instrument ID of the platform on which the
+   instrument is mounted. For CONSERT this platform is the spacecraft.
+
+      \begindata
+
+      INS-226160_PLATFORM_ID  = ( -226000 )
+
+      \begintext
+

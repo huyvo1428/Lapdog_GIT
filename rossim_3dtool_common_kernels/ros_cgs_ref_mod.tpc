@@ -1,0 +1,20 @@
+KPL/PCK
+
+Comet Churyumov-Gerasimenko
+
+File created by Bjoern Grieger.
+
+The direction of the rotation axis and the rotation period are based on
+RO-ESC-TN-5566 as of 2012-Mar-30.
+
+The phase of the rotation is chosen so that at the reference time
+2014-08-07T12:00:00 TDB the axis of the rotation from J2000 to the comet
+fixed frame is prependicular to the z-axis.
+
+     \begindata
+ 
+        BODY1000012_POLE_RA       = (  220.0            0.0            0.0 )
+        BODY1000012_POLE_DEC      = (  -70.0            0.0            0.0 )
+        BODY1000012_PM            = (  -86.369364827  679.245283019    0.0 )
+ 
+     \begintext

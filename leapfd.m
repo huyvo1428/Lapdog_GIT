@@ -11,43 +11,55 @@ lgolay=varargin{1,1};
 
 if nargin >2
     
-    x= smooth(x,lgolay,'sgolay');
+    x= smooth(x,'sgolay',lgolay);
 end
 
 
-if length(x) ==length(y)
-            
-    for j = 2: length(x)-1
+len=length(x);
+
+if len ==length(y)
+    
+
+    
+    
+        for j = 2: length(x)-1
+    
+            %leapfrog derivative method
+    
+            dx(j)= (x(j-1)-x(j+1))/(y(j-1)-y(j+1)); %dx/dy
+    
+    
+        end%for
+    
+    
+    dx(1)= (x(1)-x(1+1))/(y(1)-y(1+1)); %dx/dy forward differentiation
+    dx(len)= (x(len-1)-x(len))/(y(len-1)-y(len)); %dx/dy backward differentiation
+    
+    
+    
+    
+    if nargin >2
         
-        %leapfrog derivative method
-
-        dx(j)= (x(j-1)-x(j+1))/(y(j-1)-y(j+1)); %dx/dy
-
-        
-    end%for
+        dx= smooth(dx,'sgolay',lgolay);
+    end
     
-    dx(1)= (x(1)-x(1+1))/(y(1)-y(1+1)); %dx/dy
-    dx(j+1)= (x(j)-x(j+1))/(y(j)-y(j+1)); %dx/dy
- 
     
-if nargin >2
     
-    dx= smooth(dx,lgolay,'sgolay');
-end
-  
+  %  d2x(2:length(x)-2) = diff(diff(dx))/diff(diff(y));
     
-for j= 2:length(x)-1
-        %leapfrog derivative method
-        d2x(j)= (dx(j-1)-dx(j+1))/(y(j-1)-y(j+1)); %d2x/dy^2
-
-    end%for
+    
+    for j= 2:length(x)-1
+            %leapfrog derivative method
+            d2x(j)= (dx(j-1)-dx(j+1))/(y(j-1)-y(j+1)); %d2x/dy^2
+    
+        end%for
     
     d2x(1)= (dx(1)-dx(1+1))/(y(1)-y(1+1)); %d2x/dy^2  forward differentiation, larger error
-    d2x(j+1)= (dx(j)-dx(j+1))/(y(j)-y(j+1)); %d2x/dy^2   %backward differentiation, larger error
+    d2x(len)= (dx(len-1)-dx(len))/(y(len-1)-y(len)); %d2x/dy^2   %backward differentiation
     
-
-
-
+    
+    
+    
 end
 
 

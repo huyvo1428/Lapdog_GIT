@@ -1,0 +1,373 @@
+KPL/IK
+
+OSIRIS Instrument kernel
+===========================================================================
+
+   This instrument kernel (I-kernel) contains Rosetta Optical,
+   Spectroscopic, and Infrared Remote Imaging System (OSIRIS) Narrow
+   Angle Camera (NAC) and Wide Angle Camera (WAC) optics, detector, and
+   field-of-view parameters.
+
+
+Version and Date
+---------------------------------------------------------------------------
+
+   Version 1.0 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Version number change for the first official release.
+
+   Version 0.2 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Corrected typo in WAC FOV boresight definition.
+
+   Version 0.1 -- September 2, 2004 -- Boris Semenov, NAIF/JPL
+
+      Filled in instrument overview section (copied from [6]).
+
+   Version 0.0 -- August 3, 2004 -- Boris Semenov, NAIF/JPL
+
+      Initial release.
+
+
+References
+---------------------------------------------------------------------------
+
+   1. ``Kernel Pool Required Reading''
+
+   2. ``C-kernel Required Reading''
+
+   3. ``OSIRIS EID, Part B'', ROS-EST-RS-3016/EID B, 2001-05-15
+
+   4. Rosetta Frames Definition Kernel (FK), latest version.
+
+   5. ``OSIRIS User Manual'', RO-RIS-MPAE-SP-025, 2002-04-30 
+
+   6. ESA Science and Technology Web Server, Rosetta Instruments Area,
+      http://sci.esa.int/science-e/www/object/index.cfm?fobjectid=35061
+
+
+Implementation Notes
+--------------------------------------------------------
+
+   Applications that need SPICE I-kernel data must ``load'' the I-kernel
+   file, normally during program initialization.
+
+   Loading the kernel using the SPICELIB routine FURNSH causes the data
+   items and their associated values present in the kernel to become
+   associated with a data structure called the ``kernel pool''. The
+   application program may then obtain the value(s) for any IK data
+   item using the SPICELIB routines GDPOOL, GIPOOL, GCPOOL. Routine
+   GETFOV may be used if the file contains instrument field-of-view
+   (FOV) specification. See [1] for details.
+
+   This file was created with, and can be updated with a text editor or
+   word processor.
+
+
+Conventions for Specifying Data
+--------------------------------------------------------
+
+   Data items are specified using ``keyword=value'' assignments [1].
+   All keywords referencing values in this I-kernel start with the
+   characters `INS' followed by the NAIF Rosetta instrument ID code,
+   constructed using the spacecraft ID number (-226) followed by the
+   NAIF three digit ID number for OSIRIS NAC (111) or WAC (112). These
+   IDs are defined in [4] as follows:
+
+               Instrument name          ID
+               --------------------   -------
+               ROS_OSIRIS_NAC         -226111
+               ROS_OSIRIS_WAC         -226112
+
+
+   The remainder of the keyword is an underscore character followed by the
+   unique name of the data item. For example, the focal length of the
+   OSIRIS NAC is specified by
+
+               INS-226111_FOCAL_LENGTH
+
+   The upper bound on the length of all keywords is 32 characters.
+
+   If a keyword is included in more than one file, or if the same
+   keyword appears more than once within a single file, the last
+   assignment supersedes any earlier assignments.
+
+
+Overview
+--------------------------------------------------------
+
+   From [6]:
+
+      OSIRIS (Optical, Spectroscopic, and Infrared Remote Imaging
+      System) is a dual camera imaging system operating in the visible,
+      near infrared and near ultraviolet wavelength ranges. OSIRIS
+      consists of two independent camera systems sharing common
+      electronics. The narrow angle camera is designed to produce high
+      spatial resolution images of the nucleus of the target comet. The
+      wide angle camera has a wide field of view and high straylight
+      rejection to image the dust and gas directly above the surface of
+      the nucleus of the target comet. Each camera is equipped with
+      filter wheels to allow selection of imaging wavelengths for
+      various purposes. The spectroscopic and wider band infrared
+      imaging capabilities originally proposed and incorporated in the
+      instrument name were descoped during development.
+
+      Summary of OSIRIS Characteristics
+
+         Wavelength range (nm):
+            Wide angle camera   -- 250 - 1000
+            Narrow angle camera -- 250 - 1000
+
+         Image scale (microradians per pixel):
+            Wide angle camera   -- 100  
+            Narrow angle camera -- 20
+
+         Field of view (degrees):
+            Wide angle camera   -- 12 x 12      
+            Narrow angle camera -- 2.35 x 2.35
+
+         Optical design:
+            Wide angle camera   -- Two mirror off axis
+            Narrow angle camera -- Three mirror off axis
+
+         F-ratio:
+            Wide angle camera   -- 5.6  
+            Narrow angle camera -- 8.0
+
+         Focal length (mm):
+            Wide angle camera   -- 140
+            Narrow angle camera -- 700
+
+         Mass (including harness, kg):
+            34.4
+
+         Power consumption (maximum, W):
+            57.2
+
+
+Mounting Alignment
+--------------------------------------------------------
+
+   Refer to the latest version of the Rosetta Frames Definition Kernel
+   (FK) [4] for the OSIRIS reference frame definitions and mounting
+   alignment information.
+
+
+Apparent FOV Layout
+--------------------------------------------------------
+
+   WARNING -- the description/diagram is this section have not been verified
+
+   This section provides a diagram illustrating the OSIRIS NAC and WAC
+   apparent FOV layout in the corresponding reference frames.
+
+                                  ^
+                                  |  direction of 
+                                  |    flight
+                                  |
+
+
+                                  ^ +Xnac (down-track)
+                                  | +Xwac
+                      Pixel       |
+       ---            (1,1)-------|---------+
+        ^               |         |         |
+        | 2.35 deg      |         |         |
+        |  (NAC)        |         |         |
+        |               |         |         |
+        |         2048  |         x-------------> +Ynac (cross-track)
+        |         lines |       +Znac       |     +Ywac
+        |               |       +Zwac       |
+        | 12 deg        |                   |
+        V  (WAC)        |                   |
+       ---              +-------------------+
+                          2048 pixels/line
+
+                        |  2.35 deg (NAC)   |      Boresight (+Z axis)
+                        |<----------------->|       is into the page
+                        |   12 deg (WAC)    |
+
+
+Optical Parameters
+--------------------------------------------------------
+
+   The following OSIRIS NAC and WAC nominal first order optical
+   parameters are included in the data section below, from [3]:
+
+      -----------------------------------------------------------------
+             parameter                    NAC                 WAC
+      -----------------------------------------------------------------
+      Focal Length, mm                    700.0               140
+      f/ratio                             f/8                 f/5.6
+      IFOV, rad/pixel                     0.000020            0.000100
+      Field of view (deg)
+          Cross-track                     2.35                12.0
+          Along-track                     2.35                12.0
+      -----------------------------------------------------------------
+
+   The keywords below provide nominal data both cameras. Angular size
+   values in the keywords are given radians, with the cross-track size
+   being the first value and the along-track size being the second
+   value in each pair.
+
+      \begindata
+
+         INS-226111_FOCAL_LENGTH       = ( 700.0                )
+         INS-226111_F/RATIO            = (   8.0                )
+         INS-226111_FOV_ANGULAR_SIZE   = (   0.041015, 0.041015 )
+         INS-226111_IFOV               = (   0.000020           )
+
+         INS-226112_FOCAL_LENGTH       = ( 140.0                )
+         INS-226112_F/RATIO            = (   5.6                )
+         INS-226112_FOV_ANGULAR_SIZE   = (   0.209440, 0.209440 )
+         INS-226112_IFOV               = (   0.000100           )
+
+      \begintext
+
+
+CCD Parameters
+--------------------------------------------------------
+
+   The NAC and WAC use the CCD detector of the same type with the following
+   nominal geometry parameters, from [6]:
+
+      -----------------------------------------------------------------
+             parameter                     value      note
+      -----------------------------------------------------------------
+      Pixel Size, microns
+          Cross-track                      13.5
+          Along-track                      13.5
+      Detector Array Size
+          Cross-track                      2048
+          Along-track                      2048
+      Detector Array Center
+          Cross-track                      1023.5
+          Along-track                      1023.5
+      -----------------------------------------------------------------
+
+   The values are given in microns for PIXEL_SIZE keywords and in counts
+   for PIXEL_SAMPLES, PIXEL_LINES, and CENTER keywords.
+
+      \begindata
+
+         INS-226111_PIXEL_SIZE         = ( 13.5, 13.5 )
+         INS-226111_PIXEL_SAMPLES      = ( 2048 )
+         INS-226111_PIXEL_LINES        = ( 2048 )
+         INS-226111_CCD_CENTER         = ( 1023.5, 1023.5 )
+
+         INS-226112_PIXEL_SIZE         = ( 13.5, 13.5 )
+         INS-226112_PIXEL_SAMPLES      = ( 2048 )
+         INS-226112_PIXEL_LINES        = ( 2048 )
+         INS-226112_CCD_CENTER         = ( 1023.5, 1023.5 )
+
+      \begintext
+
+
+Filter Parameters
+---------------------------------------------------------------------------
+
+   This section contains NAC and WAC filter parameters.
+    
+
+NAC
+
+   [TBD]
+
+WAC
+
+   [TBD]
+
+
+FOV Definitions
+---------------------------------------------------------------------------
+
+   This section contains definitions for the OSIRIS NAC and WAC FOVs.
+   These definitions are provided in the format required by the SPICE
+   (CSPICE) function GETFOV (getfov_c).
+   
+NAC FOV
+
+   The set of assignments in the data section below defines the NAC FOV
+   with respect to the ROS_OSIRIS_NAC frame to be a rectangle with the
+   corners defined by the first and last pixels of the first and last
+   lines of the CCD and the boresight along the +Z axis of the
+   ROS_OSIRIS_NAC frame. This FOV definition uses angular extent style
+   specification with the cross and along track angular sizes taken
+   from the ``Optics Parameters'' section above.
+
+      \begindata
+
+         INS-226111_FOV_FRAME                 = 'ROS_OSIRIS_NAC'
+         INS-226111_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226111_BORESIGHT                 = (
+                                            0.000000     0.000000   700.000000
+                                                )
+         INS-226111_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226111_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226111_FOV_REF_ANGLE             = ( 1.175 )
+         INS-226111_FOV_CROSS_ANGLE           = ( 1.175 )
+         INS-226111_FOV_ANGLE_UNITS           = 'DEGREES'
+
+      \begintext
+
+WAC FOV
+
+   The set of assignments in the data section below defines the WAC FOV
+   with respect to the ROS_OSIRIS_WAC frame to be a rectangle with the
+   corners defined by the first and last pixels of the first and last
+   lines of the CCD and the boresight along the +Z axis of the
+   ROS_OSIRIS_WAC frame. This FOV definition uses angular extent style
+   specification with the cross and along track angular sizes taken
+   from the ``Optics Parameters'' section above.
+
+      \begindata
+
+         INS-226112_FOV_FRAME                 = 'ROS_OSIRIS_WAC'
+         INS-226112_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226112_BORESIGHT                 = (
+                                            0.000000     0.000000   140.000000
+                                                )
+         INS-226112_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226112_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226112_FOV_REF_ANGLE             = ( 6.000 )
+         INS-226112_FOV_CROSS_ANGLE           = ( 6.000 )
+         INS-226112_FOV_ANGLE_UNITS           = 'DEGREES'
+
+      \begintext
+
+
+Optical Distortion
+--------------------------------------------------------
+
+   This section provides optical distortion and geometric calibration
+   data for OSIRIS NAC and WACs.
+
+
+NAC 
+
+   [TBD].
+
+
+WAC
+
+   [TBD].
+
+
+Platform ID
+---------------------------------------------------------------------------
+
+   This number is the NAIF instrument ID of the platform on which the
+   cameras are mounted. For both cameras this platform is the
+   spacecraft.
+
+      \begindata
+
+      INS-226111_PLATFORM_ID  = ( -226000 )
+      INS-226112_PLATFORM_ID  = ( -226000 )
+
+      \begintext
+

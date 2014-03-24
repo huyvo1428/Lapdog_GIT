@@ -1,0 +1,43 @@
+KPL/PCK
+
+Comet Churyumov-Gerasimenko
+
+File created by Bjoern Grieger.
+
+The direction of the rotation axis and the rotation period are based on
+RO-ESC-TN-5566 as of 2012-Mar-30.
+
+The phase of the rotation is chosen so that at the reference time
+2014-08-07T12:00:00 TDB the axis of the rotation from J2000 to the comet
+fixed frame is prependicular to the z-axis.
+
+     \begindata
+ 
+        BODY1000012_POLE_RA       = (  220.0            0.0            0.0 )
+        BODY1000012_POLE_DEC      = (  -70.0            0.0            0.0 )
+        BODY1000012_PM            = (  -86.369364827  679.245283019    0.0 )
+ 
+     \begintext
+
+An ellipsoid of the same volume as the polyhedron shape model was fitted to
+the shape model. The optimisation criterion was maximum common volume. The
+smallest radius of the ellipsoid was restricted to be along the z-axis.
+
+     \begindata
+
+        BODY1000012_RADII         = (    2.398          1.887          1.532 )
+        BODY1000012_LONG_AXIS     =     22.39
+
+     \begintext
+
+The term BODY1000012_LONG_AXIS is the POSITIVE WEST LONGITUDE, measured
+from the prime meridian, of the longest axis of the ellipsoid.
+
+SPICELIB SOFTWARE DOES NOT CURRENTLY MAKE USE OF THIS TERM !!!
+
+In order to use the ellipsoid shape model with correct orientation
+relative to the polyhedron shape model, an auxiliary frame with
+appropriate rotation relative to the body fixed frame is needed. Such
+a frame named 67P/C-G_ELLIPSOID is provided in the kernel ros_aux.tf.
+E.g., in calls to SINCPT, the name 67P/C-G_ELLIPSOID has to be passed
+as body-fixed, body-centered target body frame.

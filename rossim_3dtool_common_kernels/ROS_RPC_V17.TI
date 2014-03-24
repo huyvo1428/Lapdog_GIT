@@ -1,0 +1,1795 @@
+KPL/IK
+
+RPC Instrument kernel
+===========================================================================
+
+   This instrument kernel (I-kernel) contains RPC sensor parameters
+   and field-of-view definitions.
+
+
+Version and Date
+---------------------------------------------------------------------------
+
+   Version 1.7 -- June 17, 2011 -- Boris Semenov, NAIF
+
+      Updated comments: documented discrepancy between the sector size
+      keyword name for -226521/IES-E and -226530/ICA (_SECTOR_SIZES)
+      the sector size keyword name for -226522/IES-I (_SECTOR_SIZE).
+
+   Version 1.6 -- May 27, 2011 -- Boris Semenov, NAIF
+
+      Fixed error in INS-226522_SECTOR_SIZE: converted negative 
+      size values to positive values.
+
+   Version 1.5 -- October 18, 2006 -- Boris Semenov, NAIF
+
+      Updated the date of the RPC User Manual release and fixed the typo 
+      in the legends of the IES and ICA cross-plane layout ASCII diagrams.
+
+   Version 1.4 -- September 5, 2006 -- Boris Semenov, NAIF
+
+      Filled in sector layout information for ICA.
+
+   Version 1.3 -- August 22, 2006 -- Boris Semenov, NAIF
+
+      Updated IES ion and electron sensor out-of-plane sector counts
+      and sector view directions and sizes based on [8].
+
+   Version 1.2 -- May 1, 2006 -- Boris Semenov, NAIF
+
+      Filled in sector layout information for IES ion and electron 
+      sensors.
+
+   Version 1.1 -- May 31, 2005 -- Boris Semenov, NAIF
+
+      Updated RPC/MAG instrument names based on the feedback comments
+      from Dr. Ingo Richter [7].
+
+   Version 1.0 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Version number change for the first official release.
+
+   Version 0.1 -- September 24, 2004 -- Boris Semenov, NAIF/JPL
+
+      Initial release.
+
+   Version 0.0 -- September 24, 2004 -- Boris Semenov, NAIF/JPL
+
+      This version number was skipped.
+
+
+References
+---------------------------------------------------------------------------
+
+   1. ``Kernel Pool Required Reading''
+
+   2. ``C-kernel Required Reading''
+
+   3. ``RPC EID, Part B'', ROS-EST-RO-3012/EID B, 2001-05-15
+
+   4. Rosetta Frames Definition Kernel (FK), latest version.
+
+   5. ``RPC User Manual'', RO-RPC-UM, 11-Nov-2005
+
+   6. ESA Science and Technology Web Server, Rosetta Instruments Area,
+      http://sci.esa.int/science-e/www/object/index.cfm?fobjectid=35061
+
+   7. E-mail "ROSETTA RPC-MAG FK / IK Comments" from Dr. Ingo Richter,
+      2005/04/19.
+
+   8. E-mails from Raymond Goldstein and Aimee Mostella, SWRI, August 
+      2006.
+
+   9. RPC-ICA-EAICD, November 5, 2003
+
+
+Implementation Notes
+--------------------------------------------------------
+
+   Applications that need SPICE I-kernel data must ``load'' the I-kernel
+   file, normally during program initialization.
+
+   Loading the kernel using the SPICELIB routine FURNSH causes the data
+   items and their associated values present in the kernel to become
+   associated with a data structure called the ``kernel pool''. The
+   application program may then obtain the value(s) for any IK data
+   item using the SPICELIB routines GDPOOL, GIPOOL, GCPOOL. Routine
+   GETFOV may be used if the file contains instrument field-of-view
+   (FOV) specification. See [1] for details.
+
+   This file was created with, and can be updated with a text editor or
+   word processor.
+
+
+Conventions for Specifying Data
+--------------------------------------------------------
+
+   Data items are specified using ``keyword=value'' assignments [1].
+   All keywords referencing values in this I-kernel start with the
+   characters `INS' followed by the NAIF Rosetta instrument ID code,
+   constructed using the spacecraft ID number (-226) followed by the
+   NAIF three digit ID number for RPC sensor or structure. The 
+   IDs for RPC are defined in [4] as follows:
+
+               Instrument name          ID
+               --------------------   -------
+               ROS_RPC                -226500
+               ROS_RPC_LAP1           -226511
+               ROS_RPC_LAP2           -226512
+               ROS_RPC_LAP1_URF       -226515
+               ROS_RPC_LAP2_URF       -226516
+               ROS_RPC_IES            -226520
+               ROS_RPC_IES_ELECTRON   -226521
+               ROS_RPC_IES_ION        -226522
+               ROS_RPC_IES_URF        -226525
+               ROS_RPC_IES_QUAD1      -226526 (*)
+               ROS_RPC_IES_QUAD2      -226527 (*)
+               ROS_RPC_IES_QUAD3      -226528 (*)
+               ROS_RPC_IES_QUAD4      -226529 (*)
+               ROS_RPC_ICA            -226530
+               ROS_RPC_ICA_URF        -226535
+               ROS_RPC_ICA_QUAD1      -226536 (*)
+               ROS_RPC_ICA_QUAD2      -226537 (*)
+               ROS_RPC_ICA_QUAD3      -226538 (*)
+               ROS_RPC_ICA_QUAD4      -226539 (*)
+               ROS_RPC_MAG_OB         -226541
+               ROS_RPC_MAG_IB         -226542
+               ROS_RPC_MAG_OB_URF     -226545
+               ROS_RPC_MAG_IB_URF     -226546
+               ROS_RPC_MIP            -226550
+               ROS_RPC_MIP_R1         -226551
+               ROS_RPC_MIP_T1         -226552
+               ROS_RPC_MIP_T2         -226553
+               ROS_RPC_MIP_R2         -226554
+               ROS_RPC_MIP_URF        -226555
+               ROS_RPC_BOOM1          -226560
+               ROS_RPC_BOOM2          -226570
+
+   (*) The "_QUAD#" names and IDs for IES and ICA do not correspond 
+       to any of the sensor's physical structures. They are introduced
+       to make possible an approximation of the sensor's FOV with four
+       rectangular 90 x 90 degrees quadrants.
+
+   The remainder of the keyword is an underscore character followed by
+   the unique name of the data item. For example, the boresight of the
+   RPC ICA QUAD3 FOV is specified by
+
+               INS-226538_BORESIGHT
+
+   The upper bound on the length of all keywords is 32 characters.
+
+   If a keyword is included in more than one file, or if the same
+   keyword appears more than once within a single file, the last
+   assignment supersedes any earlier assignments.
+
+
+Overview
+--------------------------------------------------------
+
+   From [6]:
+
+      RPC (Rosetta Plasma Consortium) is a set of five instruments
+      sharing a common electrical and data interface with the Rosetta
+      orbiter. The RPC instruments are designed to make complementary
+      measurements of the plasma environment around comet
+      67P/Churyumov-Gerasimenko.
+
+      The RPC instruments are:
+
+         *  an Ion Composition Analyser, which measures the
+            three-dimensional velocity distribution and mass
+            distribution of positive ions;
+
+         *  an Ion and Electron Sensor, which will simultaneously
+            measure the flux of electrons and ions in the plasma
+            surrounding the comet,;
+ 
+         *  a Langmuir Probe, which will measure the density,
+            temperature and flow velocity of the cometary plasma ;
+ 
+         *  a Fluxgate Magnetometer, which will measure the magnetic
+            field in the region where the solar wind plasma interacts
+            with the comet; and
+ 
+         *  a Mutual Impedance Probe, which will derive the electron
+            gas density, temperature, and drift velocity in the inner
+            coma of the comet.
+
+
+
+Mounting Alignment
+--------------------------------------------------------
+
+   Refer to the latest version of the Rosetta Frames Definition Kernel
+   (FK) [4] for the RPC reference frame definitions and mounting
+   alignment information.
+
+
+Boom-Mounted Sensor Locations
+--------------------------------------------------------
+
+   The locations of the boom-mounted RPC sensors -- MIP, MAG_OB/MAG_IB,
+   and LAP1/LAP2 -- are provided in the Rosetta structures SPK file.
+   Refer to the comments in that file for specifics of the data stored
+   in it and for recipes for using that data.
+   
+
+Sensor Sector Layout
+--------------------------------------------------------
+
+   This section contains assignments specifying the sensor layout by
+   defining individual sector view directions for IES and ICA sensors.
+
+   The combined aperture of each of the sensors is broken down into a
+   number of equally or unequally spaced sectors to achieve the
+   necessary spatial resolution within the sensor's sensor plane and in
+   the direction normal to it. This table summarizes the individual
+   sensor sector layout (based on [5]):
+
+      ---------   ---------------------   ---------------------
+        Sensor     Number of Sectors        Sector size, deg
+         Name     in-plane  cross-plane   in-plane    cross-plane
+      ---------   --------  -----------   ----------  -----------
+         IES/E       16         16(2)        22.5         5.0
+         IES/I       16         16(2)      45.0/5.0(1)    5.0
+         ICA         16         16           22.5         4.5
+      ---------   ---------------------   ---------------------
+
+   (1) IES/Ion has seven 45 degree sectors and nine 5 degree sectors.
+
+   (2) While most of the IES documentation puts the number of cross-plane 
+       sectors at 18, for engineering reasons the instrument was 
+       configured to have have only 16 cross-plane sectors the with center 
+       view directions 6 degrees apart ([8]).
+
+   The parameters from the table are provided for each sensor using
+   the following keywords:
+
+      NUMBER_OF_SECTORS  -- contains two integers for in-plane and 
+                            cross-plane sector numbers
+
+      SECTOR_SIZE        -- if all sectors have the same size, contains 
+      SECTOR_SIZES          only two numbers (in-plane and cross-plane
+                            sector size in degrees); if sectors have
+                            different sizes, contains in-plane and
+                            cross-plane sector size in degrees for each
+                            sector.
+
+                            SECTOR_SIZE keyword is used for IES/I
+                            (-226522)
+
+                            SECTOR_SIZES keyword is used for IES/E 
+                            (-226521) and ICA (-226530)
+
+      FRAME              -- contains the name of the frame in which 
+                            the sector view directions are defined
+
+      SECTOR_DIRECTIONS  -- contains sector center view directions
+                            for each sector in the sensor symmetry
+                            plane.
+
+   The order of vectors in the SECTOR_DIRECTIONS is different for
+   different sensors. It is described for each particular sensor in
+   that sensor's section of this IK.
+
+   Section "IK Code Example" provided at the bottom of file includes a
+   example C function and an example FORTRAN subroutine that can be
+   used to retrieve values of these parameters for a specifies sensor.
+
+
+IES/Electron Sector Layout
+
+   The IES/Electron Sector's 360.0 x 90.0 degrees aperture is split
+   into 256 sectors -- 16 in-plane (azimuthal) by 16 cross-plane
+   (polar). In the in-plane direction the sectors are numbered from 0
+   to 15, in the cross-plane direction the sectors are also numbered 0
+   to 15. All 16 in-plane sectors are 22.5 degrees wide with their
+   center view directions 22.5 degrees apart. In the cross-plane
+   direction all sectors have the same size of 5 degrees with their
+   center view directions 6 degrees apart. In-plane the "view
+   direction" of each sector is looking inwards, from the sector
+   position through the center of the aperture.
+
+   This diagram illustrates in-plane (azimuthal) IES/Electron sector
+   layout:
+ 
+                         ^ +Yies
+                         |                        A# indicate the azimuthal 
+                     V12 |  V11                     sector # position in 
+                V13  ....|....   V10                 the sensor assembly.
+                  .' A4  |  A3 `.        
+             V14.' A5    |     A2`. V9            V# indicate the # sector
+               . A6      |       A1.                     view direction.
+           V15.          |          . V8          
+              .A7        |        A0.                 For example, for 
+              .          o--------------> +Xies       Sector 2 the view 
+              .A8       / +Zies  A15.              direction is the vector 
+           V0 .        /            . V7             emanating from the 
+               .A9    /         A14.               aperture center through
+             V1 .A10 /         A13.  V6            the point designated
+                 `. / A11  A12  .'                         by V2.
+                 V2 `......... ' V5
+                  /   V3   V4
+                 V
+       Azimuthal sector "3"
+          view direction
+
+
+   This diagram illustrates cross-plane (polar) IES/Electron Sensor
+   sector layout:
+
+ 
+                       +Yies     Polar Sector "3"
+                         ^         ^ view dir.     P# indicate the polar 
+                      V8 | V7     /                 sector # position in
+                    .----|----.  V3                  the sensor assembly.
+            V15  ,-'   P8|P7   `/.   V0
+               .'        |     P3 `.
+              `.P15      |    /  P0.'             V# indicate the # sector
+                `.       |   /   .'                    view direction.
+                  `.     |  /  .'
+                    `.   | / .'                    For example, for polar 
+                      `. |/.'                       Sector 3 the view 
+          <-------------`o'+Xies                  direction is the vector 
+        +Zies          .' `.                        emanating from the
+                     .'     `.                    aperture center through
+                   .'         `.                     the point designated
+                 .'             `.                       by V3.
+               .'P15            P0`.
+               `.                 .'
+             V15 `-.   P8 P7   ,-'  V0
+                    `---------'
+                      V8   V7
+                
+
+   In the keywords below the sector sizes and view directions are
+   listed plane-by-plane, i.e. the first 16 vectors in the array are
+   for azimuthal sectors 0 through 15 in polar plane 0, the next 16
+   vectors -- azimuthal sectors 0 through 15 in polar plane 1, and so
+   on. The sector view direction are defined in the IES frame
+   (ROS_RPC_IES).
+
+      \begindata
+
+      INS-226521_NUMBER_OF_SECTORS = ( 16,   16  )
+
+      INS-226521_SECTOR_SIZES      = ( 
+
+         22.50000000          5.00000000
+
+                                     )
+
+      INS-226521_FRAME             = 'ROS_RPC_IES'
+
+      INS-226521_SECTOR_DIRECTIONS = ( 
+ 
+         -0.69351992         -0.13794969         -0.70710678
+         -0.58793780         -0.39284748         -0.70710678
+         -0.39284748         -0.58793780         -0.70710678
+         -0.13794969         -0.69351992         -0.70710678
+          0.13794969         -0.69351992         -0.70710678
+          0.39284748         -0.58793780         -0.70710678
+          0.58793780         -0.39284748         -0.70710678
+          0.69351992         -0.13794969         -0.70710678
+          0.69351992          0.13794969         -0.70710678
+          0.58793780          0.39284748         -0.70710678
+          0.39284748          0.58793780         -0.70710678
+          0.13794969          0.69351992         -0.70710678
+         -0.13794969          0.69351992         -0.70710678
+         -0.39284748          0.58793780         -0.70710678
+         -0.58793780          0.39284748         -0.70710678
+         -0.69351992          0.13794969         -0.70710678
+
+         -0.76221332         -0.15161366         -0.62932039
+         -0.64617325         -0.43175916         -0.62932039
+         -0.43175916         -0.64617325         -0.62932039
+         -0.15161366         -0.76221332         -0.62932039
+          0.15161366         -0.76221332         -0.62932039
+          0.43175916         -0.64617325         -0.62932039
+          0.64617325         -0.43175916         -0.62932039
+          0.76221332         -0.15161366         -0.62932039
+          0.76221332          0.15161366         -0.62932039
+          0.64617325          0.43175916         -0.62932039
+          0.43175916          0.64617325         -0.62932039
+          0.15161366          0.76221332         -0.62932039
+         -0.15161366          0.76221332         -0.62932039
+         -0.43175916          0.64617325         -0.62932039
+         -0.64617325          0.43175916         -0.62932039
+         -0.76221332          0.15161366         -0.62932039
+
+         -0.82255575         -0.16361651         -0.54463904
+         -0.69732909         -0.46594040         -0.54463904
+         -0.46594040         -0.69732909         -0.54463904
+         -0.16361651         -0.82255575         -0.54463904
+          0.16361651         -0.82255575         -0.54463904
+          0.46594040         -0.69732909         -0.54463904
+          0.69732909         -0.46594040         -0.54463904
+          0.82255575         -0.16361651         -0.54463904
+          0.82255575          0.16361651         -0.54463904
+          0.69732909          0.46594040         -0.54463904
+          0.46594040          0.69732909         -0.54463904
+          0.16361651          0.82255575         -0.54463904
+         -0.16361651          0.82255575         -0.54463904
+         -0.46594040          0.69732909         -0.54463904
+         -0.69732909          0.46594040         -0.54463904
+         -0.82255575          0.16361651         -0.54463904
+
+         -0.87388608         -0.17382675         -0.45399050
+         -0.74084485         -0.49501670         -0.45399050
+         -0.49501670         -0.74084485         -0.45399050
+         -0.17382675         -0.87388608         -0.45399050
+          0.17382675         -0.87388608         -0.45399050
+          0.49501670         -0.74084485         -0.45399050
+          0.74084485         -0.49501670         -0.45399050
+          0.87388608         -0.17382675         -0.45399050
+          0.87388608          0.17382675         -0.45399050
+          0.74084485          0.49501670         -0.45399050
+          0.49501670          0.74084485         -0.45399050
+          0.17382675          0.87388608         -0.45399050
+         -0.17382675          0.87388608         -0.45399050
+         -0.49501670          0.74084485         -0.45399050
+         -0.74084485          0.49501670         -0.45399050
+         -0.87388608          0.17382675         -0.45399050
+
+         -0.91564194         -0.18213251         -0.35836795
+         -0.77624376         -0.51866950         -0.35836795
+         -0.51866950         -0.77624376         -0.35836795
+         -0.18213251         -0.91564194         -0.35836795
+          0.18213251         -0.91564194         -0.35836795
+          0.51866950         -0.77624376         -0.35836795
+          0.77624376         -0.51866950         -0.35836795
+          0.91564194         -0.18213251         -0.35836795
+          0.91564194          0.18213251         -0.35836795
+          0.77624376          0.51866950         -0.35836795
+          0.51866950          0.77624376         -0.35836795
+          0.18213251          0.91564194         -0.35836795
+         -0.18213251          0.91564194         -0.35836795
+         -0.51866950          0.77624376         -0.35836795
+         -0.77624376          0.51866950         -0.35836795
+         -0.91564194          0.18213251         -0.35836795
+
+         -0.94736583         -0.18844278         -0.25881905
+         -0.80313797         -0.53663964         -0.25881905
+         -0.53663964         -0.80313797         -0.25881905
+         -0.18844278         -0.94736583         -0.25881905
+          0.18844278         -0.94736583         -0.25881905
+          0.53663964         -0.80313797         -0.25881905
+          0.80313797         -0.53663964         -0.25881905
+          0.94736583         -0.18844278         -0.25881905
+          0.94736583          0.18844278         -0.25881905
+          0.80313797          0.53663964         -0.25881905
+          0.53663964          0.80313797         -0.25881905
+          0.18844278          0.94736583         -0.25881905
+         -0.18844278          0.94736583         -0.25881905
+         -0.53663964          0.80313797         -0.25881905
+         -0.80313797          0.53663964         -0.25881905
+         -0.94736583          0.18844278         -0.25881905
+
+         -0.96871019         -0.19268844         -0.15643447
+         -0.82123284         -0.54873024         -0.15643447
+         -0.54873024         -0.82123284         -0.15643447
+         -0.19268844         -0.96871019         -0.15643447
+          0.19268844         -0.96871019         -0.15643447
+          0.54873024         -0.82123284         -0.15643447
+          0.82123284         -0.54873024         -0.15643447
+          0.96871019         -0.19268844         -0.15643447
+          0.96871019          0.19268844         -0.15643447
+          0.82123284          0.54873024         -0.15643447
+          0.54873024          0.82123284         -0.15643447
+          0.19268844          0.96871019         -0.15643447
+         -0.19268844          0.96871019         -0.15643447
+         -0.54873024          0.82123284         -0.15643447
+         -0.82123284          0.54873024         -0.15643447
+         -0.96871019          0.19268844         -0.15643447
+
+         -0.97944115         -0.19482296         -0.05233596
+         -0.83033011         -0.55480884         -0.05233596
+         -0.55480884         -0.83033011         -0.05233596
+         -0.19482296         -0.97944115         -0.05233596
+          0.19482296         -0.97944115         -0.05233596
+          0.55480884         -0.83033011         -0.05233596
+          0.83033011         -0.55480884         -0.05233596
+          0.97944115         -0.19482296         -0.05233596
+          0.97944115          0.19482296         -0.05233596
+          0.83033011          0.55480884         -0.05233596
+          0.55480884          0.83033011         -0.05233596
+          0.19482296          0.97944115         -0.05233596
+         -0.19482296          0.97944115         -0.05233596
+         -0.55480884          0.83033011         -0.05233596
+         -0.83033011          0.55480884         -0.05233596
+         -0.97944115          0.19482296         -0.05233596
+
+         -0.97944115         -0.19482296          0.05233596
+         -0.83033011         -0.55480884          0.05233596
+         -0.55480884         -0.83033011          0.05233596
+         -0.19482296         -0.97944115          0.05233596
+          0.19482296         -0.97944115          0.05233596
+          0.55480884         -0.83033011          0.05233596
+          0.83033011         -0.55480884          0.05233596
+          0.97944115         -0.19482296          0.05233596
+          0.97944115          0.19482296          0.05233596
+          0.83033011          0.55480884          0.05233596
+          0.55480884          0.83033011          0.05233596
+          0.19482296          0.97944115          0.05233596
+         -0.19482296          0.97944115          0.05233596
+         -0.55480884          0.83033011          0.05233596
+         -0.83033011          0.55480884          0.05233596
+         -0.97944115          0.19482296          0.05233596
+
+         -0.96871019         -0.19268844          0.15643447
+         -0.82123284         -0.54873024          0.15643447
+         -0.54873024         -0.82123284          0.15643447
+         -0.19268844         -0.96871019          0.15643447
+          0.19268844         -0.96871019          0.15643447
+          0.54873024         -0.82123284          0.15643447
+          0.82123284         -0.54873024          0.15643447
+          0.96871019         -0.19268844          0.15643447
+          0.96871019          0.19268844          0.15643447
+          0.82123284          0.54873024          0.15643447
+          0.54873024          0.82123284          0.15643447
+          0.19268844          0.96871019          0.15643447
+         -0.19268844          0.96871019          0.15643447
+         -0.54873024          0.82123284          0.15643447
+         -0.82123284          0.54873024          0.15643447
+         -0.96871019          0.19268844          0.15643447
+
+         -0.94736583         -0.18844278          0.25881905
+         -0.80313797         -0.53663964          0.25881905
+         -0.53663964         -0.80313797          0.25881905
+         -0.18844278         -0.94736583          0.25881905
+          0.18844278         -0.94736583          0.25881905
+          0.53663964         -0.80313797          0.25881905
+          0.80313797         -0.53663964          0.25881905
+          0.94736583         -0.18844278          0.25881905
+          0.94736583          0.18844278          0.25881905
+          0.80313797          0.53663964          0.25881905
+          0.53663964          0.80313797          0.25881905
+          0.18844278          0.94736583          0.25881905
+         -0.18844278          0.94736583          0.25881905
+         -0.53663964          0.80313797          0.25881905
+         -0.80313797          0.53663964          0.25881905
+         -0.94736583          0.18844278          0.25881905
+
+         -0.91564194         -0.18213251          0.35836795
+         -0.77624376         -0.51866950          0.35836795
+         -0.51866950         -0.77624376          0.35836795
+         -0.18213251         -0.91564194          0.35836795
+          0.18213251         -0.91564194          0.35836795
+          0.51866950         -0.77624376          0.35836795
+          0.77624376         -0.51866950          0.35836795
+          0.91564194         -0.18213251          0.35836795
+          0.91564194          0.18213251          0.35836795
+          0.77624376          0.51866950          0.35836795
+          0.51866950          0.77624376          0.35836795
+          0.18213251          0.91564194          0.35836795
+         -0.18213251          0.91564194          0.35836795
+         -0.51866950          0.77624376          0.35836795
+         -0.77624376          0.51866950          0.35836795
+         -0.91564194          0.18213251          0.35836795
+
+         -0.87388608         -0.17382675          0.45399050
+         -0.74084485         -0.49501670          0.45399050
+         -0.49501670         -0.74084485          0.45399050
+         -0.17382675         -0.87388608          0.45399050
+          0.17382675         -0.87388608          0.45399050
+          0.49501670         -0.74084485          0.45399050
+          0.74084485         -0.49501670          0.45399050
+          0.87388608         -0.17382675          0.45399050
+          0.87388608          0.17382675          0.45399050
+          0.74084485          0.49501670          0.45399050
+          0.49501670          0.74084485          0.45399050
+          0.17382675          0.87388608          0.45399050
+         -0.17382675          0.87388608          0.45399050
+         -0.49501670          0.74084485          0.45399050
+         -0.74084485          0.49501670          0.45399050
+         -0.87388608          0.17382675          0.45399050
+
+         -0.82255575         -0.16361651          0.54463904
+         -0.69732909         -0.46594040          0.54463904
+         -0.46594040         -0.69732909          0.54463904
+         -0.16361651         -0.82255575          0.54463904
+          0.16361651         -0.82255575          0.54463904
+          0.46594040         -0.69732909          0.54463904
+          0.69732909         -0.46594040          0.54463904
+          0.82255575         -0.16361651          0.54463904
+          0.82255575          0.16361651          0.54463904
+          0.69732909          0.46594040          0.54463904
+          0.46594040          0.69732909          0.54463904
+          0.16361651          0.82255575          0.54463904
+         -0.16361651          0.82255575          0.54463904
+         -0.46594040          0.69732909          0.54463904
+         -0.69732909          0.46594040          0.54463904
+         -0.82255575          0.16361651          0.54463904
+
+         -0.76221332         -0.15161366          0.62932039
+         -0.64617325         -0.43175916          0.62932039
+         -0.43175916         -0.64617325          0.62932039
+         -0.15161366         -0.76221332          0.62932039
+          0.15161366         -0.76221332          0.62932039
+          0.43175916         -0.64617325          0.62932039
+          0.64617325         -0.43175916          0.62932039
+          0.76221332         -0.15161366          0.62932039
+          0.76221332          0.15161366          0.62932039
+          0.64617325          0.43175916          0.62932039
+          0.43175916          0.64617325          0.62932039
+          0.15161366          0.76221332          0.62932039
+         -0.15161366          0.76221332          0.62932039
+         -0.43175916          0.64617325          0.62932039
+         -0.64617325          0.43175916          0.62932039
+         -0.76221332          0.15161366          0.62932039
+
+         -0.69351992         -0.13794969          0.70710678
+         -0.58793780         -0.39284748          0.70710678
+         -0.39284748         -0.58793780          0.70710678
+         -0.13794969         -0.69351992          0.70710678
+          0.13794969         -0.69351992          0.70710678
+          0.39284748         -0.58793780          0.70710678
+          0.58793780         -0.39284748          0.70710678
+          0.69351992         -0.13794969          0.70710678
+          0.69351992          0.13794969          0.70710678
+          0.58793780          0.39284748          0.70710678
+          0.39284748          0.58793780          0.70710678
+          0.13794969          0.69351992          0.70710678
+         -0.13794969          0.69351992          0.70710678
+         -0.39284748          0.58793780          0.70710678
+         -0.58793780          0.39284748          0.70710678
+         -0.69351992          0.13794969          0.70710678
+
+                                     )
+
+      \begintext
+
+
+IES/Ion Sector Layout
+
+   The IES/Ion Sector's 360.0 x 90.0 degrees aperture is split into 256
+   sectors -- 16 in-plane (azimuthal) by 16 cross-plane (polar). In the
+   in-plane direction the sectors are numbered from 0 to 15, in the
+   cross-plane direction the sectors are numbered 0 to 15. Not all 16
+   in-plane sectors have the same size: seven of them -- sectors 0-2
+   and 12-15 -- are 45 degrees wide while the other nine -- sectors
+   3-11 -- are 5 degrees wide. In the cross-plane direction all sectors
+   have the same size of 5 degrees with their center view directions 6
+   degrees apart. In-plane the "view direction" of each sector is
+   looking inwards, from the sector position through the center of the
+   aperture.
+
+   This diagram illustrates in-plane (azimuthal) IES/Ion sector layout:
+ 
+                           +Yies
+                         ^ 
+                         |                        A# indicate the azimuthal 
+                         |                          sector # position in 
+                 V15 ....|....  V0                    the sensor assembly.
+                  .' A7 A11    `.        
+                .' A3    |   A12 `.               V# indicate the # sector
+            V14.         |         . V1                  view direction.
+              . A2       |      A13 .             
+              .          |          .     +Xies       For example, for 
+              .          o-------------->           Sector 12 the view 
+              .         / +Zies     .              direction is the vector 
+              . A1     /        A14 .               emanating from the 
+            V13.      /            . V2            aperture center through
+                .    /            .                 the point designated
+                 `.A0        A15.'                         by V12.
+                 V12 ......... ' V3
+                  /      V11  V7
+                 V
+       Azimuthal sector "12"
+          view direction
+
+
+   This diagram illustrates cross-plane (polar) IES/Ion Sensor sector
+   layout:
+
+ 
+                       +Yies     Polar Sector "3"
+                         ^         ^ view dir.     P# indicate the polar 
+                      V8 | V7     /                 sector # position in
+                    .----|----.  V3                  the sensor assembly.
+            V15  ,-'   P8|P7   `/.   V0
+               .'        |     P3 `.
+              `.P15      |    /  P0.'             V# indicate the # sector
+                `.       |   /   .'                    view direction.
+                  `.     |  /  .'
+                    `.   | / .'                    For example, for polar 
+                      `. |/.'                       Sector 3 the view 
+          <-------------`o'+Xies                  direction is the vector 
+        +Zies          .' `.                        emanating from the
+                     .'     `.                    aperture center through
+                   .'         `.                     the point designated
+                 .'             `.                       by V3.
+               .'P15            P0`.
+               `.                 .'
+             V15 `-.   P8 P7   ,-'  V0
+                    `---------'
+                      V8   V7
+                
+
+   In the keywords below the sector sizes and view directions are
+   listed plane-by-plane, i.e. the first 16 vectors in the array are
+   for azimuthal sectors 0 through 15 in polar plane 0, the next 16
+   vectors -- azimuthal sectors 0 through 15 in polar plane 1, and so
+   on. The sector view direction are defined in the IES frame
+   (ROS_RPC_IES).
+
+      \begindata
+
+      INS-226522_NUMBER_OF_SECTORS = ( 16,   16  )
+
+      INS-226522_SECTOR_SIZE       = ( 
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+          5.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+         45.00000000          5.00000000
+
+                                     )
+
+      INS-226522_FRAME             = 'ROS_RPC_IES'
+
+      INS-226522_SECTOR_DIRECTIONS = ( 
+
+          0.27059805          0.65328148         -0.70710678
+          0.65328148          0.27059805         -0.70710678
+          0.65328148         -0.27059805         -0.70710678
+          0.47771442         -0.52133380         -0.70710678
+          0.43045933         -0.56098553         -0.70710678
+          0.37992820         -0.59636781         -0.70710678
+          0.32650558         -0.62721138         -0.70710678
+          0.27059805         -0.65328148         -0.70710678
+          0.21263111         -0.67437972         -0.70710678
+          0.15304592         -0.69034553         -0.70710678
+          0.09229596         -0.70105738         -0.70710678
+          0.03084356         -0.70643377         -0.70710678
+         -0.27059805         -0.65328148         -0.70710678
+         -0.65328148         -0.27059805         -0.70710678
+         -0.65328148          0.27059805         -0.70710678
+         -0.27059805          0.65328148         -0.70710678
+
+          0.29740088          0.71798925         -0.62932039
+          0.71798925          0.29740088         -0.62932039
+          0.71798925         -0.29740088         -0.62932039
+          0.52503220         -0.57297210         -0.62932039
+          0.47309649         -0.61655134         -0.62932039
+          0.41756022         -0.65543826         -0.62932039
+          0.35884607         -0.68933689         -0.62932039
+          0.29740088         -0.71798925         -0.62932039
+          0.23369230         -0.74117728         -0.62932039
+          0.16820517         -0.75872450         -0.62932039
+          0.10143790         -0.77049737         -0.62932039
+          0.03389863         -0.77640629         -0.62932039
+         -0.29740088         -0.71798925         -0.62932039
+         -0.71798925         -0.29740088         -0.62932039
+         -0.71798925          0.29740088         -0.62932039
+         -0.29740088          0.71798925         -0.62932039
+
+          0.32094533          0.77483057         -0.54463904
+          0.77483057          0.32094533         -0.54463904
+          0.77483057         -0.32094533         -0.54463904
+          0.56659762         -0.61833280         -0.54463904
+          0.51055029         -0.66536210         -0.54463904
+          0.45061737         -0.70732758         -0.54463904
+          0.38725497         -0.74390988         -0.54463904
+          0.32094533         -0.77483057         -0.54463904
+          0.25219310         -0.79985434         -0.54463904
+          0.18152153         -0.81879073         -0.54463904
+          0.10946848         -0.83149562         -0.54463904
+          0.03658230         -0.83787234         -0.54463904
+         -0.32094533         -0.77483057         -0.54463904
+         -0.77483057         -0.32094533         -0.54463904
+         -0.77483057          0.32094533         -0.54463904
+         -0.32094533          0.77483057         -0.54463904
+
+          0.34097343          0.82318269         -0.45399050
+          0.82318269          0.34097343         -0.45399050
+          0.82318269         -0.34097343         -0.45399050
+          0.60195528         -0.65691892         -0.45399050
+          0.54241040         -0.70688300         -0.45399050
+          0.47873746         -0.75146728         -0.45399050
+          0.41142103         -0.79033244         -0.45399050
+          0.34097343         -0.82318269         -0.45399050
+          0.26793083         -0.84976803         -0.45399050
+          0.19284911         -0.86988611         -0.45399050
+          0.11629969         -0.88338384         -0.45399050
+          0.03886516         -0.89015848         -0.45399050
+         -0.34097343         -0.82318269         -0.45399050
+         -0.82318269         -0.34097343         -0.45399050
+         -0.82318269          0.34097343         -0.45399050
+         -0.34097343          0.82318269         -0.45399050
+
+          0.35726576          0.86251585         -0.35836795
+          0.86251585          0.35726576         -0.35836795
+          0.86251585         -0.35726576         -0.35836795
+          0.63071779         -0.68830769         -0.35836795
+          0.56832775         -0.74065915         -0.35836795
+          0.50161240         -0.78737375         -0.35836795
+          0.43107947         -0.82809595         -0.35836795
+          0.35726576         -0.86251585         -0.35836795
+          0.28073305         -0.89037148         -0.35836795
+          0.20206379         -0.91145084         -0.35836795
+          0.12185670         -0.92559352         -0.35836795
+          0.04072221         -0.93269186         -0.35836795
+         -0.35726576         -0.86251585         -0.35836795
+         -0.86251585         -0.35726576         -0.35836795
+         -0.86251585          0.35726576         -0.35836795
+         -0.35726576          0.86251585         -0.35836795
+
+          0.36964381          0.89239910         -0.25881905
+          0.89239910          0.36964381         -0.25881905
+          0.89239910         -0.36964381         -0.25881905
+          0.65257003         -0.71215522         -0.25881905
+          0.58801839         -0.76632048         -0.25881905
+          0.51899157         -0.81465358         -0.25881905
+          0.44601491         -0.85678667         -0.25881905
+          0.36964381         -0.89239910         -0.25881905
+          0.29045950         -0.92121983         -0.25881905
+          0.20906461         -0.94302953         -0.25881905
+          0.12607862         -0.95766220         -0.25881905
+          0.04213309         -0.96500648         -0.25881905
+         -0.36964381         -0.89239910         -0.25881905
+         -0.89239910         -0.36964381         -0.25881905
+         -0.89239910          0.36964381         -0.25881905
+         -0.36964381          0.89239910         -0.25881905
+
+          0.37797196          0.91250504         -0.15643447
+          0.91250504          0.37797196         -0.15643447
+          0.91250504         -0.37797196         -0.15643447
+          0.66727257         -0.72820023         -0.15643447
+          0.60126657         -0.78358584         -0.15643447
+          0.53068456         -0.83300790         -0.15643447
+          0.45606372         -0.87609026         -0.15643447
+          0.37797196         -0.91250504         -0.15643447
+          0.29700361         -0.94197511         -0.15643447
+          0.21377488         -0.96427618         -0.15643447
+          0.12891920         -0.97923853         -0.15643447
+          0.04308236         -0.98674828         -0.15643447
+         -0.37797196         -0.91250504         -0.15643447
+         -0.91250504         -0.37797196         -0.15643447
+         -0.91250504          0.37797196         -0.15643447
+         -0.37797196          0.91250504         -0.15643447
+
+          0.38215898          0.92261339         -0.05233596
+          0.92261339          0.38215898         -0.05233596
+          0.92261339         -0.38215898         -0.05233596
+          0.67466433         -0.73626692         -0.05233596
+          0.60792714         -0.79226608         -0.05233596
+          0.53656326         -0.84223561         -0.05233596
+          0.46111580         -0.88579522         -0.05233596
+          0.38215898         -0.92261339         -0.05233596
+          0.30029369         -0.95240991         -0.05233596
+          0.21614299         -0.97495803         -0.05233596
+          0.13034731         -0.99008612         -0.05233596
+          0.04355961         -0.99767906         -0.05233596
+         -0.38215898         -0.92261339         -0.05233596
+         -0.92261339         -0.38215898         -0.05233596
+         -0.92261339          0.38215898         -0.05233596
+         -0.38215898          0.92261339         -0.05233596
+
+          0.38215898          0.92261339          0.05233596
+          0.92261339          0.38215898          0.05233596
+          0.92261339         -0.38215898          0.05233596
+          0.67466433         -0.73626692          0.05233596
+          0.60792714         -0.79226608          0.05233596
+          0.53656326         -0.84223561          0.05233596
+          0.46111580         -0.88579522          0.05233596
+          0.38215898         -0.92261339          0.05233596
+          0.30029369         -0.95240991          0.05233596
+          0.21614299         -0.97495803          0.05233596
+          0.13034731         -0.99008612          0.05233596
+          0.04355961         -0.99767906          0.05233596
+         -0.38215898         -0.92261339          0.05233596
+         -0.92261339         -0.38215898          0.05233596
+         -0.92261339          0.38215898          0.05233596
+         -0.38215898          0.92261339          0.05233596
+
+          0.37797196          0.91250504          0.15643447
+          0.91250504          0.37797196          0.15643447
+          0.91250504         -0.37797196          0.15643447
+          0.66727257         -0.72820023          0.15643447
+          0.60126657         -0.78358584          0.15643447
+          0.53068456         -0.83300790          0.15643447
+          0.45606372         -0.87609026          0.15643447
+          0.37797196         -0.91250504          0.15643447
+          0.29700361         -0.94197511          0.15643447
+          0.21377488         -0.96427618          0.15643447
+          0.12891920         -0.97923853          0.15643447
+          0.04308236         -0.98674828          0.15643447
+         -0.37797196         -0.91250504          0.15643447
+         -0.91250504         -0.37797196          0.15643447
+         -0.91250504          0.37797196          0.15643447
+         -0.37797196          0.91250504          0.15643447
+
+          0.36964381          0.89239910          0.25881905
+          0.89239910          0.36964381          0.25881905
+          0.89239910         -0.36964381          0.25881905
+          0.65257003         -0.71215522          0.25881905
+          0.58801839         -0.76632048          0.25881905
+          0.51899157         -0.81465358          0.25881905
+          0.44601491         -0.85678667          0.25881905
+          0.36964381         -0.89239910          0.25881905
+          0.29045950         -0.92121983          0.25881905
+          0.20906461         -0.94302953          0.25881905
+          0.12607862         -0.95766220          0.25881905
+          0.04213309         -0.96500648          0.25881905
+         -0.36964381         -0.89239910          0.25881905
+         -0.89239910         -0.36964381          0.25881905
+         -0.89239910          0.36964381          0.25881905
+         -0.36964381          0.89239910          0.25881905
+
+          0.35726576          0.86251585          0.35836795
+          0.86251585          0.35726576          0.35836795
+          0.86251585         -0.35726576          0.35836795
+          0.63071779         -0.68830769          0.35836795
+          0.56832775         -0.74065915          0.35836795
+          0.50161240         -0.78737375          0.35836795
+          0.43107947         -0.82809595          0.35836795
+          0.35726576         -0.86251585          0.35836795
+          0.28073305         -0.89037148          0.35836795
+          0.20206379         -0.91145084          0.35836795
+          0.12185670         -0.92559352          0.35836795
+          0.04072221         -0.93269186          0.35836795
+         -0.35726576         -0.86251585          0.35836795
+         -0.86251585         -0.35726576          0.35836795
+         -0.86251585          0.35726576          0.35836795
+         -0.35726576          0.86251585          0.35836795
+
+          0.34097343          0.82318269          0.45399050
+          0.82318269          0.34097343          0.45399050
+          0.82318269         -0.34097343          0.45399050
+          0.60195528         -0.65691892          0.45399050
+          0.54241040         -0.70688300          0.45399050
+          0.47873746         -0.75146728          0.45399050
+          0.41142103         -0.79033244          0.45399050
+          0.34097343         -0.82318269          0.45399050
+          0.26793083         -0.84976803          0.45399050
+          0.19284911         -0.86988611          0.45399050
+          0.11629969         -0.88338384          0.45399050
+          0.03886516         -0.89015848          0.45399050
+         -0.34097343         -0.82318269          0.45399050
+         -0.82318269         -0.34097343          0.45399050
+         -0.82318269          0.34097343          0.45399050
+         -0.34097343          0.82318269          0.45399050
+
+          0.32094533          0.77483057          0.54463904
+          0.77483057          0.32094533          0.54463904
+          0.77483057         -0.32094533          0.54463904
+          0.56659762         -0.61833280          0.54463904
+          0.51055029         -0.66536210          0.54463904
+          0.45061737         -0.70732758          0.54463904
+          0.38725497         -0.74390988          0.54463904
+          0.32094533         -0.77483057          0.54463904
+          0.25219310         -0.79985434          0.54463904
+          0.18152153         -0.81879073          0.54463904
+          0.10946848         -0.83149562          0.54463904
+          0.03658230         -0.83787234          0.54463904
+         -0.32094533         -0.77483057          0.54463904
+         -0.77483057         -0.32094533          0.54463904
+         -0.77483057          0.32094533          0.54463904
+         -0.32094533          0.77483057          0.54463904
+
+          0.29740088          0.71798925          0.62932039
+          0.71798925          0.29740088          0.62932039
+          0.71798925         -0.29740088          0.62932039
+          0.52503220         -0.57297210          0.62932039
+          0.47309649         -0.61655134          0.62932039
+          0.41756022         -0.65543826          0.62932039
+          0.35884607         -0.68933689          0.62932039
+          0.29740088         -0.71798925          0.62932039
+          0.23369230         -0.74117728          0.62932039
+          0.16820517         -0.75872450          0.62932039
+          0.10143790         -0.77049737          0.62932039
+          0.03389863         -0.77640629          0.62932039
+         -0.29740088         -0.71798925          0.62932039
+         -0.71798925         -0.29740088          0.62932039
+         -0.71798925          0.29740088          0.62932039
+         -0.29740088          0.71798925          0.62932039
+
+          0.27059805          0.65328148          0.70710678
+          0.65328148          0.27059805          0.70710678
+          0.65328148         -0.27059805          0.70710678
+          0.47771442         -0.52133380          0.70710678
+          0.43045933         -0.56098553          0.70710678
+          0.37992820         -0.59636781          0.70710678
+          0.32650558         -0.62721138          0.70710678
+          0.27059805         -0.65328148          0.70710678
+          0.21263111         -0.67437972          0.70710678
+          0.15304592         -0.69034553          0.70710678
+          0.09229596         -0.70105738          0.70710678
+          0.03084356         -0.70643377          0.70710678
+         -0.27059805         -0.65328148          0.70710678
+         -0.65328148         -0.27059805          0.70710678
+         -0.65328148          0.27059805          0.70710678
+         -0.27059805          0.65328148          0.70710678
+
+                                     )
+
+      \begintext
+
+
+ICA Sector Layout
+
+   The ICA's 360.0 x 72.00 degrees aperture is split into 256 sectors
+   -- 16 in-plane (azimuthal) by 16 cross-plane (polar). In the
+   in-plane direction the sectors are numbered from 0 to 15, in the
+   cross-plane direction the sectors are also numbered 0 to 15. All 16
+   in-plane sectors are 22.5 degrees wide with their center view
+   directions 22.5 degrees apart. In the cross-plane direction all
+   sectors have the same size of 4.5 degrees with their center view
+   directions 4.5 degrees apart. In-plane the "view direction" of each
+   sector is looking inwards, from the sector position through the
+   center of the aperture.
+
+   This diagram illustrates in-plane (azimuthal) ICA sector layout
+   (based on Figures 2 and 3 from [9]):
+ 
+                                                  A# indicate the azimuthal 
+                     V5     V4                      sector # position in 
+                V6   .........   V3                  the sensor assembly.
+                  .' A13   A12`.        
+             V7 .' A14        A11`. V2            V# indicate the # sector
+               . A15            A10.                     view direction.
+           V8 .                     . V1          
+              .A0                 A9.                 For example, for 
+   +Xica  <--------------o          .                Sector 11 the view 
+              .A1       /|+Zica   A8.              direction is the vector 
+           V9 .        / |          . V0             emanating from the 
+               .A2    /  |       A7.               aperture center through
+            V10 . A3 /   |     A6 .  V15            the point designated
+                 `. / A4 |  A5  .'                         by V11.
+                V11 `....|.... ' V14
+                  /   V12| V13
+                 V       |
+      Azimuthal sector   V  +Yica
+    "11" view direction
+
+
+   This diagram illustrates cross-plane (polar) ICA Sensor sector
+   layout (based on Figure 2 from [9]):
+
+ 
+                       +Yica    Polar Sector "3"
+                         ^         ^ view dir.     A# indicate the polar 
+                      V8 | V7     /                 sector # position in
+                    .----|----.  V3                  the sensor assembly.
+            V15  ,-'   P8|P7   `/.   V0
+               .'        |     P3 `.
+              `.P15      |    /  P0.'             V# indicate the # sector
+                `.       |   /   .'                    view direction.
+                  `.     |  /  .'
+                    `.   | / .'                    For example, for polar 
+                      `. |/.'                       Sector 3 the view 
+          <-------------`o'+Xica                  direction is the vector 
+        +Zica          .' `.                        emanating from the
+                     .'     `.                    aperture center through
+                   .'         `.                     the point designated
+                 .'             `.                       by V3.
+               .'P15            P0`.
+               `.                 .'
+             V15 `-.   P8 P7   ,-'  V0
+                    `---------'
+                      V8   V7
+                
+   In the keywords below the sector sizes and view directions are
+   listed plane-by-plane, i.e. the first 16 vectors in the array are
+   for azimuthal sectors 0 through 15 in polar plane 0, the next 16
+   vectors -- azimuthal sectors 0 through 15 in polar plane 1, and so
+   on. The sector view directions are defined in the ICA frame
+   (ROS_RPC_ICA).
+
+      \begindata
+
+      INS-226530_NUMBER_OF_SECTORS = ( 16,   16  )
+
+      INS-226530_SECTOR_SIZES      = ( 
+
+         22.50000000          4.50000000
+
+                                     )
+
+      INS-226530_FRAME             = 'ROS_RPC_ICA'
+
+      INS-226530_SECTOR_DIRECTIONS = ( 
+ 
+         -0.81549316          0.16221167         -0.55557023
+         -0.81549316         -0.16221167         -0.55557023
+         -0.69134172         -0.46193977         -0.55557023
+         -0.46193977         -0.69134172         -0.55557023
+         -0.16221167         -0.81549316         -0.55557023
+          0.16221167         -0.81549316         -0.55557023
+          0.46193977         -0.69134172         -0.55557023
+          0.69134172         -0.46193977         -0.55557023
+          0.81549316         -0.16221167         -0.55557023
+          0.81549316          0.16221167         -0.55557023
+          0.69134172          0.46193977         -0.55557023
+          0.46193977          0.69134172         -0.55557023
+          0.16221167          0.81549316         -0.55557023
+         -0.16221167          0.81549316         -0.55557023
+         -0.46193977          0.69134172         -0.55557023
+         -0.69134172          0.46193977         -0.55557023
+
+         -0.85573124          0.17021553         -0.48862124
+         -0.85573124         -0.17021553         -0.48862124
+         -0.72545392         -0.48473281         -0.48862124
+         -0.48473281         -0.72545392         -0.48862124
+         -0.17021553         -0.85573124         -0.48862124
+          0.17021553         -0.85573124         -0.48862124
+          0.48473281         -0.72545392         -0.48862124
+          0.72545392         -0.48473281         -0.48862124
+          0.85573124         -0.17021553         -0.48862124
+          0.85573124          0.17021553         -0.48862124
+          0.72545392          0.48473281         -0.48862124
+          0.48473281          0.72545392         -0.48862124
+          0.17021553          0.85573124         -0.48862124
+         -0.17021553          0.85573124         -0.48862124
+         -0.48473281          0.72545392         -0.48862124
+         -0.72545392          0.48473281         -0.48862124
+
+         -0.89069346          0.17716994         -0.41865974
+         -0.89069346         -0.17716994         -0.41865974
+         -0.75509345         -0.50453731         -0.41865974
+         -0.50453731         -0.75509345         -0.41865974
+         -0.17716994         -0.89069346         -0.41865974
+          0.17716994         -0.89069346         -0.41865974
+          0.50453731         -0.75509345         -0.41865974
+          0.75509345         -0.50453731         -0.41865974
+          0.89069346         -0.17716994         -0.41865974
+          0.89069346          0.17716994         -0.41865974
+          0.75509345          0.50453731         -0.41865974
+          0.50453731          0.75509345         -0.41865974
+          0.17716994          0.89069346         -0.41865974
+         -0.17716994          0.89069346         -0.41865974
+         -0.50453731          0.75509345         -0.41865974
+         -0.75509345          0.50453731         -0.41865974
+
+         -0.92016425          0.18303205         -0.34611706
+         -0.92016425         -0.18303205         -0.34611706
+         -0.78007759         -0.52123118         -0.34611706
+         -0.52123118         -0.78007759         -0.34611706
+         -0.18303205         -0.92016425         -0.34611706
+          0.18303205         -0.92016425         -0.34611706
+          0.52123118         -0.78007759         -0.34611706
+          0.78007759         -0.52123118         -0.34611706
+          0.92016425         -0.18303205         -0.34611706
+          0.92016425          0.18303205         -0.34611706
+          0.78007759          0.52123118         -0.34611706
+          0.52123118          0.78007759         -0.34611706
+          0.18303205          0.92016425         -0.34611706
+         -0.18303205          0.92016425         -0.34611706
+         -0.52123118          0.78007759         -0.34611706
+         -0.78007759          0.52123118         -0.34611706
+
+         -0.94396193          0.18776570         -0.27144045
+         -0.94396193         -0.18776570         -0.27144045
+         -0.80025228         -0.53471148         -0.27144045
+         -0.53471148         -0.80025228         -0.27144045
+         -0.18776570         -0.94396193         -0.27144045
+          0.18776570         -0.94396193         -0.27144045
+          0.53471148         -0.80025228         -0.27144045
+          0.80025228         -0.53471148         -0.27144045
+          0.94396193         -0.18776570         -0.27144045
+          0.94396193          0.18776570         -0.27144045
+          0.80025228          0.53471148         -0.27144045
+          0.53471148          0.80025228         -0.27144045
+          0.18776570          0.94396193         -0.27144045
+         -0.18776570          0.94396193         -0.27144045
+         -0.53471148          0.80025228         -0.27144045
+         -0.80025228          0.53471148         -0.27144045
+
+         -0.96193977          0.19134172         -0.19509032
+         -0.96193977         -0.19134172         -0.19509032
+         -0.81549316         -0.54489511         -0.19509032
+         -0.54489511         -0.81549316         -0.19509032
+         -0.19134172         -0.96193977         -0.19509032
+          0.19134172         -0.96193977         -0.19509032
+          0.54489511         -0.81549316         -0.19509032
+          0.81549316         -0.54489511         -0.19509032
+          0.96193977         -0.19134172         -0.19509032
+          0.96193977          0.19134172         -0.19509032
+          0.81549316          0.54489511         -0.19509032
+          0.54489511          0.81549316         -0.19509032
+          0.19134172          0.96193977         -0.19509032
+         -0.19134172          0.96193977         -0.19509032
+         -0.54489511          0.81549316         -0.19509032
+         -0.81549316          0.54489511         -0.19509032
+
+         -0.97398693          0.19373805         -0.11753740
+         -0.97398693         -0.19373805         -0.11753740
+         -0.82570624         -0.55171927         -0.11753740
+         -0.55171927         -0.82570624         -0.11753740
+         -0.19373805         -0.97398693         -0.11753740
+          0.19373805         -0.97398693         -0.11753740
+          0.55171927         -0.82570624         -0.11753740
+          0.82570624         -0.55171927         -0.11753740
+          0.97398693         -0.19373805         -0.11753740
+          0.97398693          0.19373805         -0.11753740
+          0.82570624          0.55171927         -0.11753740
+          0.55171927          0.82570624         -0.11753740
+          0.19373805          0.97398693         -0.11753740
+         -0.19373805          0.97398693         -0.11753740
+         -0.55171927          0.82570624         -0.11753740
+         -0.82570624          0.55171927         -0.11753740
+
+         -0.98002913          0.19493991         -0.03925982
+         -0.98002913         -0.19493991         -0.03925982
+         -0.83082858         -0.55514191         -0.03925982
+         -0.55514191         -0.83082858         -0.03925982
+         -0.19493991         -0.98002913         -0.03925982
+          0.19493991         -0.98002913         -0.03925982
+          0.55514191         -0.83082858         -0.03925982
+          0.83082858         -0.55514191         -0.03925982
+          0.98002913         -0.19493991         -0.03925982
+          0.98002913          0.19493991         -0.03925982
+          0.83082858          0.55514191         -0.03925982
+          0.55514191          0.83082858         -0.03925982
+          0.19493991          0.98002913         -0.03925982
+         -0.19493991          0.98002913         -0.03925982
+         -0.55514191          0.83082858         -0.03925982
+         -0.83082858          0.55514191         -0.03925982
+
+         -0.98002913          0.19493991          0.03925982
+         -0.98002913         -0.19493991          0.03925982
+         -0.83082858         -0.55514191          0.03925982
+         -0.55514191         -0.83082858          0.03925982
+         -0.19493991         -0.98002913          0.03925982
+          0.19493991         -0.98002913          0.03925982
+          0.55514191         -0.83082858          0.03925982
+          0.83082858         -0.55514191          0.03925982
+          0.98002913         -0.19493991          0.03925982
+          0.98002913          0.19493991          0.03925982
+          0.83082858          0.55514191          0.03925982
+          0.55514191          0.83082858          0.03925982
+          0.19493991          0.98002913          0.03925982
+         -0.19493991          0.98002913          0.03925982
+         -0.55514191          0.83082858          0.03925982
+         -0.83082858          0.55514191          0.03925982
+
+         -0.97398693          0.19373805          0.11753740
+         -0.97398693         -0.19373805          0.11753740
+         -0.82570624         -0.55171927          0.11753740
+         -0.55171927         -0.82570624          0.11753740
+         -0.19373805         -0.97398693          0.11753740
+          0.19373805         -0.97398693          0.11753740
+          0.55171927         -0.82570624          0.11753740
+          0.82570624         -0.55171927          0.11753740
+          0.97398693         -0.19373805          0.11753740
+          0.97398693          0.19373805          0.11753740
+          0.82570624          0.55171927          0.11753740
+          0.55171927          0.82570624          0.11753740
+          0.19373805          0.97398693          0.11753740
+         -0.19373805          0.97398693          0.11753740
+         -0.55171927          0.82570624          0.11753740
+         -0.82570624          0.55171927          0.11753740
+
+         -0.96193977          0.19134172          0.19509032
+         -0.96193977         -0.19134172          0.19509032
+         -0.81549316         -0.54489511          0.19509032
+         -0.54489511         -0.81549316          0.19509032
+         -0.19134172         -0.96193977          0.19509032
+          0.19134172         -0.96193977          0.19509032
+          0.54489511         -0.81549316          0.19509032
+          0.81549316         -0.54489511          0.19509032
+          0.96193977         -0.19134172          0.19509032
+          0.96193977          0.19134172          0.19509032
+          0.81549316          0.54489511          0.19509032
+          0.54489511          0.81549316          0.19509032
+          0.19134172          0.96193977          0.19509032
+         -0.19134172          0.96193977          0.19509032
+         -0.54489511          0.81549316          0.19509032
+         -0.81549316          0.54489511          0.19509032
+
+         -0.94396193          0.18776570          0.27144045
+         -0.94396193         -0.18776570          0.27144045
+         -0.80025228         -0.53471148          0.27144045
+         -0.53471148         -0.80025228          0.27144045
+         -0.18776570         -0.94396193          0.27144045
+          0.18776570         -0.94396193          0.27144045
+          0.53471148         -0.80025228          0.27144045
+          0.80025228         -0.53471148          0.27144045
+          0.94396193         -0.18776570          0.27144045
+          0.94396193          0.18776570          0.27144045
+          0.80025228          0.53471148          0.27144045
+          0.53471148          0.80025228          0.27144045
+          0.18776570          0.94396193          0.27144045
+         -0.18776570          0.94396193          0.27144045
+         -0.53471148          0.80025228          0.27144045
+         -0.80025228          0.53471148          0.27144045
+
+         -0.92016425          0.18303205          0.34611706
+         -0.92016425         -0.18303205          0.34611706
+         -0.78007759         -0.52123118          0.34611706
+         -0.52123118         -0.78007759          0.34611706
+         -0.18303205         -0.92016425          0.34611706
+          0.18303205         -0.92016425          0.34611706
+          0.52123118         -0.78007759          0.34611706
+          0.78007759         -0.52123118          0.34611706
+          0.92016425         -0.18303205          0.34611706
+          0.92016425          0.18303205          0.34611706
+          0.78007759          0.52123118          0.34611706
+          0.52123118          0.78007759          0.34611706
+          0.18303205          0.92016425          0.34611706
+         -0.18303205          0.92016425          0.34611706
+         -0.52123118          0.78007759          0.34611706
+         -0.78007759          0.52123118          0.34611706
+
+         -0.89069346          0.17716994          0.41865974
+         -0.89069346         -0.17716994          0.41865974
+         -0.75509345         -0.50453731          0.41865974
+         -0.50453731         -0.75509345          0.41865974
+         -0.17716994         -0.89069346          0.41865974
+          0.17716994         -0.89069346          0.41865974
+          0.50453731         -0.75509345          0.41865974
+          0.75509345         -0.50453731          0.41865974
+          0.89069346         -0.17716994          0.41865974
+          0.89069346          0.17716994          0.41865974
+          0.75509345          0.50453731          0.41865974
+          0.50453731          0.75509345          0.41865974
+          0.17716994          0.89069346          0.41865974
+         -0.17716994          0.89069346          0.41865974
+         -0.50453731          0.75509345          0.41865974
+         -0.75509345          0.50453731          0.41865974
+
+         -0.85573124          0.17021553          0.48862124
+         -0.85573124         -0.17021553          0.48862124
+         -0.72545392         -0.48473281          0.48862124
+         -0.48473281         -0.72545392          0.48862124
+         -0.17021553         -0.85573124          0.48862124
+          0.17021553         -0.85573124          0.48862124
+          0.48473281         -0.72545392          0.48862124
+          0.72545392         -0.48473281          0.48862124
+          0.85573124         -0.17021553          0.48862124
+          0.85573124          0.17021553          0.48862124
+          0.72545392          0.48473281          0.48862124
+          0.48473281          0.72545392          0.48862124
+          0.17021553          0.85573124          0.48862124
+         -0.17021553          0.85573124          0.48862124
+         -0.48473281          0.72545392          0.48862124
+         -0.72545392          0.48473281          0.48862124
+
+         -0.81549316          0.16221167          0.55557023
+         -0.81549316         -0.16221167          0.55557023
+         -0.69134172         -0.46193977          0.55557023
+         -0.46193977         -0.69134172          0.55557023
+         -0.16221167         -0.81549316          0.55557023
+          0.16221167         -0.81549316          0.55557023
+          0.46193977         -0.69134172          0.55557023
+          0.69134172         -0.46193977          0.55557023
+          0.81549316         -0.16221167          0.55557023
+          0.81549316          0.16221167          0.55557023
+          0.69134172          0.46193977          0.55557023
+          0.46193977          0.69134172          0.55557023
+          0.16221167          0.81549316          0.55557023
+         -0.16221167          0.81549316          0.55557023
+         -0.46193977          0.69134172          0.55557023
+         -0.69134172          0.46193977          0.55557023
+
+                                     )
+
+      \begintext
+
+
+FOV Definitions
+---------------------------------------------------------------------------
+
+   This section contains definitions for the RPC IES and ICA quadrant
+   FOVs. These definitions are provided in the format required by the
+   SPICE (CSPICE) function GETFOV (getfov_c).
+ 
+   The set of assignments in the data section below defines the IES and
+   ICA quadrant FOV as 90 x 90 degrees rectangles centered around +X,
+   +Y, -X, and -Y axes of the corresponding instrument frames.
+ 
+   These FOVs do NOT represent actual sensor sector FOVs. Instead the
+   combination of the four quadrant FOVs for each sensor serves as an
+   approximation of the total 90 x 360 degrees toroidal FOV of the
+   sensor.
+
+      \begindata
+
+         INS-226526_FOV_FRAME                 = 'ROS_RPC_IES'
+         INS-226526_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226526_BORESIGHT                 = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226526_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226526_FOV_REF_VECTOR            = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226526_FOV_REF_ANGLE             = ( 45.0 )
+         INS-226526_FOV_CROSS_ANGLE           = ( 45.0 )
+         INS-226526_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226527_FOV_FRAME                 = 'ROS_RPC_IES'
+         INS-226527_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226527_BORESIGHT                 = (
+                                            0.000000     1.000000     0.000000
+                                                )
+         INS-226527_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226527_FOV_REF_VECTOR            = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226527_FOV_REF_ANGLE             = ( 45.0 )
+         INS-226527_FOV_CROSS_ANGLE           = ( 45.0 )
+         INS-226527_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226528_FOV_FRAME                 = 'ROS_RPC_IES'
+         INS-226528_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226528_BORESIGHT                 = (
+                                           -1.000000     0.000000     0.000000
+                                                )
+         INS-226528_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226528_FOV_REF_VECTOR            = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226528_FOV_REF_ANGLE             = ( 45.0 )
+         INS-226528_FOV_CROSS_ANGLE           = ( 45.0 )
+         INS-226528_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226529_FOV_FRAME                 = 'ROS_RPC_IES'
+         INS-226529_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226529_BORESIGHT                 = (
+                                            0.000000    -1.000000     0.000000
+                                                )
+         INS-226529_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226529_FOV_REF_VECTOR            = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226529_FOV_REF_ANGLE             = ( 45.0 )
+         INS-226529_FOV_CROSS_ANGLE           = ( 45.0 )
+         INS-226529_FOV_ANGLE_UNITS           = 'DEGREES'
+
+
+         INS-226536_FOV_FRAME                 = 'ROS_RPC_ICA'
+         INS-226536_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226536_BORESIGHT                 = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226536_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226536_FOV_REF_VECTOR            = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226536_FOV_REF_ANGLE             = ( 45.0 )
+         INS-226536_FOV_CROSS_ANGLE           = ( 45.0 )
+         INS-226536_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226537_FOV_FRAME                 = 'ROS_RPC_ICA'
+         INS-226537_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226537_BORESIGHT                 = (
+                                            0.000000     1.000000     0.000000
+                                                )
+         INS-226537_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226537_FOV_REF_VECTOR            = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226537_FOV_REF_ANGLE             = ( 45.0 )
+         INS-226537_FOV_CROSS_ANGLE           = ( 45.0 )
+         INS-226537_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226538_FOV_FRAME                 = 'ROS_RPC_ICA'
+         INS-226538_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226538_BORESIGHT                 = (
+                                           -1.000000     0.000000     0.000000
+                                                )
+         INS-226538_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226538_FOV_REF_VECTOR            = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226538_FOV_REF_ANGLE             = ( 45.0 )
+         INS-226538_FOV_CROSS_ANGLE           = ( 45.0 )
+         INS-226538_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226539_FOV_FRAME                 = 'ROS_RPC_ICA'
+         INS-226539_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226539_BORESIGHT                 = (
+                                            0.000000    -1.000000     0.000000
+                                                )
+         INS-226539_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226539_FOV_REF_VECTOR            = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226539_FOV_REF_ANGLE             = ( 45.0 )
+         INS-226539_FOV_CROSS_ANGLE           = ( 45.0 )
+         INS-226539_FOV_ANGLE_UNITS           = 'DEGREES'
+
+      \begintext
+
+
+Platform ID
+---------------------------------------------------------------------------
+
+   This number is the NAIF instrument ID of the platform on which the
+   sensors are mounted. For IES and ICA sensors this platform is the
+   spacecraft; for MIP and LAP1 this platform is Boom 1; for MAG_OB,
+   MAG_IB, and LAP2 this platform is Boom 2.
+
+      \begindata
+
+      INS-226520_PLATFORM_ID  = ( -226000 )
+      INS-226530_PLATFORM_ID  = ( -226000 )
+      INS-226550_PLATFORM_ID  = ( -226560 )
+      INS-226511_PLATFORM_ID  = ( -226560 )
+      INS-226541_PLATFORM_ID  = ( -226570 )
+      INS-226542_PLATFORM_ID  = ( -226570 )
+      INS-226512_PLATFORM_ID  = ( -226570 )
+
+      \begintext
+
+
+IK Code Example
+---------------------------------------------------------------------------
+
+   This section contains an example code, in C and FORTRAN,
+   illustrating how geometry parameters the two IES sensor and ICA can
+   be retrieved using appropriate SPICE routine. Both examples are
+   presented as stand-alone functions with SPICE-style header, ready to
+   be cut-n-paste and called from an application.
+
+      [TBD; see MEX ASPERA IK for similar example]
+

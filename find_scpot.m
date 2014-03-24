@@ -13,12 +13,12 @@
 % z is used as a first location of the vicinity in which Vsc should be,
 % then the maximum of the absolute of the second derivative of the
 % current is taken as Vsc, i.e. Vsc = max(abs((d2I))
-function [Vsc1,Vsc2,Vplasma] = find_scpot(Vb,Ib,z)
+function [Vplasma,Vsc2,Vplasma] = find_scpot(Vb,Ib,z)
 Vsc1 = [];
 Vsc2 = [];
 Vsc3 = [];
 lV = length(Vb);
-lI = length(Ib);
+lI = length(Ib);s
 if lV == lI
 % Ib_smooth(1:lI-1) = (Ib(1:lI-1)+Ib(2:lI))./2;
 % Ib_smooth(lI) = Ib(lI);
@@ -38,6 +38,7 @@ Ib2 = Ib_smooth;
 
 
 %one way to find Vplasma (?Vsc)
+
 vbzero= find(le(Vb,0));
 [lfvb,d2i]= leapfd(Ib,Vb,lgolay);
 

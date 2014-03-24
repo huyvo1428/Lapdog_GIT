@@ -1,0 +1,248 @@
+KPL/IK
+
+COSIMA Instrument kernel
+===========================================================================
+
+   This instrument kernel (I-kernel) contains COSIMA parameters and
+   field-of-view definition.
+
+
+Version and Date
+---------------------------------------------------------------------------
+
+   Version 1.3 -- December 22, 2005 -- Jorge Diaz del Rio, RSSD/ESA
+
+      Corrected FOV Angular Size and IFOV definitions.
+
+   Version 1.2 -- December 19, 2005 -- Herwig Hoefner, MPE
+
+      Re-corrected field of view, reference [7] is correct,
+      do does [5] drawings. Table in [5] will be updated.
+
+   Version 1.1 -- December 8, 2005 -- Martin Hilchenbach, MPS
+
+      Corrected field of view [7].
+
+   Version 1.0 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Version number change for the first official release.
+
+   Version 0.1 -- September 2, 2004 -- Boris Semenov, NAIF/JPL
+
+      Filled in instrument overview section (copied from [6]).
+
+   Version 0.0 -- August 5, 2004 -- Boris Semenov, NAIF/JPL
+
+      Initial release.
+
+
+References
+---------------------------------------------------------------------------
+
+   1. ``Kernel Pool Required Reading''
+
+   2. ``C-kernel Required Reading''
+
+   3. ``COSIMA EID, Part B'', ROS-EST-RS-3011/EID B, 2001-05-15
+
+   4. Rosetta Frames Definition Kernel (FK), latest version.
+
+   5. ``COSIMA Users Manual'', RO-ROS-MAN-1009, 2002-12-18 
+
+   6. ESA Science and Technology Web Server, Rosetta Instruments Area,
+      http://sci.esa.int/science-e/www/object/index.cfm?fobjectid=35061
+
+   7. RO-COS-TN-51061, Mechanical Interface Drawings
+
+Implementation Notes
+--------------------------------------------------------
+
+   Applications that need SPICE I-kernel data must ``load'' the I-kernel
+   file, normally during program initialization.
+
+   Loading the kernel using the SPICELIB routine FURNSH causes the data
+   items and their associated values present in the kernel to become
+   associated with a data structure called the ``kernel pool.'' The
+   application program may then obtain the value(s) for any IK data
+   item using the SPICELIB routines GDPOOL, GIPOOL, GCPOOL. Routine
+   GETFOV may be used if the file contains instrument field-of-view
+   (FOV) specification. See [1] for details.
+
+   This file was created with, and can be updated with a text editor or
+   word processor.
+
+
+Conventions for Specifying Data
+--------------------------------------------------------
+
+   Data items are specified using ``keyword=value'' assignments [1].
+   All keywords referencing values in this I-kernel start with the
+   characters `INS' followed by the NAIF Rosetta instrument ID code,
+   constructed using the spacecraft ID number (-226) followed by the
+   NAIF three digit ID number for COSIMA (140).
+
+   The remainder of the keyword is an underscore character followed by
+   the unique name of the data item. For example, the boresight of the
+   COSIMA FOV is specified by
+
+               INS-226140_BORESIGHT
+
+   The upper bound on the length of all keywords is 32 characters.
+
+   If a keyword is included in more than one file, or if the same
+   keyword appears more than once within a single file, the last
+   assignment supersedes any earlier assignments.
+
+
+Overview
+--------------------------------------------------------
+
+   From [6]:
+
+      COSIMA (Cometary Secondary Ion Mass Analyser) is a secondary ion
+      mass spectrometer equipped with a dust collector, a primary ion
+      gun, and an optical microscope for target characterization. Dust
+      from the near comet environment is collected on a target. The
+      target is then moved under a microscope where the positions of
+      any dust particles are determined. The cometary dust particles
+      are then bombarded with pulses of indium ions from the primary
+      ion gun. The resulting secondary ions are extracted into the
+      time-of-flight mass spectrometer.
+
+      Summary of COSIMA Characteristics
+
+         Primary ion source     
+            Liquid metal field ion source plus ion optics producing
+            monoisotopic beam of 115In ions, 10 keV beam energy, 10 mkm
+            beam diameter, 3 ns duration pulses, 2000 pulses per second
+            maximum repetition rate
+
+         Secondary ion detector         
+            Microsphere plate
+
+         Mass resolution (for ion masses of above 28 Da)        
+            > 2000
+
+         Mass (kg)      
+            19.1
+
+         Dimensions (l x w x h, mm)     
+            394 x 973 x 378
+
+         Power consumption (average, W)         
+            20.6
+
+
+Mounting Alignment
+--------------------------------------------------------
+
+   Refer to the latest version of the Rosetta Frames Definition Kernel
+   (FK) [4] for the COSIMA reference frame definitions and mounting
+   alignment information.
+
+
+Apparent FOV Layout
+--------------------------------------------------------
+
+   This section provides a diagram illustrating the COSIMA FOV layout
+   in the COSIMA reference frame.
+
+
+                                  ^
+                                  |  direction of 
+                                  |    flight
+                                  |
+
+                                  ^ +Xcosima (down-track)
+                                  |
+                                  |
+       ---              +---------|---------+ 
+        ^               |         |         |
+        |               |         |         |
+        |               |         |         |
+        |               |         |         |
+        | 20 deg        |         x-------------> +Ycosima (cross-track)
+        |               |     +Zcosima      |
+        |               |                   |
+        |               |                   |
+        V               |                   |
+       ---              +-------------------+
+
+                        |       34 deg      |      Boresight (+Z axis)
+                        |<----------------->|       is into the page
+                        |                   |
+
+
+FOV Parameters
+--------------------------------------------------------
+
+   The following COSIMA FOV parameters are included in the data section
+   below, from [3]:
+
+      -----------------------------------------------------------------
+             parameter             value
+      -----------------------------------------------------------------
+      Field of view (deg)
+          Cross-track              34.0
+          Along-track              20.0
+      -----------------------------------------------------------------
+
+   The keywords below provide FOV angular size in radians, with the
+   cross-track size being the first value and the along-track size
+   being the second value in each pair. Since each FOV is just a single
+   pixel IFOV is equal to the FOV in size and the pixel size parameters
+   are set accordingly.
+
+      \begindata
+
+         INS-226140_FOV_ANGULAR_SIZE   = ( 0.59341195678, 0.349065850399 )
+         INS-226140_IFOV               = ( 0.59341195678, 0.349065850399 )
+         INS-226140_PIXEL_SAMPLES      = ( 1 )
+         INS-226140_PIXEL_LINES        = ( 1 )
+         INS-226140_CCD_CENTER         = ( 0.5, 0.5 )
+
+      \begintext
+
+
+FOV Definitions
+---------------------------------------------------------------------------
+
+   This section contains definition for the COSIMA FOV. This definition
+   is provided in the format required by the SPICE (CSPICE) function
+   GETFOV (getfov_c).
+   
+   The set of assignments in the data section below defines the COSIMA
+   FOV with respect to the COSIMA instrument frame as a rectangle of
+   the size provided in the section above and the boresight along the
+   +Z axis.
+
+      \begindata
+
+         INS-226140_FOV_FRAME                 = 'ROS_COSIMA'
+         INS-226140_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226140_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226140_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226140_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226140_FOV_REF_ANGLE             = ( 10.000 )
+         INS-226140_FOV_CROSS_ANGLE           = ( 17.000 )
+         INS-226140_FOV_ANGLE_UNITS           = 'DEGREES'
+
+      \begintext
+
+
+Platform ID
+---------------------------------------------------------------------------
+
+   This number is the NAIF instrument ID of the platform on which the
+   instrument is mounted. For COSIMA this platform is the spacecraft.
+
+      \begindata
+
+      INS-226140_PLATFORM_ID  = ( -226000 )
+
+      \begintext
+

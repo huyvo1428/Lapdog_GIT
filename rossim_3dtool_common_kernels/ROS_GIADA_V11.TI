@@ -1,0 +1,382 @@
+KPL/IK
+
+GIADA Instrument kernel
+===========================================================================
+
+   This instrument kernel (I-kernel) contains GIADA parameters and
+   field-of-view definition.
+
+
+Version and Date
+---------------------------------------------------------------------------
+
+   Version 1.1 -- March 3, 2008 -- Alessandro Aronica
+
+      - References: update of reference n.5
+      - Overview: some values corrected in the table "Summary of
+        Giada Characteristics"
+      - Apparent FOV Layout: GDS and IS FOV layout modified 
+        according to the instrument structure
+      - FOV Parameters: FOV angular size (deg and radians) swapped
+        for GDS and IS according to the "new" FOV layout
+
+   Version 1.0 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Version number change for the first official release.
+
+   Version 0.1 -- September 2, 2004 -- Boris Semenov, NAIF/JPL
+
+      Filled in instrument overview section (copied from [6]).
+
+   Version 0.0 -- September 2, 2004 -- Boris Semenov, NAIF/JPL
+
+      Initial release.
+
+
+References
+---------------------------------------------------------------------------
+
+   1. ``Kernel Pool Required Reading''
+
+   2. ``C-kernel Required Reading''
+
+   3. ``GIADA EID, Part B'', ROS-EST-RS-3009/EID B, 2001-05-15
+
+   4. Rosetta Frames Definition Kernel (FK), latest version.
+
+   5. ``GIADA FS Experiment User Manual'', RO-GIA-MA-007-I4, 2006-09-28 
+
+   6. ESA Science and Technology Web Server, Rosetta Instruments Area,
+      http://sci.esa.int/science-e/www/object/index.cfm?fobjectid=35061
+
+
+Implementation Notes
+--------------------------------------------------------
+
+   Applications that need SPICE I-kernel data must ``load'' the I-kernel
+   file, normally during program initialization.
+
+   Loading the kernel using the SPICELIB routine FURNSH causes the data
+   items and their associated values present in the kernel to become
+   associated with a data structure called the ``kernel pool''. The
+   application program may then obtain the value(s) for any IK data
+   item using the SPICELIB routines GDPOOL, GIPOOL, GCPOOL. Routine
+   GETFOV may be used if the file contains instrument field-of-view
+   (FOV) specification. See [1] for details.
+
+   This file was created with, and can be updated with a text editor or
+   word processor.
+
+
+Conventions for Specifying Data
+--------------------------------------------------------
+
+   Data items are specified using ``keyword=value'' assignments [1].
+   All keywords referencing values in this I-kernel start with the
+   characters `INS' followed by the NAIF Rosetta instrument ID code,
+   constructed using the spacecraft ID number (-226) followed by the
+   NAIF three digit ID number for GIADA GDS (410), GIADA IS (420), or
+   GIADA MBS 1..5 (431..435).
+
+   The remainder of the keyword is an underscore character followed by
+   the unique name of the data item. For example, the boresight of the
+   GIADA GDS FOV is specified by
+
+               INS-226410_BORESIGHT
+
+   The upper bound on the length of all keywords is 32 characters.
+
+   If a keyword is included in more than one file, or if the same
+   keyword appears more than once within a single file, the last
+   assignment supersedes any earlier assignments.
+
+
+Overview
+--------------------------------------------------------
+
+   From [5]:
+
+      GIADA (Grain Impact Analyser and Dust Accumulator) will measure
+      the scalar velocity, size and momentum of dust particles in the
+      coma of the comet using an optical grain detection system and a
+      mechanical grain impact sensor. Five microbalances will measure
+      the amount of dust collected as the spacecraft orbits the comet.
+
+      Summary of GIADA Characteristics
+
+         Scalar velocity sensitivity (m s-1):
+            1
+
+         Measurable grain size (diameter, mkm):
+            30
+
+         Grain momentum sensitivity (kg m s-1):
+            6.5 x 10-10
+
+         Microbalance sensitivity (kg):
+            1 x 10-13
+
+         Mass (kg):
+            6.25
+
+         Dimensions (l x w x h, mm):
+            230 x 270 x 250
+
+         Power consumption (average, W):
+            20.7
+
+
+Mounting Alignment
+--------------------------------------------------------
+
+   Refer to the latest version of the Rosetta Frames Definition Kernel
+   (FK) [4] for the GIADA reference frame definitions and mounting
+   alignment information.
+
+
+Apparent FOV Layout
+--------------------------------------------------------
+
+   This diagram illustrates the GIADA GDS and IS FOV layout in the 
+   corresponding reference frames.
+
+
+                                  ^
+                                  |  direction of
+                                  |    flight
+                                  |
+
+                                  ^ +Xis, +Xgds (down-track)
+                                  |
+                                  |
+       -------          +---------|---------+
+        ^               |         |      GDS|
+        |  ---          |   +-----|-----+   |
+        |   ^           |   |     |   IS|   |
+     68 |   |           |   |     |     |   |
+    deg |   | 37 deg    |   |     x-------------> +Yis, +Ygds (cross-track)
+        |   |           |   |   +Zis    |   |
+        |   V           |   |   +Zgds   |   |
+        |  ---          |   +-----------+   |
+        V               |                   |
+       -------          +-------------------+
+
+                        |   |   37 deg  |   |
+                        |   |<--------->|   |
+                        |   |           |   |
+                        |       68 deg      |      Boresight (+Z axis)
+                        |<----------------->|       is into the page
+                        |                   |
+
+
+   This diagram illustrates the GIADA MBS1..5 FOV layout in the
+   corresponding GIADA MBS reference frame.
+
+
+                                  ^ +Xmbs1..5
+                                  |
+                                  |
+       ---                     .__|__.
+        ^                    .'   |   `. 
+        |                   /     |     \
+        |                  .      |      .          
+        | 40 deg           |      x-------------> +Ymbs1..5
+        |                  .   +Zmbs1..5 .
+        |                   \           /
+        v                    `.       .' 
+       ---                     ` --- '
+
+
+                           |    40 deg   |        Boresight (+Z axis)
+                           |<----------->|         is into the page
+                           |             |
+
+
+FOV Parameters
+--------------------------------------------------------
+
+   The following GIADA sensor particle entrance FOV parameters are
+   included in the data section below, from [3]:
+
+      -----------------------------------------------------------------
+             parameter             GDS         IS       MBS 1..5
+      -----------------------------------------------------------------
+      Field of view (deg)
+          Cross-track              68.0       37.0        40.0
+          Along-track              68.0       37.0        40.0
+      -----------------------------------------------------------------
+
+   The keywords below provide FOV angular size in radians, with the
+   cross-track size being the first value and the along-track size
+   being the second value in each pair. Since the FOV is just a single
+   pixel IFOV is equal to the FOV in size and the pixel size parameters
+   are set accordingly.
+
+      \begindata
+
+         INS-226410_FOV_ANGULAR_SIZE   = ( 1.18682389, 1.18682389 )
+         INS-226410_IFOV               = ( 1.18682389, 1.18682389 )
+         INS-226410_PIXEL_SAMPLES      = ( 1 )
+         INS-226410_PIXEL_LINES        = ( 1 )
+         INS-226410_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226420_FOV_ANGULAR_SIZE   = ( 0.64577182, 0.64577182 )
+         INS-226420_IFOV               = ( 0.64577182, 0.64577182 )
+         INS-226420_PIXEL_SAMPLES      = ( 1 )
+         INS-226420_PIXEL_LINES        = ( 1 )
+         INS-226420_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226431_FOV_ANGULAR_SIZE   = ( 0.69813170, 0.69813170 )
+         INS-226431_IFOV               = ( 0.69813170, 0.69813170 )
+         INS-226431_PIXEL_SAMPLES      = ( 1 )
+         INS-226431_PIXEL_LINES        = ( 1 )
+         INS-226431_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226432_FOV_ANGULAR_SIZE   = ( 0.69813170, 0.69813170 )
+         INS-226432_IFOV               = ( 0.69813170, 0.69813170 )
+         INS-226432_PIXEL_SAMPLES      = ( 1 )
+         INS-226432_PIXEL_LINES        = ( 1 )
+         INS-226432_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226433_FOV_ANGULAR_SIZE   = ( 0.69813170, 0.69813170 )
+         INS-226433_IFOV               = ( 0.69813170, 0.69813170 )
+         INS-226433_PIXEL_SAMPLES      = ( 1 )
+         INS-226433_PIXEL_LINES        = ( 1 )
+         INS-226433_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226434_FOV_ANGULAR_SIZE   = ( 0.69813170, 0.69813170 )
+         INS-226434_IFOV               = ( 0.69813170, 0.69813170 )
+         INS-226434_PIXEL_SAMPLES      = ( 1 )
+         INS-226434_PIXEL_LINES        = ( 1 )
+         INS-226434_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226435_FOV_ANGULAR_SIZE   = ( 0.69813170, 0.69813170 )
+         INS-226435_IFOV               = ( 0.69813170, 0.69813170 )
+         INS-226435_PIXEL_SAMPLES      = ( 1 )
+         INS-226435_PIXEL_LINES        = ( 1 )
+         INS-226435_CCD_CENTER         = ( 0.5, 0.5 )
+
+      \begintext
+
+
+FOV Definitions
+---------------------------------------------------------------------------
+
+   This section contains definition for the GIADA FOV. This definition
+   is provided in the format required by the SPICE (CSPICE) function
+   GETFOV (getfov_c).
+   
+   The set of assignments in the data section below defines the GIADA
+   FOVs with respect to the corresponding GIADA instrument frames as a
+   rectangle (GDS and IS) or a circle (MBS1..5) of the size provided in
+   the section above and the boresight along the +Z axis.
+
+      \begindata
+
+         INS-226410_FOV_FRAME                 = 'ROS_GIADA_GDS'
+         INS-226410_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226410_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226410_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226410_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226410_FOV_REF_ANGLE             = ( 34.000 )
+         INS-226410_FOV_CROSS_ANGLE           = ( 34.000 )
+         INS-226410_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226420_FOV_FRAME                 = 'ROS_GIADA_IS'
+         INS-226420_FOV_SHAPE                 = 'RECTANGLE'
+         INS-226420_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226420_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226420_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226420_FOV_REF_ANGLE             = ( 18.500 )
+         INS-226420_FOV_CROSS_ANGLE           = ( 18.500 )
+         INS-226420_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226431_FOV_FRAME                 = 'ROS_GIADA_MBS1'
+         INS-226431_FOV_SHAPE                 = 'CIRCLE'
+         INS-226431_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226431_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226431_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226431_FOV_REF_ANGLE             = ( 20.000 )
+         INS-226431_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226432_FOV_FRAME                 = 'ROS_GIADA_MBS2'
+         INS-226432_FOV_SHAPE                 = 'CIRCLE'
+         INS-226432_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226432_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226432_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226432_FOV_REF_ANGLE             = ( 20.000 )
+         INS-226432_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226433_FOV_FRAME                 = 'ROS_GIADA_MBS3'
+         INS-226433_FOV_SHAPE                 = 'CIRCLE'
+         INS-226433_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226433_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226433_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226433_FOV_REF_ANGLE             = ( 20.000 )
+         INS-226433_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226434_FOV_FRAME                 = 'ROS_GIADA_MBS4'
+         INS-226434_FOV_SHAPE                 = 'CIRCLE'
+         INS-226434_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226434_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226434_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226434_FOV_REF_ANGLE             = ( 20.000 )
+         INS-226434_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226435_FOV_FRAME                 = 'ROS_GIADA_MBS5'
+         INS-226435_FOV_SHAPE                 = 'CIRCLE'
+         INS-226435_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226435_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226435_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226435_FOV_REF_ANGLE             = ( 20.000 )
+         INS-226435_FOV_ANGLE_UNITS           = 'DEGREES'
+
+      \begintext
+
+
+Platform ID
+---------------------------------------------------------------------------
+
+   This number is the NAIF instrument ID of the platform on which the
+   instrument is mounted. For GIADA this platform is the spacecraft.
+
+      \begindata
+
+      INS-226410_PLATFORM_ID  = ( -226000 )
+      INS-226420_PLATFORM_ID  = ( -226000 )
+      INS-226431_PLATFORM_ID  = ( -226000 )
+      INS-226432_PLATFORM_ID  = ( -226000 )
+      INS-226433_PLATFORM_ID  = ( -226000 )
+      INS-226434_PLATFORM_ID  = ( -226000 )
+      INS-226435_PLATFORM_ID  = ( -226000 )
+
+      \begintext
+

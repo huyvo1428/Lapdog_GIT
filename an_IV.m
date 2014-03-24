@@ -4,7 +4,7 @@
 
 
 
-global an_tabindex;
+%global an_tabindex;
 %an_tabindex = [];
 
 %for i=1:length(tabindex);
@@ -33,10 +33,31 @@ ind_V1H= find(strcmp('V1H', antype));
 ind_V2H= find(strcmp('V2H', antype));
 
 
+ind_I1S= find(strcmp('I1S', antype));
+ind_I2S= find(strcmp('I2S', antype));
 
 
+fprintf(1,'Analysing sweeps')
+
+   
+if(~isempty(ind_I1S))
+
+an_swp2(ind_I1S,tabindex,targetfullname);
+
+
+end
+
+
+if(~isempty(ind_I2S))
+an_swp2(ind_I2S,tabindex,targetfullname);
+
+end
 % 
 
+
+fprintf(1,'Downsample Low frequency measurements')
+
+   
 
 %send mode datatasets to downsampler function
 if(~isempty(ind_I1L))

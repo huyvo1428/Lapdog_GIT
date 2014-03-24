@@ -1,0 +1,632 @@
+KPL/IK
+
+ALICE Instrument kernel
+===========================================================================
+
+   This instrument kernel (I-kernel) contains Rosetta ALICE optics,
+   detector, and field-of-view parameters.
+
+
+Version and Date
+---------------------------------------------------------------------------
+
+   Version 1.5 -- March 25, 2010 -- A. Steffl, SwRI
+
+      Added coordinates of pixel centers.
+
+   Version 1.4 -- January 26, 2010 -- J. Vazquez, ESAC/ESA / A. Steffl, SwRI
+   
+      Added boresight and instrument definitions for -X Wide Bottom and +X 
+      Wide Top, and the pinhole.
+
+   Version 1.3 -- September 23, 2009 -- J. Vazquez, ESAC/ESA
+   
+      Removed non-printable characters from the kernel.
+
+   Version 1.2 -- February 27, 2008 -- Andrew Steffl, SwRI
+
+      Updated FOV corners to use values derived from in-flight observations
+
+   Version 1.1 -- March 21, 2007 -- Andrew Steffl, SwRI
+
+      Corrected erroneous instrument descriptions and changed slit shape
+      to "POLYGON" to accurately reflect the shape of the Rosetta Alice 
+      entrance slit.
+
+   Version 1.0 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Version number change for the first official release.
+
+   Version 0.2 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Corrected FOV definition and relevant parameters and descriptions
+      to ``line up'' the slit with +X axis of the ALICE frame.
+
+   Version 0.1 -- September 2, 2004 -- Boris Semenov, NAIF/JPL
+
+      Filled in instrument overview section (copied from [6]).
+
+   Version 0.0 -- August 3, 2004 -- Boris Semenov, NAIF/JPL
+
+      VERY PRELIMINARY VERSION.
+
+
+References
+---------------------------------------------------------------------------
+
+   1. ``Kernel Pool Required Reading''
+
+   2. ``C-kernel Required Reading''
+
+   3. ``ALICE EID, Part B'', ROS-EST-RS-3005/EID B, 2001-02-15
+
+   4. Rosetta Frames Definition Kernel (FK), latest version.
+
+   5. ``ALICE: Experiment User Manual'', 8225-EUM-01, 2002-12-XX 
+
+   6. ESA Science and Technology Web Server, Rosetta Instruments Area,
+      http://sci.esa.int/science-e/www/object/index.cfm?fobjectid=35061
+      
+   7. ``Payload Boresight Alignment Details'', RO-EST-TN-3305,
+      2008/01/17
+
+
+Implementation Notes
+--------------------------------------------------------
+
+   Applications that need SPICE I-kernel data must ``load'' the I-kernel
+   file, normally during program initialization.
+
+   Loading the kernel using the SPICELIB routine FURNSH causes the data
+   items and their associated values present in the kernel to become
+   associated with a data structure called the ``kernel pool''. The
+   application program may then obtain the value(s) for any IK data
+   item using the SPICELIB routines GDPOOL, GIPOOL, GCPOOL. Routine
+   GETFOV may be used if the file contains instrument field-of-view
+   (FOV) specification. See [1] for details.
+
+   This file was created with, and can be updated with a text editor or
+   word processor.
+
+
+Conventions for Specifying Data
+--------------------------------------------------------
+
+   Data items are specified using ``keyword=value'' assignments [1].
+   All keywords referencing values in this I-kernel start with the
+   characters `INS' followed by the NAIF Rosetta instrument ID code,
+   constructed using the spacecraft ID number (-226) followed by the
+   NAIF three digit ID number for ALICE (120). ALICE ID(s) is defined
+   in [4].
+
+   The remainder of the keyword is an underscore character followed by
+   the unique name of the data item. For example, the focal length of
+   the ALICE optics is specified by
+
+               INS-226120_FOCAL_LENGTH
+
+   The upper bound on the length of all keywords is 32 characters.
+
+   If a keyword is included in more than one file, or if the same
+   keyword appears more than once within a single file, the last
+   assignment supersedes any earlier assignments.
+
+
+Overview
+--------------------------------------------------------
+
+   From [6]:
+
+      ALICE, an Ultraviolet Imaging Spectrometer, will characterize the
+      composition of the nucleus and coma, and the nucleus/coma
+      coupling of comet 67 P/Churyumov-Gerasimenko. This will be
+      accomplished through the observation of spectral features in the
+      extreme and far ultraviolet (EUV/FUV) spectral regions from 70
+      to 205 nm.
+ 
+      ALICE will make measurements of noble gas abundances in the coma,
+      the atomic budget in the coma, and major ion abundances in the
+      tail and in the region where solar wind particles interact with
+      the ionosphere of the comet. ALICE will determine the production
+      rates, variability, and structure of H2O and CO, and CO2 gas
+      surrounding the nucleus and the far-UV properties of solid grains
+      in the coma.
+ 
+      ALICE will also map the cometary nucleus in the FUV, and study
+      Mars and the Rosetta asteroid flyby targets while en route to
+      Churyumov-Gerasimenko.
+
+      Summary of ALICE Characteristics
+
+         Wavelength range (nm):
+            70-205
+
+         Spectral resolution, (extended source, FWHM) (nm):
+            1.0 (at 70 nm),
+            1.3 (at 205 nm)
+
+         Spectral resolution, (point source, FWHM) (nm):
+            0.3-0.5
+
+         Spatial resolution (degrees):
+            0.1 x 0.5
+
+         Nominal sensitivity (counts s-1 R-1):
+            0.5 (at 190 nm);
+            7.8 (at 115 nm)
+
+         Field of view (degrees):
+            0.1 x 6.0
+
+         Pointing:
+            Boresight approximately co-aligned with OSIRIS, VIRTIS
+
+         Observation types:
+            Nucleus imaging and spectroscopy; 
+            Coma spectroscopy;
+            Jet and grain spectrophotometry; 
+            Stellar occultations (secondary observations)
+
+         Telescope:
+            40 x 40 mm entrance pupil; 
+            41 x 65 mm, f3, off-axis paraboloid primary mirror; 
+            120 mm focal length
+
+         Spectrograph:
+            Rowland Circle style imaging spectrograph;
+            0.1 (0.05 in center) x 6 deg entrance slit; 
+            50 x 50 mm toroidal holographic diffraction grating
+
+         Detector:
+            2-D (1024 x 32 pixels) microchannel plate using a 
+            double delay line (DDL) readout
+
+         Mass (kg):
+            2.7
+
+         Dimensions (l x w x h, mm):
+            204 x 413 x 140
+
+         Power consumption (average, W):
+            4.0
+
+
+Mounting Alignment
+--------------------------------------------------------
+
+   Refer to the latest version of the Rosetta Frames Definition Kernel
+   (FK) [4] for the ALICE reference frame definitions and mounting
+   alignment information.
+
+
+Apparent FOV Layout
+--------------------------------------------------------
+
+   This section provides a diagram illustrating the ALICE apparent
+   detector layout in the corresponding reference frame.
+
+                           ^ +X_alice (along slit)
+                           |
+                           |
+                           o Pinhole (Approximately Row 25)---       ^
+                           |                                ^        |
+                       +---|---+ Row 23                     |        |
+                       |   |   |                            |        |
+                 ----> |   |   |<---- 0.1 degrees           |        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   o   | +X_WIDE_TOP                |        |
+                       |   |   |                            | 2 deg. |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |_  |  _|                      ___  _v_       |
+                         | | |                         ^             |
+                    ---->| | |<---- 0.05 degrees       |             |
+                         | | |                         |             |
+                         | | |                         |             |
+                         | | |                         |             |
+   +Y_alice (cross slit) | | | ROS_ALICE_CENTER        |             |
+  <----------------------|-o-|----                     | 2 deg.      | 6 deg.
+                         | | |                         |             |
+                         | | |                         |             |
+                         | | |                         |             |
+                         | | |                         |             |
+                         | | |                         |             |
+                        _| | |_                       _v_  ___       |
+                       |   |   |                            ^        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   o   | -X_WIDE_BOTTOM             |        |
+                       |   |   |                            | 2 deg. |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   |   |                            |        |
+                       |   |   |                            v        v
+                       +---|---+ Row 5                     ---      ---
+                           |
+
+         
+                                        Alice instrument boresight (+Z_alice)
+                                        out of the page
+
+
+
+
+   There are 32 pixels in the along-slit, spatial direction. However, only 
+   rows 5-23 (inclusive) are illuminated by the entrance slit. In addition to
+   the main slit, there is a 1-milliradian diameter pinhole that illuminates
+   row 25.
+
+   There is effectively no spatial resolution in the cross-slit (spectral) 
+   direction. Thus, the 1024 pixels in this direction are used to achieve the
+   desired spectral resolution.
+
+Optical Distortion
+--------------------------------------------------------
+
+   The Alice primary mirror introduces some optical distortion (primarily 
+   coma). Thus, the projection of the Alice entrance slit onto the sky is not
+   rectilinear.
+
+Optical Parameters
+--------------------------------------------------------
+
+   The following ALICE nominal first order optical parameters are
+   included in the data section below, from [3]:
+
+      -----------------------------------------------------------------
+             parameter                    value      note     
+      -----------------------------------------------------------------
+      Focal Length, mm                    120.0    
+      f/ratio                             f/3      
+      IFOV, rad/pixel                     
+          Cross-track                     0.001745
+          Along-track                     0.005376
+      Field of view (deg)
+          Cross-track                     0.1   value is 0.05 in center 
+          Along-track                     6.0
+      -----------------------------------------------------------------
+
+   FOV and IFOV parameters above are for the spatial direction.
+
+   The keywords below provide nominal values from the table above.
+   Angular size values in the keywords are given radians, with the
+   cross-track size being the first value and the along-track size
+   being the second value in each pair.
+
+      \begindata
+
+         INS-226120_FOCAL_LENGTH       = ( 120.0                )
+         INS-226120_F/RATIO            = (   3.0                )
+         INS-226120_FOV_ANGULAR_SIZE   = (   0.001745, 0.104720 )
+         INS-226120_IFOV               = (   0.001745, 0.005376 )
+
+      \begintext
+
+
+Detector Parameters
+--------------------------------------------------------
+
+   The nominal ALICE detector parameters from [6] are:
+
+      -----------------------------------------------------------------
+             parameter                   value   note
+      -----------------------------------------------------------------
+      Detector Array Size ---- Physical 
+          Cross-slit                    1024    spectral dimension
+          Along-slit                      32    spatial dimension
+      Detector Array Size ---- Spatial  
+          Cross-slit                       1   Effectively, there is no
+                                               spatial resolution in the
+                                               cross-slit direction
+          Along-slit                      32   only rows 5-23 illuminated 
+      Detector Array Center -- Spatial
+          Cross-slit                     0.5
+          Along-slit                    15.5
+      -----------------------------------------------------------------
+
+   The values are given in counts for PIXEL_SAMPLES, PIXEL_LINES, and
+   CENTER keywords.
+
+      \begindata
+
+         INS-226120_PIXEL_SAMPLES      = (   1 )
+         INS-226120_PIXEL_LINES        = (  32 )
+         INS-226120_CCD_CENTER         = (   0.5, 15.5    )
+
+      \begintext
+
+
+FOV Definitions
+---------------------------------------------------------------------------
+
+   This section contains definitions for the ALICE FOV. This definition
+   is provided in the format required by the SPICE (CSPICE) function
+   GETFOV (getfov_c).
+
+      \begindata
+
+
+         INS-226120_FOV_FRAME                 = 'ROS_ALICE'
+         INS-226120_FOV_SHAPE                 = 'POLYGON'
+         INS-226120_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+        
+        INS-226120_FOV_CLASS_SPEC            = 'CORNERS'
+        INS-226120_FOV_BOUNDARY_CORNERS      = (
+            0.044721062315     -0.000704526509      1.000000000000
+            0.044348043165     -0.001132901540      1.000000000000
+            0.018202454381     -0.000896519481      1.000000000000
+            0.017692696428     -0.000685847442      1.000000000000
+            0.011949833432     -0.000378340802      1.000000000000
+           -0.011928236903     -0.000541432536      1.000000000000
+           -0.016703724088     -0.000880602400      1.000000000000
+           -0.017101663044     -0.001134745209      1.000000000000
+           -0.051532633282     -0.001829753266      1.000000000000
+           -0.051532791827     -0.000220135885      1.000000000000
+           -0.049830936432      0.000160445314      1.000000000000
+           -0.017667203258      0.000732004676      1.000000000000
+           -0.016687860334      0.000348078680      1.000000000000
+            0.017830104779      0.000595950114      1.000000000000
+            0.018582049915      0.001049392745      1.000000000000
+            0.041940365358      0.000891496662      1.000000000000
+            0.044568913704      0.000364935529      1.000000000000
+                                              )
+        INS-226120_PIXEL_CENTERS      = (
+           -0.083912644543     -0.002114578970      1.000000000000
+           -0.078559414280     -0.001868062959      1.000000000000
+           -0.073177584329     -0.001636534053      1.000000000000
+           -0.067766922094     -0.001419991951      1.000000000000
+           -0.062327184828     -0.001218436357      1.000000000000
+           -0.056858119441     -0.001031866986      1.000000000000
+           -0.051359462297     -0.000860283556      1.000000000000
+           -0.045830939007     -0.000703685791      1.000000000000
+           -0.040272264216     -0.000562073417      1.000000000000
+           -0.034683141378     -0.000435446164      1.000000000000
+           -0.029063262536     -0.000323803762      1.000000000000
+           -0.023412308078     -0.000227145941      1.000000000000
+           -0.017729946501     -0.000145472432      1.000000000000
+           -0.012015834153     -0.000078782962      1.000000000000
+           -0.006269614979     -0.000027077259      1.000000000000
+           -0.000490920251      0.000009644952      1.000000000000
+            0.005320631712      0.000031383949      1.000000000000
+            0.011165435830      0.000038140014      1.000000000000
+            0.017043900556      0.000029913431      1.000000000000
+            0.022956448190      0.000006704487      1.000000000000
+            0.028903515188     -0.000031486526      1.000000000000
+            0.034885552504     -0.000084659315      1.000000000000
+            0.040903025918     -0.000152813581      1.000000000000
+            0.046956416399     -0.000235949026      1.000000000000
+            0.053046220470     -0.000334065346      1.000000000000
+            0.059172950582     -0.000447162237      1.000000000000
+            0.065337135514     -0.000575239393      1.000000000000
+            0.071539320780     -0.000718296507      1.000000000000
+            0.077780069048     -0.000876333272      1.000000000000
+            0.084059960584     -0.001049349384      1.000000000000
+            0.090379593705     -0.001237344537      1.000000000000
+            0.096739585251     -0.001440318432      1.000000000000
+                                              )
+
+       \begintext
+      
+   
+   Alice has two extra boresights, situated approximately at the center of 
+   the top and bottom wide parts of the slit. The offset of these two 
+   vectors and the boresight from the Z axis of the spacecraft are given 
+   in [7]:
+      
+                                Offset from Zs/c        Offset from Zs/c
+                                along Xs/c (deg)        along Ys/c (deg)
+                                    (alpha)                 (betha)
+      -------------------------------------------------------------------
+      
+      Alice Narrow center                  0.062                  -0.098
+      Alice -X Wide Bottom                -1.95                   -0.129
+      Alice +X Wide Top                    2.05                   -0.101
+      
+      
+      In order to compute the two extra boresights in the ROS_ALICE frame, 
+      the following steps were taken:
+      
+        1) Compute the vectors in the ROS_SPACECRAFT frame. The vectors are 
+           in the form [ x, y, 1 ], where x and y are computed as:
+           
+             x = tan( alpha )
+             y = tan( betha )
+             
+        2) Compute the coordinates of the vectors in the ROS_ALICE frame.
+        
+           For example, using IDL, for Alice -X Wide Bottom:
+        
+              cspice_pxform, 'ros_spacecraft', 'ros_alice', 0, tx
+              x = tan( -1.95 * cspice_rpd() )
+              y = tan( -0.098 * cspice_rpd() )
+              cspice_mxv, tx, [ x, y, 1 ], v
+      
+      For each of the extra boresights, a complete instrument with its 
+      boresight and field of view is defined. The field of view is the same 
+      as the one for the main instrument (ROS_ALICE_CENTER). This way, users 
+      can fetch the boresight and field for the three different instruments 
+      in the same way, using, for instance, the GETFOV routine.
+          
+      
+      -X_WIDE_BOTTOM:
+      -------------
+      
+      \begindata
+
+         INS-226122_FOV_FRAME                 = 'ROS_ALICE'
+         INS-226122_FOV_SHAPE                 = 'POLYGON'
+         INS-226122_BORESIGHT                 = (
+                                -0.035129152  -0.00054111906      0.99996496
+                                                )
+        
+         INS-226122_FOV_CLASS_SPEC            = 'CORNERS'
+         INS-226122_FOV_BOUNDARY_CORNERS      = (
+            0.044721062315     -0.000704526509      1.000000000000
+            0.044348043165     -0.001132901540      1.000000000000
+            0.018202454381     -0.000896519481      1.000000000000
+            0.017692696428     -0.000685847442      1.000000000000
+            0.011949833432     -0.000378340802      1.000000000000
+           -0.011928236903     -0.000541432536      1.000000000000
+           -0.016703724088     -0.000880602400      1.000000000000
+           -0.017101663044     -0.001134745209      1.000000000000
+           -0.051532633282     -0.001829753266      1.000000000000
+           -0.051532791827     -0.000220135885      1.000000000000
+           -0.049830936432      0.000160445314      1.000000000000
+           -0.017667203258      0.000732004676      1.000000000000
+           -0.016687860334      0.000348078680      1.000000000000
+            0.017830104779      0.000595950114      1.000000000000
+            0.018582049915      0.001049392745      1.000000000000
+            0.041940365358      0.000891496662      1.000000000000
+            0.044568913704      0.000364935529      1.000000000000
+                                              )
+        INS-226122_PIXEL_CENTERS      = (
+           -0.083912644543     -0.002114578970      1.000000000000
+           -0.078559414280     -0.001868062959      1.000000000000
+           -0.073177584329     -0.001636534053      1.000000000000
+           -0.067766922094     -0.001419991951      1.000000000000
+           -0.062327184828     -0.001218436357      1.000000000000
+           -0.056858119441     -0.001031866986      1.000000000000
+           -0.051359462297     -0.000860283556      1.000000000000
+           -0.045830939007     -0.000703685791      1.000000000000
+           -0.040272264216     -0.000562073417      1.000000000000
+           -0.034683141378     -0.000435446164      1.000000000000
+           -0.029063262536     -0.000323803762      1.000000000000
+           -0.023412308078     -0.000227145941      1.000000000000
+           -0.017729946501     -0.000145472432      1.000000000000
+           -0.012015834153     -0.000078782962      1.000000000000
+           -0.006269614979     -0.000027077259      1.000000000000
+           -0.000490920251      0.000009644952      1.000000000000
+            0.005320631712      0.000031383949      1.000000000000
+            0.011165435830      0.000038140014      1.000000000000
+            0.017043900556      0.000029913431      1.000000000000
+            0.022956448190      0.000006704487      1.000000000000
+            0.028903515188     -0.000031486526      1.000000000000
+            0.034885552504     -0.000084659315      1.000000000000
+            0.040903025918     -0.000152813581      1.000000000000
+            0.046956416399     -0.000235949026      1.000000000000
+            0.053046220470     -0.000334065346      1.000000000000
+            0.059172950582     -0.000447162237      1.000000000000
+            0.065337135514     -0.000575239393      1.000000000000
+            0.071539320780     -0.000718296507      1.000000000000
+            0.077780069048     -0.000876333272      1.000000000000
+            0.084059960584     -0.001049349384      1.000000000000
+            0.090379593705     -0.001237344537      1.000000000000
+            0.096739585251     -0.001440318432      1.000000000000
+                                              )                                                                    
+       
+      \begintext
+      
+      
+      +X_WIDE_TOP:
+      -----------
+      
+      \begindata
+                                                                    
+         INS-226123_FOV_FRAME                 = 'ROS_ALICE'
+         INS-226123_FOV_SHAPE                 = 'POLYGON'
+         INS-226123_BORESIGHT                 = (
+                                0.034712399  -5.2296517e-05       1.0000397
+                                                )
+        
+         INS-226123_FOV_CLASS_SPEC            = 'CORNERS'
+         INS-226123_FOV_BOUNDARY_CORNERS      = (
+            0.044721062315     -0.000704526509      1.000000000000
+            0.044348043165     -0.001132901540      1.000000000000
+            0.018202454381     -0.000896519481      1.000000000000
+            0.017692696428     -0.000685847442      1.000000000000
+            0.011949833432     -0.000378340802      1.000000000000
+           -0.011928236903     -0.000541432536      1.000000000000
+           -0.016703724088     -0.000880602400      1.000000000000
+           -0.017101663044     -0.001134745209      1.000000000000
+           -0.051532633282     -0.001829753266      1.000000000000
+           -0.051532791827     -0.000220135885      1.000000000000
+           -0.049830936432      0.000160445314      1.000000000000
+           -0.017667203258      0.000732004676      1.000000000000
+           -0.016687860334      0.000348078680      1.000000000000
+            0.017830104779      0.000595950114      1.000000000000
+            0.018582049915      0.001049392745      1.000000000000
+            0.041940365358      0.000891496662      1.000000000000
+            0.044568913704      0.000364935529      1.000000000000
+                                              )                     
+        INS-226123_PIXEL_CENTERS      = (
+           -0.083912644543     -0.002114578970      1.000000000000
+           -0.078559414280     -0.001868062959      1.000000000000
+           -0.073177584329     -0.001636534053      1.000000000000
+           -0.067766922094     -0.001419991951      1.000000000000
+           -0.062327184828     -0.001218436357      1.000000000000
+           -0.056858119441     -0.001031866986      1.000000000000
+           -0.051359462297     -0.000860283556      1.000000000000
+           -0.045830939007     -0.000703685791      1.000000000000
+           -0.040272264216     -0.000562073417      1.000000000000
+           -0.034683141378     -0.000435446164      1.000000000000
+           -0.029063262536     -0.000323803762      1.000000000000
+           -0.023412308078     -0.000227145941      1.000000000000
+           -0.017729946501     -0.000145472432      1.000000000000
+           -0.012015834153     -0.000078782962      1.000000000000
+           -0.006269614979     -0.000027077259      1.000000000000
+           -0.000490920251      0.000009644952      1.000000000000
+            0.005320631712      0.000031383949      1.000000000000
+            0.011165435830      0.000038140014      1.000000000000
+            0.017043900556      0.000029913431      1.000000000000
+            0.022956448190      0.000006704487      1.000000000000
+            0.028903515188     -0.000031486526      1.000000000000
+            0.034885552504     -0.000084659315      1.000000000000
+            0.040903025918     -0.000152813581      1.000000000000
+            0.046956416399     -0.000235949026      1.000000000000
+            0.053046220470     -0.000334065346      1.000000000000
+            0.059172950582     -0.000447162237      1.000000000000
+            0.065337135514     -0.000575239393      1.000000000000
+            0.071539320780     -0.000718296507      1.000000000000
+            0.077780069048     -0.000876333272      1.000000000000
+            0.084059960584     -0.001049349384      1.000000000000
+            0.090379593705     -0.001237344537      1.000000000000
+            0.096739585251     -0.001440318432      1.000000000000
+                                              )
+                                                
+      \begintext
+  
+
+      PINHOLE:
+      -----------
+      
+      \begindata
+                                                    
+         INS-226124_FOV_FRAME                 = 'ROS_ALICE'
+         INS-226124_FOV_SHAPE                 = 'CIRCLE'
+         INS-226124_BORESIGHT                 = (
+                               0.052407779  -0.00022084111  1.00000000
+                                                )
+         INS-226124_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226124_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226124_FOV_REF_ANGLE             = ( 0.02 )
+         INS-226124_FOV_ANGLE_UNITS           = 'DEGREES'
+         
+      \begintext
+
+
+Platform ID
+---------------------------------------------------------------------------
+
+   This number is the NAIF instrument ID of the platform on which the
+   instrument mounted. For Alice, it is the spacecraft.
+
+      \begindata
+
+      INS-226120_PLATFORM_ID  = ( -226000 )
+      INS-226122_PLATFORM_ID  = ( -226000 )
+      INS-226123_PLATFORM_ID  = ( -226000 )
+      INS-226124_PLATFORM_ID  = ( -226000 )
+
+      \begintext

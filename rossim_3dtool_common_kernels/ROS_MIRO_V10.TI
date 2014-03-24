@@ -1,0 +1,284 @@
+KPL/IK
+
+MIRO Instrument kernel
+===========================================================================
+
+   This instrument kernel (I-kernel) contains Rosetta MIRO instrument
+   parameters.
+
+
+Version and Date
+---------------------------------------------------------------------------
+
+   Version 1.0 -- March 15, 2005 -- Boris Semenov, NAIF/JPL
+
+      Version number change for the first official release.
+
+   Version 0.1 -- September 2, 2004 -- Boris Semenov, NAIF/JPL
+
+      Filled in instrument overview section (copied from [6]).
+
+   Version 0.0 -- August 3, 2004 -- Boris Semenov, NAIF/JPL
+
+      VERY PRELIMINARY VERSION.
+
+
+References
+---------------------------------------------------------------------------
+
+   1. ``Kernel Pool Required Reading''
+
+   2. ``C-kernel Required Reading''
+
+   3. ``MIRO EID, Part B'', ROS-EST-RS-3005/EID B, 2001-02-15
+
+   4. Rosetta Frames Definition Kernel (FK), latest version.
+
+   5. ``MIRO: Experiment User Manual'', 8225-EUM-01, 2002-12-XX 
+
+   6. ESA Science and Technology Web Server, Rosetta Instruments Area,
+      http://sci.esa.int/science-e/www/object/index.cfm?fobjectid=35061
+
+   7. E-mail from L. Kamp/JPL, July 15, 2004
+
+
+Implementation Notes
+--------------------------------------------------------
+
+   Applications that need SPICE I-kernel data must ``load'' the I-kernel
+   file, normally during program initialization.
+
+   Loading the kernel using the SPICELIB routine FURNSH causes the data
+   items and their associated values present in the kernel to become
+   associated with a data structure called the ``kernel pool''. The
+   application program may then obtain the value(s) for any IK data
+   item using the SPICELIB routines GDPOOL, GIPOOL, GCPOOL. Routine
+   GETFOV may be used if the file contains instrument field-of-view
+   (FOV) specification. See [1] for details.
+
+   This file was created with, and can be updated with a text editor or
+   word processor.
+
+
+Conventions for Specifying Data
+--------------------------------------------------------
+
+   Data items are specified using ``keyword=value'' assignments [1].
+   All keywords referencing values in this I-kernel start with the
+   characters `INS' followed by the NAIF Rosetta instrument ID code,
+   constructed using the spacecraft ID number (-226) followed by the
+   NAIF three digit ID number for MIRO component. MIRO component ID(s) 
+   are defined in [4] as follows:
+
+               Instrument name          ID
+               --------------------   -------
+               ROS_MIRO               -226130
+               ROS_MIRO_MM            -226131
+               ROS_MIRO_SUBMM         -226132
+               ROS_MIRO_URF           -226135
+   
+
+   The remainder of the keyword is an underscore character followed by
+   the unique name of the data item. For example, the MIRO mm channel
+   boresight direction is specified by
+
+               INS-226131_BORESIGHT
+
+   The upper bound on the length of all keywords is 32 characters.
+
+   If a keyword is included in more than one file, or if the same
+   keyword appears more than once within a single file, the last
+   assignment supersedes any earlier assignments.
+
+
+Overview
+--------------------------------------------------------
+
+   From [6]:
+
+      MIRO (Microwave Instrument for the Rosetta Orbiter) is composed
+      of a millimetre wave mixer receiver and a submillimetre
+      heterodyne receiver. The submillimetre wave receiver provides
+      both broad band continuum and high resolution spectroscopic data,
+      whereas the millimetre wave receiver provides continuum data
+      only.
+ 
+      MIRO will measure the near surface temperature of the comet,
+      allowing estimation of the thermal and electrical properties of
+      the surface. In addition, the spectrometer portion of MIRO will
+      allow measurements of water, carbon monoxide, ammonia, and
+      methanol in the comet coma.
+
+      Summary of MIRO Characteristics
+
+         Operating frequency (millimetre wave receiver, GHz): 
+            188
+
+         Operating frequency (submillimetre wave receiver, GHz):
+            562
+
+         Mass (complete instrument, kg):
+            20.4
+
+         Dimensions (sensor unit, l x w x h, mm):
+            476 x 300 x 681
+
+         Power consumption (W):
+            18.3 - 70.7, dependent on operating mode 
+
+
+Mounting Alignment
+--------------------------------------------------------
+
+   Refer to the latest version of the Rosetta Frames Definition Kernel
+   (FK) [4] for the MIRO reference frame definitions and mounting
+   alignment information.
+
+
+Apparent FOV Layout
+--------------------------------------------------------
+
+   WARNING --- the description/diagram below have not been verified
+
+   This section provides a diagram illustrating the MIRO apparent
+   millimeter and sub-millimeter channel FOV layout in the
+   corresponding reference frames.
+
+                                  ^
+                                  | direction of 
+                                  |   flight
+                                  |
+
+     
+    22 arcmin                     ^ +Xmm (along track)
+      mm FOV                      | +Xsubmm
+        |                         | 
+        |                         |
+        V     |                   | 
+       ---    V                  _|_
+        |    ---               .'.|.`.
+        |     |                || x-------------> +Ymm (cross track)
+        |    ---               `.`-'.'            +Ysubmm
+       ---    ^                  `-'
+        ^     |         Each FOV is a single 
+        |  8 arcmin        circular pixel          Boresight (+Z axis)
+          sub-mm FOV                                is into the page
+
+
+
+Telescope Parameters
+--------------------------------------------------------
+
+   The following MIRO first order telescope parameters are included in
+   the data section below:
+
+      -----------------------------------------------------------------
+             parameter                    mm            sub-mm
+      -----------------------------------------------------------------
+      Field of view, arcmin
+          nominal (from [3])              22.0           8.0
+          actual  (from [7])              23.8           7.5
+      -----------------------------------------------------------------
+
+   The keywords below provide actual values from the table above.
+   Angular size values in the keywords are given radians.
+
+      \begindata
+
+         INS-226131_FOV_ANGULAR_SIZE   = ( 0.00692314 )
+         INS-226132_FOV_ANGULAR_SIZE   = ( 0.00218166 )
+
+      \begintext
+
+
+Detector Parameters
+--------------------------------------------------------
+
+   The nominal MIRO mm and  parameters from [7] are:
+
+      -----------------------------------------------------------------
+             parameter                    mm          sub-mm
+      -----------------------------------------------------------------
+      Detector Array Size
+          Cross-track                      1             1
+          Along-track                      1             1
+      -----------------------------------------------------------------
+
+   The values for PIXEL_SAMPLES, PIXEL_LINES and CCD_CENTER keywords
+   are given in counts.
+
+      \begindata
+
+         INS-226131_PIXEL_SAMPLES      = ( 1 )
+         INS-226131_PIXEL_LINES        = ( 1 )
+         INS-226131_CCD_CENTER         = ( 0.5, 0.5 )
+
+         INS-226132_PIXEL_SAMPLES      = ( 1 )
+         INS-226132_PIXEL_LINES        = ( 1 )
+         INS-226132_CCD_CENTER         = ( 0.5, 0.5 )
+
+      \begintext
+
+
+FOV Definitions
+---------------------------------------------------------------------------
+
+   This section contains definitions for the MIRO FOVs. This definition
+   is provided in the format required by the SPICE (CSPICE) function
+   GETFOV (getfov_c).
+   
+   The set of assignments in the data section below defines the MIRO mm
+   and sub-mm channel FOVs with respect to the corresponding frames to
+   be a circle of a specified angular size, centered around the
+   boresight aligned with the +Z axis. These FOV definitions use angular
+   extent style specification with the cross and along track angular
+   sizes taken from the ``Optics Parameters'' section above.
+
+      \begindata
+
+         INS-226131_FOV_FRAME                 = 'ROS_MIRO_MM'
+         INS-226131_FOV_SHAPE                 = 'CIRCLE'
+         INS-226131_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226131_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226131_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226131_FOV_REF_ANGLE             = ( 0.19833335 )
+         INS-226131_FOV_ANGLE_UNITS           = 'DEGREES'
+
+         INS-226132_FOV_FRAME                 = 'ROS_MIRO_SUBMM'
+         INS-226132_FOV_SHAPE                 = 'CIRCLE'
+         INS-226132_BORESIGHT                 = (
+                                            0.000000     0.000000     1.000000
+                                                )
+         INS-226132_FOV_CLASS_SPEC            = 'ANGLES'
+         INS-226132_FOV_REF_VECTOR            = (
+                                            1.000000     0.000000     0.000000
+                                                )
+         INS-226132_FOV_REF_ANGLE             = ( 0.06249996 )
+         INS-226132_FOV_ANGLE_UNITS           = 'DEGREES'
+
+      \begintext
+
+
+Optical Distortion
+--------------------------------------------------------
+
+   [TBD]
+
+
+Platform ID
+---------------------------------------------------------------------------
+
+   This number is the NAIF instrument ID of the platform on which the
+   instrument mounted. For MIRO it is the spacecraft.
+
+      \begindata
+
+      INS-226131_PLATFORM_ID  = ( -226000 )
+      INS-226132_PLATFORM_ID  = ( -226000 )
+
+      \begintext
+

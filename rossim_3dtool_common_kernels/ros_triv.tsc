@@ -1,0 +1,36 @@
+KPL/SCLK
+
+This is a trivial clock kernel (SCLK) for the
+Rosetta spacecraft, assuming an absolutely
+constant clock rate. It is used by the ROVIZ
+system to create hypothetical attitude kernels
+(CKs). In order to use such a CK properly, this
+SCLK has to be loaded.
+
+If you have any questions regarding this file,
+contact
+
+   Bj"orn Grieger
+   +34 91 81 31 107
+   bjoern.grieger@sciops.esa.int
+
+\begindata
+
+SCLK_KERNEL_ID            = ( @2011-02-01/13:14:41 )
+
+SCLK_DATA_TYPE_226        = ( 1 )
+SCLK01_TIME_SYSTEM_226    = ( 2 )
+SCLK01_N_FIELDS_226       = ( 2 )
+SCLK01_MODULI_226         = ( 4294967296 65536 )
+SCLK01_OFFSETS_226        = ( 0 0 )
+SCLK01_OUTPUT_DELIM_226   = ( 1 )
+
+SCLK_PARTITION_START_226  = ( 2.4123675052450E+12 )
+
+SCLK_PARTITION_END_226    = ( 2.8147497671065E+14 )
+
+SCLK01_COEFFICIENTS_226   = (
+
+    0.0000000000000E+00     1.3146108418400E+08     1.0000000000000E+00 )
+
+\begintext
