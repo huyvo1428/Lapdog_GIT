@@ -50,8 +50,6 @@ opsblocks;
 if(do_mill)
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(tabindexfile,'r');
-
-fp=0;
 if(fp > 0)
     fclose(fp);
     load(tabindexfile);

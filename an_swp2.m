@@ -42,6 +42,12 @@ for i=1:length(an_ind)
     
     size=    numel(scantemp{1,1});
     
+    if mod(size,steps) ~=0
+        fprintf(1,'error, bad sweepfile at \n %s \n, aborting %s mode analysis\n',tabindex{an_ind(i),1},mode)
+        return
+    end
+    
+    
     A= reshape(scantemp{1,1},steps,size/steps);
     Iarr= str2double(A(5:end,1:end));
     Vb=scantemp2{1,1};
@@ -110,7 +116,9 @@ for i=1:length(an_ind)
         % by ADDING 90 degrees) :
         Phi11 = 131;
         Phi12 = 181;
+        
         illuminati = ((SAA < Phi11) | (SAA > Phi12));
+        
         
     else %we will hopefully never have sweeps with probe number "3"
         
@@ -119,26 +127,36 @@ for i=1:length(an_ind)
         Phi21 = 18;
         Phi22 = 82;
         Phi23 = 107;
+        %illuminati = ((SAA < Phi21) | (SAA > Phi22));
+        
         illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
+        % illuminati = illuminati - 0.6*((SAA > Phi22) & (SAA < Phi23));
     end
     
-    
-    
-    
-    an_ind(i)
-    
-    
+
     
     len = length(Iarr(1,:));
+    %  cspice_str2et(
+    
+    
+    %  phot ==
+    
     
     
     for k=1:len
+        %  a= cspice_str2et(timing{1,k});
+        
         
         foutarr{k,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(timing{1,k}),mode(2),illuminati);
-        foutarr{k,2} =mean(SAA(1,k:k+1));
-        foutarr{k,3}=mean(illuminati(1,k:k+1));
-        if mean(illuminati(1,1:2))==1
-            [foutarr{k,4}(1),foutarr{k,4}(2)] = Vplasma(Vb,Iarr(:,k));
+        foutarr{k,2} =mean(SAA(1,2*k-1:2*k));
+        
+        foutarr{k,3}=mean(illuminati(1,2*k-1:2*k));
+        if foutarr{k,3}==1
+            
+            [foutarr{k,4}{1},foutarr{k,4}{2}] = Vplasma(Vb,Iarr(:,k));
+        else
+            foutarr{k,4}{1} = 'NaN';
+            foutarr{k,4}{2} = 'NaN';
             
         end%if
         
@@ -157,10 +175,13 @@ for i=1:length(an_ind)
             foutarr{k+len,1} =an_swp(Vb2,Iarr2(:,k),cspice_str2et(timing{1,k}),mode(2),illuminati);
             foutarr{k+len,2} =mean(SAA(1,k:k+1));
             foutarr{k+len,3}=mean(illuminati(1,k:k+1));
-            if mean(illuminati(1,3:4))==1
-                [foutarr{k+len,4}(1),foutarr{k+len,4}(2)] = Vplasma(Vb2,Iarr2(:,k));
-                
+            if foutarr{k+len,3}==1
+                [foutarr{k+len,4}{1},foutarr{k+len,4}{2}] = Vplasma(Vb2,Iarr2(:,k));
+            else
+                foutarr{k+len,4}{1} = 'NaN';
+                foutarr{k+len,4}{2} = 'NaN';
             end%if
+            
             foutarr{k+len,5}={timing{:,k}};
             foutarr{k+len,6}= timing{4,k};
             
@@ -185,7 +206,7 @@ for i=1:length(an_ind)
         %time0,time0,quality,mean(SAA),mean(Illuminati)
         fprintf(awID,'%s, %s,%03i,%07.4f, %03.2f,',foutarr{k,5}{1,1},foutarr{k,5}{1,2},0,foutarr{k,2},foutarr{k,3});
         %,vs,vx,Vsc,VscSigma
-        fprintf(awID,'%14.7e, %14.7e, %14.7e, %14.7e,',foutarr{k,1}(15),foutarr{k,1}(4),foutarr{k,4}(1),foutarr{k,4}(2));
+        fprintf(awID,'%14.7e, %14.7e, %14.7e, %14.7e,',foutarr{k,1}(15),foutarr{k,1}(4),foutarr{k,4}{1},foutarr{k,4}{2});
         %,Tph,If0,vb,vb,
         fprintf(awID,'%14.7e, %14.7e,%14.7e, %14.7e,', foutarr{k,1}(13),foutarr{k,1}(14),foutarr{k,1}(2),foutarr{k,1}(3));
         %poli,poli,pole,pole,
@@ -194,11 +215,11 @@ for i=1:length(an_ind)
         fprintf(awID,'%14.7e, %14.7e,%14.7e, %14.7e,',foutarr{k,1}(10),foutarr{k,1}(11),foutarr{k,1}(12));
         %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f', ...
         
-%         
-%         fprintf(awID,'%s, %s,%03i,%07.4f, %03.2f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f', ...
-%             foutarr{k,5}{1,1},foutarr{k,5}{2,1},0,foutarr{k,2},foutarr{k,3},foutarr{k,1}(15),foutarr{k,1}(4),foutarr{k,4}(1),foutarr{k,4}(2), ...
-%             foutarr{k,1}(13),foutarr{k,1}(14),foutarr{k,1}(2),foutarr{k,1}(3),foutarr{k,1}(5),foutarr{k,1}(6),foutarr{k,1}(7),foutarr{k,1}(8) ...
-%             ,foutarr{k,1}(10),foutarr{k,1}(11),foutarr{k,1}(12));
+        %
+        %         fprintf(awID,'%s, %s,%03i,%07.4f, %03.2f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f', ...
+        %             foutarr{k,5}{1,1},foutarr{k,5}{2,1},0,foutarr{k,2},foutarr{k,3},foutarr{k,1}(15),foutarr{k,1}(4),foutarr{k,4}(1),foutarr{k,4}(2), ...
+        %             foutarr{k,1}(13),foutarr{k,1}(14),foutarr{k,1}(2),foutarr{k,1}(3),foutarr{k,1}(5),foutarr{k,1}(6),foutarr{k,1}(7),foutarr{k,1}(8) ...
+        %             ,foutarr{k,1}(10),foutarr{k,1}(11),foutarr{k,1}(12));
         
     end
     fclose(awID);

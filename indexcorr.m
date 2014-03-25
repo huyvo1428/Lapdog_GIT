@@ -157,14 +157,15 @@ for i=1:length(index)
                     
                     index(end).tabfile = tempfilename;
                     index(end).t0str = scantemp{1,1}{j,1};
-                    index(end).sct0str = scantemp{1,2}(j);
+                   % index(end).sct0str = scantemp{1,2}(j);
+                    index(end).sct0str = sprintf('"%s/%014.3f"',index(i).sct0str(2),scantemp{1,2}(j));
                     index(end).t0 = t1line;
 
                     % adding new end time information to OLD INDEX ENTRY i
                     
                     index(i).t1str = scantemp{1,1}{j-1,1};
                     index(i).t1 = datenum(strrep(scantemp{1,1}{j-1,1},'T',' '));
-                    index(i).sct0str = scantemp{1,2}(j-1);
+                    index(i).sct1str = sprintf('"%s/%014.3f"',index(i).sct0str(2),scantemp{1,2}(j-1));
                     %keep some information the same as , (commented)
  
                     
@@ -187,7 +188,7 @@ for i=1:length(index)
         i
         index(end).t1 = datenum(strrep(scantemp{1,1}{j,1},'T',' '));
         index(end).t1str= scantemp{1,1}{j,1};
-        index(end).sct1str =scantemp{1,2}(j);
+        index(end).sct1str =sprintf('"%s/%014.3f"',index(end).sct0str(2),scantemp{1,2}(j));
         
         end%if new file was created
         fclose(primwID);

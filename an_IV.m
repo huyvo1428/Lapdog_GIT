@@ -37,7 +37,7 @@ ind_I1S= find(strcmp('I1S', antype));
 ind_I2S= find(strcmp('I2S', antype));
 
 
-fprintf(1,'Analysing sweeps')
+fprintf(1,'Analysing sweeps\n')
 
    
 if(~isempty(ind_I1S))
@@ -55,7 +55,7 @@ end
 % 
 
 
-fprintf(1,'Downsample Low frequency measurements')
+fprintf(1,'Downsample Low frequency measurements \n')
 
    
 

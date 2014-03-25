@@ -31,7 +31,7 @@ for i=1:length(an_ind)
     UTCpart1 = scantemp{1,1}{1,1}(1:11);
     
     
-
+    
     
     
     
@@ -44,18 +44,22 @@ for i=1:length(an_ind)
     tday0=scantemp{1,2}(1)-hms; %%UTC and Spaceclock must be correctly defined
     
     
-    for j=1:3600*24/intval;
-        
-        UTCpart2= datestr((0.5*intval+(j-1)*intval)/(24*60*60), 'HH:MM:SS.FFF'); %calculate time of each interval, as fraction of a day
-        UTC_time =sprintf('%s%s',UTCpart1,UTCpart2); %collect date and time in one variable
-        
-        
-        tfoutarr{1,1}{j,1} = UTC_time;
-        tfoutarr{1,2}(j) = tday0+ 0.5*intval+(j-1)*intval; %spaceclock time of measurement mean (
-        
-    end
+    UTCpart2= datestr((0.5*intval+(1:3600*24/intval-1)*intval)/(24*60*60), 'HH:MM:SS.FFF'); %calculate time of each interval, as fraction of a day
+    tfoutarr{1,1} = strcat(UTCpart1,UTCpart2);
+    tfoutarr{1,2} = [tday0+ 0.5*intval+(1:3600*24/intval-1)*intval];
     
-
+    %     for j=1:3600*24/intval;
+    %
+    %         UTCpart2= datestr((0.5*intval+(j-1)*intval)/(24*60*60), 'HH:MM:SS.FFF'); %calculate time of each interval, as fraction of a day
+    %         UTC_time =sprintf('%s%s',UTCpart1,UTCpart2); %collect date and time in one variable
+    %         strcat(
+    %
+    %         tfoutarr{1,1}{j,1} = UTC_time;
+    %         tfoutarr{1,2}(j) = tday0+ 0.5*intval+(j-1)*intval; %spaceclock time of measurement mean (
+    %
+    %     end
+    %
+    
     %  if count == 0 %first time going through loop! initialise things!
     %afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-6:end),sprintf('%s%i%s%iSEC.TAB',flag1,p,flag3,intval));
     
@@ -138,24 +142,24 @@ for i=1:length(an_ind)
     
     if intval ==0 %%analysis if
         
-  
+        
+        
+        for j = 2: length(scantemp{1,2})-1
             
-    for j = 2: length(scantemp{1,2})-1
+            %leapfrog derivative method
+            scantemp{1,6}(j)=scantemp{1,3}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dI/dt
+            scantemp{1,7}(j)=scantemp{1,4}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dV/dt
+            
+        end%for
         
-        %leapfrog derivative method
-        scantemp{1,6}(j)=scantemp{1,3}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dI/dt
-        scantemp{1,7}(j)=scantemp{1,4}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dV/dt
+        scantemp{1,6}(1)=scantemp{1,3}(1)-scantemp{1,3}(1+1)/(scantemp{1,2}(1)-scantemp{1,2}(1+1));  %%dI/dt  %forward differentiation, larger error
+        scantemp{1,6}(j+1)=scantemp{1,3}(j)-scantemp{1,3}(j+1)/(scantemp{1,2}(j)-scantemp{1,2}(j+1)); %%dI/dt %backward differentiation, larger error
+        scantemp{1,7}(1)=scantemp{1,4}(1)-scantemp{1,4}(1+1)/(scantemp{1,2}(1)-scantemp{1,2}(1+1));  %%dV/dt  %forward differentiation, larger error
+        scantemp{1,7}(j+1)=scantemp{1,4}(j)-scantemp{1,4}(j+1)/(scantemp{1,2}(j)-scantemp{1,2}(j+1)); %%dV/dt %backward differentiation,  larger error
         
-    end%for
-    
-    scantemp{1,6}(1)=scantemp{1,3}(1)-scantemp{1,3}(1+1)/(scantemp{1,2}(1)-scantemp{1,2}(1+1));  %%dI/dt  %forward differentiation, larger error
-    scantemp{1,6}(j+1)=scantemp{1,3}(j)-scantemp{1,3}(j+1)/(scantemp{1,2}(j)-scantemp{1,2}(j+1)); %%dI/dt %backward differentiation, larger error
-    scantemp{1,7}(1)=scantemp{1,4}(1)-scantemp{1,4}(1+1)/(scantemp{1,2}(1)-scantemp{1,2}(1+1));  %%dV/dt  %forward differentiation, larger error
-    scantemp{1,7}(j+1)=scantemp{1,4}(j)-scantemp{1,4}(j+1)/(scantemp{1,2}(j)-scantemp{1,2}(j+1)); %%dV/dt %backward differentiation,  larger error
-    
-    
-    
-      
+        
+        
+        
         dimu = accumarray(inter,scantemp{1,6}(:),[],@mean);
         disd = accumarray(inter,scantemp{1,6}(:),[],@std);
         dvmu = accumarray(inter,scantemp{1,7}(:),[],@mean);
@@ -211,7 +215,7 @@ for i=1:length(an_ind)
     an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
     an_tabindex{end,4} = length(foutarr{1,3}); %number of rows
     an_tabindex{end,5} = 6; %number of columns
-
+    
     an_tabindex{end,6} = an_ind(i);
     an_tabindex{end,7} = 'downsample'; %type
     
@@ -223,7 +227,7 @@ for i=1:length(an_ind)
             %fprintf(awID,'%s, %16.6f,,,,\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j));
             % Don't print zero values.
         else
-            fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
+            fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
         end%if
         
     end%for

@@ -58,6 +58,11 @@ index(n).probe = -1;
 i = 0;
 for ii=1:n  % Loop the label files
     %i % Print to see where we are in the processing
+    
+    if mod(i,1000) ==0
+        fprintf(1,'index generation loop #%i out of%i\n ',i,n)
+    end
+        
     % Path to label file:
     lname = deblank(sprintf('%s/%s',archivepath,iname(ii,:)));
     % 'deblank' strips off some trailing blanks sometimes turning up and causing problems

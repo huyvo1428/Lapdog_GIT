@@ -70,7 +70,7 @@ for j=1:nob
         
         bfolder=strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD);
         
-   if exist(bfolder,'dir')~=7 %this doesn't work!
+   if exist(bfolder,'dir')~=7 
         mkdir(bfolder);
      end
         
@@ -78,10 +78,8 @@ for j=1:nob
         bfshort = strcat('RPCLAP_',datestr(tmac0(j),'yyyymmdd'),'_000000_BLKLIST.TAB');
         blockfile = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/',bfshort);
         
-        
-        
         blockTAB(end+1,1:3)={blockfile,bfshort,rcount}; %new blockfile, with path, shorthand % row count
-        
+
         %write file
         bf = fopen(blockfile,'w');
         fprintf(bf,'%s,%s,%.0f\n',datestr(tmac0(j),'yyyy-mm-ddTHH:MM:SS.FFF'),datestr(tmac1(j),'yyyy-mm-ddTHH:MM:SS.FFF'),mac(j));

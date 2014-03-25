@@ -76,7 +76,15 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
     
     for(i=1:len);
         trID = fopen(index(tabind(i)).tabfile);
-        scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
+        
+        if fileflag(2) =='3'
+            
+            scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
+            
+        else
+            
+            scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
+        end
         
         %at some macros, we have measurements taken during sweeps, which leads to weird results
         %we need to find these and remove them
@@ -94,12 +102,14 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
                 if ~isempty(del)
                     
                     % instead of remove, do qualityflag?
-                    % scantemp{1,5}(del) =100;
                     
                     scantemp{1,1}(del)    = [];
                     scantemp{1,2}(del)    = [];
                     scantemp{1,3}(del)    = [];
                     scantemp{1,4}(del)    = [];
+                    if fileflag(2) =='3'
+                        scantemp{1,5}(del)    = [];
+                    end
                     
                 end%if
             end% for
@@ -110,18 +120,28 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
         scanlength = length(scantemp{1,1});
         counttemp = counttemp + scanlength;
         
-        for (j=1:scanlength)       %print
-            
-            %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-            
-            %             if isempty(scantemp{1,5}{j,1})
-            fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, 000\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-            %             else
-            %                 fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %3i\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j));
-            %             end
-            %
-        end
         
+        
+        if fileflag(2) =='3'
+            
+            for (j=1:scanlength)       %print
+                
+                %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+                fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, 000\n'...
+                ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j));
+                
+            end
+        else
+            
+            for (j=1:scanlength)       %print
+                
+                %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+                fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, 000\n'...
+                ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+                
+            end
+        end
+         
         if (i==len) %finalisation
             tabindex{end,4}= scantemp{1,1}{end,1}; %%remember stop time in universal time and spaceclock time
             tabindex{end,5}= scantemp{1,2}(end); %subset scantemp{1,1} is a cell array, but scantemp{1,2} is a normal array

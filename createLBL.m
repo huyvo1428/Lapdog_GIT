@@ -46,79 +46,93 @@ if(~isempty(tabindex));
         
         
         tempfp{1,2}{16,1} = sprintf('"%s, %s, %s"',lbltime,lbleditor,lblrev);
-        tempfp{1,2}(17:18) = [];
-        tempfp{1,1}(17:18) =[]; % should be deleted?
-        tempfp{1,2}{17,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %product creation time
-        tempfp{1,2}{27,1} = '"4"'; %% processing level ID
-        tempfp{1,2}{28,1} = index(tabindex{i,3}).t0str(1:23); %UTC start time
-        tempfp{1,2}{29,1} = tabindex{i,4}(1:23);             % UTC stop time
-%         tmpsct0 = index(tabindex{i,3}).sct0str(5:end-1);
-  %      atmpsct0 = index(tabindex{46,3}).sct0str;
-
-        tempfp{1,2}{30,1} = sprintf('%13.3f',index(tabindex{i,3}).sct0str(5:end-1));                    %% sc start time
-  
-        tempfp{1,2}{31,1} = sprintf('%13.3f',tabindex{i,5}); %% sc stop time
-        tempfp{1,2}{54,1} = sprintf('%i',tabindex{i,6}); %% rows
+        %     tempfp{1,2}(17:18) = [];
+        %    tempfp{1,1}(17:18) =[]; % should be deleted?
+        
+        tempfp{1,2}{17} = tname(1:end-4);
+        tempfp{1,2}{18} = 'DDR';
+        
+        tempfp{1,2}{19,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %product creation time
+        tempfp{1,2}{29,1} = '"4"'; %% processing level ID
+        tempfp{1,2}{30,1} = index(tabindex{i,3}).t0str(1:23); %UTC start time
+        tempfp{1,2}{31,1} = tabindex{i,4}(1:23);             % UTC stop time
+        %         tmpsct0 = index(tabindex{i,3}).sct0str(5:end-1);
+        %      atmpsct0 = index(tabindex{46,3}).sct0str;
+        
+        tempfp{1,2}{32,1} = sprintf('%14.3f',index(tabindex{i,3}).sct0str(2:17));  %% sc start time
+        tempfp{1,2}{33,1} = sprintf('%s/%014.3f',index(tabindex{i,3}).sct0str(2),tabindex{i,5}); %% sc stop time
+        tempfp{1,2}{56,1} = sprintf('%i',tabindex{i,6}); %% rows
         
         a =    tname(30);
         if (tname(30)=='S') % special format for sweep files...
             if (tname(28)=='B')
                 
-                tempfp{1,2}{55,1} = '2'; %number of rows
-                tempfp{1,2}{56,1} = '36';% ROW_BYTES
+                tempfp{1,2}{57,1} = '2'; %number of columns
+                tempfp{1,2}{58,1} = '36';% ROW_BYTES
                 
                 
-                tempfp{1,2}(74:82) = [];  %remove Current column
-                tempfp{1,1}(74:82) = [];
-                tempfp{1,2}(58:64) = [];  %remove UTC column
-                tempfp{1,1}(58:64) = [];
+                tempfp{1,2}(76:84) = [];  %remove Current column
+                tempfp{1,1}(76:84) = [];
+                tempfp{1,2}(60:66) = [];  %remove UTC column
+                tempfp{1,1}(60:66) = [];
                 
                 
                 
                 
-                tempfp{1,2}{59,1} = 'SWEEP_TIME';
-                tempfp{1,2}{62,1} = 'ASCII_REAL';
-                tempfp{1,2}{60,1} = '1';
-                tempfp{1,2}{61,1} = '16';
-                tempfp{1,2}{63,1} = 'SECONDS';
-                tempfp{1,2}{64,1} = '"F16.6"';
-                tempfp{1,2}{65,1} = '"LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT SSSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"';
+                tempfp{1,2}{61,1} = 'SWEEP_TIME';
+                tempfp{1,2}{63,1} = 'ASCII_REAL';
+                tempfp{1,2}{62,1} = '1';
+                tempfp{1,2}{63,1} = '16';
+                tempfp{1,2}{65,1} = 'SECONDS';
+                tempfp{1,2}{66,1} = '"F16.6"';
+                tempfp{1,2}{67,1} = '"LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT SSSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"';
                 
-                tempfp{1,2}{70,1} = '25';
+                tempfp{1,2}{72,1} = '25';
                 
             elseif (tname(28)=='I')
-                tempfp{1,2}(90:98) = tempfp{1,2}(74:82); % move sweep current column
-                tempfp{1,1}(90:98) = tempfp{1,1}(74:82);
-                tempfp{1,2}(81:89) = tempfp{1,2}(65:73); %move S/C time column twice
-                tempfp{1,1}(81:89) = tempfp{1,1}(65:73);
-                tempfp{1,2}(72:80) = tempfp{1,2}(65:73);
-                tempfp{1,1}(72:80) = tempfp{1,1}(65:73);
-                tempfp{1,2}(65:71) = tempfp{1,2}(58:64); %copy UTC time column
-                tempfp{1,1}(65:71) = tempfp{1,1}(58:64);
+                tempfp{1,2}(92:100) = tempfp{1,2}(74:82); % move sweep current column
+                tempfp{1,1}(92:100) = tempfp{1,1}(74:82);
+                tempfp{1,2}(83:91) = tempfp{1,2}(65:73); %move S/C time column twice
+                tempfp{1,1}(83:91) = tempfp{1,1}(65:73);
+                tempfp{1,2}(74:82) = tempfp{1,2}(65:73);
+                tempfp{1,1}(74:82) = tempfp{1,1}(65:73);
+                tempfp{1,2}(67:73) = tempfp{1,2}(58:64); %copy UTC time column
+                tempfp{1,1}(67:73) = tempfp{1,1}(58:64);
                 
                 %edit some lines
-                tempfp{1,2}{55,1} = sprintf('%i',tabindex{i,7});  %number of columns
-                tempfp{1,2}{56,1} = '3212'; %row byte size
-                tempfp{1,2}{68,1} = '28';   %second column start byte
+                tempfp{1,2}{57,1} = sprintf('%i',tabindex{i,7});  %number of columns
+                tempfp{1,2}{58,1} = '3212'; %row byte size
+                tempfp{1,2}{70,1} = '28';   %second column start byte
                 
-                tempfp{1,2}{69,1} = '26';   %
-                tempfp{1,2}{74,1} = '56';   %third column start byte
-                tempfp{1,2}{83,1} = '74';   %fourth column start byte
-                tempfp{1,2}{93,1} = '92';   %fifth column start byte
-                tempfp{1,2}{59,1} = '"SWEEP_START_TIME_UTC"';
-                tempfp{1,2}{63,1} = '"START TIME OF SWEEP DATA ROW (UTC)"';
-                tempfp{1,2}{66,1} = '"SWEEP_END_TIME_UTC"';
-                tempfp{1,2}{70,1} = '"END TIME OF SWEEP DATA ROW (UTC)"';
-                tempfp{1,2}{73,1} = '"SWEEP_START_TIME_OBT"';
-                tempfp{1,2}{79,1} = '"START TIME OF SWEEP DATA ROW (SPACECRAFT ONBOARD TIME)"';
-                tempfp{1,2}{82,1} = '"SWEEP_END_TIME_OBT"';
-                tempfp{1,2}{88,1} = '"END TIME OF SWEEP DATA ROW (SPACECRAFT ONBOARD TIME)"';
-                tempfp{1,2}{90,1} = 'ROW';
-                tempfp{1,2}{97,1} = sprintf('"FULL MEASURED CALIBRATED CURRENT SWEEP COLUMNS 5-%i)"',tabindex{i,7});
-                tempfp{1,2}{98,1} = 'ROW';
-                tempfp{1,1}{99,1} = 'END_OBJECT';
-                tempfp{1,2}{99,1} = 'TABLE';
-                tempfp{1,1}{100,1} = 'END'; % Ends file, this line is never printed, but we need something on last row
+                tempfp{1,2}{71,1} = '26';   %
+                tempfp{1,2}{76,1} = '56';   %third column start byte
+                tempfp{1,2}{85,1} = '74';   %fourth column start byte
+                tempfp{1,2}{95,1} = '92';   %fifth column start byte
+                tempfp{1,2}{61,1} = '"SWEEP_START_TIME_UTC"';
+                tempfp{1,2}{65,1} = '"START TIME OF SWEEP DATA ROW (UTC)"';
+                tempfp{1,2}{68,1} = '"SWEEP_END_TIME_UTC"';
+                tempfp{1,2}{72,1} = '"END TIME OF SWEEP DATA ROW (UTC)"';
+                tempfp{1,2}{75,1} = '"SWEEP_START_TIME_OBT"';
+                tempfp{1,2}{81,1} = '"START TIME OF SWEEP DATA ROW (SPACECRAFT ONBOARD TIME)"';
+                tempfp{1,2}{84,1} = '"SWEEP_END_TIME_OBT"';
+                tempfp{1,2}{90,1} = '"END TIME OF SWEEP DATA ROW (SPACECRAFT ONBOARD TIME)"';
+                tempfp{1,2}{92,1} = 'COLUMN';
+                tempfp2=tempfp;
+                %% VAD H?LL JAG P? MED H?R!??!
+                tempfp{1,1}{94,1} = '^STRUCTURE';
+                Bfile = tname;
+                Bfile(28)='B';
+                tempfp{1,2}{94,1} = sprintf('"%s"',Bfile);
+                tempfp{1,1}{95,1} = 'ITEMS';
+                tempfp{1,2}{95,1} = sprintf('%i',tabindex{i,7}-4);
+                tempfp{1,1}(96:end+2) = tempfp2{1,1}(94:end);
+                tempfp{1,2}(96:end+2) = tempfp2{1,2}(94:end);
+                clear tempfp2
+                tempfp{1,2}{101,1} = sprintf('" CURRENT SWEEP COLUMNS 5-%i)"',tabindex{i,7});
+                tempfp{1,2}{102,1} = 'COLUMN';
+                tempfp{1,1}{103,1} = 'END_OBJECT';
+                tempfp{1,2}{103,1} = 'TABLE';
+                tempfp{1,1}{104,1} = 'END'; % Ends file, this line is never printed, but we need something on last row
                 %tempfp{1,2}{100,1} = '';%
                 
             else
@@ -165,8 +179,8 @@ if(~isempty(blockTAB));
         fprintf(bl,'PRODUCER_ID = %s\n',producershortname);
         fprintf(bl,'PRODUCER_FULL_NAME = "%s"\n',producerfullname);
         fprintf(bl,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
-        mm = length(tname);
-        fprintf(bl,'PRODUCT_ID = "%s"\n',tname(1:(mm-4)));
+        % mm = length(tname);
+        fprintf(bl,'PRODUCT_ID = "%s"\n',tname(1:(end-4)));
         fprintf(bl,'PRODUCT_TYPE = "EDR"\n');  % No idea what this means...
         fprintf(bl,'PRODUCT_CREATION_TIME = %s\n',datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
         fprintf(bl,'INSTRUMENT_HOST_ID = RO\n');
@@ -339,16 +353,16 @@ if(~isempty(an_tabindex));
             
             fprintf(al,'END_OBJECT  = TABLE\n');
             fprintf(al,'END');
-         
+            
             
         elseif strcmp(an_tabindex{i,7},'spectra') %%%%%%%%%%%%%%%%SPECTRA FILE%%%%%%%%%%
-     
+            
             %Time Stamps
             tempfp{1,2}{30} = an_tabindex{i,8}{1,1}(1:23); %UTC start
             tempfp{1,2}{31} = an_tabindex{i,8}{1,2}(1:23); %UTC stop
-            tempfp{1,2}{32} = sprintf('1/%014.3f',an_tabindex{i,8}{1,3});
-            tempfp{1,2}{33} = sprintf('1/%014.3f',an_tabindex{i,8}{1,4}); %SC stop
-        
+            tempfp{1,2}{32} = sprintf('%s/%014.3f',tempfp{1,2}{32}(1),an_tabindex{i,8}{1,3});
+            tempfp{1,2}{33} = sprintf('%s/%014.3f',tempfp{1,2}{32}(1),an_tabindex{i,8}{1,4}); %SC stop
+            
             tempfp{1,2}{32,1} = sprintf('"%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT"',mode);
             %%%%%PRINT HEADER
             for (j=1:66) %print header of analysis file
@@ -356,27 +370,27 @@ if(~isempty(an_tabindex));
             end
             %% Customise the rest!
             
-%             
-%              fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %16.6f,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(vp));
-%         %23+23+16+16+3+16+6*2
-%     else
-%         'Error, wrong fileflag'
-%         
-%     end
-%     
-%     % fprintf(awID,'%s, %s, %16.6f, %16.6f,%03i,%16.6f,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(ib));
-%     psdout=(128/lens)^2 * psd;
-%     dlmwrite(sname,psdout.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty ne
+            %
+            %              fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %16.6f,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(vp));
+            %         %23+23+16+16+3+16+6*2
+            %     else
+            %         'Error, wrong fileflag'
+            %
+            %     end
+            %
+            %     % fprintf(awID,'%s, %s, %16.6f, %16.6f,%03i,%16.6f,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(ib));
+            %     psdout=(128/lens)^2 * psd;
+            %     dlmwrite(sname,psdout.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty ne
             
-
-
+            
+            
             fprintf(al,'OBJECT = TABLE\n');
             fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
             fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
             fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
             fprintf(al,'ROW_BYTES = 110\n');   %%row_bytes here!!!
-                 
-                 
+            
+            
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = SPECTRA_START_TIME_UTC\n');
             fprintf(al,'DATA_TYPE = TIME\n');
@@ -386,10 +400,10 @@ if(~isempty(an_tabindex));
             fprintf(al,'DESCRIPTION = "START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
             fprintf(al,'END_OBJECT  = COLUMN\n');
             
-
-                tempfp{1,2}{93,1} = '92';   %fifth column start byte
-
-                 
+            
+            tempfp{1,2}{93,1} = '92';   %fifth column start byte
+            
+            
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = SPECTRA_STOP_TIME_UTC\n');
             fprintf(al,'DATA_TYPE = TIME\n');
@@ -407,7 +421,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'UNIT = SECONDS\n');
             fprintf(al,'DESCRIPTION = "START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
             fprintf(al,'END_OBJECT  = COLUMN\n');
-                 
+            
             
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = SPECTRA_STOP_TIME_OBT\n');
@@ -417,7 +431,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'UNIT = SECONDS\n');
             fprintf(al,'DESCRIPTION = " STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
             fprintf(al,'END_OBJECT  = COLUMN\n');
-                 
+            
             
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = QUALITY\n');
@@ -427,6 +441,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'UNIT = N/A\n');
             fprintf(al,'DESCRIPTION = " QUALITYFACTOR FROM 000(best) to 999"\n');
             fprintf(al,'END_OBJECT  = COLUMN\n');
+            
             
             if strcmp(mode(1),'I')
                 
@@ -442,15 +457,42 @@ if(~isempty(an_tabindex));
                 
             elseif strcmp(mode(1),'V')
                 
-                fprintf(al,'OBJECT = COLUMN\n');
-                fprintf(al,'NAME = P%s_CURRENT\n',Pnum);
-                fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                fprintf(al,'START_BYTE = 97\n');
-                fprintf(al,'BYTES = 14\n');
-                fprintf(al,'UNIT = AMPERE\n');
-                fprintf(al,'FORMAT = E14.7\n');
-                fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
-                fprintf(al,'END_OBJECT  = COLUMN\n');
+                if Pnum=='3'
+                    
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'NAME = P1_CURRENT\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 97\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'UNIT = AMPERE\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'NAME = P2_CURRENT\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 113\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'UNIT = AMPERE\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                    
+                else
+                    
+                    
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'NAME = P%s_CURRENT\n',Pnum);
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 97\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'UNIT = AMPERE\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                end
+                
             else
                 'error'
             end
@@ -458,17 +500,19 @@ if(~isempty(an_tabindex));
             %% Spreadsheet?
             
             
-                 
+            
             
         elseif  strcmp(an_tabindex{i,7},'frequency') %%%%%%%%%%%%FREQUENCY FILE%%%%%%%%%
             
             tempfp{1,2}{32,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
-
-                        %Time Stamps
+            
+            %Time Stamps
             tempfp{1,2}{30} = an_tabindex{i,8}{1,1}(1:23); %UTC start
             tempfp{1,2}{31} = an_tabindex{i,8}{1,2}(1:23); %UTC stop
-            tempfp{1,2}{32} = sprintf('1/%014.3f',an_tabindex{i,8}{1,3});
-            tempfp{1,2}{33} = sprintf('1/%014.3f',an_tabindex{i,8}{1,4}); %SC stop
+            
+            tempfp{1,2}{32} = sprintf('%s/%014.3f',tempfp{1,2}{32}(1),an_tabindex{i,8}{1,3});
+            tempfp{1,2}{33} = sprintf('%s/%014.3f',tempfp{1,2}{32}(1),an_tabindex{i,8}{1,4}); %SC stop
+            
             
             %%%%%PRINT HEADER
             for (j=1:66) %print header of analysis file
@@ -481,7 +525,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
             fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
             fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
-                 fprintf(al,'ROW_BYTES = 14\n');   %%row_bytes here!!!
+            fprintf(al,'ROW_BYTES = 14\n');   %%row_bytes here!!!
             
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = FREQUENCY LIST\n');
@@ -498,11 +542,11 @@ if(~isempty(an_tabindex));
             
         else
             fprintf(1,'error, bad identifier in an_tabindex{%i,7}',i);
-
+            
         end
-           fclose(al);
-            
-            
+        fclose(al);
+        
+        
         
         
     end
@@ -554,9 +598,9 @@ if(0)
         fprintf(al,'PRODUCER_ID = %s\n',producershortname);
         fprintf(al,'PRODUCER_FULL_NAME = "%s"\n',producerfullname);
         fprintf(al,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
-        mm = length(tname);
-        fprintf(al,'PRODUCT_ID = "%s"\n',tname(1:(mm-4)));
-        fprintf(al,'PRODUCT_TYPE = "EDR"\n');  % No idea what this means...
+        % mm = length(tname);
+        fprintf(al,'PRODUCT_ID = "%s"\n',tname(1:(end-4)));
+        fprintf(al,'PRODUCT_TYPE = "DDR"\n');  % No idea what this means...
         fprintf(al,'PRODUCT_CREATION_TIME = %s\n',datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
         fprintf(al,'INSTRUMENT_HOST_ID = RO\n');
         fprintf(al,'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\n');
