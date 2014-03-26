@@ -38,7 +38,7 @@ if(~isempty(tabindex));
         tempfp{1,2}{6,1} = tname;
         
         tempfp{1,2}{7,1}= strrep(tempfp{1,2}{7,1},sprintf('-3-%s-CALIB',shortphase),sprintf('-4-%s-DERIV',shortphase));
-        tempfp{1,2}{8,1}=   strrep(tempfp{1,2}{8,1},sprintf('3 %s CALIB',shortphase),sprintf('4 %s DERIV',shortphase));
+        tempfp{1,2}{8,1}= strrep(tempfp{1,2}{8,1},sprintf('3 %s CALIB',shortphase),sprintf('4 %s DERIV',shortphase));
         
         tempfp{1,2}{14,1}=producershortname;
         tempfp{1,2}{15,1}=sprintf('"%s"',producerfullname);
@@ -59,8 +59,8 @@ if(~isempty(tabindex));
         %         tmpsct0 = index(tabindex{i,3}).sct0str(5:end-1);
         %      atmpsct0 = index(tabindex{46,3}).sct0str;
         
-        tempfp{1,2}{32,1} = sprintf('%14.3f',index(tabindex{i,3}).sct0str(2:17));  %% sc start time
-        tempfp{1,2}{33,1} = sprintf('%s/%014.3f',index(tabindex{i,3}).sct0str(2),tabindex{i,5}); %% sc stop time
+        tempfp{1,2}{32,1} = strcat(index(tabindex{i,3}).sct0str(1:17),'"');  %% sc start time
+        tempfp{1,2}{33,1} = sprintf('"%s/%014.3f"',index(tabindex{i,3}).sct0str(2),tabindex{i,5}); %% sc stop time
         tempfp{1,2}{56,1} = sprintf('%i',tabindex{i,6}); %% rows
         
         a =    tname(30);
@@ -90,24 +90,24 @@ if(~isempty(tabindex));
                 tempfp{1,2}{72,1} = '25';
                 
             elseif (tname(28)=='I')
-                tempfp{1,2}(92:100) = tempfp{1,2}(74:82); % move sweep current column
-                tempfp{1,1}(92:100) = tempfp{1,1}(74:82);
-                tempfp{1,2}(83:91) = tempfp{1,2}(65:73); %move S/C time column twice
-                tempfp{1,1}(83:91) = tempfp{1,1}(65:73);
-                tempfp{1,2}(74:82) = tempfp{1,2}(65:73);
-                tempfp{1,1}(74:82) = tempfp{1,1}(65:73);
-                tempfp{1,2}(67:73) = tempfp{1,2}(58:64); %copy UTC time column
-                tempfp{1,1}(67:73) = tempfp{1,1}(58:64);
+                tempfp{1,2}(92:100) = tempfp{1,2}(76:84); % move sweep current column
+                tempfp{1,1}(92:100) = tempfp{1,1}(76:84);
+                tempfp{1,2}(83:91) = tempfp{1,2}(67:75); %move S/C time column twice
+                tempfp{1,1}(83:91) = tempfp{1,1}(67:75);
+                tempfp{1,2}(74:82) = tempfp{1,2}(67:75);
+                tempfp{1,1}(74:82) = tempfp{1,1}(67:75);
+                tempfp{1,2}(67:73) = tempfp{1,2}(60:66); %copy UTC time column
+                tempfp{1,1}(67:73) = tempfp{1,1}(60:66);
                 
                 %edit some lines
                 tempfp{1,2}{57,1} = sprintf('%i',tabindex{i,7});  %number of columns
                 tempfp{1,2}{58,1} = '3212'; %row byte size
-                tempfp{1,2}{70,1} = '28';   %second column start byte
+                tempfp{1,2}{72,1} = '28';   %second column start byte
                 
-                tempfp{1,2}{71,1} = '26';   %
-                tempfp{1,2}{76,1} = '56';   %third column start byte
-                tempfp{1,2}{85,1} = '74';   %fourth column start byte
-                tempfp{1,2}{95,1} = '92';   %fifth column start byte
+                tempfp{1,2}{73,1} = '26';   %
+                tempfp{1,2}{78,1} = '56';   %third column start byte
+                tempfp{1,2}{87,1} = '74';   %fourth column start byte
+                tempfp{1,2}{97,1} = '92';   %fifth column start byte
                 tempfp{1,2}{61,1} = '"SWEEP_START_TIME_UTC"';
                 tempfp{1,2}{65,1} = '"START TIME OF SWEEP DATA ROW (UTC)"';
                 tempfp{1,2}{68,1} = '"SWEEP_END_TIME_UTC"';
@@ -128,7 +128,7 @@ if(~isempty(tabindex));
                 tempfp{1,1}(96:end+2) = tempfp2{1,1}(94:end);
                 tempfp{1,2}(96:end+2) = tempfp2{1,2}(94:end);
                 clear tempfp2
-                tempfp{1,2}{101,1} = sprintf('" CURRENT SWEEP COLUMNS 5-%i)"',tabindex{i,7});
+                tempfp{1,2}{101,1} = sprintf('" Averaged current measured of potential sweep, at different potential steps as described by %s"',Bfile);
                 tempfp{1,2}{102,1} = 'COLUMN';
                 tempfp{1,1}{103,1} = 'END_OBJECT';
                 tempfp{1,2}{103,1} = 'TABLE';
@@ -141,7 +141,7 @@ if(~isempty(tabindex));
         end
         
         for (i=1:length(tempfp{1,1})-1) %skip last row
-            fprintf(dl,'%s=%s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
+            fprintf(dl,'%s = %s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
         end
         
         fprintf(dl,'END');% Ends file
@@ -181,7 +181,7 @@ if(~isempty(blockTAB));
         fprintf(bl,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
         % mm = length(tname);
         fprintf(bl,'PRODUCT_ID = "%s"\n',tname(1:(end-4)));
-        fprintf(bl,'PRODUCT_TYPE = "EDR"\n');  % No idea what this means...
+        fprintf(bl,'PRODUCT_TYPE = "DDR"\n');  % No idea what this means...
         fprintf(bl,'PRODUCT_CREATION_TIME = %s\n',datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
         fprintf(bl,'INSTRUMENT_HOST_ID = RO\n');
         fprintf(bl,'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\n');
@@ -261,7 +261,16 @@ if(~isempty(an_tabindex));
         tempfp{1,2}{4,1} = sprintf('%d',an_tabindex{i,4});
         tempfp{1,2}{5,1} = lname;
         tempfp{1,2}{6,1} = tname;
+        tempfp{1,2}{16,1} ='DDR';
         tempfp{1,2}{17,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %product creation time
+        
+        
+        
+        %Time Stamps
+        tempfp{1,2}{30} = an_tabindex{i,8}{1,1}(1:23); %UTC start
+        tempfp{1,2}{31} = an_tabindex{i,8}{1,2}(1:23); %UTC stop
+        tempfp{1,2}{32} = sprintf('"%s/%014.3f"',tempfp{1,2}{32}(2),an_tabindex{i,8}{1,3}); %SC start
+        tempfp{1,2}{33} = sprintf('"%s/%014.3f"',tempfp{1,2}{32}(2),an_tabindex{i,8}{1,4}); %SC stop
         
         %since this is 1:1 mapping for downsampling, this can stay "as is"
         %28START_TIME =2007-11-07T02:32:42.861
@@ -276,7 +285,7 @@ if(~isempty(an_tabindex));
         
         if strcmp(an_tabindex{i,7},'downsample') %%%%%%%%DOWNSAMPLED FILE%%%%%%%%%%%%%%%
             
-            tempfp{1,2}{32,1} = sprintf('"%s SECONDS DOWNSAMPLED MEASUREMENT"',lname(end-10:end-9));
+            tempfp{1,2}{34,1} = strcat(tempfp{1,2}{34,1}(1:end-1),sprintf(' %s SECONDS DOWNSAMPLED"',lname(end-10:end-9)));
             
             %%%%%PRINT HEADER
             for (j=1:55) %print header of analysis file
@@ -292,7 +301,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
             
             fprintf(al,'ROW_BYTES = 110\n');   %%row_bytes here!!!
-            
+            fprintf(al,'DESCRIPTION = %s\n',tempfp{1,2}{34,1});
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = TIME_UTC\n');
             fprintf(al,'DATA_TYPE = TIME\n');
@@ -357,38 +366,22 @@ if(~isempty(an_tabindex));
             
         elseif strcmp(an_tabindex{i,7},'spectra') %%%%%%%%%%%%%%%%SPECTRA FILE%%%%%%%%%%
             
-            %Time Stamps
-            tempfp{1,2}{30} = an_tabindex{i,8}{1,1}(1:23); %UTC start
-            tempfp{1,2}{31} = an_tabindex{i,8}{1,2}(1:23); %UTC stop
-            tempfp{1,2}{32} = sprintf('%s/%014.3f',tempfp{1,2}{32}(1),an_tabindex{i,8}{1,3});
-            tempfp{1,2}{33} = sprintf('%s/%014.3f',tempfp{1,2}{32}(1),an_tabindex{i,8}{1,4}); %SC stop
-            
-            tempfp{1,2}{32,1} = sprintf('"%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT"',mode);
+            tempfp{1,2}{34,1} = sprintf('"%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT"',mode);
             %%%%%PRINT HEADER
             for (j=1:66) %print header of analysis file
                 fprintf(al,'%s=%s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
             end
             %% Customise the rest!
             
-            %
-            %              fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %16.6f,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(vp));
-            %         %23+23+16+16+3+16+6*2
-            %     else
-            %         'Error, wrong fileflag'
-            %
-            %     end
-            %
-            %     % fprintf(awID,'%s, %s, %16.6f, %16.6f,%03i,%16.6f,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(ib));
-            %     psdout=(128/lens)^2 * psd;
-            %     dlmwrite(sname,psdout.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty ne
-            
-            
+  
             
             fprintf(al,'OBJECT = TABLE\n');
             fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
             fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
             fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
             fprintf(al,'ROW_BYTES = 110\n');   %%row_bytes here!!!
+            fprintf(al,'DESCRIPTION = %s\n',tempfp{1,2}{34,1});
+
             
             
             fprintf(al,'OBJECT = COLUMN\n');
@@ -400,9 +393,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'DESCRIPTION = "START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
             fprintf(al,'END_OBJECT  = COLUMN\n');
             
-            
-            tempfp{1,2}{93,1} = '92';   %fifth column start byte
-            
+      
             
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = SPECTRA_STOP_TIME_UTC\n');
@@ -445,15 +436,62 @@ if(~isempty(an_tabindex));
             
             if strcmp(mode(1),'I')
                 
-                fprintf(al,'OBJECT = COLUMN\n');
-                fprintf(al,'NAME = P%s_VOLT\n',Pnum);
-                fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                fprintf(al,'START_BYTE = 97\n');
-                fprintf(al,'BYTES = 14\n');
-                fprintf(al,'UNIT = VOLT\n');
-                fprintf(al,'FORMAT = E14.7\n');
-                fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
-                fprintf(al,'END_OBJECT  = COLUMN\n');
+                
+                if Pnum=='3'
+                    
+                    
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'NAME = P1_VOLT\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 97\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'UNIT = VOLT\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                    fprintf(al,'NAME = P2_VOLT\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 113\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'UNIT = VOLT\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-7);
+                    fprintf(al,'NAME = PSD\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 129\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "PSD CURRENT SPECTRUM"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                else
+                    
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'NAME = P%s_VOLT\n',Pnum);
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 97\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'UNIT = VOLT\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-6);
+                    fprintf(al,'NAME = PSD\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 113\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "PSD CURRENT SPECTRUM"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                end
+                
                 
             elseif strcmp(mode(1),'V')
                 
@@ -468,6 +506,7 @@ if(~isempty(an_tabindex));
                     fprintf(al,'FORMAT = E14.7\n');
                     fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
                     fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
                     fprintf(al,'OBJECT = COLUMN\n');
                     fprintf(al,'NAME = P2_CURRENT\n');
                     fprintf(al,'DATA_TYPE = ASCII_REAL\n');
@@ -478,6 +517,15 @@ if(~isempty(an_tabindex));
                     fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
                     fprintf(al,'END_OBJECT  = COLUMN\n');
                     
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-7);
+                    fprintf(al,'NAME = PSD\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 129\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "PSD VOLTAGE SPECTRUM"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
                     
                 else
                     
@@ -491,7 +539,21 @@ if(~isempty(an_tabindex));
                     fprintf(al,'FORMAT = E14.7\n');
                     fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
                     fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                    
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-6);
+                    fprintf(al,'NAME = PSD\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 113\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "PSD VOLTAGE SPECTRUM"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
                 end
+                
+                
+                
                 
             else
                 'error'
@@ -504,14 +566,7 @@ if(~isempty(an_tabindex));
             
         elseif  strcmp(an_tabindex{i,7},'frequency') %%%%%%%%%%%%FREQUENCY FILE%%%%%%%%%
             
-            tempfp{1,2}{32,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
-            
-            %Time Stamps
-            tempfp{1,2}{30} = an_tabindex{i,8}{1,1}(1:23); %UTC start
-            tempfp{1,2}{31} = an_tabindex{i,8}{1,2}(1:23); %UTC stop
-            
-            tempfp{1,2}{32} = sprintf('%s/%014.3f',tempfp{1,2}{32}(1),an_tabindex{i,8}{1,3});
-            tempfp{1,2}{33} = sprintf('%s/%014.3f',tempfp{1,2}{32}(1),an_tabindex{i,8}{1,4}); %SC stop
+            tempfp{1,2}{34,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
             
             
             %%%%%PRINT HEADER
@@ -526,6 +581,10 @@ if(~isempty(an_tabindex));
             fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
             fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
             fprintf(al,'ROW_BYTES = 14\n');   %%row_bytes here!!!
+            
+            fprintf(al,'DESCRIPTION = %s\n',tempfp{1,2}{34,1});
+
+            
             
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = FREQUENCY LIST\n');

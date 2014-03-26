@@ -1,7 +1,10 @@
 % preamble.m -- set PDS keywords etc
 
 % Should geometry files be exported to the archive?
-export_geometry = input('Export geometry files to archive? (0/1) ');
+
+%export_geometry = input('Export geometry files to archive? (0/1) ');
+
+export_geometry = 0;
 
 % Set up automatic ssh login on vroom.umea.irf.se (assumes you have generated a
 % public rsa key in your .ssh directory on squid and copied it to the known_hosts
@@ -25,7 +28,7 @@ end
 fc = fopen(missioncalendar,'r');
 line = fgetl(fc);
 jj = 0;
-while((jj<100) & isempty(strfind(line,shortphase)))
+while((jj<100) && isempty(strfind(line,shortphase)))
   line = fgetl(fc);
   jj = jj + 1;
 end

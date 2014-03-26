@@ -32,7 +32,9 @@ for i=1:length(an_ind)
     
     
     
+ timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
     
+      
     
     
     
@@ -44,9 +46,9 @@ for i=1:length(an_ind)
     tday0=scantemp{1,2}(1)-hms; %%UTC and Spaceclock must be correctly defined
     
     
-    UTCpart2= datestr((0.5*intval+(1:3600*24/intval-1)*intval)/(24*60*60), 'HH:MM:SS.FFF'); %calculate time of each interval, as fraction of a day
+    UTCpart2= datestr(((1:3600*24/intval)-0.5)*intval/(24*60*60), 'HH:MM:SS.FFF'); %calculate time of each interval, as fraction of a day
     tfoutarr{1,1} = strcat(UTCpart1,UTCpart2);
-    tfoutarr{1,2} = [tday0+ 0.5*intval+(1:3600*24/intval-1)*intval];
+    tfoutarr{1,2} = [tday0 + ((1:3600*24/intval)-0.5)*intval]; 
     
     %     for j=1:3600*24/intval;
     %
@@ -62,19 +64,32 @@ for i=1:length(an_ind)
     
     %  if count == 0 %first time going through loop! initialise things!
     %afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-6:end),sprintf('%s%i%s%iSEC.TAB',flag1,p,flag3,intval));
+
     
-    %no longer good,
     %After Discussion 24/1 2014
-    %FILE CONVENTION: RPCLAP_YYMMDD_hhmmss_MMM_QPO
-    % MMM = MacroID, or if downsampled (O='D'), then MMM =XXS, where X is number of seconds.
-    % Q= Measured quantity (B/I/V/A)
-    % P=Probe number(1/2/3),
-    % O = Mode (H/L/S)
+    %FILE CONVENTION: RPCLAP_YYMMDD_hhmmss_###_QPO.TAB OR
+    %RPCLAP_YYMMDD_hhmmss_BLKLIST.TAB
+    %
+    % ### can be three integers, or 'PSD' or 'FRQ', or two integers + 'S'
+    %
+    % if ### = number between 000-999, then ### = MACROID (exists only for 
+    % mode'H'/'L'/'S')
+    % if ### = 'PSD' power spectrum of high frequency data (exists only for
+    % mode 'H')
+    % if ### = 'FRQ',corresponding frequency list to PSD data (exists only 
+    % for mode 'H')
+    % if ##S = 00S-99S downsampled data in seconds (only for mode 'D')
+    %
+    %  or if downsampled (O='D'), then MMM =XXS, where X is number of seconds.
+    % Q= Measured quantity ('B'/'I'/'V'/'A')
+    % P=Probe number(1/2/3), 
+    % (Probe 3 = combined Probe 1 & Probe 2 measurement)
+    % M = Mode ('H'/'L'/'S'/'D')
     %
     % B = probe bias voltage, exists only for mode = S
     % I = Current , all modes
     % V = Potential , only for mode = H/L
-    % A = Derived (analysed) variables results, all modes
+    % A = Derived (analysed) variables results, exists only for mode = S
     %
     % H = High frequency measurements
     % L = Low frequency measurements
@@ -92,7 +107,17 @@ for i=1:length(an_ind)
     affolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
     
     
-    
+% QUALITYFLAG:
+% is an 3 digit integer "DDD"
+% starting at 000
+
+% sweep during measurement  = +100
+% bug during measurement    = +200
+% Rotation "  "    "        = +10
+% Bias change " "           = +20
+%
+% low sample size(for avgs) = +2
+% some zeropadding(for psd) = +2
     
     
     
@@ -218,6 +243,7 @@ for i=1:length(an_ind)
     
     an_tabindex{end,6} = an_ind(i);
     an_tabindex{end,7} = 'downsample'; %type
+    an_tabindex{end,8} = timing;
     
     
     awID= fopen(afname,'w');

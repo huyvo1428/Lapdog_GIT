@@ -32,7 +32,7 @@ else
     
 end
 
-%indexcorr;
+%inde   xcorr;
 %indexcorr
 %save(indexfile,'index');
 

@@ -80,7 +80,7 @@ for(i=1:len)
     clear scantemp
  
     
-    ts = datenum(tstr(1:end-3),'yyyy-mm-ddTHH:MM:SS.FFF');
+    %ts = datenum(tstr(1:end-3),'yyyy-mm-ddTHH:MM:SS.FFF');
     
     
     lens = length(vp);
@@ -107,9 +107,9 @@ for(i=1:len)
         
         
         if fileflag(2) =='3'
-            fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %16.6f, %16.6f,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(ib1),mean(ib2));
+            fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(ib1),mean(ib2));
         else
-            fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %16.6f,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(ib));
+            fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(ib));
         end %if
         
         
@@ -130,7 +130,7 @@ for(i=1:len)
         [psd,freq] = pwelch(ib,[],[],nfft,18750);
         %    plot(freq,psd)
         psd=psd*1e18; %scale to nA for current files
-        fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %16.6f,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(vp));
+        fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(vp));
         %23+23+16+16+3+16+6*2
     else
         fprintf(1,'Error, bad fileflag %s at \n %s \n',fileflag,index(an_ind(i)).tabfile)

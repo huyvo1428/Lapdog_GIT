@@ -101,12 +101,12 @@ for ii=1:n  % Loop the label files
           sct1str = strtrim(val(ind,:));
           
           % Analyze file name for type of data:
-          yymmdd = strcat(t0str(3:4),t0str(6:7),t0str(9:10));;
+          yymmdd = strcat(t0str(3:4),t0str(6:7),t0str(9:10));
           str = sprintf('RPCLAP%s',yymmdd);
           base = strfind(lname,str);  % This finds file name start also in case path name contains RPCLAP
           efield = strcmp(lname(base+19),'E');
 
-          probe = str2num(lname(base+21));
+          probe = str2double(lname(base+21));
           if(lname(base+16) == 'S')
             lf = 0;
             hf = 1;
