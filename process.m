@@ -91,7 +91,7 @@ for b = 1:nob   % Loop through all ops blocks
     if(~isempty(p3el)) createTAB(derivedpath,ob(p3el),index,index(obs(b)).t0,'V3L',sweept3); end 
     if(~isempty(p3eh)) createTAB(derivedpath,ob(p3eh),index,index(obs(b)).t0,'V3H',sweept3); end 
     %Generate N data files
-    if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,index(obs(b)).t0,'I1L',sweept1); end
+   if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,index(obs(b)).t0,'I1L',sweept1); end
     if(~isempty(p2nl)) createTAB(derivedpath,ob(p2nl),index,index(obs(b)).t0,'I2L',sweept2); end
     if(~isempty(p1nh)) createTAB(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H',sweept1); end
     if(~isempty(p2nh)) createTAB(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H',sweept2); end

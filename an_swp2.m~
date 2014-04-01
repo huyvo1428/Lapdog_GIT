@@ -13,7 +13,7 @@ global an_tabindex;
 %
 
 
-for i=6:length(an_ind)
+for i=1:length(an_ind)
     
     foutarr=cell(1,5);
     split = 0;
@@ -42,7 +42,11 @@ for i=6:length(an_ind)
     
     size=    numel(scantemp{1,1});
     
-    if ~isempty(
+    if mod(size,steps) ~=0
+        fprintf(1,'error, bad sweepfile at \n %s \n, aborting %s mode analysis\n',tabindex{an_ind(i),1},mode)
+        return
+    end
+    
     
     A= reshape(scantemp{1,1},steps,size/steps);
     Iarr= str2double(A(5:end,1:end));
@@ -102,6 +106,11 @@ for i=6:length(an_ind)
         
     end
     %    orbit('Rosetta',{'2007-09-07';'2007-09-08'},'EARTH','ECLIPJ2000')
+    
+    if strcmp(targetfullname,'SOLAR WIND')
+        
+    else
+    
     
     [~,~,SAA]=orbit('Rosetta',timing(1:2,:),targetfullname,'ECLIPJ2000');
     

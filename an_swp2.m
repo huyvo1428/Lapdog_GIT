@@ -107,7 +107,13 @@ for i=1:length(an_ind)
     end
     %    orbit('Rosetta',{'2007-09-07';'2007-09-08'},'EARTH','ECLIPJ2000')
     
+    if strcmp(targetfullname,'SOLAR WIND')
+           [~,~,SAA]=orbit('Rosetta',timing(1:2,:),'SUN','ECLIPJ2000');
+    else
+    
+   
     [~,~,SAA]=orbit('Rosetta',timing(1:2,:),targetfullname,'ECLIPJ2000');
+    end
     
     
     if strcmp(mode(2),'1');

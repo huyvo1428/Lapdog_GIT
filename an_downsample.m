@@ -108,8 +108,8 @@ for i=1:length(an_ind)
     
     
 % QUALITYFLAG:
-% is an 3 digit integer "DDD"
-% starting at 000
+% is an 3 digit integer 
+% from 000 (best) to 332 (worst quality)
 
 % sweep during measurement  = +100
 % bug during measurement    = +200

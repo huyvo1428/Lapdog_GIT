@@ -120,7 +120,9 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
         scanlength = length(scantemp{1,1});
         counttemp = counttemp + scanlength;
         
-        
+        if scanlength ~=0 %if file is empty/all invalid, remember last time
+        timing={scantemp{1,1}{end,1},scantemp{1,2}(end)};
+        end
         
         if fileflag(2) =='3'
             
@@ -143,9 +145,13 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
         end
          
         if (i==len) %finalisation
-            tabindex{end,4}= scantemp{1,1}{end,1}; %%remember stop time in universal time and spaceclock time
-            tabindex{end,5}= scantemp{1,2}(end); %subset scantemp{1,1} is a cell array, but scantemp{1,2} is a normal array
+
+            
+            tabindex{end,4}= timing{1,1}; %%remember stop time in universal time and spaceclock time
+            tabindex{end,5}= timing{1,2}; %subset scantemp{1,1} is a cell array, but scantemp{1,2} is a normal array
             tabindex{end,6}= counttemp;
+            
+            
         end
         
         fclose(trID);

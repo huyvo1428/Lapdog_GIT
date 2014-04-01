@@ -67,16 +67,18 @@ for i=1:length(an_ind)
 
     
     %After Discussion 24/1 2014
-    %FILE CONVENTION: RPCLAP_YYMMDD_hhmmss_###_QPO
-    % ### can be three integers, or 'PSD' or 'FRQ, or twointegers + 
+    %FILE CONVENTION: RPCLAP_YYMMDD_hhmmss_###_QPO.TAB OR
+    %RPCLAP_YYMMDD_hhmmss_BLKLIST.TAB
+    %
+    % ### can be three integers, or 'PSD' or 'FRQ', or two integers + 'S'
+    %
     % if ### = number between 000-999, then ### = MACROID (exists only for 
-    % mode
-    % 'H'/'L'/'S')
-    % if ### = 'PSD',power spectrum of high frequency data (exists only for
+    % mode'H'/'L'/'S')
+    % if ### = 'PSD' power spectrum of high frequency data (exists only for
     % mode 'H')
-    % if ### = 'FRQ',Corresponding frequency list to PSD data (exists only 
+    % if ### = 'FRQ',corresponding frequency list to PSD data (exists only 
     % for mode 'H')
-    % if ### = 00S-99S downsampled data in seconds (only for mode 'D')
+    % if ##S = 00S-99S downsampled data in seconds (only for mode 'D')
     %
     %  or if downsampled (O='D'), then MMM =XXS, where X is number of seconds.
     % Q= Measured quantity ('B'/'I'/'V'/'A')
@@ -106,8 +108,8 @@ for i=1:length(an_ind)
     
     
 % QUALITYFLAG:
-% is an 3 digit integer "DDD"
-% starting at 000
+% is an 3 digit integer 
+% from 000 (best) to 332 (worst quality)
 
 % sweep during measurement  = +100
 % bug during measurement    = +200
