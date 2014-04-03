@@ -103,7 +103,16 @@ for(i=1:len)
         elseif(lens > 128)
             lens = 128;
         end %if zeropadding
-        [psd,freq] = pwelch(vp,[],[],nfft,18750);
+%        [psd,freq] = pwelch(vp,[],[],nfft,18750);
+
+
+	nfft = 256;
+	fsamp = 18750; % Or whatever is the real value [Hz]
+	vp = vp - mean(vp); 
+	lens = length(vp);
+	[psd,freq] = pwelch(vp,nfft,fsamp,hanning(lens));
+
+
         
         
         if fileflag(2) =='3'
@@ -127,7 +136,17 @@ for(i=1:len)
         elseif(lens > 128)
             lens = 128;
         end %if zeropadding
-        [psd,freq] = pwelch(ib,[],[],nfft,18750);
+
+
+nfft = 256;
+fsamp = 18750; % Or whatever is the real value [Hz]
+ib = ib - mean(ib); 
+lens = length(ib);
+[psd,freq] = pwelch(ib,nfft,fsamp,hanning(lens));
+
+
+
+        %[psd,freq] = pwelch(ib,[],[],nfft,18750);
         %    plot(freq,psd)
         psd=psd*1e18; %scale to nA for current files
         fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(vp));

@@ -24,6 +24,7 @@ This file specifies the SPICE kernels to be loaded by the custom Rosetta SPICE f
 		'$SPK/pck00008.tpc'
 		'$SPK/NAIF0010.TLS'
 		'$SPK/ATNR_P040302093352_00127.BC'
+		'$SPK/RATT_DV_002_01_______00007.BC'
 		'$SPK/ROS_110405_STEP.TSC'
 		'$SPK/ROS_V19.TF'
 		'$SPK/ROS_SA_2005_V0001.BC'
