@@ -110,7 +110,7 @@ for(i=1:len)
 	fsamp = 18750; % Or whatever is the real value [Hz]
 	vp = vp - mean(vp); 
 	lens = length(vp);
-	[psd,freq] = pwelch(vp,nfft,fsamp,hanning(lens));
+	[psd,freq] = pwelch(vp,hanning(lens),[], nfft, fsamp);
 
 
         
@@ -142,7 +142,7 @@ nfft = 256;
 fsamp = 18750; % Or whatever is the real value [Hz]
 ib = ib - mean(ib); 
 lens = length(ib);
-[psd,freq] = pwelch(ib,nfft,fsamp,hanning(lens));
+[psd,freq] = pwelch(ib,hanning(lens),[], nfft, fsamp);
 
 
 
