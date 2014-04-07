@@ -24,6 +24,7 @@ if(fp > 0)
     fclose(fp);
     load(indexfile);
 else
+
     'lapdog: calling indexgen...'
     indexgen;
     'lapdog: splitting files at midnight..'

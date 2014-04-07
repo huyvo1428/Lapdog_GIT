@@ -2,6 +2,12 @@
 
 % anders.eriksson@irfu.se 2012-03-29
 
+%Make sure an old index doesn't interfere with the new one
+    if exist('index','var')==1
+    clear index
+    end
+
+
 % Read PSA index file:
 str = sprintf('%s/INDEX/INDEX.TAB',archivepath);
 % tmp = importdata(str,'"');
@@ -37,7 +43,11 @@ if(~isempty(blacklist))
     iname(blacklist,:) = [];
 end
 
+
+
 n = length(iname);
+
+
 
 % Create array to save extended index in:
 index(n).lblfile = [];
@@ -60,7 +70,7 @@ for ii=1:n  % Loop the label files
     %i % Print to see where we are in the processing
     
     if mod(i,1000) ==0
-        fprintf(1,'index generation loop #%i out of%i\n ',i,n)
+        fprintf(1,'index generation loop #%i out of%i\r ',i,n)
     end
         
     % Path to label file:

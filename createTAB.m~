@@ -63,6 +63,18 @@ filenamep = strrep(filename,tabfolder,'');
 twID = fopen(filename,'w');
 
 global tabindex;
+
+
+%tabindex has format:
+%{ ,1} filename
+%{ ,2} shortfilename
+%{ ,3} first index number
+%{ ,4} end time(UTC)
+%{ ,5} end time (S/C clock)
+%{ ,6} number of columns
+%{ ,7} number of rows
+
+
 tabindex{end+1,1} = filename; %% Let's remember all TABfiles we create
 tabindex{end,2} = filenamep; %%their shorter name
 tabindex{end,3} = tabind(1); %% and the first index number
@@ -120,7 +132,7 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
         scanlength = length(scantemp{1,1});
         counttemp = counttemp + scanlength;
         
-        if scanlength ~=0
+        if scanlength ~=0 %if file is empty/all invalid, remember last time
         timing={scantemp{1,1}{end,1},scantemp{1,2}(end)};
         end
         
@@ -264,7 +276,7 @@ else %% if sweep, do:
         
         
         
-        fprintf(condfile,'%s, %s, %16.6f, %16.6f,',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
+        fprintf(condfile,'%s, %s, %16.6f, %16.6f, 000,',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
         dlmwrite(filename2,curtemp.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 4. pretty neat.
         
         
@@ -353,9 +365,15 @@ else %% if sweep, do:
         %
         
         if (i==len)
-            scanlength = length(scantemp{1,1});
             
-            tabindex(end,4:6)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),scanlength}; %one index for bias voltages
+%             nrpots = length(curtemp);
+%             nrfiles = len;
+            
+            
+            scanlength = length(potbias) +5;
+            tabindex(end,4:7)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),length(potbias)+5, len}; %one index for bias voltages
+            
+            
             tabindex(end+1,1:7)={filename2,strrep(filename2,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len,scanlength};
             %           tabindex(end+1,1:6)={filename3,strrep(filename3,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len};
             %one index for currents and two timestamps

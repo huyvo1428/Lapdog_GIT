@@ -94,17 +94,17 @@ for i=1:length(index)
             
         end%for "read loop"
         
-
-        
         
         if (flag ==2)
          flag =1;   %doesn't need this, flag is set to 1 a few steps later.
-        count = count +1
-        i
-        index(end).t1 = datenum(strrep(scantemp{1,1}{j,1},'T',' '));
-        index(end).t1str= scantemp{1,1}{j,1};
-        index(end).sct1str =sprintf('"%s/%014.3f"',index(end).sct0str(2),scantemp{1,2}(j));
-        
+         
+         count = count +1;
+         fprintf(1,'%i split files\r ',count);
+         %        i
+         index(end).t1 = datenum(strrep(scantemp{1,1}{j,1},'T',' '));
+         index(end).t1str= scantemp{1,1}{j,1};
+         index(end).sct1str =sprintf('"%s/%014.3f"',index(end).sct0str(2),scantemp{1,2}(j));
+         
         end%if new file was created
         fclose(primwID);
         clear scantemp

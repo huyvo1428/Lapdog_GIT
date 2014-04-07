@@ -2,7 +2,7 @@
 
 function [] = an_hf(derivedpath,an_ind,index,macrotime,fileflag)
 
-diag = 0;
+diag = 1;
 
 plotpsd=[];
 plotT=[];
@@ -80,7 +80,6 @@ for(i=1:len)
     clear scantemp
  
     
-    %ts = datenum(tstr(1:end-3),'yyyy-mm-ddTHH:MM:SS.FFF');
     
     
     lens = length(vp);
@@ -103,17 +102,14 @@ for(i=1:len)
         elseif(lens > 128)
             lens = 128;
         end %if zeropadding
-%        [psd,freq] = pwelch(vp,[],[],nfft,18750);
-
-
-	nfft = 256;
-	fsamp = 18750; % Or whatever is the real value [Hz]
-	vp = vp - mean(vp); 
-	lens = length(vp);
-	[psd,freq] = pwelch(vp,hanning(lens),[], nfft, fsamp);
-
-
+        %        [psd,freq] = pwelch(vp,[],[],nfft,18750);
         
+        
+        nfft = 256;
+        fsamp = 18750; % Or whatever is the real value [Hz]
+        vp = vp - mean(vp);
+        lens = length(vp);
+        [psd,freq] = pwelch(vp,hanning(lens),[], nfft, fsamp);
         
         if fileflag(2) =='3'
             fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(ib1),mean(ib2));
@@ -136,16 +132,16 @@ for(i=1:len)
         elseif(lens > 128)
             lens = 128;
         end %if zeropadding
-
-
-nfft = 256;
-fsamp = 18750; % Or whatever is the real value [Hz]
-ib = ib - mean(ib); 
-lens = length(ib);
-[psd,freq] = pwelch(ib,hanning(lens),[], nfft, fsamp);
-
-
-
+        
+        
+        nfft = 256;
+        fsamp = 18750; % Or whatever is the real value [Hz]
+        ib = ib - mean(ib);
+        lens = length(ib);
+        [psd,freq] = pwelch(ib,hanning(lens),[], nfft, fsamp);
+        
+        
+        
         %[psd,freq] = pwelch(ib,[],[],nfft,18750);
         %    plot(freq,psd)
         psd=psd*1e18; %scale to nA for current files
@@ -162,6 +158,8 @@ lens = length(ib);
     
     if diag
         
+        ts = datenum(tstr(1:end-3),'yyyy-mm-ddTHH:MM:SS.FFF');
+    
         plotpsd=[plotpsd,psdout];
         plotT=[plotT;ts(floor(length(ts)/2))];
         plotSCT=[plotSCT;mean(sct)];
@@ -229,7 +227,7 @@ if diag
     figure(2);
     imagesc( plotT,plotF/1e3,10*log10(plotpsd));
     set(gca,'YDir', 'normal'); % flip the Y Axis so lower frequencies are at the bottom
-    
+    colorbar('Location','EastOutside');
     datetick('x',13);
     xlabel('HH:MM:SS (UT)');
     ylabel('Frequency [kHz]');

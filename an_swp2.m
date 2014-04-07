@@ -21,7 +21,7 @@ for i=1:length(an_ind)
     rfile =tabindex{an_ind(i),1};
     mode=rfile(end-6:end-4);
     arID = fopen(tabindex{an_ind(i),1},'r');
-    
+
     scantemp = textscan(arID,'%s','delimiter',',','CollectOutput', true);
     
     % scantemp=textscan(arID,'%*s%*s%*f%*f%f','delimiter',',','CollectOutput', true);
@@ -218,7 +218,7 @@ for i=1:length(an_ind)
         %poli,poli,pole,pole,
         fprintf(awID,'%14.7e, %14.7e,%14.7e, %14.7e,',foutarr{k,1}(5),foutarr{k,1}(6),foutarr{k,1}(7),foutarr{k,1}(8));
         %  vbinf,diinf,d2iinf
-        fprintf(awID,'%14.7e, %14.7e,%14.7e, %14.7e,',foutarr{k,1}(10),foutarr{k,1}(11),foutarr{k,1}(12));
+        fprintf(awID,'%14.7e, %14.7e,%14.7e, %14.7e,\n',foutarr{k,1}(10),foutarr{k,1}(11),foutarr{k,1}(12));
         %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f, %16.6f', ...
         
         %
