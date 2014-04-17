@@ -383,16 +383,19 @@ if(~isempty(an_tabindex));
         
         %this is stupid, I need new LBLfile for spectra% freq, but haven't
         %stored that name anywhere.
-        if strcmp(an_tabindex{i,7},'downsample')
-            [fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r');
-        else
-            
-            tempn = strrep(an_tabindex{i,1},'TAB','LBL');
-            tempn = strrep(tempn,tempn(end-10:end-8),sprintf('%d',index(an_tabindex{i,3}).macro));
-            
-            [fp,errmess] = fopen(tempn);
-        end
-        
+%      if strcmp(an_tabindex{i,7},'downsample')
+%        [fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r');
+%         else
+%             
+%             tempn = strrep(an_tabindex{i,1},'TAB','LBL');
+%             tempn = strrep(tempn,tempn(end-10:end-8),sprintf('%d',index(an_tabindex{i,3}).macro));
+%             
+%             [fp,errmess] = fopen(tempn);
+%         end
+%       
+
+       [fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r');
+
         tempfp = textscan(fp,'%s %s','Delimiter','=');
         fclose(fp);
         
@@ -444,22 +447,22 @@ if(~isempty(an_tabindex));
         
         al = fopen(strrep(an_tabindex{i,1},'TAB','LBL'),'w');
         
+         %%%%%PRINT HEADER                  
+         ind = find(strcmp(tempfp{1,2}(),'TABLE'),1,'first');
+         
+         for (j=1:ind-1) %print header of analysis file
+             fprintf(al,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+         end
+         
+         
+         
+              
+            %% Customise the rest!
         %%% TAB FILE TYPE CUSTOMISATION
         
         if strcmp(an_tabindex{i,7},'downsample') %%%%%%%%DOWNSAMPLED FILE%%%%%%%%%%%%%%%
             
-            
-            
-            
-            tempfp{1,2}{34,1} = strcat(tempfp{1,2}{34,1}(1:end-1),sprintf(' %s SECONDS DOWNSAMPLED"',lname(end-10:end-9)));
-            
-            %%%%%PRINT HEADER
-            for (j=1:55) %print header of analysis file
-                fprintf(al,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
-            end
-            %% Customise the rest!
-            
-            
+
             
             fprintf(al,'OBJECT = TABLE\n');
             fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
@@ -467,7 +470,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
             
             fprintf(al,'ROW_BYTES = 110\n');   %%row_bytes here!!!
-            fprintf(al,'DESCRIPTION = %s\n',tempfp{1,2}{34,1});
+            fprintf(al,'DESCRIPTION = %s\n', strcat(tempfp{1,2}{34,1}(1:end-1),sprintf(' %s SECONDS DOWNSAMPLED"',lname(end-10:end-9))));
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = TIME_UTC\n');
             fprintf(al,'DATA_TYPE = TIME\n');
@@ -531,13 +534,14 @@ if(~isempty(an_tabindex));
             
             
         elseif strcmp(an_tabindex{i,7},'spectra') %%%%%%%%%%%%%%%%SPECTRA FILE%%%%%%%%%%
+       
             
-            %             tempfp{1,2}{34,1} = sprintf('"%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT"',mode);
-            %             ind = find(strcmp(tempfp{1,2}(),'TABLE'),1,'first');
-            %             %%%%%PRINT HEADER
-            %             for (j=1:ind-1) %print header of analysis file
-            %                 fprintf(al,'%s=%s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
-            %             end
+                 
+                        ind = find(strcmp(tempfp{1,2}(),'TABLE'),1,'first');
+                        %%%%%PRINT HEADER
+                        for (j=1:ind-1) %print header of analysis file
+                            fprintf(al,'%s=%s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+                        end
             
             
             
@@ -555,7 +559,7 @@ if(~isempty(an_tabindex));
                 fprintf(al,'ROW_BYTES = 135\n');   %%row_bytes here!!!
             end
             
-            fprintf(al,'DESCRIPTION = %s\n',tempfp{1,2}{34,1});
+            fprintf(al,'DESCRIPTION = "%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT\n"',mode);
              
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = SPECTRA_START_TIME_UTC\n');
@@ -739,7 +743,7 @@ if(~isempty(an_tabindex));
             
         elseif  strcmp(an_tabindex{i,7},'frequency') %%%%%%%%%%%%FREQUENCY FILE%%%%%%%%%
             
-            tempfp{1,2}{34,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
+           % tempfp{1,2}{34,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
             
             %             ind = find(strcmp(tempfp{1,2}(),'TABLE'),1,'first');
             %             %%%%%PRINT HEADER
@@ -755,7 +759,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
             fprintf(al,'ROW_BYTES = 14\n');   %%row_bytes here!!!
             
-            fprintf(al,'DESCRIPTION = %s\n',tempfp{1,2}{34,1});
+            fprintf(al,'DESCRIPTION = "%s FREQUENCY LIST OF PSD SPECTRA FILE\n"',lname(end-10:end-9));
             
             
             

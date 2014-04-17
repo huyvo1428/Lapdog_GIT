@@ -76,7 +76,7 @@ global tabindex;
 
 
 tabindex{end+1,1} = filename; %% Let's remember all TABfiles we create
-tabindex{end,2} = filenamep; %%their shorter name
+tabindex{end,2} = filenamep; %%their shortform name
 tabindex{end,3} = tabind(1); %% and the first index number
 
 

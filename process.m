@@ -99,17 +99,23 @@ for b = 1:nob   % Loop through all ops blocks
     if(~isempty(p3nl)) createTAB(derivedpath,ob(p3nl),index,index(obs(b)).t0,'I3L',sweept3); end
     if(~isempty(p3nh)) createTAB(derivedpath,ob(p3nh),index,index(obs(b)).t0,'I3H',sweept3); end
     
-    %   Mill the HF data in this ob:
-    
-    if(p1eh)        an_hf(derivedpath,ob(p1eh),index,index(obs(b)).t0,'V1H'); end
-    if(p2eh)        an_hf(derivedpath,ob(p2eh),index,index(obs(b)).t0,'V2H'); end
-    if(p3eh)        an_hf(derivedpath,ob(p3eh),index,index(obs(b)).t0,'V3H'); end
+%  
+%     
+% %   Mill the HF data in this ob:
+%     
+%     if(p1eh)        an_hf(derivedpath,ob(p1eh),index,index(obs(b)).t0,'V1H'); end
+%     if(p2eh)        an_hf(derivedpath,ob(p2eh),index,index(obs(b)).t0,'V2H'); end
+%     if(p3eh)        an_hf(derivedpath,ob(p3eh),index,index(obs(b)).t0,'V3H'); end
+% 
+%     if(p1nh)        an_hf(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H'); end
+%     if(p2nh)        an_hf(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H'); end
+%     if(p3nh)        an_hf(derivedpath,ob(p3nh),index,index(obs(b)).t0,'I3H'); end
+% 
+% 
+% 
 
-    if(p1nh)        an_hf(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H'); end
-    if(p2nh)        an_hf(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H'); end
-    if(p3nh)        an_hf(derivedpath,ob(p3nh),index,index(obs(b)).t0,'I3H'); end
     
     
- fprintf(1,'Macroblock %i out of  %i \n Latest file created from %s\n ',b,nob,index(obe(b)).t1str)
+ fprintf(1,'Macroblock %i out of  %i.\n Latest file created from %s\n ',b,nob,index(obe(b)).t1str)
     
 end %observation block for loop

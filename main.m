@@ -64,9 +64,23 @@ end
 
 
 an_IV;
+% 
+% 
+% tabindexfile = sprintf('an_tabindex/an_tabindex_%s.mat',archiveid);
+% fp = fopen(tabindexfile,'r');
+% 
+% if(fp > 0)
+%     fclose(fp);
+%     load(tabindexfile);
+%     'lapdog: succesfully loaded index'
+%     
+% else
+%     
+% end
 
 
-
+    
+    
 'lapdog: generate LBL files....'
 createLBL;
 

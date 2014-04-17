@@ -1,6 +1,9 @@
 %hf sweep
 
-function [] = an_hf(derivedpath,an_ind,index,macrotime,fileflag)
+%function [] = an_hf(derivedpath,an_ind,index,macrotime,fileflag)
+
+
+function [] = an_hf(an_ind,tabindex,fileflag)
 
 diag = 1;
 
@@ -25,23 +28,27 @@ q=0;
 nfft=128;
 
 
-dirY = datestr(index(an_ind(1)).t0,'YYYY');
-dirM = upper(datestr(index(an_ind(1)).t0,'mmm'));
-dirD = strcat('D',datestr(index(an_ind(1)).t0,'dd'));
-ffolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
-
-fname = sprintf('%sRPCLAP_%s_%s_FRQ_%s.TAB',ffolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),fileflag); %%
+%fname = sprintf('%sRPCLAP_%s_%s_FRQ_%s.TAB',ffolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),fileflag); %%
 %fpath = strrep(filename,ffolder,'');
-sname = strrep(fname,'FRQ','PSD');%%
-
-tmpf = fopen(sname,'w');
-fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
-awID= fopen(sname,'a');
 
 
 len = length(an_ind);
 
-for(i=1:len)
+for i=1:len
+    
+    
+    fname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-10:end-8),'FRQ');
+    %afname = strrep(afname,afname(end-4),'D');
+    ffolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
+
+    sname = strrep(fname,'FRQ','PSD');%%
+
+    tmpf = fopen(sname,'w');
+    fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
+    awID= fopen(sname,'a');
+
+    
+
     %  fprintf(1,'Calculating V1H spectrum #%.0f of %.0f\n',i,len)
     % [tstr ib vp] = textread(index(ob(p1eh(i))).tabfile,'%s%*f%f%f','delimiter',',');
     % ts = datenum(tstr,'yyyy-mm-ddTHH:MM:SS.FFF');
@@ -50,20 +57,67 @@ for(i=1:len)
     
     
     %  fprintf(1,'Calculating %s spectrum #%.0f of %.0f\n',fileflag,i,len)
+    trID = fopen(tabindex{an_ind(i),1},'r');
+
     
-    trID = fopen(index(an_ind(i)).tabfile,'r');
-    %scantemp = textscan(index(an_ind).tabfile,'%s%f%f%f','delimiter',',');
+    
+    
+    
+ 
+        
+
     %[tstr,sct,ib,vp] = textscan(trID,'%s%f%f%f','delimiter',',');
     
     if fileflag(2) =='3' %one more column for probe 3 files
-        scantemp = textscan(trID,'%s%f%f%f%f','delimiter',','); %ts,sct,ib1,ib2,vp1-vp2
+        scantemp = textscan(trID,'%s%f%f%f%f%*f','delimiter',','); %ts,sct,ib1,ib2,vp1-vp2
         ib1=scantemp{1,3};
         ib2=scantemp{1,4};
     else
-        scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
+        scantemp = textscan(trID,'%s%f%f%f%*f','delimiter',',');
     end
     
+    
+    reltime= scantemp{1,2} - scantemp{1,2}(1);
        
+    dt = reltime(2);
+      
+count = 0;
+t0=reltime(1);
+sind = zeros(length(reltime),1);
+
+
+
+    for n=2:length(reltime)
+        if reltime(n)-reltime(n-1)>dt*100
+            
+            t0 =reltime(n);
+            count = count+1;
+            
+        end
+        
+        if reltime(n)-t0 >= 2e-3 && reltime(n)-t0 <= 8e-3
+            
+            sind(n) = count;     
+%         else
+%             sind(n) = 0;
+            
+        end
+    end
+    
+obs = find(diff(sind)>0);
+obe = find(diff(sind)<0);
+
+
+for b=1:length(obs)    
+ob = obs(b):obe(b);
+
+
+    
+    
+    
+    
+    
+    
     fclose(trID);
     
     
@@ -80,6 +134,12 @@ for(i=1:len)
     clear scantemp
  
     
+    
+       
+    
+    
+    for j=1:2 %!!!
+        
     
     
     lens = length(vp);
@@ -148,7 +208,7 @@ for(i=1:len)
         fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),q,mean(vp));
         %23+23+16+16+3+16+6*2
     else
-        fprintf(1,'Error, bad fileflag %s at \n %s \n',fileflag,index(an_ind(i)).tabfile)
+        fprintf(1,'Error, bad fileflag %s at \n %s \n',fileflag,tabindex{an_ind(i),1})
     end %if filetype detection
     
     psdout=(128/lens)^2 * psd;
@@ -191,7 +251,8 @@ global an_tabindex;
 
 an_tabindex{end+1,1} = fname;%start new line of an_tabindex, and record file name
 an_tabindex{end,2} = strrep(fname,ffolder,''); %shortfilename
-an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
+an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
+%an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
 an_tabindex{end,4} = length(freq); %number of rows
 an_tabindex{end,5} = 1; %number of columns
 %an_tabindex{end,6} = an_ind(i);
@@ -201,7 +262,8 @@ an_tabindex{end,8} = timing;
 
 an_tabindex{end+1,1} = sname;%start new line of an_tabindex, and record file name
 an_tabindex{end,2} = strrep(sname,ffolder,''); %shortfilename
-an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
+  an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
+%an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set 
 an_tabindex{end,4} = len; %number of rows
 an_tabindex{end,5} = 6+length(freq); %number of columns
 
@@ -251,3 +313,5 @@ end%if diag
 
 
 end
+end
+

@@ -1,6 +1,8 @@
 %hf sweep
 
-function [] = an_hf(derivedpath,an_ind,index,macrotime,fileflag)
+function [] = an_hf2(derivedpath,an_ind,index,macrotime,fileflag)
+
+
 
 diag = 1;
 
