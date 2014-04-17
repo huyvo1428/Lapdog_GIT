@@ -73,8 +73,8 @@ if(~isempty(tabindex));
         
         colind= find(ismember(strrep(tempfp{1,2},' ', ''),'TABLE'));% find table start and end
         
-        for (i=1:colind(end)-1) %skip last row
-            fprintf(dl,'%s = %s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
+        for (j=1:colind(end)-1) %skip last row
+            fprintf(dl,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
         end
         
         

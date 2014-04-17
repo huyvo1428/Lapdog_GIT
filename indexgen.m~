@@ -44,7 +44,8 @@ for(i=1:nprel)
     
     if preldate < 040101
         blacklist = [blacklist; i];
-        fprintf(1,'index generation found file: %s \n before 2004-01-01(!) ignoring...\n',lname); 
+        fprintf(1,'index generation found file %s before 2004-01-01(!) ignoring...',lname); 
+    
     end
     
         
@@ -108,22 +109,41 @@ for ii=1:n  % Loop the label files
           %macro = sscanf(macrostr,'%7*c%f');
           macro = str2num(macrostr(8:10));
 
-
-
           
-%           if isempty(ind)           
-%               macro
-%               macrostr
-%               i
-%           end
-%           if (length(ind) > 1)
-%           ind
-%           end            
+          hello = val(25,:);
+          
+          if macrostr ~=hello
+              
+          
+          ind
+          
+          end
+          
+          if macrotemp ~=macro
+              
+          macrostr
+          
+          end
+          
+          macrotemp= macro;
+         
+          
+          if isempty(ind)
+              
+              macro
+              macrostr
+              i
+          end
+              
               
           
           % Find start time:
           ind = find(strcmp('START_TIME',var));
-
+          if (length(ind) > 1)
+              
+          ind
+          
+          end
           
           t0str = val(ind,:);
           t0 = datenum(strrep(t0str,'T',' '));
