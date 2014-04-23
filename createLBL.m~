@@ -676,13 +676,13 @@ if(~isempty(an_tabindex));
 
                     
                     fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P%s_VOLT_MEAN\n',Pnum);
+                    fprintf(al,'NAME = P%s_VOLT\n',Pnum);
                     fprintf(al,'DATA_TYPE = ASCII_REAL\n');
                     fprintf(al,'START_BYTE = 118\n');
                     fprintf(al,'BYTES = 14\n');
                     fprintf(al,'UNIT = VOLT\n');
                     fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "VOLTAGE MEAN"\n');
+                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
                     fprintf(al,'END_OBJECT  = COLUMN\n');
                     
                     fprintf(al,'OBJECT = COLUMN\n');
@@ -702,23 +702,23 @@ if(~isempty(an_tabindex));
                 if Pnum=='3'
                     
                     fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P1_CURRENT_MEAN\n');
+                    fprintf(al,'NAME = P1_CURRENT\n');
                     fprintf(al,'DATA_TYPE = ASCII_REAL\n');
                     fprintf(al,'START_BYTE = 101\n');
                     fprintf(al,'BYTES = 14\n');
                     fprintf(al,'UNIT = AMPERE\n');
                     fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "CURRENT MEAN"\n');
+                    fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
                     fprintf(al,'END_OBJECT  = COLUMN\n');
                     
                     fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P2_CURRENT_MEAN\n');
+                    fprintf(al,'NAME = P2_CURRENT\n');
                     fprintf(al,'DATA_TYPE = ASCII_REAL\n');
                     fprintf(al,'START_BYTE = 118\n');
                     fprintf(al,'BYTES = 14\n');
                     fprintf(al,'UNIT = AMPERE\n');
                     fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "CURRENT MEAN"\n');
+                    fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
                     fprintf(al,'END_OBJECT  = COLUMN\n');
                     
                     
@@ -754,7 +754,7 @@ if(~isempty(an_tabindex));
                     fprintf(al,'BYTES = 14\n');
                     fprintf(al,'UNIT = AMPERE\n');
                     fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "CURRENT MEAN"\n');
+                    fprintf(al,'DESCRIPTION = "BIAS CURRENT"\n');
                     fprintf(al,'END_OBJECT  = COLUMN\n');
                     
                     fprintf(al,'OBJECT = COLUMN\n');
@@ -764,7 +764,7 @@ if(~isempty(an_tabindex));
                     fprintf(al,'BYTES = 14\n');
                     fprintf(al,'UNIT = VOLT\n');
                     fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "VOLTAGE MEAN"\n');
+                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE MEAN"\n');
                     fprintf(al,'END_OBJECT  = COLUMN\n');                                        
                     
                     fprintf(al,'OBJECT = COLUMN\n');

@@ -106,10 +106,9 @@ for ii=1:n  % Loop the label files
           ind = find(strcmp('INSTRUMENT_MODE_ID',var));
           macrostr = val(ind,:);
           %macro = sscanf(macrostr,'%7*c%f');
-          macro = str2num(macrostr(8:10));
+          macro = str2double(macrostr(8:10));
 
-
-
+          
           
 %           if isempty(ind)           
 %               macro

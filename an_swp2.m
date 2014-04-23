@@ -38,25 +38,25 @@ for i=1:length(an_ind)
     % scantemp=textscan(arID,'%s%f%f%f%d','delimiter',',');
     fclose(arID);
     
-    steps=    length(scantemp2{1,1})+4;
+    steps=    length(scantemp2{1,1})+5; %current + 4 timestamps + 1 QF
     
     size=    numel(scantemp{1,1});
     
     if mod(size,steps) ~=0
-        fprintf(1,'error, bad sweepfile at \n %s \n, aborting %s mode analysis\n',tabindex{an_ind(i),1},mode)
+        fprintf(1,'error, bad sweepfile at \n %s \n, aborting %s mode analysis\n',rfile,mode);
         return
     end
     
     
     A= reshape(scantemp{1,1},steps,size/steps);
-    Iarr= str2double(A(5:end,1:end));
+    Iarr= str2double(A(6:end,1:end));
     Vb=scantemp2{1,1};
     
     timing= A(1:4,1:end);
     % clear scantemp  A
     
     %    foutarr = cell(size/steps,2);
-    Iuni = zeros(size/steps,1);
+ %   Iuni = zeros(size/steps,1);
     
     %     [Vb, ~, ic] = unique(Vb); %%sort Vb, and remove duplicates (e.g. sweeps
     %     %from -30 to +30 to -30 creates duplicate potential values)

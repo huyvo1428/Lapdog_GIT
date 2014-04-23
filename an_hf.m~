@@ -120,7 +120,7 @@ for i=1:len
     
     
     
-    timing={scantemp{1,1}{obs(1)},scantemp{1,1}{obe(end)},scantemp{1,2}(obs(1)),scantemp{1,2}(obe(end))};
+    timing={scantemp{1,1}{obs(1)},scantemp{1,1}{obe(end)},scantemp{1,2}{obs(1)},scantemp{1,2}{obe(end)}};
     
     for b=1:length(obs) %loop each 6ms spectra subsample
         ob = obs(b):obe(b);
@@ -147,7 +147,14 @@ for i=1:len
             % Quality factor to a single value for entire sweep
 %            qfd= unique(qfarray);            
             qf= sum(unique(qfarray));
-          
+
+ %           
+            
+            
+            %    clear scantemp
+            
+            
+            
             
             lens = length(vp);
             
@@ -187,9 +194,9 @@ for i=1:len
                 [psd,freq] = pwelch(vp,hanning(lens),[], nfft, fsamp);
                 
                 if fileflag(2) =='3'
-                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib1),mean(ib2),mean(vp));
+                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib1),mean(ib2));
                 else
-                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
+                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib));
                 end %if
                 
                 
@@ -219,7 +226,7 @@ for i=1:len
                 %    plot(freq,psd)
                 psd=psd*1e18; %scale to nA for current files
                 
-                fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
+                fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(vp));
                 %23+23+16+16+3+16+6*2
             else
                 fprintf(1,'Error, bad fileflag %s at \n %s \n',fileflag,tabindex{an_ind(i),1});

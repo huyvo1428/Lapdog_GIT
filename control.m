@@ -55,9 +55,9 @@ lblrev = '4th draft';
 %shortphase = 'AST2';
 %archivepath = '/data/LAP_ARCHIVE/RO-A-RPCLAP-2-AST2-EDITED-V1.0';
 % 
-% % Lutetia calibrated:
-%  shortphase = 'AST2';
-%  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-A-RPCLAP-3-AST2-CALIB-V2.0';
+% Lutetia calibrated:
+ shortphase = 'AST2';
+ archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-A-RPCLAP-3-AST2-CALIB-V2.0';
 
 % % RVM1 edited:
 %shortphase = 'RVM1';
@@ -72,12 +72,12 @@ lblrev = '4th draft';
 % shortphase = 'RVM2';
 % archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
 % 
-
-% MARS calibrated:
- shortphase = 'MARS';
- archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-M-RPCLAP-3-MARS-CALIB-V1.0';
-
-
+% 
+% % MARS calibrated:
+%  shortphase = 'MARS';
+%  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-M-RPCLAP-3-MARS-CALIB-V1.0';
+% 
+% 
 
 % % % Available mission phase short names:
 % % GRND  LEOP   CVP  EAR1
