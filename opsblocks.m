@@ -10,6 +10,8 @@
 
 % Define file start times:
 t0 = [index.t0]';
+t1 = [index.t1]';
+
 macro = [index.macro]';
 n = length(t0);
 

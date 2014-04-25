@@ -33,15 +33,16 @@ lblrev = '4th draft';
 % ====================================
 
 % 
-% 
-% %ESB1 calibrated (aie test):
-% shortphase = 'EAR1';
-% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR1-CALIB-V1.0';
 % % 
-% % % ESB2 calibrated:
-% shortphase = 'EAR2';
-% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR2-CALIB-V2.0';
-% 
+% % %ESB1 calibrated (aie test):
+%  shortphase = 'EAR1';
+%  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR1-CALIB-V1.0';
+% % 
+%  %Latest run 23/4 2014
+% ESB2 calibrated:
+shortphase = 'EAR2';
+archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR2-CALIB-V2.0';
+
 % 
 % % ESB3 edited:
 %shortphase = 'EAR3';
@@ -54,12 +55,19 @@ lblrev = '4th draft';
 % Lutetia edited:
 %shortphase = 'AST2';
 %archivepath = '/data/LAP_ARCHIVE/RO-A-RPCLAP-2-AST2-EDITED-V1.0';
-% 
-% Lutetia calibrated:
- shortphase = 'AST2';
- archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-A-RPCLAP-3-AST2-CALIB-V2.0';
 
-% % RVM1 edited:
+
+
+%Latest run: 23/4 2014
+% 
+% % Lutetia calibrated:
+%  shortphase = 'AST2';
+%  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-A-RPCLAP-3-AST2-CALIB-V2.0';
+% 
+
+
+
+% % % RVM1 edited:
 %shortphase = 'RVM1';
 %archivepath = '/data/LAP_ARCHIVE/RO-SS-RPCLAP-2-RVM1-EDITED-V1.0';
 

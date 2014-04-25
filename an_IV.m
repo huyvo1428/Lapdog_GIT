@@ -55,18 +55,18 @@ ind_I2S= find(strcmp('I2S', antype));
 
 
 fprintf(1,'Generating Spectra\n')
-% 
-% 
-%     if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
-%     if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
-%     if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
-% 
-%     if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
-%     if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
-%     if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
-% 
-% 
-% 
+
+    if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
+    if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
+    if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
+    if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
+
+
+    if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
+    if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
+
+
+
 
 
 fprintf(1,'Analysing sweeps\n')

@@ -369,7 +369,7 @@ else %% if sweep, do:
 %             nrpots = length(curtemp);
 %             nrfiles = len;
             
-            tabindex(end,4:7)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),length(potbias)+5, len}; %one index for bias voltages
+            tabindex(end,4:7)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),length(potbias),2}; %one index for bias voltages
             
             
             tabindex(end+1,1:7)={filename2,strrep(filename2,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len,length(potbias)+5};

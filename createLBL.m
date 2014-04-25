@@ -62,6 +62,7 @@ if(~isempty(tabindex));
         %         tmpsct0 = index(tabindex{i,3}).sct0str(5:end-1);
         %      atmpsct0 = index(tabindex{46,3}).sct0str;
         
+        
         tempfp{1,2}{32,1} = strcat(index(tabindex{i,3}).sct0str(1:17),'"');  %% sc start time
         tempfp{1,2}{33,1} = sprintf('"%s/%014.3f"',index(tabindex{i,3}).sct0str(2),tabindex{i,5}); %% sc stop time
         %   tempfp{1,2}{56,1} = sprintf('%i',tabindex{i,6}); %% rows
@@ -73,13 +74,27 @@ if(~isempty(tabindex));
         
         colind= find(ismember(strrep(tempfp{1,2},' ', ''),'TABLE'));% find table start and end
         
-        for (j=1:colind(end)-1) %skip last row
-            fprintf(dl,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
-        end
+%         for (j=1:colind(end)-1) %skip last row
+%             fprintf(dl,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+%         end
         
         
         if (tname(30)=='S') % special format for sweep files...
+            
+            for (j=1:colind(1)-1) %skip last row
+                fprintf(dl,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+            end
             if (tname(28)=='B')
+                
+                
+                
+                fprintf(dl,'OBJECT = TABLE\n');
+                fprintf(dl,'INTERCHANGE_FORMAT = ASCII\n');
+                fprintf(dl,'ROWS = %d\n',tabindex{i,6});
+                fprintf(dl,'COLUMNS = %d\n',tabindex{i,7});
+                fprintf(dl,'ROW_BYTES = 30\n');   %%row_bytes here!!!
+                
+                fprintf(dl,'DESCRIPTION = %s\n', strcat(tempfp{1,2}{34,1}(1:end-1),'Sweep step bias and time between each step'));
                 
                 
                 fprintf(dl,'OBJECT = COLUMN\n');
@@ -104,6 +119,19 @@ if(~isempty(tabindex));
               
                 
             else %% if tname(28) =='I'
+                
+                
+                fprintf(dl,'OBJECT = TABLE\n');
+                fprintf(dl,'INTERCHANGE_FORMAT = ASCII\n');
+                fprintf(dl,'ROWS = %d\n',tabindex{i,6});
+                fprintf(dl,'COLUMNS = %d\n',tabindex{i,7});
+                fprintf(dl,'ROW_BYTES = 115\n');   %%row_bytes here!!!
+                
+                fprintf(dl,'DESCRIPTION = %s\n',tempfp{1,2}{34,1}(1:end-1));
+                
+                
+                
+                
                 
                 Bfile = tname;
                 Bfile(28)='B';
@@ -619,49 +647,49 @@ if(~isempty(an_tabindex));
             if strcmp(mode(1),'I')
                 
                 
-%                 if Pnum=='3'
-%                     
-%                      
-%                     fprintf(al,'NAME = Current\n');
-%                     fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-%                     fprintf(al,'START_BYTE = 118\n');
-%                     fprintf(al,'BYTES = 14\n');
-%                     fprintf(al,'UNIT = VOLT\n');
-%                     fprintf(al,'FORMAT = E14.7\n');
-%                     fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
-%                     fprintf(al,'END_OBJECT  = COLUMN\n');
-%                     
-%                     
-%                     fprintf(al,'OBJECT = COLUMN\n');
-%                     fprintf(al,'NAME = P1_VOLT\n');
-%                     fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-%                     fprintf(al,'START_BYTE = 101\n');
-%                     fprintf(al,'BYTES = 14\n');
-%                     fprintf(al,'UNIT = VOLT\n');
-%                     fprintf(al,'FORMAT = E14.7\n');
-%                     fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
-%                     fprintf(al,'END_OBJECT  = COLUMN\n');
-%                     
-%                     fprintf(al,'NAME = P2_VOLT\n');
-%                     fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-%                     fprintf(al,'START_BYTE = 118\n');
-%                     fprintf(al,'BYTES = 14\n');
-%                     fprintf(al,'UNIT = VOLT\n');
-%                     fprintf(al,'FORMAT = E14.7\n');
-%                     fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
-%                     fprintf(al,'END_OBJECT  = COLUMN\n');
-%                     
-%                     fprintf(al,'OBJECT = COLUMN\n');
-%                     fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-7);
-%                     fprintf(al,'NAME = PSD\n');
-%                     fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-%                     fprintf(al,'START_BYTE = 135\n');
-%                     fprintf(al,'BYTES = 14\n');
-%                     fprintf(al,'FORMAT = E14.7\n');
-%                     fprintf(al,'DESCRIPTION = "PSD CURRENT SPECTRUM"\n');
-%                     fprintf(al,'END_OBJECT  = COLUMN\n');
+                if Pnum=='3'
                     
-%                 else
+                    fprintf(al,'OBJECT = COLUMN\n');                    
+                    fprintf(al,'NAME = P1-P2_CURRENT MEAN\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 101\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'UNIT = VOLT\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                    
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'NAME = P1_VOLT\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 118\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'UNIT = VOLT\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                    fprintf(al,'NAME = P2_VOLT\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 135\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'UNIT = VOLT\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                    fprintf(al,'OBJECT = COLUMN\n');
+                    fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-7);
+                    fprintf(al,'NAME = PSD\n');
+                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(al,'START_BYTE = 152\n');
+                    fprintf(al,'BYTES = 14\n');
+                    fprintf(al,'FORMAT = E14.7\n');
+                    fprintf(al,'DESCRIPTION = "PSD CURRENT SPECTRUM"\n');
+                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    
+                else
 
 
                     fprintf(al,'OBJECT = COLUMN\n');
@@ -694,7 +722,7 @@ if(~isempty(an_tabindex));
                     fprintf(al,'FORMAT = E14.7\n');
                     fprintf(al,'DESCRIPTION = "PSD CURRENT SPECTRUM"\n');
                     fprintf(al,'END_OBJECT  = COLUMN\n');
-%                 end
+                end
                 
                 
             elseif strcmp(mode(1),'V')
@@ -723,7 +751,7 @@ if(~isempty(an_tabindex));
                     
                     
                     fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = V1-V2 MEAN\n');
+                    fprintf(al,'NAME = P1-P2 VOLTAGE MEAN\n');
                     fprintf(al,'DATA_TYPE = ASCII_REAL\n');
                     fprintf(al,'START_BYTE = 135\n');
                     fprintf(al,'BYTES = 14\n');
@@ -782,7 +810,8 @@ if(~isempty(an_tabindex));
                 
                 
             else
-                'error'
+                fprintf(1,'error, bad mode identifier in an_tabindex{%i,1}',i);
+                
             end
             
    
