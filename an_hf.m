@@ -39,19 +39,16 @@ fsamp = 18750;
 len = length(an_ind);
 
 for i=1:len
-
-    fout={};
+    
+    fout={};  %fout is the array that will be printed.fout{:,end} will be a boolean print check, but is first saved as a
+    
+    %names, folders
     fname = tabindex{an_ind(i),1};
     fname(end-10:end-8)='FRQ';
     ffolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
     
     sname = strrep(fname,'FRQ','PSD');%%
     
-    tmpf = fopen(sname,'w');    
-    
-    fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
-    awID= fopen(sname,'a');
-
     
     %  fprintf(1,'Calculating V1H spectrum #%.0f of %.0f\n',i,len)
     % [tstr ib vp] = textread(index(ob(p1eh(i))).tabfile,'%s%*f%f%f','delimiter',',');
@@ -62,7 +59,7 @@ for i=1:len
     
     %  fprintf(1,'Calculating %s spectrum #%.0f of %.0f\n',fileflag,i,len)
     trID = fopen(tabindex{an_ind(i),1},'r');
-
+    
     %[tstr,sct,ib,vp] = textscan(trID,'%s%f%f%f','delimiter',',');
     
     if fileflag(2) =='3' %one more column for probe 3 files
@@ -75,7 +72,7 @@ for i=1:len
     
     fclose(trID);
     
- 
+    
     
     
     %need to split **H.TAB file into seperate high frequency snap shots
@@ -98,15 +95,18 @@ for i=1:len
         end
         
         
-        if reltime(n+1)-t0 >8e-3 %%start new timer, but don't increment counter
-             t0 =reltime(n+1);
+        if reltime(n+1)-t0 >8e-3 
+            %%start new timer, but don't increment line counter, results
+            %%will be averaged
+            t0 =reltime(n+1);
+            '1'
         end
-   
         
-        if reltime(n+1)-reltime(n)>dt*5000
+        
+        if reltime(n+1)-reltime(n)>dt*5000 %new timer
             
             t0 =reltime(n+1);
-            count = count+1;
+            count = count+1; %each count will generate 1 line of output in file
             
         end
         
@@ -119,29 +119,26 @@ for i=1:len
         end
         
         
-    end   
+    end
     obs = find(diff(sind)>0)+1;
     obe = find(diff(sind)<0)-1;
     if sind(end)~=0
         obe(end+1)=length(sind);
     end
+    
  
-    
-    
-    
     timing={scantemp{1,1}{obs(1)},scantemp{1,1}{obe(end)},scantemp{1,2}(obs(1)),scantemp{1,2}(obe(end))};
-    tempcount = 0;
     
     
     for b=1:length(obs) %loop each 6ms spectra subsample
-      
-        if reltime(obe(b))-reltime(obs(b)) >3e-3%if subsample too small, disregard
         
-           ob = obs(b):obe(b);
-
+        if reltime(obe(b))-reltime(obs(b)) >3e-3%if subsample too small, disregard
             
-        %if reltime(ob(end))-reltime(ob(1)) >3e-3 
- 
+            ob = obs(b):obe(b);
+            
+            
+            %if reltime(ob(end))-reltime(ob(1)) >3e-3
+            
             
             tstr= scantemp{1,1}(ob(1):ob(end));
             sct= scantemp{1,2}(ob(1):ob(end));
@@ -152,242 +149,272 @@ for i=1:len
                 ib2=scantemp{1,4}(ob(1):ob(end));
                 
             elseif strcmp(fileflag,'I3H')
-            
+                
                 vp1 =scantemp{1,4}(ob(1):ob(end));
                 vp2 =scantemp{1,5}(ob(1):ob(end));
             end
             
             ib=scantemp{1,3}(ob(1):ob(end));
             vp=scantemp{1,end-1}(ob(1):ob(end)); %for probe 3, vp is scantemp{1,5}, otherwise {1,4}
-            qfarray = scantemp{1,end}(ob(1):ob(end)).'; %quality factor, always at the end
-%             
-%             if b==1 timing={tstr{1,1},[],sct(1)}; end
-%             if b==length(obs) timing{1,2}=tstr{end,1};timing{1,4}=sct(end);end
-%             
-
-
-
-            % Quality factor to a single value for entire sweep
-%            qfd= unique(qfarray);         
-
-            qfunique=unique(qfarray);
+            qfarray = scantemp{1,end}(ob(1):ob(end)); %quality factor, always at the end
+            %
+            %             if b==1 timing={tstr{1,1},[],sct(1)}; end
+            %             if b==length(obs) timing{1,2}=tstr{end,1};timing{1,4}=sct(end);end
+            %
             
-    %        qf= sum(unique(qfarray));
-          
+            
+            
+            % Quality factor to a single value for entire sweep
+            %            qfd= unique(qfarray);
+            
+            %      qfunique=unique(qfarray);
+            
+            %        qf= sum(unique(qfarray));
+            
             
             lens = length(vp);
-%             
-%             if(lens < nfft)
-%                 
-%                 %              ib = [ib; zeros(pad,1)];
-%                 qf=qf+2; %zeropadding QF
-%                 %        elseif(lens > 128)
-%                 %              lens = 128;
-%             end %if zeropadding
-%             %  pad = 0;
-%             %  q= 0;
+            %
+            %             if(lens < nfft)
+            %
+            %                 %              ib = [ib; zeros(pad,1)];
+            %                 qf=qf+2; %zeropadding QF
+            %                 %        elseif(lens > 128)
+            %                 %              lens = 128;
+            %             end %if zeropadding
+            %             %  pad = 0;
+            %             %  q= 0;
             if strcmp(fileflag(1),'V')
                 
-%                 if fileflag(2) =='3' && (std(ib1)>1e-12 || std(ib2)>1e-12) %
-%                     qf=qf+20; %bias change QF
-%                 elseif std(ib)>1e-12 %
-%                     qf=qf+20; %bias change QF
-%                 end %if bias change
-%                 
-%                 
-%                 
-%                 if(lens < nfft)
-%                     %          pad = 128-lens;
-%                     %           vp = [vp; zeros(pad,1)];
-%                     qf=qf+2; %zeropadding QF
-%                     %             elseif(lens > nfft)
-%                     %                lens = 128;
-%                 end %if zeropadding
-%                 %        [psd,freq] = pwelch(vp,[],[],nfft,18750);
-%                 
+                %                 if fileflag(2) =='3' && (std(ib1)>1e-12 || std(ib2)>1e-12) %
+                %                     qf=qf+20; %bias change QF
+                %                 elseif std(ib)>1e-12 %
+                %                     qf=qf+20; %bias change QF
+                %                 end %if bias change
+                %
+                %
+                %
+                %                 if(lens < nfft)
+                %                     %          pad = 128-lens;
+                %                     %           vp = [vp; zeros(pad,1)];
+                %                     qf=qf+2; %zeropadding QF
+                %                     %             elseif(lens > nfft)
+                %                     %                lens = 128;
+                %                 end %if zeropadding
+                %                 %        [psd,freq] = pwelch(vp,[],[],nfft,18750);
+                %
                 
                 %       nfft = 256;
-                 % Or whatever is the real value [Hz]
+                % Or whatever is the real value [Hz]
                 vpred = vp - mean(vp);
-         %       lens = length(vp);
+                %       lens = length(vp);
                 [psd,freq] = pwelch(vpred,hanning(lens),[], nfft, fsamp);
-%                 
-%                 if fileflag(2) =='3'
-%                     fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib1),mean(ib2),mean(vp));
-%                 else
-%                     fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
-%                 end %if
+                %
+                %                 if fileflag(2) =='3'
+                %                     fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib1),mean(ib2),mean(vp));
+                %                 else
+                %                     fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
+                %                 end %if
                 
                 
             elseif strcmp(fileflag(1),'I')
                 
                 
-%                 
-%                 if fileflag(2) =='3' && (std(vp1)>1e-8 || std(vp2)>1e-8) %
-%                     qf=qf+20; %bias change QF
-%                 elseif std(vp)>1e-8 %
-%                     qf=qf+20; %bias change QF
-%                 end %if bias change
-%                 
+                %
+                %                 if fileflag(2) =='3' && (std(vp1)>1e-8 || std(vp2)>1e-8) %
+                %                     qf=qf+20; %bias change QF
+                %                 elseif std(vp)>1e-8 %
+                %                     qf=qf+20; %bias change QF
+                %                 end %if bias change
+                %
                 
-%                 
-%                 if(lens < nfft)
-%                     %              pad = 128-lens;
-%                     %              ib = [ib; zeros(pad,1)];
-%                     qf=qf+2; %zeropadding QF
-%                     %        elseif(lens > 128)
-%                     %              lens = 128;
-%                 end %if zeropadding
-%                 
+                %
+                %                 if(lens < nfft)
+                %                     %              pad = 128-lens;
+                %                     %              ib = [ib; zeros(pad,1)];
+                %                     qf=qf+2; %zeropadding QF
+                %                     %        elseif(lens > 128)
+                %                     %              lens = 128;
+                %                 end %if zeropadding
+                %
                 
                 ibred = ib - mean(ib);
                 [psd,freq] = pwelch(ibred,hanning(lens),[], nfft, fsamp);
-
+                
                 %[psd,freq] = pwelch(ib,[],[],nfft,18750);
                 %    plot(freq,psd)
                 psd=psd*1e18; %scale to nA for current files
-%                 
-%                 if fileflag(2) =='3'
-%                     
-%              %       fout={fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2)};
-%                     
-%                     %fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
-%                 else
-%              %       fout = {fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp)};
-%               %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
-%                 end %if
-
+                %
+                %                 if fileflag(2) =='3'
+                %
+                %              %       fout={fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2)};
+                %
+                %                     %fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
+                %                 else
+                %              %       fout = {fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp)};
+                %               %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
+                %                 end %if
+                
             else
                 fprintf(1,'Error, bad fileflag %s at \n %s \n',fileflag,tabindex{an_ind(i),1});
             end %if filetype detection
-
+            
             
             
             
             
             if ((std(ib1)>1e-12 || std(ib2)>1e-12) ||std(vp1)>1e-8 ||std(vp2)>1e-8) ...
                     ||((strcmp(fileflag(1),'V') &&  std(ib)>1e-12) ||(strcmp(fileflag(1),'I') &&  std(vp)>1e-8))
-                qarray=[qarray;20];
+                qfarray=[qfarray;20];
                 
             end
             if(lens < nfft)
-                qarray=[qarray;2]; %zeropadding QF
-
+                qfarray=[qfarray;2]; %zeropadding QF
+                
             end %if zeropadding
             
             
             
-           
-%             psdtemp=[psdtemp;psd.'];
-%             
-%             
-%                     
-%             print = 1;
-%             %print line?
-%             if b~=length(obs) %need seperate ifs because next operation generates errors otherwise
-%                 if sind(obs(b))==sind(obs(b+1)) && reltime(obe(b+1))-reltime(obs(b+1)) >3e-3%if subsample too small, disregard
-%                     print = 0;
-%                      
-%                     
-%                     
-%                 end
-%             end %print?
-%             
-%             
-%             if print
-%                 psdout = mean(psdtemp,1);
-%                 qfout= sum(unique([qfunique;qf]));
-%                 qf=0;
-%                 psdtemp=[];
-%                 
-%             end
-%             
             
-           
-     
-            if diag
-                
-                ts = datenum(tstr(1:end-3),'yyyy-mm-ddTHH:MM:SS.FFF');
-                
-                plotpsd=[plotpsd,psdout];
-                plotT=[plotT;ts(floor(length(ts)/2))];
-                plotSCT=[plotSCT;mean(sct)];
-                
-                plotF=freq;
-                
-            end %if diag
+            %             psdtemp=[psdtemp;psd.'];
+            %
+            %
+            %
+            %             print = 1;
+            %             %print line?
+            %             if b~=length(obs) %need seperate ifs because next operation generates errors otherwise
+            %                 if sind(obs(b))==sind(obs(b+1)) && reltime(obe(b+1))-reltime(obs(b+1)) >3e-3%if subsample too small, disregard
+            %                     print = 0;
+            %
+            %
+            %
+            %                 end
+            %             end %print?
+            %
+            %
+            %             if print
+            %                 psdout = mean(psdtemp,1);
+            %                 qfout= sum(unique([qfunique;qf]));
+            %                 qf=0;
+            %                 psdtemp=[];
+            %
+            %             end
+            %
             
             
-
-fout={fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qarray,mean(ib),mean(ib1),mean(ib2),mean(vp),mean(vp1),mean(vp2),psd,sind(obs(b))};
-
-%    dlmwrite(sname,psdout.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
-    
+            
+                        if diag
+            
+                            ts = datenum(tstr(1:23),'yyyy-mm-ddTHH:MM:SS.FFF');
+            
+                            plotpsd=[plotpsd,psd];
+                            plotT=[plotT;ts(floor(length(ts)/2))];
+                            plotSCT=[plotSCT;mean(sct)];
+            
+                            plotF=freq;
+            
+                        end %if diag
+            
+            
+            
+            fout(end+1,1:13)={tstr{1,1},tstr{end,1},sct(1),sct(end),qfarray,mean(ib),mean(ib1),mean(ib2),mean(vp),mean(vp1),mean(vp2),psd,sind(obs(b))};
+            
+            %    dlmwrite(sname,psdout.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
+            
         end%if long enough
-
+        
     end %for loop
-
-    for k = 1:length(fout)
-        
-       
     
+    
+    check = cell2mat(fout(:,end));
+    
+    
+    
+    indcheck = find(diff(check));
+    
+    avgind =[];
+    for k = 1:length(check) %print checker loop & average some values
         
-        
+        %    if k~=length(check) && fout{k+1,end} ==  fout{k,end}
+        if k~=length(check) && check(k+1) ==  check(k)
+            fout{k+1,1} = fout{k,1};
+            fout{k+1,3} = fout{k,3};
+      %      fout{k+1,4} = [fout{k+1,4};fout{k,4}];
+            fout{k+1,5} = [fout{k+1,5};fout{k,5}];
+            avgind = [avgind;k];
+            fout{k,end} = 0; %print flag
+        else %print
+            
+            fout{k,end}=1; %print flag
+            %            check(k) = 1;
+            
+            if ~isempty(avgind)
+                avgind=[avgind;k]; %add index
+                %fout{k,5} = mean(cell2mat(fout(avgind,5)));
+                fout{k,6} = mean(cell2mat(fout(avgind,6)));
+                fout{k,7} = mean(cell2mat(fout(avgind,7)));
+                fout{k,8} = mean(cell2mat(fout(avgind,8)));
+                fout{k,9} = mean(cell2mat(fout(avgind,9)));
+                fout{k,10} = mean(cell2mat(fout(avgind,10)));
+                fout{k,11} = mean(cell2mat(fout(avgind,11)),1);
+            end
+            avgind=[];
+        end
     end
     
     
     
+    % LET'S PRINT!
+    
+ %   tmpf = fopen(sname,'w');
+%    fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
+    awID= fopen(sname,'w');
     
     
-    
-    
-     if strcmp(fileflag(1),'V')
-         if  fileflag(2) =='3'     
-             
-             
-             for k =1:length(fout)
-
-             
-             
-            fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',fout{k,1}{1,1},fout{k,2}{1,1},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7},fout{k,8},fout{k,9});
-            dlmwrite(sname,fout{end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
-             end
-             
-         else
-             fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',fout{k,1}{1,1},fout{k,2}{1,1},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
-
-             dlmwrite(sname,fout{end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
-        
-         end
-         
-     elseif strcmp(fileflag(1),'I')    
-         
-         if fileflag(2) =='3'
-         
-            fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',fout{k,1}{1,1},fout{k,2}{1,1},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
-            dlmwrite(sname,fout{end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
-    
-             
-             
-             %fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
-         else
-   fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',fout{k,1}{1,1},fout{k,2}{1,1},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
-            dlmwrite(sname,fout{k,end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
-
-             %       fout = {fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp)};
-             %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
-         end %if
-         
-    for k =1:length(fout)
-        
-        
-        fprint
-    
-    
+    for k=1:length(fout(:,1)) % print loop
+        if fout{k,end} %last index should be file checker
+            if strcmp(fileflag(1),'V')
+                if  fileflag(2) =='3'
+                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7},fout{k,8},fout{k,9});
+                    fprintf(awID,', %14.7e',fout{k,end-1}.');
+                    fprintf(awID,'\n');                    
+                else
+                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
+                    fprintf(awID,', %14.7e',fout{k,end-1}.');
+                    fprintf(awID,'\n');                    
+                    
+                end
+                
+            elseif strcmp(fileflag(1),'I')
+                
+                if fileflag(2) =='3'
+                    
+                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
+                    fprintf(awID,', %14.7e',fout{k,end-1}.');
+                    fprintf(awID,'\n');                    
+                    
+                    
+                    %fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
+                else
+                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
+                    fprintf(awID,', %14.7e',fout{k,end-1}.');
+                    fprintf(awID,'\n');
+                    
+                    
+                    %dlmwrite(sname,fout{k,end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
+                    
+                    %       fout = {fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp)};
+                    %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
+                end %if
+            end
+        end
+    end
     
     
     fclose(awID);
     afID = fopen(fname,'w');
+    
+    
+    fprintf(afID,'%14.7e',freq);
     dlmwrite(fname,freq,'precision', '%14.7e');
     fclose(afID);
     
@@ -417,8 +444,8 @@ fout={fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qarray,mean(ib),mean(ib1),mean(
         title(titstr);
         drawnow;
     end%if diag
-
-
+    
+    
     %dlmwrite(fname,freq,'precision', '%14.7e');
     
     global an_tabindex;

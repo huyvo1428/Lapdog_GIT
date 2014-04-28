@@ -125,8 +125,7 @@ if(~isempty(tabindex));
                 fprintf(dl,'INTERCHANGE_FORMAT = ASCII\n');
                 fprintf(dl,'ROWS = %d\n',tabindex{i,6});
                 fprintf(dl,'COLUMNS = %d\n',tabindex{i,7});
-                fprintf(dl,'ROW_BYTES = 115\n');   %%row_bytes here!!!
-                
+                fprintf(dl,'ROW_BYTES = 115\n');   %%row_bytes here!!!                
                 fprintf(dl,'DESCRIPTION = %s\n',tempfp{1,2}{34,1}(1:end-1));
                 
                 
@@ -200,6 +199,18 @@ if(~isempty(tabindex));
             
             
             ind= find(ismember(strrep(tempfp{1,1},' ', ''),'START_BYTE'));% lots of whitespace often
+            
+            tempfp{1,2}(ind)=
+                    tempfp{1,2}{ind,1}= sprintf('%i',tabindex{i,6}); %% rows
+             
+            for (j=1:colind(end)-1) %s
+                fprintf(dl,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+            end
+            
+            
+            
+            
+            %ind= find(ismember(strrep(tempfp{1,1},' ', ''),'START_BYTE'));% lots of whitespace often
             start_byte= str2double(tempfp{1,2}(ind(end),1)) + str2double(tempfp{1,2}(ind(end)+1,1)) + 3;
 
             fprintf(dl,'OBJECT = COLUMN\n');
