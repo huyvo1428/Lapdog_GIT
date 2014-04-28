@@ -38,34 +38,34 @@ lblrev = '4th draft';
 %  shortphase = 'EAR1';
 %  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR1-CALIB-V1.0';
 % % 
-%  %Latest run 23/4 2014
+%  %Latest run 28/4 2014
 % ESB2 calibrated:
-shortphase = 'EAR2';
-archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR2-CALIB-V2.0';
+%shortphase = 'EAR2';
+%archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR2-CALIB-V2.0';
 
 % 
 % % ESB3 edited:
 %shortphase = 'EAR3';
 %archivepath = '/data/LAP_ARCHIVE/RO-E-RPCLAP-2-EAR3-EDITED-V1.0';
 
-% % ESB3 calibrated:
-% shortphase = 'EAR3';
-% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR3-CALIB-V1.1';
-
-% Lutetia edited:
-%shortphase = 'AST2';
-%archivepath = '/data/LAP_ARCHIVE/RO-A-RPCLAP-2-AST2-EDITED-V1.0';
-
-
-
-%Latest run: 23/4 2014
+% % % ESB3 calibrated: Latest runt 28/4 2014
+%  shortphase = 'EAR3';
+%  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR3-CALIB-V1.1';
 % 
-% % Lutetia calibrated:
+% % Lutetia edited:
+% %shortphase = 'AST2';
+% %archivepath = '/data/LAP_ARCHIVE/RO-A-RPCLAP-2-AST2-EDITED-V1.0';
+
+
+
+%Latest run: 28/4 2014
+% 
+% % % Lutetia calibrated:
 %  shortphase = 'AST2';
 %  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-A-RPCLAP-3-AST2-CALIB-V2.0';
 % 
-
-
+% 
+% 
 
 % % % RVM1 edited:
 %shortphase = 'RVM1';
@@ -76,10 +76,10 @@ archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECO
 %archivepath = '/data/LAP_ARCHIVE/RO-SS-RPCLAP-3-RVM1-CALIB-V1.0';
 
 % 
-% % RVM2 calibrated:
-% shortphase = 'RVM2';
-% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
-% 
+% RVM2 calibrated:
+shortphase = 'RVM2';
+archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
+
 % 
 % % MARS calibrated:
 %  shortphase = 'MARS';

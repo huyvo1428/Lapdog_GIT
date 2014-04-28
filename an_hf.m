@@ -50,18 +50,10 @@ for i=1:len
     sname = strrep(fname,'FRQ','PSD');%%
     
     
-    %  fprintf(1,'Calculating V1H spectrum #%.0f of %.0f\n',i,len)
-    % [tstr ib vp] = textread(index(ob(p1eh(i))).tabfile,'%s%*f%f%f','delimiter',',');
-    % ts = datenum(tstr,'yyyy-mm-ddTHH:MM:SS.FFF');
-    % [psd,f1eh] = pwelch(vp,[],[],nfft,18750);
-    % psd_p1eh = [psd_p1eh; mean(ts) psd'];
+
     
-    
-    %  fprintf(1,'Calculating %s spectrum #%.0f of %.0f\n',fileflag,i,len)
     trID = fopen(tabindex{an_ind(i),1},'r');
-    
-    %[tstr,sct,ib,vp] = textscan(trID,'%s%f%f%f','delimiter',',');
-    
+        
     if fileflag(2) =='3' %one more column for probe 3 files
         scantemp = textscan(trID,'%s%f%f%f%f%d','delimiter',','); %ts,sct,ib1,ib2,vp1-vp2
         ib1=scantemp{1,3};
@@ -99,7 +91,6 @@ for i=1:len
             %%start new timer, but don't increment line counter, results
             %%will be averaged
             t0 =reltime(n+1);
-            '1'
         end
         
         
@@ -136,9 +127,7 @@ for i=1:len
             
             ob = obs(b):obe(b);
             
-            
-            %if reltime(ob(end))-reltime(ob(1)) >3e-3
-            
+      
             
             tstr= scantemp{1,1}(ob(1):ob(end));
             sct= scantemp{1,2}(ob(1):ob(end));
@@ -157,85 +146,23 @@ for i=1:len
             ib=scantemp{1,3}(ob(1):ob(end));
             vp=scantemp{1,end-1}(ob(1):ob(end)); %for probe 3, vp is scantemp{1,5}, otherwise {1,4}
             qfarray = scantemp{1,end}(ob(1):ob(end)); %quality factor, always at the end
-            %
-            %             if b==1 timing={tstr{1,1},[],sct(1)}; end
-            %             if b==length(obs) timing{1,2}=tstr{end,1};timing{1,4}=sct(end);end
-            %
-            
-            
-            
-            % Quality factor to a single value for entire sweep
-            %            qfd= unique(qfarray);
-            
-            %      qfunique=unique(qfarray);
-            
-            %        qf= sum(unique(qfarray));
-            
+
+
             
             lens = length(vp);
-            %
-            %             if(lens < nfft)
-            %
-            %                 %              ib = [ib; zeros(pad,1)];
-            %                 qf=qf+2; %zeropadding QF
-            %                 %        elseif(lens > 128)
-            %                 %              lens = 128;
-            %             end %if zeropadding
-            %             %  pad = 0;
-            %             %  q= 0;
+
             if strcmp(fileflag(1),'V')
-                
-                %                 if fileflag(2) =='3' && (std(ib1)>1e-12 || std(ib2)>1e-12) %
-                %                     qf=qf+20; %bias change QF
-                %                 elseif std(ib)>1e-12 %
-                %                     qf=qf+20; %bias change QF
-                %                 end %if bias change
-                %
-                %
-                %
-                %                 if(lens < nfft)
-                %                     %          pad = 128-lens;
-                %                     %           vp = [vp; zeros(pad,1)];
-                %                     qf=qf+2; %zeropadding QF
-                %                     %             elseif(lens > nfft)
-                %                     %                lens = 128;
-                %                 end %if zeropadding
-                %                 %        [psd,freq] = pwelch(vp,[],[],nfft,18750);
-                %
-                
-                %       nfft = 256;
-                % Or whatever is the real value [Hz]
+
+
                 vpred = vp - mean(vp);
                 %       lens = length(vp);
                 [psd,freq] = pwelch(vpred,hanning(lens),[], nfft, fsamp);
-                %
-                %                 if fileflag(2) =='3'
-                %                     fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib1),mean(ib2),mean(vp));
-                %                 else
-                %                     fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
-                %                 end %if
+ 
                 
                 
             elseif strcmp(fileflag(1),'I')
                 
-                
-                %
-                %                 if fileflag(2) =='3' && (std(vp1)>1e-8 || std(vp2)>1e-8) %
-                %                     qf=qf+20; %bias change QF
-                %                 elseif std(vp)>1e-8 %
-                %                     qf=qf+20; %bias change QF
-                %                 end %if bias change
-                %
-                
-                %
-                %                 if(lens < nfft)
-                %                     %              pad = 128-lens;
-                %                     %              ib = [ib; zeros(pad,1)];
-                %                     qf=qf+2; %zeropadding QF
-                %                     %        elseif(lens > 128)
-                %                     %              lens = 128;
-                %                 end %if zeropadding
-                %
+   
                 
                 ibred = ib - mean(ib);
                 [psd,freq] = pwelch(ibred,hanning(lens),[], nfft, fsamp);
@@ -273,32 +200,7 @@ for i=1:len
             end %if zeropadding
             
             
-            
-            
-            %             psdtemp=[psdtemp;psd.'];
-            %
-            %
-            %
-            %             print = 1;
-            %             %print line?
-            %             if b~=length(obs) %need seperate ifs because next operation generates errors otherwise
-            %                 if sind(obs(b))==sind(obs(b+1)) && reltime(obe(b+1))-reltime(obs(b+1)) >3e-3%if subsample too small, disregard
-            %                     print = 0;
-            %
-            %
-            %
-            %                 end
-            %             end %print?
-            %
-            %
-            %             if print
-            %                 psdout = mean(psdtemp,1);
-            %                 qfout= sum(unique([qfunique;qf]));
-            %                 qf=0;
-            %                 psdtemp=[];
-            %
-            %             end
-            %
+       
             
             
             
@@ -317,9 +219,7 @@ for i=1:len
             
             
             fout(end+1,1:13)={tstr{1,1},tstr{end,1},sct(1),sct(end),qfarray,mean(ib),mean(ib1),mean(ib2),mean(vp),mean(vp1),mean(vp2),psd,sind(obs(b))};
-            
-            %    dlmwrite(sname,psdout.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
-            
+             
         end%if long enough
         
     end %for loop
@@ -338,7 +238,6 @@ for i=1:len
         if k~=length(check) && check(k+1) ==  check(k)
             fout{k+1,1} = fout{k,1};
             fout{k+1,3} = fout{k,3};
-      %      fout{k+1,4} = [fout{k+1,4};fout{k,4}];
             fout{k+1,5} = [fout{k+1,5};fout{k,5}];
             avgind = [avgind;k];
             fout{k,end} = 0; %print flag
@@ -349,7 +248,6 @@ for i=1:len
             
             if ~isempty(avgind)
                 avgind=[avgind;k]; %add index
-                %fout{k,5} = mean(cell2mat(fout(avgind,5)));
                 fout{k,6} = mean(cell2mat(fout(avgind,6)));
                 fout{k,7} = mean(cell2mat(fout(avgind,7)));
                 fout{k,8} = mean(cell2mat(fout(avgind,8)));
@@ -363,10 +261,8 @@ for i=1:len
     
     
     
-    % LET'S PRINT!
+    %--------------------- LET'S PRINT!
     
- %   tmpf = fopen(sname,'w');
-%    fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
     awID= fopen(sname,'w');
     
     
@@ -473,22 +369,7 @@ for i=1:len
     %an_tabindex{end,6} = an_ind(i);
     an_tabindex{end,7} = 'spectra'; %type
     an_tabindex{end,8} = timing;
-    
-    
-    
-    % figure(86);
-    % %  surf(plotT,plotF/1e3,10*log10(plotpsd(:,1:(2+nfft/2))).','edgecolor','none');
-    % surf(plotT,plotF/1e3,10*log10(plotpsd),'edgecolor','none');
-    %
-    % view(0,90);
-    % %datetick(
-    %
-    % datetick('x',13);
-    % xlabel('HH:MM:SS (UT)');
-    % ylabel('Frequency [kHz]');
-    % titstr = sprintf('LAP %s spectrogram %s',fileflag,datestr(ts(1),29));
-    % title(titstr);
-    % drawnow;
+   
     
     
 end

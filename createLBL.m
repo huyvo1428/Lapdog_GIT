@@ -199,10 +199,13 @@ if(~isempty(tabindex));
             
             
             ind= find(ismember(strrep(tempfp{1,1},' ', ''),'START_BYTE'));% lots of whitespace often
+            start_byte=[str2double(tempfp{1,2}(ind))];
             
-            tempfp{1,2}(ind)=
-                    tempfp{1,2}{ind,1}= sprintf('%i',tabindex{i,6}); %% rows
-             
+            
+            for k =1:length(ind) %Anders wanted spaces between each result
+                tempfp{1,2}{ind(k),1}=sprintf('%i',start_byte(k)+k-1);
+            end
+                        
             for (j=1:colind(end)-1) %s
                 fprintf(dl,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
             end
@@ -851,7 +854,7 @@ if(~isempty(an_tabindex));
             fprintf(al,'OBJECT = COLUMN\n');
             fprintf(al,'NAME = FREQUENCY LIST\n');
             fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 0\n');
+            fprintf(al,'START_BYTE = 1\n');
             fprintf(al,'BYTES = 14\n');
             fprintf(al,'UNIT = kHz\n');
             fprintf(al,'FORMAT = E14.7\n');
