@@ -26,14 +26,14 @@ tmac0 = t0(obs);  % Start time of first file in ops block
 tmac1 = t0(obe);  % Start time of last file in ops block
 macind = [tmac0 tmac1 mac];
 
-str = sprintf('blocklists/block_list_%s.txt',archiveid);
-mf = fopen(str,'w');
-for j=1:nob
-    fprintf(mf,'%s   %s   %.0f\n',datestr(tmac0(j),'yyyy-mm-dd HH:MM:SS.FFF'),datestr(tmac1(j),'yyyy-mm-dd HH:MM:SS.FFF'),mac(j));
-    
-end
-fclose(mf);
-    
+    % str = sprintf('blocklists/block_list_%s.txt',archiveid);
+% mf = fopen(str,'w');
+% for j=1:nob
+%     fprintf(mf,'%s   %s   %.0f\n',datestr(tmac0(j),'yyyy-mm-dd HH:MM:SS.FFF'),datestr(tmac1(j),'yyyy-mm-dd HH:MM:SS.FFF'),mac(j));
+%     
+% end
+% fclose(mf);
+
 %for j=1:nob
 %    fprintf(mf,'%s   %s   %.0f\n',datestr(tmac0(j),'yyyy-mm-dd HH:MM:SS.FFF'),datestr(tmac1(j),'yyyy-mm-dd HH:MM:SS.FFF'),mac(j));
     
@@ -43,8 +43,6 @@ fclose(mf);
 
 % Prepare archive with blocklist files
 
-derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-4');
-derivedpath = strrep(derivedpath,'CALIB','DERIV');
 blockTAB = {};
 rcount = 0;
 cmpdate='';
@@ -71,9 +69,9 @@ for j=1:nob
         
         bfolder=strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD);
         
-   if exist(bfolder,'dir')~=7 
-        mkdir(bfolder);
-     end
+        if exist(bfolder,'dir')~=7
+            mkdir(bfolder);
+        end
         
         
         bfshort = strcat('RPCLAP_',datestr(tmac0(j),'yyyymmdd'),'_000000_BLKLIST.TAB');
@@ -83,7 +81,7 @@ for j=1:nob
 
         %write file
         bf = fopen(blockfile,'w');
-        fprintf(bf,'%s,%s,%.0f\n',datestr(tmac0(j),'yyyy-mm-ddTHH:MM:SS.FFF'),datestr(tmac1(j),'yyyy-mm-ddTHH:MM:SS.FFF'),mac(j));
+        fprintf(bf,'%s, %s, %.0f\n',datestr(tmac0(j),'yyyy-mm-ddTHH:MM:SS.FFF'),datestr(tmac1(j),'yyyy-mm-ddTHH:MM:SS.FFF'),mac(j));
   %        fprintf(bf,'%s   %s   %.0f\n',datestr(tmac0(j),'yyyy-mm-dd HH:MM:SS.FFF'),datestr(tmac1(j),'yyyy-mm-dd HH:MM:SS.FFF'),mac(j));  
     end%if
     fclose(bf); %close file

@@ -139,7 +139,7 @@ et_s = cspice_sce2c(id, et);
 % Compute the inverse of the change of basis transformatation matrix (the 
 % COLUMNS of which are the the basis vectors of the S/C frame expressed in
 % the given 'base frame'):
-[~, ~, num] = size(cmat);
+[junk, junk, num] = size(cmat);
 basis = zeros(size(cmat));
 for i = 1:num
     %%%
@@ -194,7 +194,7 @@ if (id == -226 || id == -226000)
     % COLUMNS of which are the the basis vectors of the instrument frame expressed in
     % the S/C frame):
     %
-    %   [~, ~, num] = size(cmat);
+    %   [junk, junk, num] = size(cmat);
     %   basis_SA1 = zeros(size(cmat_SA1));
     %   basis_SA2 = zeros(size(cmat_SA2));
         

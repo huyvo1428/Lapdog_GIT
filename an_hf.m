@@ -5,7 +5,7 @@
 
 function [] = an_hf(an_ind,tabindex,fileflag)
 
-diag = 1;
+diag = 0;
 
 plotpsd=[];
 plotT=[];
@@ -81,11 +81,7 @@ for i=1:len
     for n=1:length(reltime)-1
         
         
-        if count==1 && reltime(n+1)-t0 >= 2e-3
-            
-            sind(n+1) = count;
-        end
-        
+   
         
         if reltime(n+1)-t0 >8e-3 
             %%start new timer, but don't increment line counter, results
@@ -94,7 +90,7 @@ for i=1:len
         end
         
         
-        if reltime(n+1)-reltime(n)>dt*5000 %new timer
+        if reltime(n+1)-reltime(n)>dt*5000 %large jump, new timer
             
             t0 =reltime(n+1);
             count = count+1; %each count will generate 1 line of output in file
@@ -109,10 +105,16 @@ for i=1:len
             
         end
         
+%         if count==1 && reltime(n+1)-t0 >= 2e-3
+%             
+%             sind(n+1) = count;
+%         end
+        
+        
         
     end
     obs = find(diff(sind)>0)+1;
-    obe = find(diff(sind)<0)-1;
+    obe = find(diff(sind)<0);
     if sind(end)~=0
         obe(end+1)=length(sind);
     end
@@ -120,10 +122,10 @@ for i=1:len
  
     timing={scantemp{1,1}{obs(1)},scantemp{1,1}{obe(end)},scantemp{1,2}(obs(1)),scantemp{1,2}(obe(end))};
     
-    
+    a=[];
     for b=1:length(obs) %loop each 6ms spectra subsample
-        
-        if reltime(obe(b))-reltime(obs(b)) >3e-3%if subsample too small, disregard
+       a= [a;reltime(obe(b))-reltime(obs(b))];
+        if reltime(obe(b))-reltime(obs(b)) >(3e-3-0.1304)%if subsample too small, disregard
             
             ob = obs(b):obe(b);
             
@@ -270,13 +272,13 @@ for i=1:len
         if fout{k,end} %last index should be file checker
             if strcmp(fileflag(1),'V')
                 if  fileflag(2) =='3'
-                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7},fout{k,8},fout{k,9});
-                    fprintf(awID,', %14.7e',fout{k,end-1}.');
-                    fprintf(awID,'\n');                    
+                    b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7},fout{k,8},fout{k,9});
+                    b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
+                    b3= fprintf(awID,'\n');                    
                 else
-                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
-                    fprintf(awID,', %14.7e',fout{k,end-1}.');
-                    fprintf(awID,'\n');                    
+                    b1=fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
+                    b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
+                    b3= fprintf(awID,'\n');                    
                     
                 end
                 
@@ -284,16 +286,16 @@ for i=1:len
                 
                 if fileflag(2) =='3'
                     
-                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
-                    fprintf(awID,', %14.7e',fout{k,end-1}.');
-                    fprintf(awID,'\n');                    
+                    b1=fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
+                    b2=fprintf(awID,', %14.7e',fout{k,end-1}.');
+                    b3= fprintf(awID,'\n');                    
                     
                     
                     %fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
                 else
-                    fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
-                    fprintf(awID,', %14.7e',fout{k,end-1}.');
-                    fprintf(awID,'\n');
+                    b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
+                    b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
+                    b3=fprintf(awID,'\n');
                     
                     
                     %dlmwrite(sname,fout{k,end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
@@ -301,7 +303,9 @@ for i=1:len
                     %       fout = {fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp)};
                     %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
                 end %if
+               
             end
+             row_byte=b1+b2+b3;
         end
     end
     
@@ -310,8 +314,8 @@ for i=1:len
     afID = fopen(fname,'w');
     
     
-    fprintf(afID,'%14.7e',freq);
-    dlmwrite(fname,freq,'precision', '%14.7e');
+    fprintf(afID,'%14.7e\n',freq);
+ %   dlmwrite(fname,freq,'precision', '%14.7e');
     fclose(afID);
     
     
@@ -355,7 +359,7 @@ for i=1:len
     %an_tabindex{end,6} = an_ind(i);
     an_tabindex{end,7} = 'frequency'; %type
     an_tabindex{end,8} = timing;
-    
+    an_tabindex{end,9} = 14;
     
     an_tabindex{end+1,1} = sname;%start new line of an_tabindex, and record file name
     an_tabindex{end,2} = strrep(sname,ffolder,''); %shortfilename
@@ -369,6 +373,7 @@ for i=1:len
     %an_tabindex{end,6} = an_ind(i);
     an_tabindex{end,7} = 'spectra'; %type
     an_tabindex{end,8} = timing;
+    an_tabindex{end,9} = row_byte;
    
     
     

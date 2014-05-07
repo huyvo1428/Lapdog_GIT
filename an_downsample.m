@@ -35,8 +35,7 @@ for i=1:length(an_ind)
  timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
     
       
-    
-    
+ 
     
     %set starting spaceclock time to (UTC) 00:00:00.000000
     ah =str2double(scantemp{1,1}{1,1}(12:13));
@@ -155,12 +154,18 @@ for i=1:length(an_ind)
     
     
     
+  %  sumunique= @(x) sum(unique(x));
+    
+    
+    qf = accumarray(inter,scantemp{1,5}(:),[],@(x) sum(unique(x)));
+    
+    
     foutarr{1,3}(inter(1):inter(end),1)=imu(inter(1):inter(end)); %prepare for printing results
     foutarr{1,4}(inter(1):inter(end),1)=isd(inter(1):inter(end));
     foutarr{1,5}(inter(1):inter(end),1)=vmu(inter(1):inter(end));
     foutarr{1,6}(inter(1):inter(end),1)=vsd(inter(1):inter(end));
     foutarr{1,7}(inter(1):inter(end),1)=1; %%flag to determine if row should be written.
-    
+    foutarr{1,8}(inter(1):inter(end),1)=qf(inter(1):inter(end));
     
     
     
@@ -235,15 +240,6 @@ for i=1:length(an_ind)
     
     %For LBL file genesis, we need an index with name, shortname,
     %original file
-    an_tabindex{end+1,1} = afname;%start new line of an_tabindex, and record file name
-    an_tabindex{end,2} = strrep(afname,affolder,''); %shortfilename
-    an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
-    an_tabindex{end,4} = length(foutarr{1,3}); %number of rows
-    an_tabindex{end,5} = 6; %number of columns
-    
-    an_tabindex{end,6} = an_ind(i);
-    an_tabindex{end,7} = 'downsample'; %type
-    an_tabindex{end,8} = timing;
     
     
     awID= fopen(afname,'w');
@@ -253,10 +249,23 @@ for i=1:length(an_ind)
             %fprintf(awID,'%s, %16.6f,,,,\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j));
             % Don't print zero values.
         else
-            fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
+            row_byte= fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e, %03i\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j),sum(foutarr{1,8}(j)));
         end%if
         
     end%for
+
+    
+    an_tabindex{end+1,1} = afname;%start new line of an_tabindex, and record file name
+    an_tabindex{end,2} = strrep(afname,affolder,''); %shortfilename
+    an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
+    an_tabindex{end,4} = length(foutarr{1,3}); %number of rows
+    an_tabindex{end,5} = 7; %number of columns
+    
+    an_tabindex{end,6} = an_ind(i);
+    an_tabindex{end,7} = 'downsample'; %type
+    an_tabindex{end,8} = timing;
+    an_tabindex{end,9} = row_byte;
+    
     
     fclose(awID);
     clear foutarr  %not really needed, will not exist outside of function anyway.

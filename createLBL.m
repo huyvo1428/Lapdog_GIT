@@ -2,9 +2,12 @@
 
 %%DATAFILE .LBL FILES
 
+strnow = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF');
+
+
 if(~isempty(tabindex));
     len= length(tabindex(:,3));
-       
+    
     
     for(i=1:len)
         
@@ -21,7 +24,7 @@ if(~isempty(tabindex));
         tempfp = textscan(fp,'%s %s','Delimiter','=');
         fclose(fp);
         
-        dl = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');
+        fid = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');
         
         Pnum = tname(end-5);
         
@@ -40,8 +43,8 @@ if(~isempty(tabindex));
         tempfp{1,2}{5,1} = lname;
         tempfp{1,2}{6,1} = tname;
         
-        tempfp{1,2}{7,1}= strrep(tempfp{1,2}{7,1},sprintf('-3-%s-CALIB',shortphase),sprintf('-4-%s-DERIV',shortphase));
-        tempfp{1,2}{8,1}= strrep(tempfp{1,2}{8,1},sprintf('3 %s CALIB',shortphase),sprintf('4 %s DERIV',shortphase));
+        tempfp{1,2}{7,1}= strrep(tempfp{1,2}{7,1},sprintf('-3-%s-CALIB',shortphase),sprintf('-5-%s-DERIV',shortphase));
+        tempfp{1,2}{8,1}= strrep(tempfp{1,2}{8,1},sprintf('3 %s CALIB',shortphase),sprintf('5 %s DERIV',shortphase));
         
         tempfp{1,2}{14,1}=producershortname;
         tempfp{1,2}{15,1}=sprintf('"%s"',producerfullname);
@@ -55,8 +58,8 @@ if(~isempty(tabindex));
         tempfp{1,2}{17} = tname(1:end-4);
         tempfp{1,2}{18} = '"DDR"';
         
-        tempfp{1,2}{19,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %product creation time
-        tempfp{1,2}{29,1} = '"4"'; %% processing level ID
+        tempfp{1,2}{19,1} = strnow; %product creation time
+        tempfp{1,2}{29,1} = '"5"'; %% processing level ID
         tempfp{1,2}{30,1} = index(tabindex{i,3}).t0str(1:23); %UTC start time
         tempfp{1,2}{31,1} = tabindex{i,4}(1:23);             % UTC stop time
         %         tmpsct0 = index(tabindex{i,3}).sct0str(5:end-1);
@@ -74,60 +77,67 @@ if(~isempty(tabindex));
         
         colind= find(ismember(strrep(tempfp{1,2},' ', ''),'TABLE'));% find table start and end
         
-%         for (j=1:colind(end)-1) %skip last row
-%             fprintf(dl,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
-%         end
+        %         for (j=1:colind(end)-1) %skip last row
+        %             fprintf(fid,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+        %         end
+        
+        byte=1;
+        
         
         
         if (tname(30)=='S') % special format for sweep files...
             
             for (j=1:colind(1)-1) %skip last row
-                fprintf(dl,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+                fprintf(fid,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
             end
             if (tname(28)=='B')
                 
                 
                 
-                fprintf(dl,'OBJECT = TABLE\n');
-                fprintf(dl,'INTERCHANGE_FORMAT = ASCII\n');
-                fprintf(dl,'ROWS = %d\n',tabindex{i,6});
-                fprintf(dl,'COLUMNS = %d\n',tabindex{i,7});
-                fprintf(dl,'ROW_BYTES = 30\n');   %%row_bytes here!!!
+                fprintf(fid,'OBJECT = TABLE\n');
+                fprintf(fid,'INTERCHANGE_FORMAT = ASCII\n');
+                fprintf(fid,'ROWS = %d\n',tabindex{i,6});
+                fprintf(fid,'COLUMNS = %d\n',tabindex{i,7});
+                fprintf(fid,'ROW_BYTES = 30\n');   %%row_bytes here!!!
                 
-                fprintf(dl,'DESCRIPTION = %s\n', strcat(tempfp{1,2}{34,1}(1:end-1),'Sweep step bias and time between each step'));
+                fprintf(fid,'DESCRIPTION = %s"\n', strcat(tempfp{1,2}{34,1}(1:end-1),'Sweep step bias and time between each step'));
+                %DELIMITER EVERYWHERE???
+                fprintf(fid,'OBJECT = COLUMN\n');
+                fprintf(fid,'NAME = SWEEP_TIME\n');
+                fprintf(fid,'DATA_TYPE = TIME\n');
+                fprintf(fid,'START_BYTE = %i\n',byte);
+                fprintf(fid,'BYTES = 14\n');
+                byte=byte+14+2;
                 
+                fprintf(fid,'UNIT = SECONDS\n');
+                fprintf(fid,'FORMAT = E14.7\n');
+                fprintf(fid,'DESCRIPTION = "LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT"\n');
+                fprintf(fid,'END_OBJECT  = COLUMN\n');
                 
-                fprintf(dl,'OBJECT = COLUMN\n');
-                fprintf(dl,'NAME = SWEEP_TIME\n');
-                fprintf(dl,'DATA_TYPE = TIME\n');
-                fprintf(dl,'START_BYTE = 1\n');
-                fprintf(dl,'BYTES = 14\n');
-                fprintf(dl,'UNIT = SECONDS\n');
-                fprintf(dl,'FORMAT = E14.7\n');
-                fprintf(dl,'DESCRIPTION = "LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT"\n');
-                fprintf(dl,'END_OBJECT  = COLUMN\n');
-                               
-                fprintf(dl,'OBJECT = COLUMN\n');
-                fprintf(dl,'NAME = P%i_VOLTAGE\n',Pnum);
-                fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
-                fprintf(dl,'START_BYTE = 16\n');
-                fprintf(dl,'BYTES = 14\n');
-                fprintf(dl,'UNIT = VOLT\n');
-                fprintf(dl,'FORMAT = E14.7\n');
-                fprintf(dl,'DESCRIPTION = "CALIBRATED VOLTAGE BIAS"\n');
-                fprintf(dl,'END_OBJECT  = COLUMN\n');
-              
+                fprintf(fid,'OBJECT = COLUMN\n');
+                fprintf(fid,'NAME = P%i_VOLTAGE\n',Pnum);
+                fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                fprintf(fid,'START_BYTE = %i\n',byte);
+                fprintf(fid,'BYTES = 14\n');
+                byte=byte+14+2;
+                
+                fprintf(fid,'UNIT = VOLT\n');
+                fprintf(fid,'FORMAT = E14.7\n');
+                fprintf(fid,'DESCRIPTION = "CALIBRATED VOLTAGE BIAS"\n');
+                fprintf(fid,'END_OBJECT  = COLUMN\n');
+                
                 
             else %% if tname(28) =='I'
                 
                 
-                fprintf(dl,'OBJECT = TABLE\n');
-                fprintf(dl,'INTERCHANGE_FORMAT = ASCII\n');
-                fprintf(dl,'ROWS = %d\n',tabindex{i,6});
-                fprintf(dl,'COLUMNS = %d\n',tabindex{i,7});
-                fprintf(dl,'ROW_BYTES = 115\n');   %%row_bytes here!!!                
-                fprintf(dl,'DESCRIPTION = %s\n',tempfp{1,2}{34,1}(1:end-1));
-                
+                fprintf(fid,'OBJECT = TABLE\n');
+                fprintf(fid,'INTERCHANGE_FORMAT = ASCII\n');
+                fprintf(fid,'ROWS = %d\n',tabindex{i,6});
+                fprintf(fid,'COLUMNS = %d\n',tabindex{i,7});
+                fprintf(fid,'ROW_BYTES = 115\n');   %%row_bytes here!!!
+                fprintf(fid,'DESCRIPTION = %s\n',tempfp{1,2}{34,1});
+                fprintf(fid,'DELIMITER = ", "\n');
+
                 
                 
                 
@@ -135,67 +145,86 @@ if(~isempty(tabindex));
                 Bfile = tname;
                 Bfile(28)='B';
                 
-                fprintf(dl,'OBJECT = COLUMN\n');
-                fprintf(dl,'NAME = START_TIME_UTC\n');
-                fprintf(dl,'DATA_TYPE = TIME\n');
-                fprintf(dl,'START_BYTE = 1\n');
-                fprintf(dl,'BYTES = 26\n');
-                fprintf(dl,'UNIT = SECONDS\n');
-                fprintf(dl,'DESCRIPTION = "START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
-                fprintf(dl,'END_OBJECT  = COLUMN\n');
+                fprintf(fid,'OBJECT = COLUMN\n');
+                fprintf(fid,'NAME = START_TIME_UTC\n');
+                fprintf(fid,'DATA_TYPE = TIME\n');
+                fprintf(fid,'START_BYTE = %i\n',byte);
+                fprintf(fid,'BYTES = 26\n');
+                byte=byte+26+2;
+                fprintf(fid,'UNIT = SECONDS\n');
+                fprintf(fid,'DESCRIPTION = "START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
+                fprintf(fid,'END_OBJECT  = COLUMN\n');
                 
-                fprintf(dl,'OBJECT = COLUMN\n');
-                fprintf(dl,'NAME = STOP_TIME_UTC\n');
-                fprintf(dl,'DATA_TYPE = TIME\n');
-                fprintf(dl,'START_BYTE = 29\n');
-                fprintf(dl,'BYTES = 26\n');
-                fprintf(dl,'UNIT = SECONDS\n');
-                fprintf(dl,'DESCRIPTION = "STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
-                fprintf(dl,'END_OBJECT  = COLUMN\n');
+                fprintf(fid,'OBJECT = COLUMN\n');
+                fprintf(fid,'NAME = STOP_TIME_UTC\n');
+                fprintf(fid,'DATA_TYPE = TIME\n');
+                fprintf(fid,'START_BYTE = %i\n',byte);
+                fprintf(fid,'BYTES = 26\n');
+                byte=byte+26+2;
+                fprintf(fid,'UNIT = SECONDS\n');
+                fprintf(fid,'DESCRIPTION = "STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
+                fprintf(fid,'END_OBJECT  = COLUMN\n');
                 
-                fprintf(dl,'OBJECT = COLUMN\n');
-                fprintf(dl,'NAME = START_TIME_OBT\n');
-                fprintf(dl,'START_BYTE = 57\n');
-                fprintf(dl,'BYTES = 16\n'); %
-                fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
-                fprintf(dl,'UNIT = SECONDS\n');
-                fprintf(dl,'DESCRIPTION = "START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
-                fprintf(dl,'END_OBJECT  = COLUMN\n');
-                                
-                fprintf(dl,'OBJECT = COLUMN\n');
-                fprintf(dl,'NAME = STOP_TIME_OBT\n');
-                fprintf(dl,'START_BYTE = 76\n');
-                fprintf(dl,'BYTES = 16\n'); %
-                fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
-                fprintf(dl,'UNIT = SECONDS\n');
-                fprintf(dl,'FORMAT = F16.6\n');
-                fprintf(dl,'DESCRIPTION = " STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
-                fprintf(dl,'END_OBJECT  = COLUMN\n');
-                                
-                fprintf(dl,'OBJECT = COLUMN\n');
-                fprintf(dl,'NAME = QUALITY\n');
-                fprintf(dl,'START_BYTE = 95\n');
-                fprintf(dl,'BYTES = 3\n'); %
-                fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
-                fprintf(dl,'UNIT = N/A\n');
-                fprintf(dl,'DESCRIPTION = " QUALITYFACTOR FROM 000(best) to 999"\n');
-                fprintf(dl,'END_OBJECT  = COLUMN\n');
-                                
-                fprintf(dl,'OBJECT = COLUMN\n');
-                fprintf(dl,'ITEMS = %i\n',tabindex{i,6}-5);
-                fprintf(dl,'NAME = P%s_SWEEP_CURRENT\n',Pnum);
-                fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
-                fprintf(dl,'START_BYTE = 101\n');
-                fprintf(dl,'BYTES = 14\n');
-                fprintf(dl,'UNIT = AMPERE\n');
-                fprintf(dl,'FORMAT = E14.7\n');
-                fprintf(dl,'DESCRIPTION = "Averaged current measured of potential sweep, at different potential steps as described by %s\n"',Bfile);
-                fprintf(dl,'END_OBJECT  = COLUMN\n');
-                                              
+                fprintf(fid,'OBJECT = COLUMN\n');
+                fprintf(fid,'NAME = START_TIME_OBT\n');
+                fprintf(fid,'START_BYTE = %i\n',byte);
+                fprintf(fid,'BYTES = 16\n');
+                byte=byte+16+2;
+                fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                fprintf(fid,'UNIT = SECONDS\n');
+                fprintf(fid,'DESCRIPTION = "START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
+                fprintf(fid,'END_OBJECT  = COLUMN\n');
+                
+                fprintf(fid,'OBJECT = COLUMN\n');
+                fprintf(fid,'NAME = STOP_TIME_OBT\n');
+                fprintf(fid,'START_BYTE = %i\n',byte);
+                fprintf(fid,'BYTES = 16\n');
+                byte=byte+16+2;
+                
+                fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                fprintf(fid,'UNIT = SECONDS\n');
+                %             fprintf(fid,'FORMAT = F16.6\n');
+                fprintf(fid,'DESCRIPTION = " STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
+                fprintf(fid,'END_OBJECT  = COLUMN\n');
+                
+                fprintf(fid,'OBJECT = COLUMN\n');
+                fprintf(fid,'NAME = QUALITY\n');
+                fprintf(fid,'START_BYTE = %i\n',byte);
+                fprintf(fid,'BYTES = 3\n');
+                byte=byte+3+2;
+                fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                fprintf(fid,'UNIT = N/A\n');
+                fprintf(fid,'DESCRIPTION = " QUALITY FACTOR FROM 000(best) to 999"\n');
+                fprintf(fid,'END_OBJECT  = COLUMN\n');
+                
+                fprintf(fid,'OBJECT = COLUMN\n');
+                fprintf(fid,'ITEMS = %i\n',tabindex{i,7}-5);
+                fprintf(fid,'NAME = P%s_SWEEP_CURRENT\n',Pnum);
+                fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                fprintf(fid,'START_BYTE = %i\n',byte);
+                fprintf(fid,'BYTES = 14\n');
+                byte=byte+14+2;
+                fprintf(fid,'UNIT = AMPERE\n');
+                fprintf(fid,'FORMAT = E14.7\n');
+                fprintf(fid,'DESCRIPTION = "Averaged current measured of potential sweep, at different potential steps as described by %s"\n',Bfile);
+                fprintf(fid,'END_OBJECT  = COLUMN\n');
+                
+                
+                
             end
             
             
         else %if anything but a sweep file
+            
+            
+            ind= find(ismember(strrep(tempfp{1,1},' ', ''),'ROW_BYTES'));
+            
+            if Pnum ~= '3'
+                
+                tempfp{1,2}{ind} ='82';
+            else
+                tempfp{1,2}{ind} ='98';
+            end
             
             
             ind= find(ismember(strrep(tempfp{1,1},' ', ''),'START_BYTE'));% lots of whitespace often
@@ -205,31 +234,31 @@ if(~isempty(tabindex));
             for k =1:length(ind) %Anders wanted spaces between each result
                 tempfp{1,2}{ind(k),1}=sprintf('%i',start_byte(k)+k-1);
             end
-                        
+            
             for (j=1:colind(end)-1) %s
-                fprintf(dl,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+                fprintf(fid,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
             end
             
             
             
             
             %ind= find(ismember(strrep(tempfp{1,1},' ', ''),'START_BYTE'));% lots of whitespace often
-            start_byte= str2double(tempfp{1,2}(ind(end),1)) + str2double(tempfp{1,2}(ind(end)+1,1)) + 3;
-
-            fprintf(dl,'OBJECT = COLUMN\n');
-            fprintf(dl,'NAME = QUALITY\n');
-            fprintf(dl,'START_BYTE = %i\n',start_byte);
-            fprintf(dl,'BYTES = 3\n'); %
-            fprintf(dl,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(dl,'UNIT = N/A\n');
-            fprintf(dl,'DESCRIPTION = " QUALITYFACTOR FROM 000(best) to 999"\n');
-            fprintf(dl,'END_OBJECT  = COLUMN\n');
-                                   
+            start_byte= str2double(tempfp{1,2}(ind(end),1)) + str2double(tempfp{1,2}(ind(end)+1,1)) + 2;
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = QUALITY\n');
+            fprintf(fid,'START_BYTE = %i\n',start_byte);
+            fprintf(fid,'BYTES = 3\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = N/A\n');
+            fprintf(fid,'DESCRIPTION = " QUALITY FACTOR FROM 000(best) to 999"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
         end
         
-        fprintf(dl,'END_OBJECT  = TABLE\n');
-        fprintf(dl,'END');
-        fclose(dl);
+        fprintf(fid,'END_OBJECT  = TABLE\n');
+        fprintf(fid,'END');
+        fclose(fid);
         
         
         
@@ -316,11 +345,11 @@ if(~isempty(tabindex));
         % %         end
         % %
         %         for (i=1:length(tempfp{1,1})-1) %skip last row
-        %             fprintf(dl,'%s = %s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
+        %             fprintf(fid,'%s = %s\n',tempfp{1,1}{i,1},tempfp{1,2}{i,1});
         %         end
         %
-        %         fprintf(dl,'END');% Ends file
-        %         fclose(dl);
+        %         fprintf(fid,'END');% Ends file
+        %         fclose(fid);
         
     end
     
@@ -334,75 +363,82 @@ if(~isempty(blockTAB));
         
         tname = blockTAB{i,2};
         lname=strrep(tname,'TAB','LBL');
-        bl = fopen(strrep(blockTAB{i,1},'TAB','LBL'),'w');
+        fid = fopen(strrep(blockTAB{i,1},'TAB','LBL'),'w');
         
-        fprintf(bl,'PDS_VERSION_ID = PDS3\n');
-        fprintf(bl,'RECORD_TYPE = FIXED_LENGTH\n');
+        fprintf(fid,'PDS_VERSION_ID = PDS3\n');
+        fprintf(fid,'RECORD_TYPE = FIXED_LENGTH\n');
         fileinfo = dir(blockTAB{i,1});
-        fprintf(bl,'RECORD_BYTES = %d\n',fileinfo.bytes);
-        fprintf(bl,'FILE_RECORDS = %d\n',blockTAB{i,3});
-        fprintf(bl,'FILE_NAME = "%s"\n',lname);
-        fprintf(bl,'^TABLE = "%s"\n',tname);
+        fprintf(fid,'RECORD_BYTES = %d\n',fileinfo.bytes);
+        fprintf(fid,'FILE_RECORDS = %d\n',blockTAB{i,3});
+        fprintf(fid,'FILE_NAME = "%s"\n',lname);
+        fprintf(fid,'^TABLE = "%s"\n',tname);
         
-        fprintf(bl,'DATA_SET_ID = "%s"\n', strrep(datasetid,sprintf('-3-%s-CALIB',shortphase),sprintf('-4-%s-DERIV',shortphase)));
-        fprintf(bl,'DATA_SET_NAME = "%s"\n',strrep(datasetname,sprintf('3 %s CALIB',shortphase),sprintf('4 %s DERIV',shortphase)));
-        fprintf(bl,'DATA_QUALITY_ID = 1\n');
-        fprintf(bl,'MISSION_ID = ROSETTA\n');
-        fprintf(bl,'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\n');
-        fprintf(bl,'MISSION_PHASE_NAME = "%s"\n',missionphase);
-        fprintf(bl,'PRODUCER_INSTITUTION_NAME = "SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"\n');
-        fprintf(bl,'PRODUCER_ID = %s\n',producershortname);
-        fprintf(bl,'PRODUCER_FULL_NAME = "%s"\n',producerfullname);
-        fprintf(bl,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
+        fprintf(fid,'DATA_SET_ID = "%s"\n', strrep(datasetid,sprintf('-3-%s-CALIB',shortphase),sprintf('-5-%s-DERIV',shortphase)));
+        fprintf(fid,'DATA_SET_NAME = "%s"\n',strrep(datasetname,sprintf('3 %s CALIB',shortphase),sprintf('5 %s DERIV',shortphase)));
+        fprintf(fid,'DATA_QUALITY_ID = 1\n');
+        fprintf(fid,'MISSION_ID = ROSETTA\n');
+        fprintf(fid,'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\n');
+        fprintf(fid,'MISSION_PHASE_NAME = "%s"\n',missionphase);
+        fprintf(fid,'PRODUCER_INSTITUTION_NAME = "SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"\n');
+        fprintf(fid,'PRODUCER_ID = %s\n',producershortname);
+        fprintf(fid,'PRODUCER_FULL_NAME = "%s"\n',producerfullname);
+        fprintf(fid,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
         % mm = length(tname);
-        fprintf(bl,'PRODUCT_ID = "%s"\n',tname(1:(end-4)));
-        fprintf(bl,'PRODUCT_TYPE = "DDR"\n');  % No idea what this means...
-        fprintf(bl,'PRODUCT_CREATION_TIME = %s\n',datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
-        fprintf(bl,'INSTRUMENT_HOST_ID = RO\n');
-        fprintf(bl,'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\n');
-        fprintf(bl,'INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\n');
-        fprintf(bl,'INSTRUMENT_ID = RPCLAP\n');
-        fprintf(bl,'INSTRUMENT_TYPE = "PLASMA INSTRUMENT"\n');
-        fprintf(bl,'TARGET_NAME = "%s"\n',targetfullname);
-        fprintf(bl,'TARGET_TYPE = "%s"\n',targettype);
-        fprintf(bl,'PROCESSING_LEVEL_ID = %d\n',4);
+        fprintf(fid,'PRODUCT_ID = "%s"\n',tname(1:(end-4)));
+        fprintf(fid,'PRODUCT_TYPE = "DDR"\n');  % No idea what this means...
+        fprintf(fid,'PRODUCT_CREATION_TIME = %s\n',strnow);
+        fprintf(fid,'INSTRUMENT_HOST_ID = RO\n');
+        fprintf(fid,'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\n');
+        fprintf(fid,'INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\n');
+        fprintf(fid,'INSTRUMENT_ID = RPCLAP\n');
+        fprintf(fid,'INSTRUMENT_TYPE = "PLASMA INSTRUMENT"\n');
+        fprintf(fid,'TARGET_NAME = "%s"\n',targetfullname);
+        fprintf(fid,'TARGET_TYPE = "%s"\n',targettype);
+        fprintf(fid,'PROCESSING_LEVEL_ID = %d\n',5);
+        
+        byte = 1;
+        
+        fprintf(fid,'OBJECT = TABLE\n');
+        fprintf(fid,'INTERCHANGE_FORMAT = ASCII\n');
+        fprintf(fid,'ROWS = %d\n',blockTAB{i,3});
+        fprintf(fid,'COLUMNS = 3\n');
+        fprintf(fid,'ROW_BYTES = 59\n');
+        fprintf(fid,'DESCRIPTION = "BLOCKLIST DATA. START & STOP TIME OF MACROBLOCK AND MACROID."\n');
         
         
-        fprintf(bl,'OBJECT = TABLE\n');
-        fprintf(bl,'INTERCHANGE_FORMAT = ASCII\n');
-        fprintf(bl,'ROWS = %d\n',blockTAB{i,3});
-        fprintf(bl,'COLUMNS = 3\n');
-        fprintf(bl,'ROW_BYTES = 59\n');
-        fprintf(bl,'DESCRIPTION = "BLOCKLIST DATA. START & STOP TIME OF MACROBLOCK AND MACROID."\n');                
         
-        fprintf(bl,'OBJECT = COLUMN\n');
-        fprintf(bl,'NAME = TIME_UTC\n');
-        fprintf(bl,'DATA_TYPE = TIME\n');
-        fprintf(bl,'START_BYTE = 1\n');
-        fprintf(bl,'BYTES = 23\n');
-        fprintf(bl,'UNIT = SECONDS\n');
-        fprintf(bl,'DESCRIPTION = "START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss"\n');
-        fprintf(bl,'END_OBJECT  = COLUMN\n');
+        fprintf(fid,'OBJECT = COLUMN\n');
+        fprintf(fid,'NAME = TIME_UTC\n');
+        fprintf(fid,'DATA_TYPE = TIME\n');
+        fprintf(fid,'START_BYTE = %i\n',byte);
+        fprintf(fid,'BYTES = 23\n');
+        byte=byte+23+2;
+        fprintf(fid,'UNIT = SECONDS\n');
+        fprintf(fid,'DESCRIPTION = "START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss"\n');
+        fprintf(fid,'END_OBJECT  = COLUMN\n');
         
-        fprintf(bl,'OBJECT = COLUMN\n');
-        fprintf(bl,'NAME = TIME_UTC\n');
-        fprintf(bl,'DATA_TYPE = TIME\n');
-        fprintf(bl,'START_BYTE = 25\n');
-        fprintf(bl,'BYTES = 23\n');
-        fprintf(bl,'UNIT = SECONDS\n');
-        fprintf(bl,'DESCRIPTION = "END TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss"\n');
-        fprintf(bl,'END_OBJECT  = COLUMN\n');
+        fprintf(fid,'OBJECT = COLUMN\n');
+        fprintf(fid,'NAME = TIME_UTC\n');
+        fprintf(fid,'DATA_TYPE = TIME\n');
+        fprintf(fid,'START_BYTE = %i\n',byte);
+        fprintf(fid,'BYTES = 23\n');
+        byte=byte+23+2;
         
-        fprintf(bl,'OBJECT = COLUMN\n');
-        fprintf(bl,'NAME = MACRO_ID\n');
-        fprintf(bl,'DATA_TYPE = ASCII_REAL\n');
-        fprintf(bl,'START_BYTE = 49\n');
-        fprintf(bl,'BYTES = 3\n');
-        fprintf(bl,'DESCRIPTION = "MACRO IDENTIFICATION NUMBER"\n');
-        fprintf(bl,'END_OBJECT  = COLUMN\n');
-        fprintf(bl,'END_OBJECT  = TABLE\n');
-        fprintf(bl,'END');
-        fclose(bl);
+        fprintf(fid,'UNIT = SECONDS\n');
+        fprintf(fid,'DESCRIPTION = "END TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss"\n');
+        fprintf(fid,'END_OBJECT  = COLUMN\n');
+        
+        fprintf(fid,'OBJECT = COLUMN\n');
+        fprintf(fid,'NAME = MACRO_ID\n');
+        fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+        fprintf(fid,'START_BYTE = %i\n',byte);
+        fprintf(fid,'BYTES = 3\n');
+        byte=byte+14+2;
+        fprintf(fid,'DESCRIPTION = "MACRO IDENTIFICATION NUMBER"\n');
+        fprintf(fid,'END_OBJECT  = COLUMN\n');
+        fprintf(fid,'END_OBJECT  = TABLE\n');
+        fprintf(fid,'END');
+        fclose(fid);
         
     end
     
@@ -429,19 +465,19 @@ if(~isempty(an_tabindex));
         
         %this is stupid, I need new LBLfile for spectra% freq, but haven't
         %stored that name anywhere.
-%      if strcmp(an_tabindex{i,7},'downsample')
-%        [fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r');
-%         else
-%             
-%             tempn = strrep(an_tabindex{i,1},'TAB','LBL');
-%             tempn = strrep(tempn,tempn(end-10:end-8),sprintf('%d',index(an_tabindex{i,3}).macro));
-%             
-%             [fp,errmess] = fopen(tempn);
-%         end
-%       
-
-       [fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r');
-
+        %      if strcmp(an_tabindex{i,7},'downsample')
+        %        [fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r');
+        %         else
+        %
+        %             tempn = strrep(an_tabindex{i,1},'TAB','LBL');
+        %             tempn = strrep(tempn,tempn(end-10:end-8),sprintf('%d',index(an_tabindex{i,3}).macro));
+        %
+        %             [fp,errmess] = fopen(tempn);
+        %         end
+        %
+        
+        [fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r');
+        
         tempfp = textscan(fp,'%s %s','Delimiter','=');
         fclose(fp);
         
@@ -460,14 +496,14 @@ if(~isempty(an_tabindex));
         %         ind = find(strcmp(tempfp{1,1}(),'PRODUCT_TYPE'),1,'first');
         %         tempfp{1,2}{ind,1} ='"DDR"';
         tempfp{1,2}{18,1} ='"DDR"';
-        tempfp{1,2}{29,1} ='"4"';
+        tempfp{1,2}{29,1} ='"5"';
         %
         
         %         ind = find(strcmp(tempfp{1,1}(),'PRODUCT_CREATION_TIME '),1,'first');
-        %         tempfp{1,2}{ind,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %product creation time
+        %         tempfp{1,2}{ind,1} = strnow; %product creation time
         %
         
-        tempfp{1,2}{19,1} = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'); %product creation time
+        tempfp{1,2}{19,1} = strnow; %product creation time
         % %
         %         %Time Stamps
         %
@@ -492,250 +528,281 @@ if(~isempty(an_tabindex));
         %31SPACECRAFT_CLOCK_STOP_COUNT =153100766.291081
         
         
-        al = fopen(strrep(an_tabindex{i,1},'TAB','LBL'),'w');
+        fid = fopen(strrep(an_tabindex{i,1},'TAB','LBL'),'w');
         
-         %%%%%PRINT HEADER                  
-         ind = find(strcmp(tempfp{1,2}(),'TABLE'),1,'first');
-         
-         for (j=1:ind-1) %print header of analysis file
-             fprintf(al,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
-         end
-         
-         
-         
-              
-            %% Customise the rest!
+        %%%%%PRINT HEADER
+        ind = find(strcmp(tempfp{1,2}(),'TABLE'),1,'first');
+        
+        for (j=1:ind-1) %print header of analysis file
+            fprintf(fid,'%s = %s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+        end
+        
+        
+        %% Customise the rest!
         %%% TAB FILE TYPE CUSTOMISATION
+        byte = 1;
         
         if strcmp(an_tabindex{i,7},'downsample') %%%%%%%%DOWNSAMPLED FILE%%%%%%%%%%%%%%%
             
-
             
-            fprintf(al,'OBJECT = TABLE\n');
-            fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
-            fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
-            fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
             
-            fprintf(al,'ROW_BYTES = 110\n');   %%row_bytes here!!!
-            fprintf(al,'DESCRIPTION = %s\n', strcat(tempfp{1,2}{34,1}(1:end-1),sprintf(' %s SECONDS DOWNSAMPLED"',lname(end-10:end-9))));
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = TIME_UTC\n');
-            fprintf(al,'DATA_TYPE = TIME\n');
-            fprintf(al,'START_BYTE = 1\n');
-            fprintf(al,'BYTES = 23\n');
-            fprintf(al,'UNIT = SECONDS\n');
-            fprintf(al,'DESCRIPTION = "UTC TIME YYYY-MM-DD HH:MM:SS.FFF"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
+            fprintf(fid,'OBJECT = TABLE\n');
+            fprintf(fid,'INTERCHANGE_FORMAT = ASCII\n');
+            fprintf(fid,'ROWS = %d\n',an_tabindex{i,4});
+            fprintf(fid,'COLUMNS = %d\n',an_tabindex{i,5});
+            fprintf(fid,'ROW_BYTES = %d\n',an_tabindex{i,9});
+            %fprintf(fid,'ROW_BYTES = 110\n');   %%row_bytes here!!!
+            fprintf(fid,'DESCRIPTION = %s\n', strcat(tempfp{1,2}{34,1}(1:end-1),sprintf(' %s SECONDS DOWNSAMPLED"',lname(end-10:end-9))));
             
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = OBT_TIME\n');
-            fprintf(al,'START_BYTE = 26\n');
-            fprintf(al,'BYTES = 16\n'); %
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'UNIT = SECONDS\n');
-            fprintf(al,'DESCRIPTION = "SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = TIME_UTC\n');
+            fprintf(fid,'DATA_TYPE = TIME\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            fprintf(fid,'BYTES = 23\n');
+            byte=byte+23+2;
+            fprintf(fid,'UNIT = SECONDS\n');
+            fprintf(fid,'DESCRIPTION = "UTC TIME YYYY-MM-DD HH:MM:SS.FFF"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
             
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = P%s_CURRENT\n',Pnum);
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 44\n');
-            fprintf(al,'BYTES = 14\n');
-            fprintf(al,'UNIT = AMPERE\n');
-            fprintf(al,'FORMAT = E14.7\n');
-            fprintf(al,'DESCRIPTION = "AVERAGED CURRENT"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = OBT_TIME\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+16+2;
+            fprintf(fid,'BYTES = 16\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = SECONDS\n');
+            fprintf(fid,'DESCRIPTION = "SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
             
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = P%s_CURRENT_STDDEV\n',Pnum);
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 60\n');
-            fprintf(al,'BYTES = 14\n');
-            fprintf(al,'UNIT = AMPERE\n');
-            fprintf(al,'FORMAT = E14.7\n');
-            fprintf(al,'DESCRIPTION = "CURRENT STANDARD DEVIATION"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = P%s_CURRENT\n',Pnum);
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n');
+            fprintf(fid,'UNIT = AMPERE\n');
+            fprintf(fid,'FORMAT = E14.7\n');
+            fprintf(fid,'DESCRIPTION = "AVERAGED CURRENT"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
             
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = P%s_VOLT\n',Pnum);
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 76\n');
-            fprintf(al,'BYTES = 14\n');
-            fprintf(al,'UNIT = VOLT\n');
-            fprintf(al,'FORMAT = E14.7\n');
-            fprintf(al,'DESCRIPTION = "AVERAGED MEASURED VOLTAGE"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = P%s_CURRENT_STDDEV\n',Pnum);
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n');
+            fprintf(fid,'UNIT = AMPERE\n');
+            fprintf(fid,'FORMAT = E14.7\n');
+            fprintf(fid,'DESCRIPTION = "CURRENT STANDARD DEVIATION"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
             
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = P%s_VOLT_STDDEV\n',Pnum);
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 92\n');
-            fprintf(al,'BYTES = 14\n');
-            fprintf(al,'UNIT = VOLT\n');
-            fprintf(al,'FORMAT = E14.7\n');
-            fprintf(al,'DESCRIPTION = "VOLTAGE STANDARD DEVIATION"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = P%s_VOLT\n',Pnum);
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n');
+            fprintf(fid,'UNIT = VOLT\n');
+            fprintf(fid,'FORMAT = E14.7\n');
+            fprintf(fid,'DESCRIPTION = "AVERAGED MEASURED VOLTAGE"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
             
-            fprintf(al,'END_OBJECT  = TABLE\n');
-            fprintf(al,'END');
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = P%s_VOLT_STDDEV\n',Pnum);
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n');
+            fprintf(fid,'UNIT = VOLT\n');
+            fprintf(fid,'FORMAT = E14.7\n');
+            fprintf(fid,'DESCRIPTION = "VOLTAGE STANDARD DEVIATION"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = QUALITY\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            fprintf(fid,'BYTES = 3\n');
+            byte=byte+3+2;
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = N/A\n');
+            fprintf(fid,'DESCRIPTION = " QUALITY FACTOR FROM 000(best) to 999"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            fprintf(fid,'END_OBJECT  = TABLE\n');
+            fprintf(fid,'END');
             
             
         elseif strcmp(an_tabindex{i,7},'spectra') %%%%%%%%%%%%%%%%SPECTRA FILE%%%%%%%%%%
-       
-            
-                 
-            
-            
-            fprintf(al,'OBJECT = TABLE\n');
-            fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
-            fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
-            fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
             
             
             
-            if Pnum=='3'
-                row_byte = (an_tabindex{i,5}-6)*17 +169;
-                
-                
-%               fprintf(al,'ROW_BYTES = 169\n');   %%row_bytes here!!!
-                
-            else
-                
-                row_byte = (an_tabindex{i,5}-6)*17 +152;
-                
-            end
-            
-            fprintf(al,'ROW_BYTES = %f',row_byte);   %%row_bytes here!!!
-            
-            fprintf(al,'DESCRIPTION = "%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT\n"',mode);
-             
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = SPECTRA_START_TIME_UTC\n');
-            fprintf(al,'DATA_TYPE = TIME\n');
-            fprintf(al,'START_BYTE = 1\n');
-            fprintf(al,'BYTES = 26\n');
-            fprintf(al,'UNIT = SECONDS\n');
-            fprintf(al,'DESCRIPTION = "START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
-                      
-            
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = SPECTRA_STOP_TIME_UTC\n');
-            fprintf(al,'DATA_TYPE = TIME\n');
-            fprintf(al,'START_BYTE = 29\n');
-            fprintf(al,'BYTES = 26\n');
-            fprintf(al,'UNIT = SECONDS\n');
-            fprintf(al,'DESCRIPTION = "SPECTRA STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = SPECTRA_START_TIME_OBT\n');
-            fprintf(al,'START_BYTE = 57\n');
-            fprintf(al,'BYTES = 16\n'); %
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'UNIT = SECONDS\n');
-            fprintf(al,'DESCRIPTION = "START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
             
             
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = SPECTRA_STOP_TIME_OBT\n');
-            fprintf(al,'START_BYTE = 76\n');
-            fprintf(al,'BYTES = 16\n'); %
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'UNIT = SECONDS\n');
-            fprintf(al,'DESCRIPTION = " STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
+            fprintf(fid,'OBJECT = TABLE\n');
+            fprintf(fid,'INTERCHANGE_FORMAT = ASCII\n');
+            fprintf(fid,'ROWS = %d\n',an_tabindex{i,4});
+            fprintf(fid,'COLUMNS = %d\n',an_tabindex{i,5});
             
             
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = QUALITY\n');
-            fprintf(al,'START_BYTE = 95\n');
-            fprintf(al,'BYTES = 3\n'); %
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'UNIT = N/A\n');
-            fprintf(al,'DESCRIPTION = " QUALITYFACTOR FROM 000(best) to 999"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
+            %
+            %             if Pnum=='3'
+            %                 row_byte = (an_tabindex{i,5}-6)*17 +169;
+            %
+            %
+            % %               fprintf(fid,'ROW_BYTES = 169\n');   %%row_bytes here!!!
+            %
+            %             else
+            %
+            %                 row_byte = (an_tabindex{i,5}-6)*17 +152;
+            %
+            %             end
             
+            
+            fprintf(fid,'ROW_BYTES = %f',an_tabindex{i,9});   %%row_bytes here!!!
+            
+            fprintf(fid,'DESCRIPTION = "%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT\n"',mode);
+            fprintf(fid,'DELIMITER = ", "\n');
+
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = SPECTRA_START_TIME_UTC\n');
+            fprintf(fid,'DATA_TYPE = TIME\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+26+2;
+            fprintf(fid,'BYTES = 26\n');
+            fprintf(fid,'UNIT = SECONDS\n');
+            fprintf(fid,'DESCRIPTION = "START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = SPECTRA_STOP_TIME_UTC\n');
+            fprintf(fid,'DATA_TYPE = TIME\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+26+2;
+            fprintf(fid,'BYTES = 26\n');
+            fprintf(fid,'UNIT = SECONDS\n');
+            fprintf(fid,'DESCRIPTION = "SPECTRA STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = SPECTRA_START_TIME_OBT\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+16+2;
+            fprintf(fid,'BYTES = 16\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = SECONDS\n');
+            fprintf(fid,'DESCRIPTION = "START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = SPECTRA_STOP_TIME_OBT\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+16+2;
+            fprintf(fid,'BYTES = 16\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = SECONDS\n');
+            fprintf(fid,'DESCRIPTION = " STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = QUALITY\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+3+2;
+            fprintf(fid,'BYTES = 3\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = N/A\n');
+            fprintf(fid,'DESCRIPTION = " QUALITY FACTOR FROM 000(best) to 999"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
             
             if strcmp(mode(1),'I')
                 
                 
                 if Pnum=='3'
                     
-                    fprintf(al,'OBJECT = COLUMN\n');                    
-                    fprintf(al,'NAME = P1-P2_CURRENT MEAN\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 101\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = VOLT\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'NAME = P1-P2_CURRENT MEAN\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = VOLT\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "BIAS VOLTAGE"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P1_VOLT\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 118\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = VOLT\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'NAME = P1_VOLT\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = VOLT\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "BIAS VOLTAGE"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
-                    fprintf(al,'NAME = P2_VOLT\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 135\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = VOLT\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "BIAS VOLTAGE"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'NAME = P2_VOLT\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = VOLT\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "BIAS VOLTAGE"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-7);
-                    fprintf(al,'NAME = PSD\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 152\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "PSD CURRENT SPECTRUM"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'ITEMS = %i\n',an_tabindex{i,5}-7);
+                    fprintf(fid,'NAME = PSD\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "PSD CURRENT SPECTRUM"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
                 else
-
-
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P%s_CURRENT_MEAN\n',Pnum);
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 101\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = AMPERE\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "CURRENT MEAN"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
-
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P%s_VOLT_MEAN\n',Pnum);
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 118\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = VOLT\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "VOLTAGE MEAN"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-6);
-                    fprintf(al,'NAME = PSD\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 135\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "PSD CURRENT SPECTRUM"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'NAME = P%s_CURRENT_MEAN\n',Pnum);
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = AMPERE\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "CURRENT MEAN"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
+                    
+                    
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'NAME = P%s_VOLT_MEAN\n',Pnum);
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = VOLT\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "VOLTAGE MEAN"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
+                    
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'ITEMS = %i\n',an_tabindex{i,5}-6);
+                    fprintf(fid,'NAME = PSD\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "PSD CURRENT SPECTRUM"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                 end
                 
                 
@@ -743,83 +810,89 @@ if(~isempty(an_tabindex));
                 
                 if Pnum=='3'
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P1_CURRENT_MEAN\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 101\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = AMPERE\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "CURRENT MEAN"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'NAME = P1_CURRENT_MEAN\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = AMPERE\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "CURRENT MEAN"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P2_CURRENT_MEAN\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 118\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = AMPERE\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "CURRENT MEAN"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
-                    
-                    
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P1-P2 VOLTAGE MEAN\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 135\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = VOLT\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "MEAN VOLTAGE DIFFERENCE"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'NAME = P2_CURRENT_MEAN\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = AMPERE\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "CURRENT MEAN"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-7);
-                    fprintf(al,'NAME = PSD\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 152\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "PSD VOLTAGE SPECTRUM"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'NAME = P1-P2 VOLTAGE MEAN\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = VOLT\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "MEAN VOLTAGE DIFFERENCE"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
+                    
+                    
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'ITEMS = %i\n',an_tabindex{i,5}-7);
+                    fprintf(fid,'NAME = PSD\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "PSD VOLTAGE SPECTRUM"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
                 else
                     
                     
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P%s_CURRENT\n',Pnum);
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 101\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = AMPERE\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "CURRENT MEAN"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'NAME = P%s_CURRENT\n',Pnum);
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = AMPERE\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "CURRENT MEAN"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'NAME = P%s_VOLT_MEAN\n',Pnum);
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 118\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'UNIT = VOLT\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "VOLTAGE MEAN"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');                                        
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'NAME = P%s_VOLT_MEAN\n',Pnum);
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'UNIT = VOLT\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "VOLTAGE MEAN"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
-                    fprintf(al,'OBJECT = COLUMN\n');
-                    fprintf(al,'ITEMS = %i\n',an_tabindex{i,5}-6);
-                    fprintf(al,'NAME = PSD\n');
-                    fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-                    fprintf(al,'START_BYTE = 135\n');
-                    fprintf(al,'BYTES = 14\n');
-                    fprintf(al,'FORMAT = E14.7\n');
-                    fprintf(al,'DESCRIPTION = "PSD VOLTAGE SPECTRUM"\n');
-                    fprintf(al,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'OBJECT = COLUMN\n');
+                    fprintf(fid,'ITEMS = %i\n',an_tabindex{i,5}-6);
+                    fprintf(fid,'NAME = PSD\n');
+                    fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+                    fprintf(fid,'START_BYTE = %i\n',byte);
+                    byte=byte+14+2;
+                    fprintf(fid,'BYTES = 14\n');
+                    fprintf(fid,'FORMAT = E14.7\n');
+                    fprintf(fid,'DESCRIPTION = "PSD VOLTAGE SPECTRUM"\n');
+                    fprintf(fid,'END_OBJECT  = COLUMN\n');
                 end
-                
                 
                 
                 
@@ -827,48 +900,320 @@ if(~isempty(an_tabindex));
                 fprintf(1,'error, bad mode identifier in an_tabindex{%i,1}',i);
                 
             end
+            fprintf(fid,'END_OBJECT  = TABLE\n');
+            fprintf(fid,'END');
             
-   
+            
         elseif  strcmp(an_tabindex{i,7},'frequency') %%%%%%%%%%%%FREQUENCY FILE%%%%%%%%%
             
-           % tempfp{1,2}{34,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
+            % tempfp{1,2}{34,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
             
             %             ind = find(strcmp(tempfp{1,2}(),'TABLE'),1,'first');
             %             %%%%%PRINT HEADER
             %             for (j=1:ind-1) %print header of analysis file
-            %                 fprintf(al,'%s=%s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+            %                 fprintf(fid,'%s=%s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
             %             end
             %             %%%%% Customise the rest!
             %
             
-            fprintf(al,'OBJECT = TABLE\n');
-            fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
-            fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
-            fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
-            fprintf(al,'ROW_BYTES = 14\n');   %%row_bytes here!!!
+            fprintf(fid,'OBJECT = TABLE\n');
+            fprintf(fid,'INTERCHANGE_FORMAT = ASCII\n');
+            fprintf(fid,'ROWS = %d\n',an_tabindex{i,4});
+            fprintf(fid,'COLUMNS = %d\n',an_tabindex{i,5});
+            fprintf(fid,'ROW_BYTES = 14\n');   %%row_bytes here!!!
             
-            fprintf(al,'DESCRIPTION = "%s FREQUENCY LIST OF PSD SPECTRA FILE\n"',lname(end-10:end-9));
+            fprintf(fid,'DESCRIPTION = "%s FREQUENCY LIST OF PSD SPECTRA FILE\n"',lname(end-10:end-9));
             
             
             
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = FREQUENCY LIST\n');
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 1\n');
-            fprintf(al,'BYTES = 14\n');
-            fprintf(al,'UNIT = kHz\n');
-            fprintf(al,'FORMAT = E14.7\n');
-            fprintf(al,'DESCRIPTION = "FREQUENCY LIST FOR CORRESPONDING PSD SPECTRA FILE"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = FREQUENCY LIST\n');
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'START_BYTE = 1\n');
+            fprintf(fid,'BYTES = 14\n');
+            fprintf(fid,'UNIT = kHz\n');
+            fprintf(fid,'FORMAT = E14.7\n');
+            fprintf(fid,'DESCRIPTION = "FREQUENCY LIST FOR CORRESPONDING PSD SPECTRA FILE"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
             
-            fprintf(al,'END_OBJECT  = TABLE\n');
-            fprintf(al,'END');
+            fprintf(fid,'END_OBJECT  = TABLE\n');
+            fprintf(fid,'END');
             
+        elseif  strcmp(an_tabindex{i,7},'sweep') %%%%%%%%%%%%SWEEP FILE%%%%%%%%%
+            
+            % tempfp{1,2}{34,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
+            
+            %             ind = find(strcmp(tempfp{1,2}(),'TABLE'),1,'first');
+            %             %%%%%PRINT HEADER
+            %             for (j=1:ind-1) %print header of analysis file
+            %                 fprintf(fid,'%s=%s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
+            %             end
+            %             %%%%% Customise the rest!
+            %
+            
+            fprintf(fid,'OBJECT = TABLE\n');
+            fprintf(fid,'INTERCHANGE_FORMAT = ASCII\n');
+            fprintf(fid,'ROWS = %d\n',an_tabindex{i,4});
+            fprintf(fid,'COLUMNS = %d\n',an_tabindex{i,5});
+            fprintf(fid,'ROW_BYTES = %d\n',an_tabindex{i,9});   %%row_bytes here!!!
+            
+            fprintf(fid,'DESCRIPTION = "MODEL FITTED ANALYSIS OF %s SWEEP FILE\n"',tabindex{an_tabindex{i,6},2});
+            
+            
+            
+            %
+            %              %1:5
+            %
+            %         %time0,time0,QUALITY FACTOR,mean(SAA),mean(Illuminati)
+            %         b1=fprintf(awID,'%s, %s, %03i, %07.4f, %03.2f,',fout{k,5}{1,1},fout{k,5}{1,2},Qfarr(k),fout{k,2},fout{k,3});
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = START_TIME_UTC\n');
+            fprintf(fid,'DATA_TYPE = TIME\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+26+2;
+            fprintf(fid,'BYTES = 26\n');
+            fprintf(fid,'UNIT = SECONDS\n');
+            fprintf(fid,'DESCRIPTION = "START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = STOP_TIME_UTC\n');
+            fprintf(fid,'DATA_TYPE = TIME\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+26+2;
+            fprintf(fid,'BYTES = 26\n');
+            fprintf(fid,'UNIT = SECONDS\n');
+            fprintf(fid,'DESCRIPTION = "STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = QUALITY\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+3+2;
+            fprintf(fid,'BYTES = 3\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = N/A\n');
+            fprintf(fid,'DESCRIPTION = " QUALITY FACTOR FROM 000(best) to 999"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = SAA\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+7+2;
+            fprintf(fid,'BYTES = 7\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = DEGREES\n');
+            fprintf(fid,'DESCRIPTION = " SOLAR ASPECT ANGLE FROM SPICE (DEGREES)"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = Illumination\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+3+2;
+            fprintf(fid,'BYTES = 3\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = N/A\n');
+            fprintf(fid,'DESCRIPTION = "Sunlit sphere 1=yes,0=no,otherwise: sunlit during part of sweep"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            
+            
+            %         %6:9
+            
+            %         %,vs,vx,Vsc,VscSigma
+            %         b2=fprintf(awID,' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(15),fout{k,1}(4),fout{k,4}{1},fout{k,4}{2});
+            %
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = Vs\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = VOLT\n');
+            fprintf(fid,'DESCRIPTION = "Spacecraft potential from ion & photoemission current intersection, iterative solution"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = Vx\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = VOLT\n');
+            fprintf(fid,'DESCRIPTION = " Vsat + Te from electron current fit"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = Vsc\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = VOLT\n');
+            fprintf(fid,'DESCRIPTION = "Spacecraft potential from 2nd derivative gaussian fit"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = Vsc_sigma\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = VOLT\n');
+            fprintf(fid,'DESCRIPTION = "Spacecraft potential sigma from 2nd derivative gaussian fit"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            %10:13
+            %         %,Tph,If0,vb(lastneg), vb(firstpos),
+            %         b3= fprintf(awID,' %14.7e, %14.7e  %14.7e, %14.7e,', fout{k,1}(13),fout{k,1}(14),fout{k,1}(2),fout{k,1}(3));
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = Tph\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = eV\n');
+            fprintf(fid,'DESCRIPTION = "Photoelectron temperature from model fit"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = If0\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = AMPERE\n');
+            fprintf(fid,'DESCRIPTION = "If0"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = Vb(lastneg)\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = VOLT\n');
+            fprintf(fid,'DESCRIPTION = "Last negative current potential"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = Vb(firstpos)\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = VOLT\n');
+            fprintf(fid,'DESCRIPTION = "First positive current potential"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            %         %poli,poli,pole,pole,
+            %         b4 =fprintf(awID,' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(5),fout{k,1}(6),fout{k,1}(7),fout{k,1}(8));
+            %         %14:17
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = poli(1)\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = N/A\n');
+            fprintf(fid,'DESCRIPTION = "N/A"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = poli(2\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = N/A\n');
+            fprintf(fid,'DESCRIPTION = "N/A"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = pole(1)\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = N/A\n');
+            fprintf(fid,'DESCRIPTION = "N/A"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            fprintf(fid,'OBJECT = COLUMN\n');
+            
+            fprintf(fid,'NAME = pole(2)\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = N/A\n');
+            fprintf(fid,'DESCRIPTION = "N/A"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            %         %17:19
+            
+            %         %  vbinf,diinf,d2iinf
+            %         b5 = fprintf(awID,' %14.7e, %14.7e, %14.7e\n',fout{k,1}(10),fout{k,1}(11),fout{k,1}(12));
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = vbinf\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = VOLT\n');
+            fprintf(fid,'DESCRIPTION = "inflection point bias potential"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = diinf\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = AMPERE\n');
+            fprintf(fid,'DESCRIPTION = "current derivative at inflection point"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            fprintf(fid,'OBJECT = COLUMN\n');
+            fprintf(fid,'NAME = d2iinf\n');
+            fprintf(fid,'START_BYTE = %i\n',byte);
+            byte=byte+14+2;
+            fprintf(fid,'BYTES = 14\n'); %
+            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
+            fprintf(fid,'UNIT = AMPERE\n');
+            fprintf(fid,'DESCRIPTION = "current 2nd derivative at inflection point"\n');
+            fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+            
+            fprintf(fid,'END_OBJECT  = TABLE\n');
+            fprintf(fid,'END');
         else
             fprintf(1,'error, bad identifier in an_tabindex{%i,7}',i);
             
         end
-        fclose(al);
+        fclose(fid);
         
         
         
@@ -876,168 +1221,4 @@ if(~isempty(an_tabindex));
     end
 end
 
-
-
-
-%if(~isempty(an_tabindex));
-
-if(0)
-    len=length(an_tabindex(:,1));
-    
-    for(i=1:len)
-        
-        %tabindex cell array = {tab file name, first index number of batch,
-        % UTC time of last row, S/C time of last row, row counter}
-        %    units: [cell array] =  {[string],[double],[string],[float],[integer]
-        
-        % Write label file:
-        
-        
-        %[fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r'); %Problematic for indices created in indexcorr (Files split at midnight)
-        %tempfp = textscan(fp,'%s %s','Delimiter','=');
-        %fclose(fp);
-        
-        tname = an_tabindex{i,2};
-        %  tabi0 = str2double(an_tabindex{i,6}(1:2)); %%tabindex index of first tabfilein
-        %  tabi1 = str2double(an_tabindex{i,6}(end-1:end)); %%tabindex of last tabfile
-        lname=strrep(tname,'TAB','LBL');
-        
-        al = fopen(strrep(an_tabindex{i,1},'TAB','LBL'),'w');
-        
-        
-        fprintf(al,'PDS_VERSION_ID = PDS3\n');
-        fprintf(al,'RECORD_TYPE = FIXED_LENGTH\n');
-        fileinfo = dir(an_tabindex{i,1});
-        fprintf(al,'RECORD_BYTES = %d\n',fileinfo.bytes);
-        fprintf(al,'FILE_RECORDS = %d\n',an_tabindex{i,4});
-        fprintf(al,'FILE_NAME = "%s"\n',lname);
-        fprintf(al,'^TABLE = "%s"\n',tname);
-        fprintf(al,'DATA_SET_ID = "%s"\n',datasetid);
-        fprintf(al,'DATA_SET_NAME = "%s"\n',datasetname);
-        fprintf(al,'DATA_QUALITY_ID = 1\n');
-        fprintf(al,'MISSION_ID = ROSETTA\n');
-        fprintf(al,'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\n');
-        fprintf(al,'MISSION_PHASE_NAME = "%s"\n',missionphase);
-        fprintf(al,'PRODUCER_INSTITUTION_NAME = "SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"\n');
-        fprintf(al,'PRODUCER_ID = %s\n',producershortname);
-        fprintf(al,'PRODUCER_FULL_NAME = "%s"\n',producerfullname);
-        fprintf(al,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
-        % mm = length(tname);
-        fprintf(al,'PRODUCT_ID = "%s"\n',tname(1:(end-4)));
-        fprintf(al,'PRODUCT_TYPE = "DDR"\n');  % No idea what this means...
-        fprintf(al,'PRODUCT_CREATION_TIME = %s\n',datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
-        fprintf(al,'INSTRUMENT_HOST_ID = RO\n');
-        fprintf(al,'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\n');
-        fprintf(al,'INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\n');
-        fprintf(al,'INSTRUMENT_ID = RPCLAP\n');
-        fprintf(al,'INSTRUMENT_TYPE = "PLASMA INSTRUMENT"\n');
-        fprintf(al,'TARGET_NAME = "%s"\n',targetfullname);
-        fprintf(al,'TARGET_TYPE = "%s"\n',targettype);
-        fprintf(al,'PROCESSING_LEVEL_ID = %d\n',4);
-        
-        %looks messy, but I'm finding the first original index used in this
-        %file, and outputting it's start time, as well as the index of the
-        %last file used, to output the stop time. There are easier ways, but
-        %not as accurate.
-        
-        %  fprintf(al,'START_TIME  = %s\n',index(tabindex{tabi0,3}).t0str);
-        % fprintf(al,'STOP_TIME  = %s\n',tabindex{tabi1,4});
-        %        fprintf(al,'SPACECRAFT_CLOCK_START_COUNT  = %s\n',index(tabindex{tabi0,3}).sct0str(5:end-1));
-        %       fprintf(al,'SPACECRAFT_CLOCK_STOP_COUNT  = %16.6f\n',tabindex{tabi1,5});
-        fprintf(al,'OBJECT = TABLE\n');
-        fprintf(al,'INTERCHANGE_FORMAT = ASCII\n');
-        fprintf(al,'ROWS = %d\n',an_tabindex{i,4});
-        fprintf(al,'COLUMNS = %d\n',an_tabindex{i,5});
-        
-        
-        
-        %     tempfp{1,2}{28,1} = index(tabindex{tabi0,3}).t0str; %UTC start time
-        %     tempfp{1,2}{29,1} = tabindex{tabi1,4};             % UTC stop time
-        %     tmpsct0 = index(tabindex{tabi0,3}).sct0str(5:end-1);
-        %     tempfp{1,2}{30,1} = tmpsct0;                    %% sc start time
-        %     tempfp{1,2}{31,1} = sprintf('%16.6f',tabindex{tabi1,5}); %% sc stop time
-        
-        if strcmp(an_tabindex{i,7},'downsample')
-            
-            mode = tname(end-6:end-4);
-            Pnum = tname(end-5);
-            %  fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e\n',foutarr{1,1}{j,1},foutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j));
-            %      23, 16+1, 14+1, 14+1, 14+1, 14+1
-            %      = 2*5+23+17+15*4 = 110
-            
-            fprintf(al,'ROW_BYTES = 110\n');   %%row_bytes here!!!
-            
-            fprintf(al,'DESCRIPTION = "%s SECONDS DOWNSAMPLED MEASUREMENT"\n',lname(end-10:end-9));
-            
-            
-            
-            %%Varf?r finns det tv? "DESCRIPTION" i LBL filerna?
-            
-            
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = TIME_UTC\n');
-            fprintf(al,'DATA_TYPE = TIME\n');
-            fprintf(al,'START_BYTE = 1\n');
-            fprintf(al,'BYTES = 23\n');
-            fprintf(al,'UNIT = SECONDS\n');
-            fprintf(al,'DESCRIPTION = "START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.FFF"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = OBT_TIME\n');
-            fprintf(al,'START_BYTE = 26\n');
-            fprintf(al,'BYTES = 16\n'); %
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'UNIT = SECONDS\n');
-            fprintf(al,'DESCRIPTION = "SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = P%s_CURRENT\n',Pnum);
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 45\n');
-            fprintf(al,'BYTES = 14\n');
-            fprintf(al,'UNIT = AMPERE\n');
-            fprintf(al,'FORMAT = E14.7\n');
-            fprintf(al,'DESCRIPTION = "AVERAGED CURRENT"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = P%s_CURRENT_STDDEV\n',Pnum);
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 62\n');
-            fprintf(al,'BYTES = 14\n');
-            fprintf(al,'UNIT = AMPERE\n');
-            fprintf(al,'FORMAT = E14.7\n');
-            fprintf(al,'DESCRIPTION = "CURRENT STANDARD DEVIATION"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = P%s_VOLT\n',Pnum);
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 79\n');
-            fprintf(al,'BYTES = 14\n');
-            fprintf(al,'UNIT = VOLT\n');
-            fprintf(al,'FORMAT = E14.7\n');
-            fprintf(al,'DESCRIPTION = "AVERAGED MEASURED VOLTAGE"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(al,'OBJECT = COLUMN\n');
-            fprintf(al,'NAME = P%s_VOLT_STDDEV\n',Pnum);
-            fprintf(al,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(al,'START_BYTE = 96\n');
-            fprintf(al,'BYTES = 14\n');
-            fprintf(al,'UNIT = VOLT\n');
-            fprintf(al,'FORMAT = E14.7\n');
-            fprintf(al,'DESCRIPTION = "VOLTAGE STANDARD DEVIATION"\n');
-            fprintf(al,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(al,'END_OBJECT  = TABLE\n');
-            fprintf(al,'END');
-            fclose(al);
-            
-        end
-        
-    end
-end
 

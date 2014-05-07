@@ -15,6 +15,8 @@ producerfullname='Fredrik Johansson';
 producershortname='FJ';
 
 
+
+
 % 2. Control section
 % ==================
 do_geom = 0;  % Geometry file preparation off/on
@@ -59,12 +61,12 @@ lblrev = '4th draft';
 
 
 %Latest run: 28/4 2014
-% 
-% % % Lutetia calibrated:
-%  shortphase = 'AST2';
-%  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-A-RPCLAP-3-AST2-CALIB-V2.0';
-% 
-% 
+
+% % Lutetia calibrated:
+ shortphase = 'AST2';
+ archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-A-RPCLAP-3-AST2-CALIB-V2.0';
+
+
 % 
 
 % % % RVM1 edited:
@@ -75,10 +77,10 @@ lblrev = '4th draft';
 %shortphase = 'RVM1';
 %archivepath = '/data/LAP_ARCHIVE/RO-SS-RPCLAP-3-RVM1-CALIB-V1.0';
 
-% 
-% RVM2 calibrated:
-shortphase = 'RVM2';
-archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
+% % 
+% % RVM2 calibrated:
+% shortphase = 'RVM2';
+% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
 
 % 
 % % MARS calibrated:
@@ -102,3 +104,10 @@ archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECO
 % !!!
 missioncalendar = '/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/Mission_Calendar.txt';
 
+
+
+% 6. Output path
+% ====================================
+
+derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-5');
+derivedpath = strrep(derivedpath,'CALIB','DERIV');

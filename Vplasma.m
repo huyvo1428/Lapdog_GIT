@@ -2,7 +2,7 @@
 function [Vplasma,sigma] = Vplasma(Vb,Ib2)
 diag = 0;
 
-[Vb, ~, ic] = unique(Vb);
+[Vb, junk, ic] = unique(Vb);
 
 Ib = accumarray(ic,Ib2,[],@mean);
 
@@ -15,7 +15,7 @@ Ib = accumarray(ic,Ib2,[],@mean);
 
 
 %vbzero= find(le(Vb,0));
-[~,d2i]= leapfd(Ib,Vb,2);
+[junk,d2i]= leapfd(Ib,Vb,2);
 
 
 

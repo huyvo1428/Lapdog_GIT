@@ -103,28 +103,40 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
         
         if ~isempty(sweept)
             
+            lee= length(scantemp{1,2}(:));
+            del = false(1,lee);
             for j =1:length(sweept(1,:))
+ 
+                if scantemp{1,2}(end)<sweept(1,j) || scantemp{1,2}(1)>sweept(2,j)
+    %                j
+                    break
+                end
+                tmpdel=false(1,lee);
+                
+%                 IDX = uint32(1:size(A,1));
+%                 ind = IDX(A(:,1) >= L & A(:,1) < U);
                 after  = scantemp{1,2}(:)   >= sweept(1,j);   %after sweep start
-                before = scantemp{1,2}(:)   <= sweept(2,j);   %before sweep ends
+                tmpdel(after) = scantemp{1,2}(after)   <= sweept(2,j);   %before sweep ends
+                
+                del(tmpdel)=1;                 
                 
                 %NB: sweep stop % start time (from LBL files) seem to be roughly
                 %0.2 seconds before and after first and final measurement, so we
                 %probably won't have to increase "deletion window"
-                del = find(after==before); %%after ~= before unless value within sweep window
-                if ~isempty(del)
-                    
-                    % instead of remove, do qualityflag?
-                    
-                    scantemp{1,1}(del)    = [];
-                    scantemp{1,2}(del)    = [];
-                    scantemp{1,3}(del)    = [];
-                    scantemp{1,4}(del)    = [];
-                    if fileflag(2) =='3'
-                        scantemp{1,5}(del)    = [];
-                    end
-                    
-                end%if
-            end% for
+            end
+            if ~isempty(del)
+                
+                % instead of remove, do qualityflag?
+                scantemp{1,1}(del)    = [];
+                scantemp{1,2}(del)    = [];
+                scantemp{1,3}(del)    = [];
+                scantemp{1,4}(del)    = [];
+                if fileflag(2) =='3'
+                    scantemp{1,5}(del)    = [];
+                end
+                
+            end%if
+            
         end%  sweep window deletions
         
         
@@ -160,7 +172,7 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
 
             
             tabindex{end,4}= timing{1,1}; %%remember stop time in universal time and spaceclock time
-            tabindex{end,5}= timing{1,2}; %subset scantemp{1,1} is a cell array, but scantemp{1,2} is a normal array
+            tabindex{end,5}= timing{1,2};
             tabindex{end,6}= counttemp;
             
             
@@ -173,17 +185,13 @@ else %% if sweep, do:
     
     filename2 = filename;
     filename2(end-6) = 'I'; %current data file name according to convention%
-    filename3 = filename;
-    filename3(end-6) = 'A'; %A for derived  analysis
-    
+   
     %     if exist(filename2,'file')==2 %this doesn't work!
     %         delete('filename2');
     %     end
-    tmpf = fopen(filename2,'w');
-    fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
-    tmpf = fopen(filename3,'w');
-    fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
-    condfile = fopen(filename2,'a');
+%     tmpf = fopen(filename2,'w');
+%     fclose(tmpf); %ugly way of deleting if it exists, we need appending filewrite
+     twID2 = fopen(filename2,'w');
     
     
     
@@ -211,7 +219,7 @@ else %% if sweep, do:
             scantemp{1,4}(1:step1)    = [];
             
             
-            %     [potbias, ~, ic] = unique(scantemp{1,4}(:),'stable'); %group potbias uniquely
+            %     [potbias, junk, ic] = unique(scantemp{1,4}(:),'stable'); %group potbias uniquely
             
             %slightly more complicated way of getting the mean
             stepnr= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
@@ -220,23 +228,26 @@ else %% if sweep, do:
             potbias = accumarray(inter,scantemp{1,4}(:),[],@mean); %average
             scan2temp=accumarray(inter,scantemp{1,2}(:),[],@mean); %average
             reltime = scan2temp(:)-scan2temp(1); %relative time stamps
-
-            potout = [reltime(:),potbias];
-            dlmwrite(filename,potout,'-append','precision', '%14.7e'); %also writes \n
             
+  % potout = [reltime(:),potbias]; %won't work with  fprintf
+            potout(1:2:2*length(reltime)) = reltime;
+            potout(2:2:2*length(reltime)) = potbias;
+            b1= fprintf(twID,'%14.7e, %14.7e\n',potout);
+ %            dlmwrite(filename,potout,'-append','precision', '%14.7e'); %also writes \n
+                
         elseif scantemp{1,4}(1) == potbias(1); %bugfix special case
-            
-            %first values are problematic, often not in the sweep at all since
-            %spacecraft starts recording too early, and the number of first
-            %values varies from file to file, so total number of rows varies
-            %unless removen properly
-            
-            %also, we have found sweep files in the same macro that happen to
-            %have the first few values on the first actual sweep step
-            %if this happens in the first file (but not necessarily in the rest
-            %we currently have no way of not deleting all measurements on that
-            %step
-            
+        
+        %first values are problematic, often not in the sweep at all since
+        %spacecraft starts recording too early, and the number of first
+        %values varies from file to file, so total number of rows varies
+        %unless removen properly
+        
+        %also, we have found sweep files in the same macro that happen to
+        %have the first few values on the first actual sweep step
+        %if this happens in the first file (but not necessarily in the rest
+        %we currently have no way of not deleting all measurements on that
+        %step
+        
             
             step1 = find(diff(scantemp{1,4}(1:end)),1,'first')-stepnr;
             scantemp{1,1}(1:step1)    = [];
@@ -276,87 +287,11 @@ else %% if sweep, do:
         
         
         
-        fprintf(condfile,'%s, %s, %16.6f, %16.6f, 000,',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
-        dlmwrite(filename2,curtemp.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 4. pretty neat.
+        b2= fprintf(twID2,'%s, %s, %16.6f, %16.6f, 000',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
+        b3= fprintf(twID2,', %14.7e',curtemp.');
+        fprintf(twID2,'\n');
         
-        
-        
-        %        dlmwrite(filename2,curtemp,'-append','precision', '%14.7e', 'delimiter', ', '); %
-        
-        %   curtemp = curtemp.'; %transpose..
-        
-        
-        %excellent time for some analysis!
-        %
-        %         filename3 = filename;
-        %         filename3(end-6) = 'A'; %A for derived  analysis
-        %
-        
-        
-        
-        
-        
-        %         [Vb,ind]=sort(potbias);
-        %
-        %        % Vb=potbias(ind);
-        %         Is=curtemp(ind);
-        %
-        %   %      sweepooo = find_scpot(Vb,Is,0);
-        %    %     Weyderived = preliminaries(Vb,Is);
-        %
-        %
-        %
-        %         derived = an_swp(potbias,curtemp,scantemp{1,2}(1,1),filename(end-5));
-        
-        
-        %    %     p2s_params= derived;
-        %
-        %     figure(157);
-        %
-        %     subplot(4,1,1);
-        %     plot(derived(:,1),1e9*derived(:,15),'k.',p2s_params(:,1),1e9*p2s_params(:,15)+7,'r.');
-        %     ylim([-15 0])
-        %     grid on;
-        %     datetick('x',15);
-        %     ylabel('If0 [nA]');
-        %     if(~isempty(derived))
-        %       titstr = sprintf('Sweep summary %s',datestr(derived(1,1),29));
-        %     else
-        %       titstr = sprintf('Sweep summary %s',datestr(p2s_params(1,1),29));
-        %     end
-        %     title(titstr);
-        %
-        %     subplot(4,1,2);
-        %     plot(derived(:,1),-derived(:,11),'ko',p2s_params(:,1),-p2s_params(:,11),'ro');
-        %     hold on;
-        %     plot(derived(:,1),derived(:,16),'k.',p2s_params(:,1),p2s_params(:,16),'r.');
-        %     hold off;
-        %     grid on;
-        %     datetick('x',15);
-        %     ylim([-5 5]);
-        %     ylabel('Vps [V]');
-        %
-        %     subplot(4,1,3);
-        %     Te1 = derived(:,12)./derived(:,13);
-        %     Te2 = p2s_params(:,12)./p2s_params(:,13);
-        %     semilogy(derived(:,1),Te1,'k.',p2s_params(:,1),Te2,'r.',derived(:,1),derived(:,14),'ko',p2s_params(:,1),p2s_params(:,14),'ro');
-        %     ylim([0.01 10]);
-        %     grid on;
-        %     datetick('x',15);
-        %     ylabel('Te [V]');
-        %
-        %     subplot(4,1,4)
-        %     % Cal fact n/(dI/dV): (1.6e-19)^1.5 * 4 * pi * 0.025 / sqrt(2*pi*Te*9.1e-31);
-        %     k = sqrt(2*pi*9.1e-31) ./ ((1.6e-19)^1.5 * 4 * pi * 0.025^2);
-        %     semilogy(derived(:,1),1e-6*k*derived(:,8).*sqrt(Te1),'k.',p2s_params(:,1),1e-6*k*p2s_params(:,8).*sqrt(Te2),'r.');
-        %     ylim([0.1 100]);
-        %     grid on;
-        %     datetick('x',15);
-        %     ylabel('ne [cm-3]');
-        %
-        %     samexaxis('join');
-        %     drawnow;
-        %
+       
         %
         
         
@@ -370,9 +305,11 @@ else %% if sweep, do:
 %             nrfiles = len;
             
             tabindex(end,4:7)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),length(potbias),2}; %one index for bias voltages
-            
+                        tabindex{end,8}=b1;
+
             
             tabindex(end+1,1:7)={filename2,strrep(filename2,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len,length(potbias)+5};
+            tabindex{end,8}=b2+b3;
             %           tabindex(end+1,1:6)={filename3,strrep(filename3,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len};
             %one index for currents and two timestamps
             
@@ -385,7 +322,7 @@ else %% if sweep, do:
         
         clear scantemp;
     end
-    fclose(condfile); %write file nr 2, condensed data, terminated asap
+    fclose(twID2); %write file nr 2, condensed data, terminated asap
     
 end
 fclose(twID); %write file nr 1

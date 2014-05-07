@@ -170,8 +170,9 @@ for i=1:length(an_ind)
     
     %  phot ==
     
-    om1 = 0;
+    om1 =0;
     om2 = 0;
+    oldmatlab=[];
     
     for k=1:len
         %  a= cspice_str2et(timing{1,k});
@@ -184,7 +185,8 @@ for i=1:length(an_ind)
         if fout{k,3}==1
         %     [fout{k,4}{1},fout{k,4}{2}] = Vplasma(Vb,Iarr(:,k));           
              [om1,om2] = Vplasma(Vb,Iarr(:,k));
-       
+             
+             
              fout{k,4}{1} = om1;
              fout{k,4}{2} = om2;
              
@@ -211,7 +213,7 @@ for i=1:length(an_ind)
             fout{k+len,3}=mean(illuminati(1,k:k+1));
             if fout{k+len,3}==1           
                 %      [fout{k+len,4}{1},fout{k+len,4}{2}] = Vplasma(Vb2,Iarr2(:,k));
-                [om1,om2] = Vplasma(Vb2,Iarr2(:,k));
+                oldmatlab([om1,om2]) = Vplasma(Vb2,Iarr2(:,k));
                 fout{k+len,4}{1} = om1;
                 fout{k+len,4}{2} = om2;
 

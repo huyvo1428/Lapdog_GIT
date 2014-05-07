@@ -8,8 +8,6 @@
 global tabindex;
 tabindex = {};
 
-global an_tabindex;
-an_tabindex = {};
 
 
 for b = 1:nob   % Loop through all ops blocks
@@ -58,6 +56,9 @@ for b = 1:nob   % Loop through all ops blocks
     %
     %
     
+    
+    
+    %delete measurements during sweeps
     sct0temp= cellfun(@(s) s(4:end-1), {index(ob(p1s)).sct0str}, 'uni',false);
     sct1temp= cellfun(@(s) s(4:end-1), {index(ob(p1s)).sct1str}, 'uni',false);
     sweept1 = [str2double(sct0temp); str2double(sct1temp)];
@@ -71,7 +72,7 @@ for b = 1:nob   % Loop through all ops blocks
     sweept3 = [sweept1,sweept2];
     
     
-    %     %%%% Start TAB/LBL genesis
+    %     %%%% Start TAB genesis
     %
     %
     %
@@ -91,28 +92,14 @@ for b = 1:nob   % Loop through all ops blocks
     if(~isempty(p3el)) createTAB(derivedpath,ob(p3el),index,index(obs(b)).t0,'V3L',sweept3); end 
     if(~isempty(p3eh)) createTAB(derivedpath,ob(p3eh),index,index(obs(b)).t0,'V3H',sweept3); end 
     %Generate N data files
-   if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,index(obs(b)).t0,'I1L',sweept1); end
+    if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,index(obs(b)).t0,'I1L',sweept1); end
     if(~isempty(p2nl)) createTAB(derivedpath,ob(p2nl),index,index(obs(b)).t0,'I2L',sweept2); end
     if(~isempty(p1nh)) createTAB(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H',sweept1); end
     if(~isempty(p2nh)) createTAB(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H',sweept2); end
     
     if(~isempty(p3nl)) createTAB(derivedpath,ob(p3nl),index,index(obs(b)).t0,'I3L',sweept3); end
     if(~isempty(p3nh)) createTAB(derivedpath,ob(p3nh),index,index(obs(b)).t0,'I3H',sweept3); end
-    
-%  
-%     
-% %   Mill the HF data in this ob:
-%     
-%     if(p1eh)        an_hf(derivedpath,ob(p1eh),index,index(obs(b)).t0,'V1H'); end
-%     if(p2eh)        an_hf(derivedpath,ob(p2eh),index,index(obs(b)).t0,'V2H'); end
-%     if(p3eh)        an_hf(derivedpath,ob(p3eh),index,index(obs(b)).t0,'V3H'); end
-% 
-%     if(p1nh)        an_hf(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H'); end
-%     if(p2nh)        an_hf(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H'); end
-%     if(p3nh)        an_hf(derivedpath,ob(p3nh),index,index(obs(b)).t0,'I3H'); end
-% 
-% 
-% 
+
 
     
     

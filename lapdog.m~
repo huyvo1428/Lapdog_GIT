@@ -1,13 +1,14 @@
 % main -- LAP Dataset Overview and Geometry (lapdog) main file
 %
+
+%LAP DERIVED ARCHIVE GENERATION
+
+
 % Create overview of LAP ops and geometry files for a given data set.
 
 % anders.eriksson@irfu.se 2012-03-29
 % frejon@irfu.se 2014-04-28
 
-
-
-%For local execution via Matlab, to execute in batch mode, see lapdog.m
 
 
 %Quick description
@@ -33,17 +34,20 @@
 %specific file type)
 %
 
+function [] = lapdog(archpath, archID, missioncalendar)
 
 
 'LAPDOG - LAP Data Overview and Geometry'
-''
 
-% Define the dataset:
+     
 
-'lapdog: calling control...'
-control;
+% fprintf(1,'lapdog: Reading pds.conf\r ')
+batch_control;
 
 % Set up PDS keywords etc:
+
+   fprintf(1,'lapdog: calling preamble...\r')
+
 'lapdog: calling preamble...'
 preamble;
 
@@ -60,9 +64,12 @@ else
     indexgen;
     'lapdog: splitting files at midnight..'
     indexcorr;
-    save(indexfile,'index');
-    
+    save(indexfile,'index');    
 end
+
+%inde   xcorr;
+%indexcorr
+%save(indexfile,'index');
 
 
 % Generate daily geometry files:
@@ -91,12 +98,24 @@ else
   if exist('tabindex','dir')~=7
       mkdir('tabindex');
   end
-   save(tabindexfile,'tabindex');
+  save(tabindexfile,'tabindex');
 end
 
 
-analysis;
-
+an_IV;
+% 
+% 
+% tabindexfile = sprintf('an_tabindex/an_tabindex_%s.mat',archiveid);
+% fp = fopen(tabindexfile,'r');
+% 
+% if(fp > 0)
+%     fclose(fp);
+%     load(tabindexfile);
+%     'lapdog: succesfully loaded index'
+%     
+% else
+%     
+% end
 
 
     
@@ -108,6 +127,6 @@ end
 
 
 
+end
 
-'lapdog: Parmesan -Done!'
 % End of main.m

@@ -77,7 +77,6 @@ i_spk = strcmpi(s, 'SPK');
 i_mice = strcmpi(s, 'MICE');
 i_irfu = strcmpi(s, 'irfu-matlab');
 % 
-% dynampath = strrep(mfilename('fullpath'),'/paths','');
 % 
 % 
 % p = strrep(p,p{1,1},dynampath);
@@ -86,6 +85,17 @@ i_irfu = strcmpi(s, 'irfu-matlab');
 spiceDirectory = cell2mat(cellstr(p(i_spk)));
 micePath = cell2mat(cellstr(p(i_mice)));
 irfuPath = cell2mat(cellstr(p(i_irfu)));
+
+% 
+% 
+% if strcmp(spiceDirectory(1:49),'/Users/frejon/Documents/RosettaArchive/Lapdog_GIT')
+%     dynampath = strrep(mfilename('fullpath'),'/paths','');
+% 
+% spiceDirectory = strrep(spiceDirectory,'/Users/frejon/Documents/RosettaArchive/Lapdog_GIT',dynampath);
+% micePath = strrep(micePath,'/Users/frejon/Documents/RosettaArchive/Lapdog_GIT',dynampath);
+% irfuPath = strrep(irfuPath,'/Users/frejon/Documents/RosettaArchive/Lapdog_GIT',dynampath);
+%     
+% end
 
 
 %--------------------------------------------------------------------------

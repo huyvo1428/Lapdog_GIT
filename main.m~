@@ -3,7 +3,7 @@
 % Create overview of LAP ops and geometry files for a given data set.
 
 % anders.eriksson@irfu.se 2012-03-29
-% 
+% frejon@irfu.se 2014-04-28
 
 
 
@@ -16,7 +16,7 @@
 %specified from the index.dat file in outputs it into a useful "index"
 %variable
 %4. some post-processing of the index is needed in indexcorr to split files
-%exactly at midnight
+%exactly at midnight, OBS some files created in temp/ folder, 
 %5.generates daily geometry files
 %6. Seperates all files into macro operation blocks, each block terminated 
 %by midnight or new macroid
@@ -61,10 +61,6 @@ else
     
 end
 
-%inde   xcorr;
-%indexcorr
-%save(indexfile,'index');
-
 
 % Generate daily geometry files:
 if(do_geom)
@@ -87,24 +83,17 @@ if(fp > 0)
 else
 'lapdog: calling process...'
   process;
+  
+  
+  if exist('tabindex','dir')~=7
+      mkdir('tabindex');
+  end
    save(tabindexfile,'tabindex');
 end
 
 
 an_IV;
-% 
-% 
-% tabindexfile = sprintf('an_tabindex/an_tabindex_%s.mat',archiveid);
-% fp = fopen(tabindexfile,'r');
-% 
-% if(fp > 0)
-%     fclose(fp);
-%     load(tabindexfile);
-%     'lapdog: succesfully loaded index'
-%     
-% else
-%     
-% end
+
 
 
     
