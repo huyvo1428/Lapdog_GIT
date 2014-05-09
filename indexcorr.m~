@@ -12,7 +12,7 @@ lindex = length(index);
 
  folder= sprintf('%s/temp',dynampath);
     if exist(folder,'dir')~=7
-        mkdir(folder);
+        mkdir('folder');
     end
     
 
@@ -61,7 +61,7 @@ for i=1:length(index)
                 
             else %IF NOT THE SAME DATE
                 if (flag==1) %if first item
-                    tempfilename = sprintf('%s/appendix_%i_%i_%s',folder,i,j,index(i).tabfile(end-28:end));   %let's preserve most of the file name
+                    tempfilename = sprintf('%s/appendix_%i_%i_%s',i,j,index(i).tabfile(end-28:end));   %let's preserve most of the file name
                     
                     % tempfilename = sprintf('%s/temp/appendix_%i_%i_%s',archivepath,i,j,index(i).tabfile(end-28:end));   %let's preserve most of the file name
                     twID = fopen(tempfilename,'w');

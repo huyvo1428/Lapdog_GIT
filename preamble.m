@@ -21,14 +21,6 @@ end
 
 % Read mission calendar:
 % (this path should really be dynamically read from user's pds.conf file)
-% !!!
-%missioncalendar = '/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/Mission_Calendar.txt';
-%should be in control.m
-
-
-   fprintf(1,'lapdog: calling %s...\n',missioncalendar)
-
-
 
 fc = fopen(missioncalendar,'r');
 

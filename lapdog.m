@@ -53,8 +53,12 @@ preamble;
 
 % Load or, if not defined, generate index:
 % fprintf(1,'lapdog: load indices if existing...')
+dynampath= mfilename('fullpath'); %find path & remove/lapdog from string
+dynampath = dynampath(1:end-7);
 
-indexfile = sprintf('index/index_%s.mat',archiveid);
+fprintf(1,'lapdog: %s\n',dynampath)
+
+indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
 % fp = fopen(indexfile,'r');
 % if(fp > 0)
 %     fclose(fp);
@@ -65,7 +69,14 @@ indexfile = sprintf('index/index_%s.mat',archiveid);
     indexgen;
     fprintf(1,'lapdog: splitting files at midnight..\n')   
     indexcorr;
-    if exist('index','dir')~=7        mkdir('index');    end
+    
+    
+    folder= sprintf('%s/index',dynampath);
+    if exist(folder,'dir')~=7
+        mkdir(folder);
+    end
+    
+
     save(indexfile,'index');
 % end
 
@@ -82,7 +93,7 @@ fprintf(1,'lapdog: calling opsblocks...\n')
 opsblocks;
 
 if(do_mill)
-    tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
+    tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);
 %     fp = fopen(tabindexfile,'r');
 %     if(fp > 0)
 %         fclose(fp);
@@ -92,13 +103,16 @@ if(do_mill)
         
         fprintf(1,'lapdog: calling process...\n')
         process;
-
-        if exist('tabindex','dir')~=7
-            mkdir('tabindex');
+        
+        
+        folder= sprintf('%s/tabindex',dynampath);
+        if exist(folder,'dir')~=7
+            mkdir(folder);
         end
-        save(tabindexfile,'tabindex');
-    %end
-    
+        
+       save(tabindexfile,'tabindex');
+        %end
+        
     
     
     analysis;

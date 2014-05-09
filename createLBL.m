@@ -100,11 +100,11 @@ if(~isempty(tabindex));
                 fprintf(fid,'COLUMNS = %d\n',tabindex{i,7});
                 fprintf(fid,'ROW_BYTES = 30\n');   %%row_bytes here!!!
                 
-                fprintf(fid,'DESCRIPTION = %s"\n', strcat(tempfp{1,2}{34,1}(1:end-1),'Sweep step bias and time between each step'));
+                fprintf(fid,'DESCRIPTION = %s"\n', strcat(tempfp{1,2}{34,1}(1:end-1),' Sweep step bias and time between each step'));
                 %DELIMITER EVERYWHERE???
                 fprintf(fid,'OBJECT = COLUMN\n');
                 fprintf(fid,'NAME = SWEEP_TIME\n');
-                fprintf(fid,'DATA_TYPE = TIME\n');
+                fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
                 fprintf(fid,'START_BYTE = %i\n',byte);
                 fprintf(fid,'BYTES = 14\n');
                 byte=byte+14+2;
@@ -660,9 +660,9 @@ if(~isempty(an_tabindex));
             %             end
             
             
-            fprintf(fid,'ROW_BYTES = %f',an_tabindex{i,9});   %%row_bytes here!!!
+            fprintf(fid,'ROW_BYTES = %i"\n',an_tabindex{i,9});   %%row_bytes here!!!
             
-            fprintf(fid,'DESCRIPTION = "%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT\n"',mode);
+            fprintf(fid,'DESCRIPTION = "%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT"\n',mode);
             fprintf(fid,'DELIMITER = ", "\n');
 
             fprintf(fid,'OBJECT = COLUMN\n');
@@ -922,7 +922,7 @@ if(~isempty(an_tabindex));
             fprintf(fid,'COLUMNS = %d\n',an_tabindex{i,5});
             fprintf(fid,'ROW_BYTES = 14\n');   %%row_bytes here!!!
             
-            fprintf(fid,'DESCRIPTION = "%s FREQUENCY LIST OF PSD SPECTRA FILE\n"',lname(end-10:end-9));
+            fprintf(fid,'DESCRIPTION = "FREQUENCY LIST OF PSD SPECTRA FILE"\n');
             
             
             
@@ -957,7 +957,7 @@ if(~isempty(an_tabindex));
             fprintf(fid,'COLUMNS = %d\n',an_tabindex{i,5});
             fprintf(fid,'ROW_BYTES = %d\n',an_tabindex{i,9});   %%row_bytes here!!!
             
-            fprintf(fid,'DESCRIPTION = "MODEL FITTED ANALYSIS OF %s SWEEP FILE\n"',tabindex{an_tabindex{i,6},2});
+            fprintf(fid,'DESCRIPTION = "MODEL FITTED ANALYSIS OF %s SWEEP FILE"\n',tabindex{an_tabindex{i,6},2});
             
             
             
