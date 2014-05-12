@@ -78,11 +78,18 @@ lblrev = '4th draft';
 %archivepath = '/data/LAP_ARCHIVE/RO-SS-RPCLAP-3-RVM1-CALIB-V1.0';
 
 % 
-% RVM2 calibrated:
-shortphase = 'RVM2';
-archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
-
+% % RVM2 calibrated:
+% shortphase = 'RVM2';
+% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
 % 
+
+
+% RVM2 calibrated:
+shortphase = 'M03';
+archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-M03-CALIB-V1.0';
+
+
+% % 
 % % MARS calibrated:
 %  shortphase = 'MARS';
 %  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-M-RPCLAP-3-MARS-CALIB-V1.0';
@@ -102,7 +109,7 @@ archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECO
 
 % (this path should really be dynamically read from user's pds.conf file)
 % !!!
-missioncalendar = '/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/Mission_Calendar.txt';
+missioncalendar = '/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/Mission_Calendar_hacked.txt';
 
 
 

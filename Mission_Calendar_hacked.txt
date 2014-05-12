@@ -1,0 +1,39 @@
+
+# EXTRACTED MISSION TIMELINE:
+#
+# Prepared by: Reine Gill
+# Tweaked version for internal LAP use by aie 140507
+#
+# ESOC European Space Operations Centre
+# European Space Agency
+
+# ROSETTA Mission Calendar
+# RO-ESC-TN-5026
+# RO-ESC-PL-5026
+#
+#MISSION_PHASE_NAME        :ABBR:CCYYMMDD  :DUR :TARGET_NAME_IN_DATA_SET_ID:TARGET_ID :TARGET_TYPE   :TARGET_NAME_IN_DATA_SET_NAME
+"GROUND"                   :GRND:2000-01-01:1520:"CHECKOUT"                :X         :"N/A"         :CHECK
+"LAUNCH"                   :LEOP:2004-03-02:0003:"CHECKOUT"                :X         :"N/A"         :CHECK 
+"COMMISSIONING"            :CVP :2004-03-05:0226:"CHECKOUT"                :X         :"N/A"         :CHECK
+"EARTH SWING-BY 1"         :EAR1:2004-10-17:0170:"EARTH"                   :E         :"PLANET"      :EARTH
+"CRUISE 2"                 :CR2 :2005-04-05:0480:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
+"MARS SWING-BY"            :MARS:2006-07-29:0304:"MARS"                    :M         :"PLANET"      :EARTH
+"CRUISE 3"                 :CR3 :2007-05-29:0107:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
+"EARTH SWING-BY 2"         :EAR2:2007-09-13:0092:"EARTH"                   :E         :"PLANET"      :EARTH
+"CRUISE 4-1"               :CR4A:2007-12-14:0204:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
+"STEINS FLY-BY"            :AST1:2008-07-05:0124:"2867 STEINS"             :A         :"ASTEROID"    :STEINS
+"CRUISE 4-2"               :CR4B:2008-11-06:0311:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
+"EARTH SWING-BY 3"         :EAR3:2009-09-13:0092:"EARTH"                   :E         :"PLANET"      :EARTH
+"CRUISE 5"                 :CR5 :2009-12-14:0147:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
+"LUTETIA FLY-BY"           :AST2:2010-05-10:0124:"21 LUTETIA"              :A         :"ASTEROID"    :LUTETIA
+"RENDEZVOUS MANOEUVRE 1"   :RVM1:2010-09-11:0306:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
+"CRUISE 6"                 :CR6 :2011-07-14:0917:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
+"RENDEZVOUS MANOEUVRE 2"   :RVM2:2014-01-23:0211:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
+"MTP 03"                   :M03 :2014-05-07:1248:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
+"MTP 04"                   :M04 :2014-06-04:1050:"67P/CHURYMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
+"MTP 05"                   :M05 :2014-07-02:0835:"67P/CHURYMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
+"MTP 06"                   :M06 :2014-08-01:1000:"67P/CHURYMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
+"MTP 07"                   :M07 :2014-09-02:1000:"67P/CHURYMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
+"MTP 08"                   :M08 :2014-09-23:1000:"67P/CHURYMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
+"MTP 09"                   :M09 :2014-10-24:1000:"67P/CHURYMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
+"MTP 10"                   :M10 :2014-11-21:0000:"67P/CHURYMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P

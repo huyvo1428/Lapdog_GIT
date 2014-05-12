@@ -5,7 +5,7 @@
 
 function [] = an_hf(an_ind,tabindex,fileflag)
 
-diag = 0;
+diag = 1;
 
 plotpsd=[];
 plotT=[];

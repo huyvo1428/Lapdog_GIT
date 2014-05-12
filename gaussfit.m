@@ -20,6 +20,10 @@ function [sigma, mu] = gaussfit( x, y, sigma0, mu0 )
 % 
 % VERSION: 23.02.2012
 % 
+
+
+%some edits by Fredrik Johansson 2014-05-12
+
 % EXAMPLE USAGE:
 % x = -10:1:10;
 % s = 2;
@@ -100,9 +104,11 @@ for i=1:Nmax
     
     if( sigma < 0 )
         sigma = abs( sigma );
+        sigma = 'NaN';
+        
         fprintf( 'Instability detected! Rerun with initial values sigma0 and mu0! \n\r' );
         fprintf( 'Check if your data is properly scaled! p.d.f should approx. sum up to \n\r' );
-        exit;
+        break;
     end
 end
 

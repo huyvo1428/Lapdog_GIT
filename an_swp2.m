@@ -22,6 +22,7 @@ kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
 
 
 
+    
 
 for i=1:length(an_ind)
     
@@ -124,20 +125,25 @@ for i=1:length(an_ind)
     end
     %    orbit('Rosetta',{'2007-09-07';'2007-09-08'},'EARTH','ECLIPJ2000')
     
+    
+    %need to convert target to correct string for NAIF SPICE TOOLKIT KERNEL
     if strcmp(targetfullname,'SOLAR WIND')
            [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),'SUN','ECLIPJ2000');
+           
+           
+    elseif strcmp(target,'67P')
+           [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),'CHURYUMOV-GERASIMENKO','ECLIPJ2000');
+        
     else
-    
-   
+        
     [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),targetfullname,'ECLIPJ2000');
     end
     
     
+        cspice_furnsh(kernelFile);
     
+
     clear junk
-    
-    
-    cspice_furnsh(kernelFile);
     
     if strcmp(mode(2),'1');
         %current (Elias) SAA = z axis, Anders = x axis.
@@ -282,7 +288,7 @@ for i=1:length(an_ind)
     an_tabindex{end,9} = row_bytes;
     
 cspice_unload(kernelFile);
-end
 
+end
 
 end

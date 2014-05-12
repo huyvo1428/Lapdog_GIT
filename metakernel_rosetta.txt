@@ -28,6 +28,9 @@ This file specifies the SPICE kernels to be loaded by the custom Rosetta SPICE f
 		'$SPK/ROS_110405_STEP.TSC'
 		'$SPK/ROS_V19.TF'
 		'$SPK/ROS_SA_2005_V0001.BC'
+		'$SPK/CORB_DV_004_01_______00012.BSP'
+		'$SPK/RATM_DM_003_01____A__00008.BC'
+		'$SPK/RATM_DM_004_01____A__00009.BC'
 	)
 \begintext
 (After the begintext line we again find ourselves in comment mode.) Above, SPK was defined to point to the parent directory of the Rosetta kernel files. IT IS ABSOLUTELY NECESSARY THAT THE PARENT DIRECTORY OF THE KERNEL FILES BE CORRECTLY SPECIFIED! Change the PATH_VALUES line to give the search path to this directory on your machine, otherwise the custom Rosetta SPICE functions will not work for you.

@@ -9,6 +9,8 @@ lindex = length(index);
 %mkdir(sprintf('%s/temp',archivepath))
 
 
+dynampath= mfilename('fullpath'); %find path & remove/lapdog from string
+dynampath = dynampath(1:end-10);
 
  folder= sprintf('%s/temp',dynampath);
     if exist(folder,'dir')~=7
