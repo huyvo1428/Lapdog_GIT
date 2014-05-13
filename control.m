@@ -78,16 +78,16 @@ lblrev = '4th draft';
 %archivepath = '/data/LAP_ARCHIVE/RO-SS-RPCLAP-3-RVM1-CALIB-V1.0';
 
 % 
-% % RVM2 calibrated:
-% shortphase = 'RVM2';
-% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
-% 
-
-
 % RVM2 calibrated:
-shortphase = 'M03';
-archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-M03-CALIB-V1.0';
+shortphase = 'RVM2';
+archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
 
+
+% 
+% % M03 calibrated:
+% shortphase = 'M03';
+% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-M03-CALIB-V1.0';
+% 
 
 % % 
 % % MARS calibrated:

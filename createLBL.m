@@ -66,8 +66,10 @@ if(~isempty(tabindex));
         %      atmpsct0 = index(tabindex{46,3}).sct0str;
         
         
-        tempfp{1,2}{32,1} = strcat(index(tabindex{i,3}).sct0str(1:17),'"');  %% sc start time
-        tempfp{1,2}{33,1} = sprintf('"%s/%014.3f"',index(tabindex{i,3}).sct0str(2),tabindex{i,5}); %% sc stop time
+        
+        shitstr = index(tabindex{i,3}).sct0str;
+        tempfp{1,2}{32,1} = strcat(index(tabindex{i,3}).sct0str(1:end-1),'"');  %% sc start time
+        tempfp{1,2}{33,1} = sprintf('"%s/%017.6f"',index(tabindex{i,3}).sct0str(2),tabindex{i,5}); %% sc stop time
         %   tempfp{1,2}{56,1} = sprintf('%i',tabindex{i,6}); %% rows
         
         
@@ -660,7 +662,7 @@ if(~isempty(an_tabindex));
             %             end
             
             
-            fprintf(fid,'ROW_BYTES = %i"\n',an_tabindex{i,9});   %%row_bytes here!!!
+            fprintf(fid,'ROW_BYTES = %i\n',an_tabindex{i,9});   %%row_bytes here!!!
             
             fprintf(fid,'DESCRIPTION = "%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT"\n',mode);
             fprintf(fid,'DELIMITER = ", "\n');
@@ -920,10 +922,11 @@ if(~isempty(an_tabindex));
             fprintf(fid,'INTERCHANGE_FORMAT = ASCII\n');
             fprintf(fid,'ROWS = %d\n',an_tabindex{i,4});
             fprintf(fid,'COLUMNS = %d\n',an_tabindex{i,5});
-            fprintf(fid,'ROW_BYTES = 14\n');   %%row_bytes here!!!
+            fprintf(fid,'ROW_BYTES = %i\n',an_tabindex{i,9}); 
+          %  fprintf(fid,'ROW_BYTES = 14\n');   %%row_bytes here!!!
             
             fprintf(fid,'DESCRIPTION = "FREQUENCY LIST OF PSD SPECTRA FILE"\n');
-            
+            fprintf(fid,'DELIMITER = ", "\n');
             
             
             fprintf(fid,'OBJECT = COLUMN\n');
@@ -931,10 +934,29 @@ if(~isempty(an_tabindex));
             fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
             fprintf(fid,'START_BYTE = 1\n');
             fprintf(fid,'BYTES = 14\n');
+            fprintf(fid,'ITEMS = %i\n',an_tabindex{i,5});
             fprintf(fid,'UNIT = kHz\n');
             fprintf(fid,'FORMAT = E14.7\n');
-            fprintf(fid,'DESCRIPTION = "FREQUENCY LIST FOR CORRESPONDING PSD SPECTRA FILE"\n');
+            psdname = strrep(an_tabindex{i,2},'FRQ','PSD');
+            fprintf(fid,'DESCRIPTION = "FREQUENCY LIST OF PSD SPECTRA FILE %s"\n', psdname);
             fprintf(fid,'END_OBJECT  = COLUMN\n');
+            
+%             
+%             
+%             DELIMITER = ", "
+% OBJECT = COLUMN
+% NAME = FREQUENCY LIST
+% DATA_TYPE = ASCII_REAL
+% START_BYTE = 1
+% BYTES = 13
+% ITEMS = 65
+% UNIT = kHz
+% FORMAT = E14.7
+% DESCRIPTION = "FREQUENCY LIST FOR CORRESPONDING PSD SPECTRA FILE"
+% END_OBJECT  = COLUMN
+% 
+%             
+            
             
             fprintf(fid,'END_OBJECT  = TABLE\n');
             fprintf(fid,'END');

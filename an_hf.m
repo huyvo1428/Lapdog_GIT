@@ -5,7 +5,7 @@
 
 function [] = an_hf(an_ind,tabindex,fileflag)
 
-diag = 1;
+diag = 0;
 
 plotpsd=[];
 plotT=[];
@@ -314,7 +314,10 @@ for i=1:len
     afID = fopen(fname,'w');
     
     
-    fprintf(afID,'%14.7e\n',freq);
+    f1= fprintf(afID,'%14.7e, ',freq(1:end-1));
+    f2= fprintf(afID,'%14.7e',freq(end));
+
+    
  %   dlmwrite(fname,freq,'precision', '%14.7e');
     fclose(afID);
     
@@ -354,12 +357,12 @@ for i=1:len
     an_tabindex{end,2} = strrep(fname,ffolder,''); %shortfilename
     an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
     %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
-    an_tabindex{end,4} = length(freq); %number of rows
-    an_tabindex{end,5} = 1; %number of columns
+    an_tabindex{end,4} = 1; %number of rows
+    an_tabindex{end,5} = length(freq); %number of columns
     %an_tabindex{end,6} = an_ind(i);
     an_tabindex{end,7} = 'frequency'; %type
     an_tabindex{end,8} = timing;
-    an_tabindex{end,9} = 14;
+    an_tabindex{end,9} = f1+f2;
     
     an_tabindex{end+1,1} = sname;%start new line of an_tabindex, and record file name
     an_tabindex{end,2} = strrep(sname,ffolder,''); %shortfilename
