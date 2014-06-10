@@ -16,9 +16,9 @@ foutarr=cell(1,7);
 %outputarr =
 %
 
+j=0;
 
-
-
+try
 
 
 for i=1:length(an_ind)
@@ -234,10 +234,7 @@ for i=1:length(an_ind)
     %     tabindex
     
     
-    
-    % if i ==length(an_ind) %only print if this is last file of the loop, otherwise perform print check at beginning of loop
-    
-    
+     
     %For LBL file genesis, we need an index with name, shortname,
     %original file
     
@@ -281,6 +278,18 @@ for i=1:length(an_ind)
     
     
 end%for main loop
+
+catch err
+    
+    fprintf(1,'Error at loop step %i or  foutarr{}(%i), file %s',i,j,tabindex{an_ind(i),1});
+
+    err
+    err.stack.name
+    err.stack.line
+
+    
+end
+
 end%function
 
 

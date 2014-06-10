@@ -103,8 +103,8 @@ for i=1:Nmax
     mu = a(2);
     
     if( sigma < 0 )
-        sigma = abs( sigma );
-        sigma = 'NaN';
+        %sigma = abs( sigma );
+        sigma = NaN;
         
         fprintf( 'Instability detected! Rerun with initial values sigma0 and mu0! \n\r' );
         fprintf( 'Check if your data is properly scaled! p.d.f should approx. sum up to \n\r' );

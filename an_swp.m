@@ -206,3 +206,16 @@ end   % Case of no photoemission
 
 % Collect parameters:
 params = [ts vb(lastneg) vb(firstpos) vx poli(1) poli(2) pole(1) pole(2) p vbinf diinf d2iinf Tph If0 vs];
+
+%p_out= num2cell(params);
+% ind = isnan(params);
+% p_out(1,ind)={'N/A'};
+
+
+end
+
+
+
+
+
+

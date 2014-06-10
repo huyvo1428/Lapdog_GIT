@@ -98,44 +98,56 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
             scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
         end
         
+        
         %at some macros, we have measurements taken during sweeps, which leads to weird results
         %we need to find these and remove them
         
         if ~isempty(sweept)
+            % don't loop if no sweep during macro or if file starts after last sweep or ends before first sweep
+            if scantemp{1,2}(end)<sweept(1,1) || scantemp{1,2}(1)>sweept(2,end)
+                %do nothing
+            else %do something
+                
+                dt = scantemp{1,2}(2)-scantemp{1,2}(1); %timestep between measurements.
+                
+                lee= length(scantemp{1,2}(:));
+                del = false(1,lee);
+                
+                for j =1:length(sweept(1,:))  %try to break this loop as early as possible
+                    
+                    if scantemp{1,2}(end)+dt <sweept(1,j) %no need to cycle through if we passed point of interest 
+                        break     %(if last input is before j:th sweep start, we can safely break j-loop here)
+                    end
+                    
+                    tmpdel=false(1,lee);
+                    after  = scantemp{1,2}(:)+dt  >= sweept(1,j);   %measurement window after sweep start
+                    tmpdel(after) = scantemp{1,2}(after)   <= sweept(2,j);   %before sweep ends
+                    
+                    del(tmpdel)=1;        %assign deletion flag to all indices that are within sweep times
+                    
+                    %NB: sweep stop % start time (from LBL files) seem to be roughly
+                    %0.2 seconds before and after first and final measurement, so we
+                    %probably won't have to increase "deletion window"
+                    %NB2: above comment seems obsolete
+                    
+                end%for
+                
+                if sum(unique(del)) %delete flagged measurements, if = 1 if any delete flags, 0 otherwise
+                    
+                    % instead of remove, do qualityflag?
+                    scantemp{1,1}(del)    = [];
+                    scantemp{1,2}(del)    = [];
+                    scantemp{1,3}(del)    = [];
+                    scantemp{1,4}(del)    = [];
+                    if fileflag(2) =='3'
+                        scantemp{1,5}(del)    = [];
+                    end%if
+                                        
+                    
+                end%if delete
+            end%if loop
             
-            lee= length(scantemp{1,2}(:));
-            del = false(1,lee);
-            for j =1:length(sweept(1,:))
- 
-                if scantemp{1,2}(end)<sweept(1,j) || scantemp{1,2}(1)>sweept(2,j)
-    %                j
-                    break
-                end
-                tmpdel=false(1,lee);
-                
-%                 IDX = uint32(1:size(A,1));
-%                 ind = IDX(A(:,1) >= L & A(:,1) < U);
-                after  = scantemp{1,2}(:)   >= sweept(1,j);   %after sweep start
-                tmpdel(after) = scantemp{1,2}(after)   <= sweept(2,j);   %before sweep ends
-                
-                del(tmpdel)=1;                 
-                
-                %NB: sweep stop % start time (from LBL files) seem to be roughly
-                %0.2 seconds before and after first and final measurement, so we
-                %probably won't have to increase "deletion window"
-            end
-            if ~isempty(del)
-                
-                % instead of remove, do qualityflag?
-                scantemp{1,1}(del)    = [];
-                scantemp{1,2}(del)    = [];
-                scantemp{1,3}(del)    = [];
-                scantemp{1,4}(del)    = [];
-                if fileflag(2) =='3'
-                    scantemp{1,5}(del)    = [];
-                end
-                
-            end%if
+               
             
         end%  sweep window deletions
         
@@ -291,13 +303,7 @@ else %% if sweep, do:
         b3= fprintf(twID2,', %14.7e',curtemp.');
         fprintf(twID2,'\n');
         
-       
-        %
-        
-        
-        %         % dlmwrite(filename3,derived,'-append','precision','%14,7e');
-        %         dlmwrite(filename3,derived,'-append');
-        %
+   
         
         if (i==len)
             

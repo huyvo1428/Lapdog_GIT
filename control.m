@@ -79,15 +79,20 @@ lblrev = '4th draft';
 
 % 
 % RVM2 calibrated:
-shortphase = 'RVM2';
-archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
-
-
+% shortphase = 'RVM2';
+% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
 % 
+% % 
+% % 
 % % M03 calibrated:
 % shortphase = 'M03';
-% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-M03-CALIB-V1.0';
-% 
+% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-M03-CALIB-V0.1';
+
+
+ % M03 calibrated:
+ shortphase = 'M04';
+ archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M04-CALIB-V0.1';
+
 
 % % 
 % % MARS calibrated:
@@ -118,3 +123,9 @@ missioncalendar = '/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/Mission_Cal
 
 derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-5');
 derivedpath = strrep(derivedpath,'CALIB','DERIV');
+
+
+
+shortphase
+archivepath
+

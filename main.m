@@ -51,6 +51,9 @@ preamble;
 'lapdog: load indices if existing...'
 indexfile = sprintf('index/index_%s.mat',archiveid);
 fp = fopen(indexfile,'r');
+
+ fp = -1;
+
 if(fp > 0)
     fclose(fp);
     load(indexfile);
@@ -78,6 +81,9 @@ opsblocks;
 if(do_mill)
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(tabindexfile,'r');
+
+ fp = -2;
+
 if(fp > 0)
     fclose(fp);
     load(tabindexfile);
@@ -91,7 +97,7 @@ else
   if exist('tabindex','dir')~=7
       mkdir('tabindex');
   end
-   save(tabindexfile,'tabindex');
+ %  save(tabindexfile,'tabindex');
 end
 
 
