@@ -16,7 +16,7 @@ p =str2double(probenr);
 % Set default output:
 params = [NaN NaN NaN NaN NaN NaN NaN NaN NaN p NaN NaN NaN NaN NaN NaN];
 
-diag = 0;  % Set to one if diagnostic
+diag = 1;  % Set to one if diagnostic
 if(diag)
     figure(159);
 end

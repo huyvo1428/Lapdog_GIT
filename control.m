@@ -89,7 +89,7 @@ lblrev = '4th draft';
 % archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-M03-CALIB-V0.1';
 
 
- % M03 calibrated:
+ % M04 calibrated:
  shortphase = 'M04';
  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M04-CALIB-V0.1';
 
@@ -102,11 +102,11 @@ lblrev = '4th draft';
 % 
 
 % % % Available mission phase short names:
-% % GRND  LEOP   CVP  EAR1
-% %  CR2  MARS   CR3  EAR2
-% % CR4A  AST1  CR4B  EAR3
-% %  CR5  AST2  RVM1   CR6  
-% % RVM2   GMP   SSP    CE
+% % GRND  LEOP   CVP  EAR1  M03 M08   
+% %  CR2  MARS   CR3  EAR2  M04 M09
+% % CR4A  AST1  CR4B  EAR3  M05 M10
+% %  CR5  AST2  RVM1   CR6  M06
+% % RVM2   GMP   SSP    CE  M07
 %  EXT
 
 % 5. Mission Calendar

@@ -4,7 +4,7 @@
 function []= an_swp2(an_ind,tabindex,targetfullname)
 
 global an_tabindex;
-
+global target;
 %antemp ='';
 
 
@@ -33,6 +33,9 @@ try
         rfile =tabindex{an_ind(i),1};
         rfolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
         mode=rfile(end-6:end-4);
+        diagmacro=rfile(end-10:end-8);
+        
+        
         arID = fopen(tabindex{an_ind(i),1},'r');
         
         scantemp = textscan(arID,'%s','delimiter',',','CollectOutput', true);
@@ -128,17 +131,22 @@ try
         
         
         %need to convert target to correct string for NAIF SPICE TOOLKIT KERNEL
-        if strcmp(targetfullname,'SOLAR WIND')
-            [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),'SUN','ECLIPJ2000');
-            
-            
-        elseif strcmp(target,'67P')
-            [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),'CHURYUMOV-GERASIMENKO','ECLIPJ2000');
-            
-        else
-            
-            [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),targetfullname,'ECLIPJ2000');
-        end
+        
+        [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000');
+        
+        
+        
+%         if strcmp(targetfullname,'SOLAR WIND')
+%             [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),'SUN','ECLIPJ2000');
+%             
+%             
+%         elseif strcmp(target,'67P')
+%             [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),'CHURYUMOV-GERASIMENKO','ECLIPJ2000');
+%             
+%         else
+%             
+%             [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),targetfullname,'ECLIPJ2000');
+%         end
         
         
         cspice_furnsh(kernelFile);
