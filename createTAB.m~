@@ -334,7 +334,7 @@ else %% if sweep, do:
             
             qf= zeros(length(potbias),1);
             
-            qf(unique(qftest)) = 2; %low sample size quality factor
+            qf(unique(qftest)) = 2; %low sample size quality fact
             
 %            qftemp(unique(qftest)) = qftemp(unique(qftest))+2; Doesn't
 %            work
@@ -346,8 +346,7 @@ else %% if sweep, do:
         
         
         
-%                curtemp = accumarray(inter,scantemp{1,3}(:),[],@mean); 
-
+        
        %
         curtemp = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN); 
         %careful here, what if all measurements at one potential step is missing due to LDL interference? fill with nan
