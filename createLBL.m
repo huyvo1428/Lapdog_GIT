@@ -1,6 +1,5 @@
 %createLBL.m
-
-%%DATAFILE .LBL FILES
+%CREATE .LBL FILES, FROM PREVIOUS LBL FILES
 
 strnow = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF');
 

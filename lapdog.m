@@ -1,16 +1,12 @@
 % main -- LAP Dataset Overview and Geometry (lapdog) main file
 %
-
-%LAP DERIVED ARCHIVE GENERATION
-
-
+% LAP DERIVED ARCHIVE GENERATION
 % anders.eriksson@irfu.se 2012-03-29
 % frejon@irfu.se 2014-05-07
-
-
+%
 %For batch mode execution via script, to execute local execution in Matlab, see main.m
-
-
+%
+%
 %Quick description
 %1. The program is designed to be called by a script, and somewhat controlled in batch_control.m, with no other user
 % input necessary

@@ -1,9 +1,7 @@
-%an_daily
-
-
-
 function []= an_downsample(an_ind,tabindex,intval)
-%count = 0;
+%function []= an_downsample(an_ind,tabindex,intval)
+
+%%count = 0;
 %oldUTCpart1 ='shirley,you must be joking';
 
 global an_tabindex;
@@ -99,8 +97,11 @@ for i=1:length(an_ind)
     %collect files of same macro? or skip macro information, but contain inside LBL file
     %RPCLAP_YYMMDD_DWNSMP_32S_V1L
     %RPCLAP_YYMMDD_hhmmss_32S_V1D
+    afname =tabindex{an_ind(i),1};
+    afname(end-10:end-8) =sprintf('%02iS',intval);
     
-    afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-10:end-8),sprintf('%02iS',intval));
+    
+    %afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-10:end-8),sprintf('%02iS',intval));
     afname(end-4) = 'D';
     %afname = strrep(afname,afname(end-4),'D');
     affolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');

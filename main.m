@@ -1,15 +1,9 @@
 % main -- LAP Dataset Overview and Geometry (lapdog) main file
 %
 % Create overview of LAP ops and geometry files for a given data set.
-
 % anders.eriksson@irfu.se 2012-03-29
 % frejon@irfu.se 2014-04-28
-
-
-
 %For local execution via Matlab, to execute in batch mode, see lapdog.m
-
-
 %Quick description
 %1. The program is designed to be controlled in control.m, with no other user
 % input necessary

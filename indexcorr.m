@@ -1,4 +1,4 @@
-% Some doublecheck on index creation
+% indexcorr.m Some corrections after index creation
 
 count = 0;
 

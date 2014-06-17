@@ -193,9 +193,9 @@ try
             
             
             fout{k,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati);
-            fout{k,2} =mean(SAA(1,2*k-1:2*k));
+            fout{k,2} = mean(SAA(1,2*k-1:2*k));
             
-            fout{k,3}=mean(illuminati(1,2*k-1:2*k));
+            fout{k,3} = mean(illuminati(1,2*k-1:2*k));
             if fout{k,3}==1
                 %     [fout{k,4}{1},fout{k,4}{2}] = Vplasma(Vb,Iarr(:,k));
                 [om1,om2] = Vplasma(Vb,Iarr(:,k));

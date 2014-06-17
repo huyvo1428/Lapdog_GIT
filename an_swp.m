@@ -1,6 +1,5 @@
 function params = an_swp(vb,ip,ts,probenr,illuminati)
 % an_swp.m -- analyze sweep data
-
 % Analyze sweep
 % Input:
 %   ts = sweep sample times
@@ -12,6 +11,8 @@ function params = an_swp(vb,ip,ts,probenr,illuminati)
 % Output if unsuccesful:
 %   par = zeros(1,16): vb or ip not a vector
 %   par = ones(1,16): vp or ip different length
+
+
 p =str2double(probenr);
 % Set default output:
 params = [NaN NaN NaN NaN NaN NaN NaN NaN NaN p NaN NaN NaN NaN NaN NaN];

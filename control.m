@@ -1,6 +1,5 @@
 %
 %control.m -- set control parameters
-
 % Contents:
 % 1. User info
 % 2. Control section

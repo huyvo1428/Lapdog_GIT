@@ -1,7 +1,6 @@
 % geometry.m -- create daily geometry file
 %
 % Assumes index has been generated and exists in workspace
-
 % anders.eriksson@irfu.se 2012-03-29
 
 % Path to geometry files:
