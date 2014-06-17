@@ -1,4 +1,4 @@
 *.m~
 *.DS_Store
-irfu-matlab/
-mice/
+irfu-matlab/*
+mice/*
