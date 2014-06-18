@@ -38,6 +38,11 @@ try
         
         arID = fopen(tabindex{an_ind(i),1},'r');
         
+        if arID < 0
+            fprintf(1,'Error, cannot open file %s', tabindex{an_ind(i),1});
+            break
+        end % if I/O error
+        
         scantemp = textscan(arID,'%s','delimiter',',','CollectOutput', true);
         
         

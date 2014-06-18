@@ -1,6 +1,5 @@
 %createLBL.m
-
-%%DATAFILE .LBL FILES
+%CREATE .LBL FILES, FROM PREVIOUS LBL FILES
 
 strnow = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF');
 
@@ -25,6 +24,7 @@ if(~isempty(tabindex));
         fclose(fp);
         
         fid = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');
+        
         
         Pnum = tname(end-5);
         
@@ -1031,13 +1031,13 @@ if(~isempty(an_tabindex));
             fprintf(fid,'END_OBJECT  = COLUMN\n');
             
             fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = Illumination\n');
+            fprintf(fid,'NAME = SUNLIT\n');
             fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+3+2;
-            fprintf(fid,'BYTES = 3\n'); %
+            byte=byte+4+2;
+            fprintf(fid,'BYTES = 4\n'); %
             fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
             fprintf(fid,'UNIT = N/A\n');
-            fprintf(fid,'DESCRIPTION = "Sunlit sphere 1=yes,0=no,otherwise: sunlit during part of sweep"\n');
+            fprintf(fid,'DESCRIPTION = "SUNLIT PROBE: 1=YES,0=NO,ELSE: SUNLIT DURING PART OF SWEEP"\n');
             fprintf(fid,'END_OBJECT  = COLUMN\n');
             
             

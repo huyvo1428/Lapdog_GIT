@@ -59,6 +59,11 @@ try
         
         trID = fopen(tabindex{an_ind(i),1},'r');
         
+        if trID < 0
+            fprintf(1,'Error, cannot open file %s', tabindex{an_ind(i),1});
+            break
+        end % if I/O error
+        
         if fileflag(2) =='3' %one more column for probe 3 files
             scantemp = textscan(trID,'%s%f%f%f%f%d','delimiter',','); %ts,sct,ib1,ib2,vp1-vp2
             ib1=scantemp{1,3};

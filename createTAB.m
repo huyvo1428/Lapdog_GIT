@@ -90,6 +90,12 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
     for(i=1:len);
         trID = fopen(index(tabind(i)).tabfile);
         
+        if trID < 0
+            fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
+            break
+        end % if I/O error
+        
+        
         if fileflag(2) =='3'
             
             scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
@@ -199,11 +205,16 @@ else %% if sweep, do:
     
     for(i=1:len); %read&write loop
         trID = fopen(index(tabind(i)).tabfile);
-        scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
-        fclose(trID); %close read file, terminated each new read iteration
         
+        if trID > 0
+            scantemp = textscan(trID,'%s%f%f%f','delimiter',',');?
+            fclose(trID); %close read file
+        else           
+            fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
+            break
+        end % if I/O error
         
-        
+      
         t0 =scantemp{1,2}(1); %absolute S/C start of measurements for each file.
         
         

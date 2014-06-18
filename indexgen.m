@@ -14,7 +14,15 @@
 str = sprintf('%s/INDEX/INDEX.TAB',archivepath);
 % tmp = importdata(str,'"');
 % iname = tmp.textdata(:,2);    % List of label files
-ilp = fopen(str);  
+ilp = fopen(str);
+
+
+if ilp < 0
+    fprintf(1,'Error, cannot open file %s', str);
+    break
+end % if I/O error
+
+
 tmp=textscan(ilp,'%s %*s %*s %*s %*s %*s','Delimiter',',');
 iname = strtrim(char(tmp{1}));  % Clean away leading/trailing blanks
 % clear tmp;
@@ -192,7 +200,7 @@ for ii=1:n  % Loop the label files
          
           
           
-      end %end of fopen error message constraint
+      end %if I/O error
     end % End of if-not-HK
 end
 

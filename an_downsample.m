@@ -22,8 +22,16 @@ try
 for i=1:length(an_ind)
     
     arID = fopen(tabindex{an_ind(i),1},'r');
+    if arID < 0
+        fprintf(1,'Error, cannot open file %s', tabindex{an_ind(i),1});
+        break
+    end % if I/O error
     %    scantemp=textscan(arID,'%s%f%f%f%i','delimiter',',');
     scantemp=textscan(arID,'%s%f%f%f%d','delimiter',',');
+    
+    
+    
+    
     fclose(arID);
     
     UTCpart1 = scantemp{1,1}{1,1}(1:11);

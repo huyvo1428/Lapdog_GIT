@@ -24,13 +24,21 @@ end
 
 fc = fopen(missioncalendar,'r');
 
-
-line = fgetl(fc);
-jj = 0;
-while((jj<100) && isempty(strfind(line,shortphase)))
-  line = fgetl(fc);
-  jj = jj + 1;
+if fc > 0
+    
+    line = fgetl(fc);
+    jj = 0;
+    while((jj<100) && isempty(strfind(line,shortphase)))
+        line = fgetl(fc);
+        jj = jj + 1;
+    end
+    
+else
+    fprintf(1,'Error, cannot open %s', missioncalendar);
+    break
 end
+
+    
 parts = textscan(line,'%s %s %*s %*s %s %s %s %s','delimiter',':');
 % Need to remove double quotes and trailing blanks from strings (strrep, strtrim)
 missionphase = strtrim(strrep(char(parts{1}),'"',''));
@@ -55,29 +63,9 @@ switch target
         target = '2867 STEINS';
     case 'LUTETIA'
         target = '21 LUTETIA';
-        
+    otherwise
+        %do nothing      
 end
-% 
-% 
-% if(target == 'SW')
-% target = 'SUN';
-% end
-% 
-% if(target == '67P')
-% target = 'CHURYUMOV-GERASIMENKO';
-% end
-% 
-% if(target == 'STEINS')
-% target = '2867 STEINS';
-% end
-% 
-% if(target == 'LUTETIA')
-% target = '21 LUTETIA';
-% end
-% 
-% if(target == 'LUTETIA')
-% target = '21 LUTETIA';
-% end
 
 
 if(strcmp(shortphase,'MARS')) %bug from older mission calendar

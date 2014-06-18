@@ -20,10 +20,21 @@ if(~isempty(tabindex));
         
         
         [fp,errmess] = fopen(index(tabindex{i,3}).lblfile,'r');
+        
+        if fp < 0
+            fprintf(1,'Error, cannot open file %s', index(tabindex{i,3}).lblfile);
+            break
+        end % if I/O error
         tempfp = textscan(fp,'%s %s','Delimiter','=');
         fclose(fp);
         
         fid = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');
+
+%         if fid < 0        
+%             fprintf(1,'Error, cannot open file %s', strrep(tabindex{i,1},'TAB','LBL'));
+%             break
+%         end % if I/O error
+        
         
         Pnum = tname(end-5);
         
@@ -478,6 +489,11 @@ if(~isempty(an_tabindex));
         %
         
         [fp,errmess] = fopen(index(an_tabindex{i,3}).lblfile,'r');
+        
+        if fp < 0
+            fprintf(1,'Error, cannot open file %s', index(an_tabindex{i,3}).lblfile);
+            break
+        end % if I/O error
         
         tempfp = textscan(fp,'%s %s','Delimiter','=');
         fclose(fp);

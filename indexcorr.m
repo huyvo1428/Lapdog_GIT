@@ -39,11 +39,20 @@ for i=1:length(index)
         
         trID = fopen(index(i).tabfile,'r');  %read file
         
-        if index(i).probe == 3 %file for probe == 3 is different
-            scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
+        if trID > 0
+      
+            if index(i).probe == 3 %file for probe == 3 is different
+                scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
+            else
+                scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
+            end
+            
         else
-            scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
+            fprintf(1,'Error, cannot open file %s', index(i).tabfile);
+            break
+            
         end
+        
         fclose(trID);
         
         primfname = sprintf('%s/primary_%s',folder,index(i).tabfile(end-28:end));
