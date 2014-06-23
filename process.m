@@ -29,28 +29,28 @@ for b = 1:nob   % Loop through all ops blocks
     
     % Find E data:
     
-    
-    p1el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 1));
-    p2el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 2));
-    p1eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 1));
-    p2eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 2));
-    
-    % Find N data:
-    p1nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 1));
-    p2nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 2));
-    p1nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 1));
-    p2nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 2));
-    
-    
-    %probe 3
-    % Find E data:
-    p3el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 3));
-    p3eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 3));
-    % Find N data:
-    p3nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 3));
-    p3nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 3));
-    
-    
+%     
+%     p1el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 1));
+%     p2el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 2));
+%     p1eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 1));
+%     p2eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 2));
+%     
+%     % Find N data:
+%     p1nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 1));
+%     p2nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 2));
+%     p1nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 1));
+%     p2nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 2));
+%     
+%     
+%     %probe 3
+%     % Find E data:
+%     p3el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 3));
+%     p3eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 3));
+%     % Find N data:
+%     p3nl = find([index(ob).lf] & ~[index(ob).efield] & ([index(ob).probe] == 3));
+%     p3nh = find([index(ob).hf] & ~[index(ob).efield] & ([index(ob).probe] == 3));
+%     
+%     
     %     % Find does not preserve label indices, but only the new indices. so
     %     % index(ob) where ob = 6:10, gives results in the range 1:5
     %

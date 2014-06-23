@@ -47,7 +47,7 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 %  QF =000 ALL OK.
 
 
-
+macroNo = index(tabind(1)).macro
 
 
 
@@ -207,7 +207,7 @@ else %% if sweep, do:
         trID = fopen(index(tabind(i)).tabfile);
         
         if trID > 0
-            scantemp = textscan(trID,'%s%f%f%f','delimiter',',');?
+            scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
             fclose(trID); %close read file
         else           
             fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
@@ -240,8 +240,8 @@ else %% if sweep, do:
             %     [potbias, junk, ic] = unique(scantemp{1,4}(:),'stable'); %group potbias uniquely
             
             %slightly more complicated way of getting the mean
-            stepnr= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
-            inter = 1+ floor((0:1:length(scantemp{1,2})-1)/stepnr).'; %find which values to average together
+            nStep= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
+            inter = 1+ floor((0:1:length(scantemp{1,2})-1)/nStep).'; %find which values to average together
             
             
             
@@ -295,7 +295,7 @@ else %% if sweep, do:
             %step
             
             
-            step1 = find(diff(scantemp{1,4}(1:end)),1,'first')-stepnr;
+            step1 = find(diff(scantemp{1,4}(1:end)),1,'first')-nStep;
             scantemp{1,1}(1:step1)    = [];
             scantemp{1,2}(1:step1)    = [];
             scantemp{1,3}(1:step1)    = [];
@@ -317,31 +317,28 @@ else %% if sweep, do:
         if (index(tabind(1)).macro ==807)
      
             
+            
+            LDLsweepcorr(scantemp{1,3}(:),inter,potbias,nStep);
+
             %need extra care if macro = 807,703,600?
             
             LDLmacro=false(length(inter),1);            
             reltime2=scantemp{1,2}(:)-t0; %needs to start exactly at first measurement
-          
+            
             %logical indexing instead of loop
             LDLmacro(mod(reltime2*1000,8) <= 2) = 1;
             
             
-     %       for i=1:length(inter)
-                
-                %relmod =mod(reltime2(i),8e-3)
-      %          if (mod(reltime2(i)*1000,8) <= 2 ) %if (mod(reltime2(i),8e-3) <=2
-       %             LDLmacro(i)=1;
-                    
-        %        end%if
-                
-                %will average all LDL macro measurements together and remove them from array potbias, curtemp
-                
-                
-                %   if LDLmacro(reltime(:)
-                
-         %   end%for
+            %       for i=1:length(inter)
+            %relmod =mod(reltime2(i),8e-3)
+            %          if (mod(reltime2(i)*1000,8) <= 2 ) %if (mod(reltime2(i),8e-3) <=2
+            %             LDLmacro(i)=1;
             
+            %        end%if
+            %will average all LDL macro measurements together and remove them from array potbias, curtemp
+            %   if LDLmacro(reltime(:)
             
+            %   end%for            
             qftest=inter(LDLmacro);
             
             qf= zeros(length(potbias),1);
@@ -351,8 +348,15 @@ else %% if sweep, do:
 %            qftemp(unique(qftest)) = qftemp(unique(qftest))+2; Doesn't
 %            work
             
+
+            stdev = accumarray(inter,scantemp{1,3}(:),[],@std); %standard deviation
+                
             
-            inter(LDLmacro)=del;
+            
+            
+
+            
+        %    inter(LDLmacro)=del;
             
         end%if weird macro
         
