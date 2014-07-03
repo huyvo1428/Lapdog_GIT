@@ -38,18 +38,19 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 % bug during measurement    = +200
 % Rotation "  "    "        = +10
 % Bias change " "           = +20
+% LDL Macro                 = +30
 %
 % low sample size(for avgs) = +2
 % some zeropadding (for psd)= +2
+% poor fit for analysis     = +1
 
 
 %e.g. QF = 320 -> Sweep during measurement, bug during measurement, bias change during measurement
 %  QF =000 ALL OK.
 
 
-macroNo = index(tabind(1)).macro
-
-
+macroNo = index(tabind(1)).macro;
+diag = 0;
 
 
 dirY = datestr(index(tabind(1)).t0,'YYYY');
@@ -59,11 +60,12 @@ tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 
 
 
-filename = sprintf('%sRPCLAP_%s_%s_%d_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),index(tabind(1)).macro,fileflag); %%
+filename = sprintf('%sRPCLAP_%s_%s_%d_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),macroNo,fileflag); %%
 filenamep = strrep(filename,tabfolder,'');
 twID = fopen(filename,'w');
 
-global tabindex;
+global tabindex;  %global index
+global LDLMACROS; %global constant list
 
 
 %tabindex has format:
@@ -84,10 +86,12 @@ tabindex{end,3} = tabind(1); %% and the first index number
 
 len = length(tabind);
 counttemp = 0;
+
 %tot_bytes = 0;
 if(~index(tabind(1)).sweep); %% if not a sweep, do:
     
     for(i=1:len);
+        qualityF = 0;     % qualityfactor initialised!
         trID = fopen(index(tabind(i)).tabfile);
         
         if trID < 0
@@ -160,8 +164,8 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
             for (j=1:scanlength)       %print
                 
                 %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, 000\n'...
-                    ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j));
+                fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %03i\n'...
+                    ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qualityF);
                 
             end
         else
@@ -169,8 +173,8 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
             for (j=1:scanlength)       %print
                 
                 %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, 000\n'...
-                    ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+                fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %03i\n'...
+                    ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),qualityF);
                 
             end
         end
@@ -204,6 +208,7 @@ else %% if sweep, do:
     
     
     for(i=1:len); %read&write loop
+        qualityF = 0;     % qualityfactor initialised!
         trID = fopen(index(tabind(i)).tabfile);
         
         if trID > 0
@@ -212,75 +217,44 @@ else %% if sweep, do:
         else           
             fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
             break
-        end % if I/O error
-        
-      
-        t0 =scantemp{1,2}(1); %absolute S/C start of measurements for each file.
-        
-        
-        
+        end % if I/O error   
+       % t0 =scantemp{1,2}(1); %absolute S/C start of measurements for each file.      
         if (i==1) %do this only once + bugfix
             
             %first values are problematic, often not in the sweep at all since
             %spacecraft starts recording too early
             
             
-            step1 = find(diff(scantemp{1,4}(1:end)),1,'first');
+            step1 = find(diff(scantemp{1,4}(1:end)),1,'first'); %index of first step
             scantemp{1,1}(1:step1)    = [];
             scantemp{1,2}(1:step1)    = [];
             scantemp{1,3}(1:step1)    = [];
             scantemp{1,4}(1:step1)    = [];
-            
-            
-            
-            
-            
-            
+   
             
             %     [potbias, junk, ic] = unique(scantemp{1,4}(:),'stable'); %group potbias uniquely
             
             %slightly more complicated way of getting the mean
             nStep= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
             inter = 1+ floor((0:1:length(scantemp{1,2})-1)/nStep).'; %find which values to average together
-            
-            
-            
- 
-        
-            del = (max(inter,[],1)+1); %index needed for LDLMACRO deletion
-            
-            
-
-            
-            %if index(tabind(1)).macro
-            
-            
-            
+       
             potbias = accumarray(inter,scantemp{1,4}(:),[],@mean); %average
             scan2temp=accumarray(inter,scantemp{1,2}(:),[],@mean); %average
             
             
-            if (length(potbias)==del) %this is true if LDL macro and measurements taken during MIP intervals
-                
-                potbias(del) = [];
-                scan2temp(del) =[];
-                
-            end
+%             if (length(potbias)==del) %this is true if LDL macro and measurements taken during MIP intervals                
+%                 potbias(del) = [];
+%                 scan2temp(del) =[];
+%             end
             
             
             reltime = scan2temp(:)-scan2temp(1); %relative time stamps
-            
-            % potout = [reltime(:),potbias]; %won't work with  fprintf
-            
+
             potout(1:2:2*length(reltime)) = reltime;
             potout(2:2:2*length(reltime)) = potbias;
-            
-            
+
             b1= fprintf(twID,'%14.7e, %14.7e\n',potout);
-            
-            
-            %            dlmwrite(filename,potout,'-append','precision', '%14.7e'); %also writes \n
-            
+             
         elseif scantemp{1,4}(1) == potbias(1); %bugfix special case
             
             %first values are problematic, often not in the sweep at all since
@@ -293,17 +267,14 @@ else %% if sweep, do:
             %if this happens in the first file (but not necessarily in the rest
             %we currently have no way of not deleting all measurements on that
             %step
-            
-            
+
             step1 = find(diff(scantemp{1,4}(1:end)),1,'first')-nStep;
             scantemp{1,1}(1:step1)    = [];
             scantemp{1,2}(1:step1)    = [];
             scantemp{1,3}(1:step1)    = [];
             scantemp{1,4}(1:step1)    = [];
             
-            
-        else %normal bugfix
-                        
+        else %normal bugfix                        
             step1 = find(diff(scantemp{1,4}(1:end)),1,'first');
             scantemp{1,1}(1:step1)    = [];
             scantemp{1,2}(1:step1)    = [];
@@ -314,67 +285,103 @@ else %% if sweep, do:
         
         
         
-        if (index(tabind(1)).macro ==807)
-     
+        %checks if macro is LDL macro, and downsamples current measurement
+        if any(ismember(macroNo,LDLMACROS)) %if macro is any of the LDL macros
+            qualityF = qualityF+30; %LDL macro measurement
+%         if (macroNo ==807 || macroNo == 703 || macroNo == 600 )
+% 
+            %delete outliers at each step and overall step, suggested
+            %comparison factorsts : >3 std(overall) and 1 > std(step)
+            curCorr= sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,1);
+            
+            curArray = nanmean(curCorr); %final downsampled product
+            qualityF = qualityF +2; %lower samplesize
             
             
-            LDLsweepcorr(scantemp{1,3}(:),inter,potbias,nStep);
-
-            %need extra care if macro = 807,703,600?
-            
-            LDLmacro=false(length(inter),1);            
-            reltime2=scantemp{1,2}(:)-t0; %needs to start exactly at first measurement
-            
-            %logical indexing instead of loop
-            LDLmacro(mod(reltime2*1000,8) <= 2) = 1;
-            
-            
-            %       for i=1:length(inter)
-            %relmod =mod(reltime2(i),8e-3)
-            %          if (mod(reltime2(i)*1000,8) <= 2 ) %if (mod(reltime2(i),8e-3) <=2
-            %             LDLmacro(i)=1;
-            
-            %        end%if
-            %will average all LDL macro measurements together and remove them from array potbias, curtemp
-            %   if LDLmacro(reltime(:)
-            
-            %   end%for            
-            qftest=inter(LDLmacro);
-            
-            qf= zeros(length(potbias),1);
-            
-            qf(unique(qftest)) = 2; %low sample size quality factor
-            
-%            qftemp(unique(qftest)) = qftemp(unique(qftest))+2; Doesn't
-%            work
-            
-
-            stdev = accumarray(inter,scantemp{1,3}(:),[],@std); %standard deviation
+            if diag
                 
-            
-            
+                figure(163);
+                
+                subplot(2,2,1)
+                plot(potbias,curArray);
+                xlabel('Vp [V]');
+                ylabel('I');
+                title('edited sweep, factor 3 & 1, 99% confidence, 60% confidence');
+                grid on;
+                
+               % curTmp = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
+
+                subplot(2,2,2)
+                plot(scantemp{1,4}(:),scantemp{1,3}(:),'b',potbias,(mean(scantemp{1,3}(:)) + 2*std(scantemp{1,3}(:))),'r',potbias,(mean(scantemp{1,3}(:)) - 2*std(scantemp{1,3}(:))),'r')
+                %plot(potbias,curTmp)
+                
+                %hold all
+         %      plot(potbias,(mean(scantemp{1,3}(:)) + 3*std(scantemp{1,3}(:))));
+                xlabel('Vp [V]');
+                ylabel('I');
+                title('unedited sweep');
+                grid on;
+                
+                
+                subplot(2,2,3)
+                plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,3)))
+                xlabel('Vp [V]');
+                ylabel('I');
+                title('unedited sweep, factor 3&3 99% confidence, 99%confidene ');
+                grid on;
+                
+                   subplot(2,2,4)
+                plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,2,0.8)),'b',potbias,curArray,'r')
+        %        plot(potbias,curArray);
+                xlabel('Vp [V]');
+                ylabel('I');
+                title('unedited sweep, factor 2&0.8');
+                grid on;
+                
+                
+                
+            end
             
 
-            
-        %    inter(LDLmacro)=del;
-            
-        end%if weird macro
-        
-        
-        
-%                curtemp = accumarray(inter,scantemp{1,3}(:),[],@mean); 
+      
+%             LDLmacro=false(length(inter),1);
+%             reltime2=scantemp{1,2}(:)-t0; %needs to start exactly at first measurement
+%             
+%             logical indexing instead of loop
+%             LDLmacro(mod(reltime2*1000,8) <= 2) = 1;
+%             for i=1:length(inter)
+%                 relmod =mod(reltime2(i),8e-3)
+%                 if (mod(reltime2(i)*1000,8) <= 2 ) %if (mod(reltime2(i),8e-3) <=2
+%                     LDLmacro(i)=1;
+%                     
+%                 end%if
+%                 will average all LDL macro measurements together and remove them from array potbias, curtemp
+%                 if LDLmacro(reltime(:)
+%             end%for
+%                 qftest=inter(LDLmacro);
+%                 
+%                 qf= zeros(length(potbias),1);
+%                 
+%                 qf(unique(qftest)) = 2; %low sample size quality factor
+%                 inter(LDLmacro)=del;
+%                 
+%             end%if weird macro    
 
-       %
-        curtemp = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN); 
+        else
+            curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
+            
+            
+        end%if LDL macro check & downsampling
+        
         %careful here, what if all measurements at one potential step is missing due to LDL interference? fill with nan
-        if (length(curtemp)==del) %this is true if LDL macro AND measurements taken during MIP intervals            
-            curtemp(del) = [];
-        end
+%         if (length(curArray)==del) %this is true if LDL macro AND measurements taken during MIP intervals            
+%             curArray(del) = [];
+%         end
         %%LET'S PRINT!
         
         
-        b2= fprintf(twID2,'%s, %s, %16.6f, %16.6f, 000',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
-        b3= fprintf(twID2,', %14.7e',curtemp.');
+        b2= fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
+        b3= fprintf(twID2,', %14.7e',curArray.'); %some steps could be "NaN" values if LDL macro
         fprintf(twID2,'\n');
         
         %%Finalise

@@ -1,27 +1,16 @@
 %an_swp2
-
-
+%analyses sweeps, utilising modded version of Anders an_swp code, and other
+%methods
 function []= an_swp2(an_ind,tabindex,targetfullname)
 
 global an_tabindex;
 global target;
-%antemp ='';
-
-
-%fprintf(awID,'%s,%16.6f,,,,\n',UTC_time,(0.5*intval+tday0+(j-1)*intval));
-%outputarr =
-%
 
 dynampath = strrep(mfilename('fullpath'),'/an_swp2','');
-%
-
-% p = strrep(p,p{1,1},dynampath);
-
-
 kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
+paths();
 
-
-
+cspice_furnsh(kernelFile);
 
 try
     
@@ -45,13 +34,6 @@ try
         
         scantemp = textscan(arID,'%s','delimiter',',','CollectOutput', true);
         
-        
-        
-        
-        % scantemp=textscan(arID,'%*s%*s%*f%*f%f','delimiter',',','CollectOutput', true);
-        %   scantemp3=textscan(arID,'%f','delimiter','\n');
-        
-        % scantemp=textscan(arID,'%s%f%f%f%d','delimiter',',');
         fclose(arID);
         
         rfile(end-6)='B';
@@ -132,31 +114,10 @@ try
             
             
         end
-        %    orbit('Rosetta',{'2007-09-07';'2007-09-08'},'EARTH','ECLIPJ2000')
         
-        
-        %need to convert target to correct string for NAIF SPICE TOOLKIT KERNEL
-        
-        [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000');
-        
-        
-        
-%         if strcmp(targetfullname,'SOLAR WIND')
-%             [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),'SUN','ECLIPJ2000');
-%             
-%             
-%         elseif strcmp(target,'67P')
-%             [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),'CHURYUMOV-GERASIMENKO','ECLIPJ2000');
-%             
-%         else
-%             
-%             [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),targetfullname,'ECLIPJ2000');
-%         end
-        
-        
-        cspice_furnsh(kernelFile);
-        
-        
+        %'preloaded' is a dummy entry, just so orbit realises spice kernels
+        %are already loaded
+        [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
         clear junk
         
         if strcmp(mode(2),'1');
@@ -190,33 +151,50 @@ try
         
         %  phot ==
         
-        om1 = 0;
-        om2 = 0;
+        vP = 0;
+        vPStd = 0;
         
         for k=1:len
             %  a= cspice_str2et(timing{1,k});
+            m = k;
+            
+            %% quality factor check
+            qf= Qfarr(k);
+            
+            if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.01) %rotation of more than 0.01 degrees
+                qf = qf+20; %rotation
+            end
             
             
-            fout{k,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati);
-            fout{k,2} = mean(SAA(1,2*k-1:2*k));
             
-            fout{k,3} = mean(illuminati(1,2*k-1:2*k));
-            if fout{k,3}==1
-                %     [fout{k,4}{1},fout{k,4}{2}] = Vplasma(Vb,Iarr(:,k));
-                [om1,om2] = Vplasma(Vb,Iarr(:,k));
+            fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
+            fout{m,2} = mean(SAA(1,2*k-1:2*k));
+            fout{m,3} = mean(illuminati(1,2*k-1:2*k));
+            if fout{m,3}==1
+                %estimates plasma potential from second derivative gaussian
+                %fit, using qualified guesses of the plasma potential from
+                %an_swp (,fout{l,1}(15)=vs = Vsc as intersection of ion and photoemission
+                %current)
+                [vP,vPStd] = Vplasma(Vb,Iarr(:,k),fout{m,1}(15),3);
                 
-                fout{k,4}(1) = om1;
-                fout{k,4}(2) = om2;
+                fout{m,4}(1) = vP; %skipping intermediate step impossible on old matlab...
+                fout{m,4}(2) = vPStd;
+                
+                
+                if max(Vb)<(vP+vPStd) || min(Vb)>(vP-vPStd) %
+                    qf=qf+1; %poor fit for analysis method
+                end
+                
                 
             else
-                fout{k,4}(1) = NaN;
-                fout{k,4}(2) = NaN;
+                fout{m,4}(1) = NaN;
+                fout{m,4}(2) = NaN;
                 
             end%if
-            
-            fout{k,5}={Tarr{:,k}};
-            fout{k,6}= Tarr{3,k};
-            fout{k,7}=Qfarr(k);
+          
+            fout{m,5}={Tarr{:,k}};
+            fout{m,6}= Tarr{3,k};
+            fout{m,7}=qf;
         end%for
         
         
@@ -225,24 +203,47 @@ try
             
             
             for k=1:length(Iarr2(1,:))
+                m=k+len;          %add to end of output array (fout{})
+                %note Vb =! Vb2, Iarr =! Iarr2, etc.
+                %% quality factor check
+                qf= Qfarr(k);
                 
-                fout{k+len,1} =an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati);
-                fout{k+len,2} =mean(SAA(1,k:k+1));
-                fout{k+len,3}=mean(illuminati(1,k:k+1));
-                if fout{k+len,3}==1
-                    %      [fout{k+len,4}{1},fout{k+len,4}{2}] = Vplasma(Vb2,Iarr2(:,k));
-                    [om1,om2] = Vplasma(Vb2,Iarr2(:,k));
-                    fout{k+len,4}(1) = om1;
-                    fout{k+len,4}(2) = om2;
+                if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.01) %rotation of more than 0.01 degrees
+                    qf = qf+20; %rotation
+                end
+                
+                fout{m,1} =an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati);
+                
+                fout{m,2} = mean(SAA(1,2*k-1:2*k)); %every pair...
+                fout{m,3} = mean(illuminati(1,2*k-1:2*k));
+                if fout{m,3}==1
+                    %      [fout{l+len,4}{1},fout{l+len,4}{2}] = Vplasma(Vb2,Iarr2(:,k));
+                    
+                    %estimates plasma potential from second derivative gaussian
+                    %fit, using qualified guesses of the plasma potential from
+                    %an_swp (,fout{l,1}(15)=vs = Vsc as intersection of ion and photoemission
+                    %current)
+                    [vP,vPStd] = Vplasma(Vb2,Iarr2(:,k),fout{m,1}(15),4);
+                    %have to do this in three steps since old matlab version on server
+                    fout{m,4}(1) = vP;
+                    fout{m,4}(2) = vPStd;
+                    
+                    if max(Vb)<(vP+vPStd) || min(Vb)>(vP-vPStd) %
+                        qf=qf+1; %poor fit for analysis method
+                    end
+                    
                     
                 else
-                    fout{k+len,4}(1) = NaN;
-                    fout{k+len,4}(2) = NaN;
+                    fout{m,4}(1) = NaN;
+                    fout{m,4}(2) = NaN;
                 end%if
                 
-                fout{k+len,5}={Tarr{:,k}};
-                fout{k+len,6}= Tarr{4,k};
-                fout{k+len,7}=Qfarr(k);
+                fout{m,5}={Tarr{:,k}};
+                fout{m,6}= Tarr{4,k}; %%obs, not Tarr{3,k};
+                
+                
+                
+                fout{m,7}=qf;
                 
                 
             end%for
@@ -257,20 +258,20 @@ try
         awID= fopen(wfile,'w');
         r2 = 0;
         
-     
+        
         % fpformat = '%s, %s, %03i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e  %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
         for k=1:length(fout(:,1))
             %params = [ts vb(lastneg) vb(firstpos) vx poli(1) poli(2) pole(1) pole(2) p vbinf diinf d2iinf Tph If0 vs];
             %time0,time0,quality,mean(SAA),mean(Illuminati)
             
             
-
-             %           '1,  2,   3  ,   4   ,   5   ;   6   ,   7   ,    8  ,   9  ;   10  ,   11  ,   12  ,   13  ;   14  ,   15  ,   16  ,   18  ;   19  ,   20  ,   21  \n   
-           
+            
+            %           '1,  2,   3  ,   4   ,   5   ;   6   ,   7   ,    8  ,   9  ;   10  ,   11  ,   12  ,   13  ;   14  ,   15  ,   16  ,   18  ;   19  ,   20  ,   21  \n
+            
             %f_format = '%s, %s, %03i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
             %1:5
             %time0,time0,qualityfactor,mean(SAA),mean(Illuminati)
-            str1=sprintf('%s, %s, %03i, %07.3f, %03.2f,',fout{k,5}{1,1},fout{k,5}{1,2},fout{k,7},fout{k,2},fout{k,3});     
+            str1=sprintf('%s, %s, %03i, %07.3f, %03.2f,',fout{k,5}{1,1},fout{k,5}{1,2},fout{k,7},fout{k,2},fout{k,3});
             %6:9
             %,vs,vx,Vsc,VscSigma
             str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(15),fout{k,1}(4),fout{k,4}(1),fout{k,4}(2));
@@ -278,34 +279,32 @@ try
             %,Tph,If0,vb(lastneg) vb(firstpos),
             str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', fout{k,1}(13),fout{k,1}(14),fout{k,1}(2),fout{k,1}(3));
             %14:17
-            %poli,poli,pole,pole,
+            %poli(1),poli(2),pole,pole,
             str4=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(5),fout{k,1}(6),fout{k,1}(7),fout{k,1}(8));
             %18:20
             %  vbinf,diinf,d2iinf
             str5=sprintf(' %14.7e, %14.7e, %14.7e',fout{k,1}(10),fout{k,1}(11),fout{k,1}(12));
             strtot= strcat(str1,str2,str3,str4,str5);
             str6=strrep(strtot,'NaN','   ');
-          
-%If you need to change NaN to something (e.g. N/A, as accepted by Rosetta Archiving Guidelines) change it here!
+            
+            %If you need to change NaN to something (e.g. N/A, as accepted by Rosetta Archiving Guidelines) change it here!
             
             
             row_bytes =fprintf(awID,'%s\n',str6);
-%             if (row_bytes ~= r2 && r2~= 0)
-%                 s= strcat(str6,r3)
-%                 
-%                 'hello'
-%                 
-% %             end
-%             r2 = row_bytes;
-%             r3 =str6;
-%             
+            %             if (row_bytes ~= r2 && r2~= 0)
+            %                 s= strcat(str6,r3)
+            %
+            %                 'hello'
+            %
+            % %             end
+            %             r2 = row_bytes;
+            %             r3 =str6;
+            %
             
-
+            
             
         end
         fclose(awID);
-        
-        
         
         an_tabindex{end+1,1} = wfile;%start new line of an_tabindex, and record file name
         an_tabindex{end,2} = strrep(wfile,rfolder,''); %shortfilename
@@ -318,9 +317,10 @@ try
         an_tabindex{end,8} = timing;
         an_tabindex{end,9} = row_bytes;
         
-        cspice_unload(kernelFile);
         
     end
+    
+    cspice_unload(kernelFile);  %unload kernels when exiting function
     
 catch err
     
@@ -329,7 +329,9 @@ catch err
     err
     err.stack.name
     err.stack.line
-
+    cspice_unload(kernelFile);
+    
+    
     
 end
 

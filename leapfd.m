@@ -6,12 +6,12 @@ function [dx,d2x] = leapfd(x,y,varargin)
 dx= zeros(length(y),1);
 d2x = zeros(length(y),1);
 
-lgolay=varargin{1,1};
+spread=varargin{1,1};
 
 
 if nargin >2
     
-    x= smooth(x,'sgolay',lgolay);
+    x= smooth(x,spread,'sgolay');
 end
 
 
@@ -40,7 +40,7 @@ if len ==length(y)
     
     if nargin >2
         
-        dx= smooth(dx,'sgolay',lgolay);
+        dx= smooth(dx,spread,'sgolay');
     end
     
     

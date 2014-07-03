@@ -37,11 +37,17 @@
 % of a cell array containing string(s) in any format recognized by SPICE
 % as epochs. (E.g. the ISOC calendar format: YYYY-MM-DDThh:mm:ss.sss)
 
-function [varargout] = orbit(object, time, origin, frame)
+function [varargout] = orbit(object, time, origin, frame,varargin)
 
 %% Set up paths and SPICE kernel files
 % PATHS() gives paths to SPICE kernels directory and sets up MICE paths.
 
+
+
+
+if (isempty(varargin)) %if orbit)() is overloaded, then assume spice kernels are loaded
+    
+    
 paths();
 
 %% Load SPICE kernel files
@@ -61,6 +67,7 @@ dynampath = strrep(mfilename('fullpath'),'/orbit','');
 
 kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
 cspice_furnsh(kernelFile);
+end%if overloaded
 
 %% Read input
 % If time is NOT floating point number(s), convert from string
@@ -424,7 +431,12 @@ end
 %% Unload SPICE kernels
 % It is important to unload the kernel files at the end of the program so
 % that successive executions won't fill up the kernel pool.
+
+
+if (isempty(varargin))
 cspice_unload(kernelFile);
+end%if
+
 
 end
 

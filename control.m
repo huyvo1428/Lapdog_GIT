@@ -37,15 +37,15 @@ lblrev = '4th draft';
 % % 
 % % %ESB1 calibrated (aie test):
 %  shortphase = 'EAR1';
-%  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR1-CALIB-V1.0';
+% %  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR1-CALIB-V1.0';
 % % 
-%  %Latest run 28/4 2014
-% ESB2 calibrated:
-%shortphase = 'EAR2';
-%archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR2-CALIB-V2.0';
-
+%  %Latest run 28/6 2014
+% %ESB2 calibrated:
+% shortphase = 'EAR2';
+% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-E-RPCLAP-3-EAR2-CALIB-V2.0';
 % 
-% % ESB3 edited:
+% % % 
+% % % ESB3 edited:
 %shortphase = 'EAR3';
 %archivepath = '/data/LAP_ARCHIVE/RO-E-RPCLAP-2-EAR3-EDITED-V1.0';
 
@@ -75,22 +75,22 @@ lblrev = '4th draft';
 % RVM1 calibrated:
 %shortphase = 'RVM1';
 %archivepath = '/data/LAP_ARCHIVE/RO-SS-RPCLAP-3-RVM1-CALIB-V1.0';
-
 % 
-% RVM2 calibrated:
+% 
+% %RVM2 calibrated:
 % shortphase = 'RVM2';
 % archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
 % 
-% % 
-% % 
-% % M03 calibrated:
-% shortphase = 'M03';
-% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-M03-CALIB-V0.1';
+% % % % 
+% % % 
+% M03 calibrated:
+shortphase = 'M03';
+archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-M03-CALIB-V0.1';
 
-
- % M04 calibrated:
- shortphase = 'M04';
- archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M04-CALIB-V0.1';
+% 
+%  % M04 calibrated:
+%  shortphase = 'M04';
+%  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M04-CALIB-V0.1';
 
 
 % % 

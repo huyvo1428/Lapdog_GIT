@@ -72,6 +72,15 @@ if(strcmp(shortphase,'MARS')) %bug from older mission calendar
 target = 'MARS';
 end
 
+%some macros need to be handled with special care
+%constant list known everywhere
+global LDLMACROS;
+LDLMACROS = [807,804,803,703,704];
+
+    
+
+
+
 
 % Read info from DATASET.CAT:
 dname = strcat(archivepath,'/CATALOG/DATASET.CAT'); 

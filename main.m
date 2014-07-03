@@ -74,7 +74,7 @@ opsblocks;
 if(do_mill)
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(tabindexfile,'r');
-fp = -2;
+%fp = -2;
 
 if(fp > 0)
     fclose(fp);
@@ -89,7 +89,7 @@ else
   if exist('tabindex','dir')~=7
       mkdir('tabindex');
   end
-%   save(tabindexfile,'tabindex');
+   save(tabindexfile,'tabindex');
 end
 
 

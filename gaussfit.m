@@ -20,10 +20,7 @@ function [sigma, mu] = gaussfit( x, y, sigma0, mu0 )
 % 
 % VERSION: 23.02.2012
 % 
-
-
 %some edits by Fredrik Johansson 2014-05-12
-
 % EXAMPLE USAGE:
 % x = -10:1:10;
 % s = 2;
@@ -34,6 +31,7 @@ function [sigma, mu] = gaussfit( x, y, sigma0, mu0 )
 % yp = 1/(sqrt(2*pi)* sigma ) * exp( - (xp-mu).^2 / (2*sigma^2));
 % plot( x, y, 'o', xp, yp, '-' );
 
+            diag = 0;
 
 % Maximum number of iterations
 Nmax = 50;
@@ -57,7 +55,7 @@ y = X(:,2);
 dx = diff( x );
 dy = 0.5*(y(1:length(y)-1) + y(2:length(y)));
 s = sum( dx .* dy );
-if( s > 1.5 | s < 0.5 )
+if( s > 1.3 | s < 0.7 )
 %    fprintf( 'Data is not normalized! The pdf sums to: %f. Normalizing...\n\r', s );
     y = y ./ s;
 end
@@ -72,20 +70,28 @@ X(:,3) = (x.*x);
 [ymax,index]=max(y);
 mu = x(index);
 
+estmu=mu;
+
 % estimate sigma
 sigma = 1/(sqrt(2*pi)*ymax);
+estsigma = sigma;
 
 if( nargin == 3 )
     sigma = sigma0;
 end
 
-if( nargin == 4 )
+if( nargin == 4 ) &&~isnan(mu0)
     mu = mu0;
 end
 
 %xp = linspace( min(x), max(x) );
 
 % iterations
+
+
+h=0.25;
+
+
 for i=1:Nmax
 %    yp = 1/(sqrt(2*pi)*sigma) * exp( -(xp - mu).^2 / (2*sigma^2));
 %    plot( x, y, 'o', xp, yp, '-' );
@@ -98,9 +104,34 @@ for i=1:Nmax
     F = [ dfdsigma dfdmu ];
     a0 = [sigma;mu];
     f0 = 1/(sqrt(2*pi)*sigma).*exp( -(x-mu).^2 /(2*sigma^2));
-    a = (F'*F)^(-1)*F'*(y-f0) + a0;
+    da = (F'*F)^(-1)*F'*(y-f0);
+   
+    a = da*h + a0; %%edited FJ 26/6 2014 ,the stepsize was much too large 
+    %ideally, use leapfrog, central difference or Runge-Kutta method
+    %instead of this
     sigma = a(1);
     mu = a(2);
+%     
+%     if mu>10
+%         diag = 1;
+%     end
+    
+    
+    
+    if diag
+        figure(3242)
+        plot(x,y,'r',x,(1/(sqrt(2*pi)*sigma^2)*exp(-((x-mu).^2) / (2*sigma^2))),'g');
+
+        
+    end
+    
+    
+    %%break condition when sufficient accuracy reached FJ
+    if (abs(da(1)/a(1)))< 0.001 && i>5 
+        i;
+        break;
+    end
+    
     
     if( sigma < 0 )
         %sigma = abs( sigma );
@@ -108,6 +139,19 @@ for i=1:Nmax
         
         fprintf( 'Instability detected! Rerun with initial values sigma0 and mu0! \n\r' );
         fprintf( 'Check if your data is properly scaled! p.d.f should approx. sum up to \n\r' );
+        %instead return initial estimates!
+        
+        if diag
+            figure(3241)
+            subplot(1,2,1)
+            plot(x,y,'r',x,(-1/(sqrt(2*pi)*estsigma^2)*exp(-((x-estmu).^2) / (2*estsigma^2))),'g');
+            subplot(1,2,2)
+            plot(F);
+            
+        end
+        
+        mu=estmu; 
+        %sigma=3*estsigma;       
         break;
     end
 end
