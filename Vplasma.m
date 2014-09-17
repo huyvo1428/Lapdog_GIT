@@ -8,7 +8,7 @@ function [vPlasma,sigma] = Vplasma(Vb2,Ib2,vGuess,sigmaGuess)
 %undefined function in old MATLAB........!!
 
 
-diag = 1;
+diag = 0;
 
 [Vb, junk, ic] = unique(Vb2);
 
@@ -16,18 +16,9 @@ Ib = accumarray(ic,Ib2,[],@mean);
 
 % %don't do it here, silly. it's done in d2i if you ask it too
 
-
-% points = length(Vb);
-% lgolay = max([(2*floor(points/12)+1) 5]);
-
-
-%%Vplasma
-%points = length(Vb);
-
-
 %vbzero= find(le(Vb,0));
 [junk,d2i]= leapfd(Ib,Vb,0.28);
-Ib5 = smooth(Ib,0.14,'sgolay');
+
 
 
 [Vb,ind]=sort(Vb);
@@ -63,6 +54,10 @@ end
 
 % [gsd,gmu] =gaussfit(Vb(10:end-10),d2i(10:end-10));'
 if diag
+    
+    
+%just for diagnostics
+    Ib5 = smooth(Ib,0.14,'sgolay');
     figure(3)
     subplot(2,2,1)
     x = Vb(1):0.2:Vb(end);

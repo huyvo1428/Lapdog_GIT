@@ -45,8 +45,7 @@ preamble;
 'lapdog: load indices if existing...'
 indexfile = sprintf('index/index_%s.mat',archiveid);
 fp = fopen(indexfile,'r');
-
-
+% fp =-1;
 if(fp > 0)
     fclose(fp);
     load(indexfile);
@@ -60,6 +59,7 @@ else
     
 end
 
+scResetCount=str2double(index(1).sct0str(2));
 
 % Generate daily geometry files:
 if(do_geom)
@@ -74,7 +74,7 @@ opsblocks;
 if(do_mill)
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(tabindexfile,'r');
-%fp = -2;
+fp = -2;
 
 if(fp > 0)
     fclose(fp);

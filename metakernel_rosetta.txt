@@ -1,37 +1,89 @@
-This file specifies the SPICE kernels to be loaded by the custom Rosetta SPICE functions. Specifically, the paths to the parent directories of the kernel files are given under PATH_VALUES and assigned symbolic names under PATH_SYMBOLS. These symbolic names are then used to specify the kernels to load under KERNELS_TO_LOAD. (This file starts in comment mode. The actual data file begins after the begindata line.)
+(This file starts in comment mode. The actual data file begins after the begindata line.)
+This file specifies the SPICE kernels to be loaded by the custom Rosetta SPICE functions.
+Specifically, the paths to the parent directories of the kernel files are given under PATH_VALUES and assigned symbolic names under PATH_SYMBOLS.
+These symbolic names are then used to specify the kernels to load under KERNELS_TO_LOAD.
 \begindata
 	PATH_VALUES = (
-		'/Users/frejon/Documents/RosettaArchive/Lapdog_GIT'
-		'/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/rossim_3dtool_common_kernels'
-		'/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/mice'
-		'/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/irfu-matlab'
+		'/Users/frejon/lapdog'
+		'/Users/frejon/lapdog/kernels'
+		'/Users/frejon/lapdog/kernels/spk'
+		'/Users/frejon/lapdog/kernels/ck'
+		'/Users/frejon/lapdog/kernels/pck'
+		'/Users/frejon/lapdog/kernels/fk'
+		'/Users/frejon/lapdog/kernels/lsk'
+		'/Users/frejon/lapdog/kernels/sclk'
+		'/Users/frejon/lapdog/mice'
+		'/Users/frejon/lapdog/irfu-matlab'
 	)
 	PATH_SYMBOLS = (
 		'SPICE'
+		'KERNELS'
 		'SPK'
+		'CK'
+		'PCK'
+		'FK'
+		'LSK'
+		'SCLK'
 		'MICE'
 		'irfu-matlab'
 	)
 	KERNELS_TO_LOAD = (
-        	'$SPK/ORHR_______________00122.BSP'
-		'$SPK/cg_11nov.BSP'
-		'$SPK/ORHS_______________00109.BSP'
-		'$SPK/ORHO_______________00077.BSP'
+		'$SPK/ORHR_______________00122.BSP'
+		'$SPK/ORER_______________00031.BSP'
+		'$SPK/ORMR_______________00052.BSP'
+		'$SPK/ORFR_______________00067.BSP'
+		'$SPK/ORGR_______________00096.BSP'
+		'$SPK/RORL_DL_001_02____A__00002.BSP'
+		'$SPK/RORL_DL_002_02____A__00040.BSP'
+		'$SPK/RORB_DV_029_01_______00048.BSP'
+		'$SPK/67P_CHURY_GERAS_2004_2016.BSP'
+		'$SPK/ORHW_______________00122.BSP'
+		'$SPK/CORL_DL_001_02____A__00002.BSP'
+		'$SPK/CORL_DL_002_02____A__00040.BSP'
+		'$SPK/CORB_DV_029_01_______00048.BSP'
 		'$SPK/DE405.BSP'
-		'$SPK/ROS_CGS_RSOC_V03.TPC'
-		'$SPK/ROS_LUTETIA_RSOC_V03.TPC'
-		'$SPK/ROS_STEINS_V04.TPC'
-		'$SPK/pck00008.tpc'
-		'$SPK/NAIF0010.TLS'
-		'$SPK/ATNR_P040302093352_00127.BC'
-		'$SPK/RATT_DV_002_01_______00007.BC'
-		'$SPK/ROS_110405_STEP.TSC'
-		'$SPK/ROS_V19.TF'
-		'$SPK/ROS_SA_2005_V0001.BC'
-		'$SPK/CORB_DV_004_01_______00012.BSP'
-		'$SPK/RATM_DM_003_01____A__00008.BC'
-		'$SPK/RATM_DM_004_01____A__00009.BC'
+		'$SPK/ORHO_______________00077.BSP'
+                '$SPK/ORHS_______________00109.BSP'
+		'$CK/ATNR_P040302093352_00127.BC'
+                '$CK/RATM_DM_001_01____A__00004.BC'
+                '$CK/RATM_DM_002_01____A__00005.BC'
+                '$CK/RATM_DM_003_01____A__00008.BC'
+                '$CK/RATM_DM_004_01____A__00009.BC'
+                '$CK/RATM_DM_005_01____A__00015.BC'
+		'$CK/RATM_DM_006_01____A__00020.BC'
+		'$CK/RATM_DM_006_02____A__00023.BC'
+		'$CK/RATM_DM_007_01____A__00042.BC'
+		'$CK/RATT_DV_029_01_01____00048.BC'
+		'$CK/CATT_DV_028_01_______00046.BC'
+		'$CK/CATT_DV_029_01_______00048.BC'
+		'$PCK/PCK00010.TPC'
+		'$PCK/ROS_CGS_RSOC_V03.TPC'
+		'$PCK/ROS_LUTETIA_RSOC_V03.TPC'
+		'$PCK/ROS_STEINS_V04.TPC'
+		'$FK/ROS_V22.TF'
+		'$FK/ROS_CHURYUMOV_V01.TF'
+		'$LSK/NAIF0010.TLS'
+		'$SCLK/ros_triv.tsc'
+		'$SCLK/ROS_140813_STEP.TSC'
+		'$SPICE/rosetta_custom_coordinates.tf'
 	)
 \begintext
-(After the begintext line we again find ourselves in comment mode.) Above, SPK was defined to point to the parent directory of the Rosetta kernel files. IT IS ABSOLUTELY NECESSARY THAT THE PARENT DIRECTORY OF THE KERNEL FILES BE CORRECTLY SPECIFIED! Change the PATH_VALUES line to give the search path to this directory on your machine, otherwise the custom Rosetta SPICE functions will not work for you.
-   Furthermore, MICE was defined to point to the mice directory. paths.m uses this to find the required mice paths. This also has to be adjusted to the right path on your machine!
+(After the begintext line we again find ourselves in comment mode.)
+Above, SPK, CK etc were defined to point to the parent directories of the respective Rosetta kernel files.
+IT IS ABSOLUTELY NECESSARY THAT THE PARENT DIRECTORIES OF THE KERNEL FILES BE CORRECTLY SPECIFIED!
+Change the PATH_VALUES line to give the search path to this directory on your machine, otherwise the custom Rosetta SPICE functions will not work for you.
+Furthermore, MICE was defined to point to the mice directory and irfu-matlab to the irfu-matlab directory.
+paths.m uses this to find the required mice and irfu-matlab paths. This also has to be adjusted to the right path on your machine!
+
+Comments regarding kernels: ORHW is allegedly (accordning to aareadme.txt in ftp://ssols01.esac.esa.int/pub/data/SPICE/ROSETTA/kernels/spk)
+the kernel that contains the comet orbit before the comet phase of the mission. However, this only covers times from 2010 onwards, so
+67P_CHURY_GERAS_2004_2016.BSP is necessary for comet orbit before that. I load this first because ORHW, being the official kernel,
+should take precedence in case of conflict.
+There are two different sclk (S/C clock) kernels. ros_triv.tsc is to be used with the RATM attitude files whereas the ROS_..._STEP.TSC is to be
+used with RATT, CATT and ATNR files. Since the RATM files are printed before the RATT files in this metakernel file, they will only be called if
+RATT lacks coverage, i.e. for times far enough into the future. Then, presumably, ROS_..._STEP.TSC will also lack coverage and ros_triv.tsc will
+be called instead. I am not sure about this last part, but I hope that the coverage of ROS_..._STEP.TSC ends at the same time as that of the current
+RATT file, otherwise I do not know how to automatically set which one is to be used. Either way, any error because of this should only occur in the
+planning phase, where RATM files are called instead of RATT. A posteriori data analysis should be unaffected. If one wants to be sure of accurate
+planning data, it is of course possible to load ros_triv.tsc manually with cspice_furnsh after this metakernel has been loaded. It will then take
+precedence, but one must then remember that, since this matekernel file loads RATT after RATM, any epochs covered also by RATT will be incorrect.

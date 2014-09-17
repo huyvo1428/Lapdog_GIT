@@ -183,6 +183,7 @@ try
                     %    plot(freq,psd)
                     psd=psd*1e18; %scale to nA for current files
                     %
+                    %
                     %                 if fileflag(2) =='3'
                     %
                     %              %       fout={fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2)};

@@ -154,6 +154,11 @@ try
         vP = 0;
         vPStd = 0;
         
+        
+        
+        
+        
+        % analyse!
         for k=1:len
             %  a= cspice_str2et(timing{1,k});
             m = k;
@@ -161,7 +166,7 @@ try
             %% quality factor check
             qf= Qfarr(k);
             
-            if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.01) %rotation of more than 0.01 degrees
+            if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.01) %rotation of more than 0.01 degrees  %arbitrary chosen value... seems decent
                 qf = qf+20; %rotation
             end
             
@@ -170,6 +175,11 @@ try
             fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
             fout{m,2} = mean(SAA(1,2*k-1:2*k));
             fout{m,3} = mean(illuminati(1,2*k-1:2*k));
+            
+% 
+%             DP = an_LP_Sweep(Vb, Iarr(:,k),0,fout{m,1}(15),fout{m,3});
+%             
+            
             if fout{m,3}==1
                 %estimates plasma potential from second derivative gaussian
                 %fit, using qualified guesses of the plasma potential from
@@ -177,7 +187,7 @@ try
                 %current)
                 [vP,vPStd] = Vplasma(Vb,Iarr(:,k),fout{m,1}(15),3);
                 
-                fout{m,4}(1) = vP; %skipping intermediate step impossible on old matlab...
+                fout{m,4}(1) = vP; %skipping the intermediate step impossible on old matlab version on squid.
                 fout{m,4}(2) = vPStd;
                 
                 

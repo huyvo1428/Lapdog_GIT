@@ -51,13 +51,6 @@ ind_I2S= find(strcmp('I2S', antype));
 fprintf(1,'Analysing sweeps\n')
 
 
-   
-if(~isempty(ind_I1S))
-
-an_swp2(ind_I1S,tabindex,targetfullname);
-
-
-end
 
 
 if(~isempty(ind_I2S))
@@ -65,6 +58,13 @@ an_swp2(ind_I2S,tabindex,targetfullname);
 
 end
 
+   
+if(~isempty(ind_I1S))
+
+an_swp2(ind_I1S,tabindex,targetfullname);
+
+
+end
 
 
 

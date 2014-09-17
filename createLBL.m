@@ -78,8 +78,11 @@ if(~isempty(tabindex));
         
         
         shitstr = index(tabindex{i,3}).sct0str;
-        tempfp{1,2}{32,1} = strcat(index(tabindex{i,3}).sct0str(1:end-1),'"');  %% sc start time
-        tempfp{1,2}{33,1} = sprintf('"%s/%017.6f"',index(tabindex{i,3}).sct0str(2),tabindex{i,5}); %% sc stop time
+      %  tempfp{1,2}{32,1} = strcat(index(tabindex{i,3}).sct0str(1:end-1),'"');  %% sc start time
+        tempfp{1,2}{32,1} = index(tabindex{i,3}).sct0str;
+        tempfp{1,2}{33,1} = obt2sct(tabindex{i,5},scResetCount);
+        
+       % tempfp{1,2}{33,1} = sprintf('"%s/%017.6f"',index(tabindex{i,3}).sct0str(2),tabindex{i,5}); %% sc stop time
         %   tempfp{1,2}{56,1} = sprintf('%i',tabindex{i,6}); %% rows
         
         
