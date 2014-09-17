@@ -88,10 +88,6 @@ Q    = [0 0 0 0];   % Quality vector
 % Sort the data
 [V,I] = LP_Sort_Sweep(V',I');
 
-
-
-
-
 % %if (length(V) <= ALG.SM_Dta_Points) % Too few data points to do any work
 %         if (efi_f_io_lp_l1bp)
 % 		disp('Too few data points to do any work');
@@ -135,38 +131,57 @@ end
 % Now, removing the linearly fitted ion-current from the electron ion 
 % current will leave the collected electron current, Remember we have 
 % already subtracted  Iph
-Ie = I - Ii; % The electron current is denoted Ie
+Itemp = I - Ii; % The electron current is denoted Ie
+
+
+if (efi_f_io_lp_l1bp>1)
+	subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
+	title('I & I - ion current');
+end
+
 
 %Ie_s = LP_MA(Ie); % Now we smooth the data using a 9-point moving average
 
 
-[Te,ne,Iph,ea,eb]=LP_Electron_curr(V,Ie_s,Vsc);
+[Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc);
 
-[Vsc, sigma] = Vplasma(V,Iph,Vsc,3); %let's try it again
+Itemp = Itemp - Ie;
 
 
+
+if (efi_f_io_lp_l1bp>1)
+
+    
+	subplot(2,2,2),plot(V,I,'b',V,Itemp,'g');grid on;
+	title('I & I - ions - electrons');
+end
+
+
+% Redetermine s/c potential, without ions and plasma electron currents
+
+
+[Vsc, sigma] = Vplasma(V,Itemp,Vsc,sigma); 
 
 if(illuminated)
     
+    Iph = Itemp;
     
-    iph = ip(pos) - iecoll;
-    vbh = vb(pos);
     
+%     iph = ip(pos) - iecoll;
+%     vbh = vb(pos);
+%     
     
     % Do log fit to first 4 V:
-    phind = find(vbh < vbinf + 4);
-    phpol = polyfit(vbh(phind),log(abs(iph(phind))),1);
+    phind = find(V < Vsc + 4);
+    phpol = polyfit(V(phind),log(abs(Iph(phind))),1);
     Tph = -1/phpol(1);
     Iftmp = -exp(phpol(2));
     
     % Find Vsc as intersection of ion and photoemission current:
     % Iterative solution:
-    vs = -vbinf;
+    vs = -Vsc;
     for(i=1:10)
-        vs = -(log(-polyval(poli,-vs)) - phpol(2))/phpol(1);
-        if(diag)
-            %  vs
-        end
+        vs = -(log(-polyval([ia,ib],-vs)) - phpol(2))/phpol(1);
     end
     % Calculate If0:
     If0 = Iftmp * exp(vs/Tph);
@@ -177,35 +192,20 @@ else
 %  Iie = I; % Skip compensation for photo electrons.
 end
 
-
-
-if (efi_f_io_lp_l1bp>1)
-
-    
-	subplot(2,2,3),plot(V,I,'b',V,Ie,'g');grid on;
-	title('electron side for a and b determination');
-end
-
-% Redetermine s/c potential, without ions and photo currents
-%Vsc = LP_Find_SCpot(V,Ie,dv);  
-[Vsc, sigma] = Vplasma(V,I,Vsc,3);
-
-
-
-if (efi_f_io_lp_l1bp>1)
-    
-    
-    x = V(1):0.2:V(end);
-    y = gaussmf(x,[sigma Vsc]);    
-	subplot(2,2,1),plot(V,Ie,'g',x,y*abs(max(I))/4,'b');grid on;
-	title('V & I and Vsc Guess');
-    
-    Vsc2 = LP_Find_SCpot(V,Ie,dv); 
-    x = V(1):0.2:V(end);
-    y = gaussmf(x,[1, Vsc2]);    
-	subplot(2,2,2),plot(V,Ie,'g',x,y*max(I),'b');grid on;
-	title('V & I and Vsc Guess number 2');
-end
+% if (efi_f_io_lp_l1bp>1)
+%     
+%     
+%     x = V(1):0.2:V(end);
+%     y = gaussmf(x,[sigma Vsc]);    
+% 	subplot(2,2,1),plot(V,Ie,'g',x,y*abs(max(I))/4,'b');grid on;
+% 	title('V & I and Vsc Guess');
+%     
+%     Vsc2 = LP_Find_SCpot(V,Ie,dv); 
+%     x = V(1):0.2:V(end);
+%     y = gaussmf(x,[1, Vsc2]);    
+% 	subplot(2,2,2),plot(V,Ie,'g',x,y*max(I),'b');grid on;
+% 	title('V & I and Vsc Guess number 2');
+% end
 
 
 
@@ -218,6 +218,12 @@ end
 DP.Te      = Te;
 DP.ne      = ne;
 DP.Vs      = Vsc;
+DP.If0     = If0;
+DP.Tph      = Tph;
+DP.ia      = ia;
+DP.ib      = ib;
+DP.ea      = ea;
+DP.eb      = eb;
 DP.Quality = Q;
 end
 

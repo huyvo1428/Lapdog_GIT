@@ -177,7 +177,7 @@ try
             fout{m,3} = mean(illuminati(1,2*k-1:2*k));
             
 % 
-%             DP = an_LP_Sweep(Vb, Iarr(:,k),0,fout{m,1}(15),fout{m,3});
+            DP = an_LP_Sweep(Vb, Iarr(:,k),0,fout{m,1}(15),fout{m,3});
 %             
             
             if fout{m,3}==1

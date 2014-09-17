@@ -126,8 +126,8 @@ b = P(2); % ...and this is the crossing on the y-axis of the line
 % contribution would not be sensible), extended to the full range of the
 % potential sweep, is a good approximation to the ion current, and that is
 % what is returned from this function
-
-Ii = polyval(P,V);    % The current is calculated across the entire potential
+Ii(1:len) = 0;
+Ii = polyval(P,Vi);    % The current is calculated across the entire potential
                       % sweep. The function polyval returns the value of the
                       % polynomial P evaluated at all the points of the vector V.
 
@@ -140,7 +140,7 @@ Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
 
                       
 if (efi_f_io_lp_l1bp>1)    
-	subplot(2,2,3),plot(V,I,'b',Vi,Ii,'g');grid on;
+	subplot(2,2,3),plot(V,I,'b',V,Ii,'g');grid on;
 	title('Ion/photo-side for a and b determination');
 end
 

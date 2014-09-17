@@ -95,7 +95,7 @@ bot = floor(ind(1)-l_ind*SM_Below_Vs +0.5);
                          % the calling parameter to the nearest integer 
                          % towards minus infinity.
 
-ind = ind(bot:emd); % Only the first ALG.SM_Below_Vs*100% above the spacecraft potential is now
+ind = ind(bot:end); % Only the first ALG.SM_Below_Vs*100% above the spacecraft potential is now
 Vr  = V(ind);     % kept of the vector ind    
 Ir  = I(ind);     % The "ion-voltage" and "ion-current" are set. Note that this
     
