@@ -1,5 +1,5 @@
-%leapfrogd
-
+%Computes a central difference derivative and second derivative, with some
+%smoothing if asked.
 function [dx,d2x] = leapfd(x,y,varargin)
 
 
@@ -44,8 +44,6 @@ if len ==length(y)
     end
     
     
-    
-  %  d2x(2:length(x)-2) = diff(diff(dx))/diff(diff(y));
     
     
     for j= 2:length(x)-1

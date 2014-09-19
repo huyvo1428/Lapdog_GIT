@@ -159,21 +159,7 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
             if macroNo == 604
             %'hello'
             end
-            
-%             if diag2 == 1
-%                 shit = [];
-%                 shit(:,1) = scantemp{1,2}(:)- floor(scantemp{1,2}(:));
-%                 shit(1:length(sweept(1,:)),4) = floor(sweept(1,:));
-%                 shit(1:length(sweept(1,:)),3) = sweept(1,:)- floor(sweept(1,:));
-%                 shit(1:length(sweept(2,:)),6) = floor(sweept(2,:));
-%                 shit(1:length(sweept(2,:)),5) = sweept(2,:)- floor(sweept(2,:));
-%                 shit(:,2) = floor(scantemp{1,2}(:));
-%                 shit(:,7) = scantemp{1,3}(:);
-%                 shit(:,8) = del(:);
-%                 diag2;
-%                 
-%             end
-%                 
+
             if scantemp{1,2}(end)<sweept(1,1) || scantemp{1,2}(1)>sweept(2,end)
             
             %all measurements before first sweep or after last sweep.
@@ -187,36 +173,9 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
             del=ismemberf(scantemp{1,2}(:),sweept2,'tol',tol);
             
             
-%                 for j =1:length(sweept(1,:))
-%                     
-%                     
-%                     
-%                     if scantemp{1,2}(end)<sweept(1,j)
-%                         break
-%                     end
-%                     tmpdel=false(1,lee);
-%                     
-%                     %                 IDX = uint32(1:size(A,1));
-%                     %                 ind = IDX(A(:,1) >= L & A(:,1) < U);
-%                     after  = scantemp{1,2}(:)   >= sweept(1,j);   %after sweep start
-%                     tmpdel(after) = scantemp{1,2}(after)   <= sweept(2,j);   %before sweep ends
-%                     
-%                     del(tmpdel)=1;
-%                    
-%                     if(sum(unique(tmpdel)))
-%                         sweept(:,j)=[];
-%                     end
-%                     
-%                     
-%                     %NB: sweep stop % start time (from LBL files) seem to be roughly
-%                     %0.2 seconds before and after first and final measurement, so we
-%                     %probably won't have to increase "deletion window"
-%                 end
                 
                 if sum(unique(del)) %is zero or one
-%                     if diag2
-%                         shit(:,8) = del(:);
-%                     end
+                    
                     % instead of remove, do qualityflag?
                     scantemp{1,1}(del)    = [];
                     scantemp{1,2}(del)    = [];
@@ -245,9 +204,7 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
             if fileflag(2) =='3'
                 
                 for (j=1:scanlength)       %print
-                    
-                    scantemp{1,3}(j)= scantemp{1,3}(j)+ CURRENTO1; %
-                    scantemp{1,4}(j)= scantemp{1,4}(j)+ CURRENTO2;
+
                     %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
                     fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %03i\n'...
                         ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qualityF);
@@ -326,14 +283,7 @@ else %% if sweep, do:
             inter = 1+ floor((0:1:length(scantemp{1,2})-1)/nStep).'; %find which values to average together
        
             potbias = accumarray(inter,scantemp{1,4}(:),[],@mean); %average
-            scan2temp=accumarray(inter,scantemp{1,2}(:),[],@mean); %average time
-            
-            
-%             if (length(potbias)==del) %this is true if LDL macro and measurements taken during MIP intervals                
-%                 potbias(del) = [];
-%                 scan2temp(del) =[];
-%             end
-            
+            scan2temp=accumarray(inter,scantemp{1,2}(:),[],@mean); %average time           
             
             reltime = scan2temp(:)-scan2temp(1); %relative time stamps
 
@@ -424,31 +374,6 @@ else %% if sweep, do:
                 
                 
             end
-            
-
-      
-%             LDLmacro=false(length(inter),1);
-%             reltime2=scantemp{1,2}(:)-t0; %needs to start exactly at first measurement
-%             
-%             logical indexing instead of loop
-%             LDLmacro(mod(reltime2*1000,8) <= 2) = 1;
-%             for i=1:length(inter)
-%                 relmod =mod(reltime2(i),8e-3)
-%                 if (mod(reltime2(i)*1000,8) <= 2 ) %if (mod(reltime2(i),8e-3) <=2
-%                     LDLmacro(i)=1;
-%                     
-%                 end%if
-%                 will average all LDL macro measurements together and remove them from array potbias, curtemp
-%                 if LDLmacro(reltime(:)
-%             end%for
-%                 qftest=inter(LDLmacro);
-%                 
-%                 qf= zeros(length(potbias),1);
-%                 
-%                 qf(unique(qftest)) = 2; %low sample size quality factor
-%                 inter(LDLmacro)=del;
-%                 
-%             end%if weird macro    
 
         else
             curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
@@ -456,10 +381,7 @@ else %% if sweep, do:
             
         end%if LDL macro check & downsampling
         
-        %careful here, what if all measurements at one potential step is missing due to LDL interference? fill with nan
-%         if (length(curArray)==del) %this is true if LDL macro AND measurements taken during MIP intervals            
-%             curArray(del) = [];
-%         end
+
         %%LET'S PRINT!
         
         curArray=curArray+ CURRENTOFFSET;
@@ -471,10 +393,7 @@ else %% if sweep, do:
         %%Finalise
         
         if (i==len)
-            
-            %             nrpots = length(curtemp);
-            %             nrfiles = len;
-            
+
             tabindex(end,4:7)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),length(potbias),2}; %one index for bias voltages
             tabindex{end,8}=b1;
             

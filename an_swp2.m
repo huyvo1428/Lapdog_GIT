@@ -12,11 +12,18 @@ paths();
 
 cspice_furnsh(kernelFile);
 
+% 
+% 
+
 try
     
-    for i=1:length(an_ind)
+    for i=10:length(an_ind)
         
-        fout=cell(1,7);
+        
+        
+        
+        
+        %fout=cell(1,7);
         split = 0;
         
         rfile =tabindex{an_ind(i),1};
@@ -110,7 +117,7 @@ try
             
             Vb=Vb(1:mind);
             Iarr= Iarr(1:mind,:);
-            split = 1;
+            split = -1;
             
             
         end
@@ -149,13 +156,43 @@ try
         %  cspice_str2et(
         
         
-        %  phot ==
+        %% initialise and clear output struct
+        AP(len).ts       = [];
+        AP(len).vx       = [];
+        AP(len).Tph      = [];
+        AP(len).If0      = [];
+        AP(len).vs       = [];
+        AP(len).lastneg  = [];
+        AP(len).firstpos = [];
+        AP(len).poli1    = [];
+        AP(len).poli2    = [];
+        AP(len).pole1    = [];
+        AP(len).pole2    = [];
+        AP(len).probe    = [];
+        AP(len).vbinf    = [];
+        AP(len).diinf    = [];
+        AP(len).d2iinf   = [];
         
-        vP = 0;
-        vPStd = 0;
         
+        EP(len).tstamp   = [];
+        EP(len).SAA      = [];
+        EP(len).qf       = [];
+        EP(len).Tarr     = {};
+        EP(len).lum      = [];
+        EP(len).split    = [];
         
-        
+        DP(len).If0      = [];
+        DP(len).Tph      = [];
+        DP(len).Te       = [];
+        DP(len).ne       = [];
+        DP(len).Vsc      = [];
+        DP(len).Vsigma   = [];
+        DP(len).ia       = [];
+        DP(len).ib       = [];
+        DP(len).ea       = [];
+        DP(len).eb       = [];
+        DP(len).Quality  = [];
+        %%
         
         
         % analyse!
@@ -170,46 +207,62 @@ try
                 qf = qf+20; %rotation
             end
             
+            EP(k).SAA = mean(SAA(1,2*k-1:2*k));
+            EP(k).lum = mean(illuminati(1,2*k-1:2*k));
+            
+            EP(k).split = 0;
+            EP(k).Tarr = {Tarr{:,k}};
+            
+            %       fout{m,5}={Tarr{:,k}};
+            EP(k).tstamp = Tarr{3,k};
+            EP(k).qf = qf;
             
             
-            fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
-            fout{m,2} = mean(SAA(1,2*k-1:2*k));
-            fout{m,3} = mean(illuminati(1,2*k-1:2*k));
+            %Anders LP sweep analysis
+            AP(k)=  an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(k).lum);
+            %AP = [AP;temp];
             
-% 
-            DP = an_LP_Sweep(Vb, Iarr(:,k),0,fout{m,1}(15),fout{m,3});
+  %          fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
+ %           fout{m,2} = mean(SAA(1,2*k-1:2*k));
+
+
+%            fout{m,3} = mean(illuminati(1,2*k-1:2*k));
+            
+%           %new LP sweep analysis
+            DP(k)= an_LP_Sweep(Vb, Iarr(:,k),AP(k).vs,EP(k).lum);
+            
+            
+           % DP = [DP;temp];
 %             
             
-            if fout{m,3}==1
-                %estimates plasma potential from second derivative gaussian
-                %fit, using qualified guesses of the plasma potential from
-                %an_swp (,fout{l,1}(15)=vs = Vsc as intersection of ion and photoemission
-                %current)
-                [vP,vPStd] = Vplasma(Vb,Iarr(:,k),fout{m,1}(15),3);
-                
-                fout{m,4}(1) = vP; %skipping the intermediate step impossible on old matlab version on squid.
-                fout{m,4}(2) = vPStd;
-                
-                
-                if max(Vb)<(vP+vPStd) || min(Vb)>(vP-vPStd) %
-                    qf=qf+1; %poor fit for analysis method
-                end
-                
-                
-            else
-                fout{m,4}(1) = NaN;
-                fout{m,4}(2) = NaN;
-                
-            end%if
-          
-            fout{m,5}={Tarr{:,k}};
-            fout{m,6}= Tarr{3,k};
-            fout{m,7}=qf;
+%             if AP(k).lum==1
+%                 %estimates plasma potential from second derivative gaussian
+%                 %fit, using qualified guesses of the plasma potential from
+%                 %an_swp (,fout{l,1}(15)=vs = Vsc as intersection of ion and photoemission
+%                 %current)
+%                 [vP,vPStd] = Vplasma(Vb,Iarr(:,k),AP(k).vs,3);
+%                 
+%                 fout{m,4}(1) = vP; %skipping the intermediate step impossible on old matlab version on squid.
+%                 fout{m,4}(2) = vPStd;
+%                 
+%                 
+%                 if max(Vb)<(vP+vPStd) || min(Vb)>(vP-vPStd) %
+%                     qf=qf+1; %poor fit for analysis method
+%                 end
+%                 
+%                 
+%             else
+%                 fout{m,4}(1) = NaN;
+%                 fout{m,4}(2) = NaN;
+%                 
+%             end%if
+
+%            fout{m,7}=qf;
         end%for
         
         
         
-        if split
+        if (split~=0)
             
             
             for k=1:length(Iarr2(1,:))
@@ -222,47 +275,70 @@ try
                     qf = qf+20; %rotation
                 end
                 
-                fout{m,1} =an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati);
+                %               fout{m,1} =an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati);
+                %                fout{m,2} = mean(SAA(1,2*k-1:2*k)); %every pair...
+                %                fout{m,3} = mean(illuminati(1,2*k-1:2*k));
                 
-                fout{m,2} = mean(SAA(1,2*k-1:2*k)); %every pair...
-                fout{m,3} = mean(illuminati(1,2*k-1:2*k));
-                if fout{m,3}==1
-                    %      [fout{l+len,4}{1},fout{l+len,4}{2}] = Vplasma(Vb2,Iarr2(:,k));
-                    
-                    %estimates plasma potential from second derivative gaussian
-                    %fit, using qualified guesses of the plasma potential from
-                    %an_swp (,fout{l,1}(15)=vs = Vsc as intersection of ion and photoemission
-                    %current)
-                    [vP,vPStd] = Vplasma(Vb2,Iarr2(:,k),fout{m,1}(15),4);
-                    %have to do this in three steps since old matlab version on server
-                    fout{m,4}(1) = vP;
-                    fout{m,4}(2) = vPStd;
-                    
-                    if max(Vb)<(vP+vPStd) || min(Vb)>(vP-vPStd) %
-                        qf=qf+1; %poor fit for analysis method
-                    end
-                    
-                    
-                else
-                    fout{m,4}(1) = NaN;
-                    fout{m,4}(2) = NaN;
-                end%if
+                EP(m).SAA = mean(SAA(1,2*k-1:2*k));
+                EP(m).lum = mean(illuminati(1,2*k-1:2*k));
+                EP(m).Tarr = {Tarr{:,k}};
+                EP(m).tstamp = Tarr{4,k};
+                EP(m).qf = qf;
+                EP(m).split= split; % 1 for V form, -1 for upsidedownV
+
+                AP(m)     =  an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(m).lum);
+                %          fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
+                %                fout{m,2} = mean(SAA(1,2*k-1:2*k));
+
+                DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),AP(m).vs,EP(m).lum);
+
                 
-                fout{m,5}={Tarr{:,k}};
-                fout{m,6}= Tarr{4,k}; %%obs, not Tarr{3,k};
-                
-                
-                
-                fout{m,7}=qf;
+                %
+%                 if fout{m,3}==1
+%                     %      [fout{l+len,4}{1},fout{l+len,4}{2}] = Vplasma(Vb2,Iarr2(:,k));
+%                     
+%                     %estimates plasma potential from second derivative gaussian
+%                     %fit, using qualified guesses of the plasma potential from
+%                     %an_swp (,fout{l,1}(15)=vs = Vsc as intersection of ion and photoemission
+%                     %current)
+%                     [vP,vPStd] = Vplasma(Vb2,Iarr2(:,k),fout{m,1}(15),4);
+%                     %have to do this in three steps since old matlab version on server
+%                     fout{m,4}(1) = vP;
+%                     fout{m,4}(2) = vPStd;
+%                     
+%                     if max(Vb)<(vP+vPStd) || min(Vb)>(vP-vPStd) %
+%                         qf=qf+1; %poor fit for analysis method
+%                     end
+%                     
+%                     
+%                 else
+%                     fout{m,4}(1) = NaN;
+%                     fout{m,4}(2) = NaN;
+%                 end%if
+%                 
+% %                fout{m,5}={Tarr{:,k}};
+%                 fout{m,6}= Tarr{4,k}; %%obs, not Tarr{3,k};
+%                 
+%                 
+%                 
+%                 fout{m,7}=qf;
                 
                 
             end%for
         end%if split
         
-        fout = sortrows(fout,6);
+    %    fout = sortrows(fout,6);
         %  [foutarr,~] = sortrows{foutarr,6,'ascend'};
+
         
+        [junk,ind] = sort({EP.tstamp});
         
+  %      [junk,ind] = sort({EP.tstamp});
+        klen=length(ind);
+
+        AP=AP(ind);
+        DP=DP(ind);
+        EP=EP(ind);
         wfile= rfile;
         wfile(end-6)='A';
         awID= fopen(wfile,'w');
@@ -270,7 +346,7 @@ try
         
         
         % fpformat = '%s, %s, %03i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e  %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
-        for k=1:length(fout(:,1))
+        for k=1:klen
             %params = [ts vb(lastneg) vb(firstpos) vx poli(1) poli(2) pole(1) pole(2) p vbinf diinf d2iinf Tph If0 vs];
             %time0,time0,quality,mean(SAA),mean(Illuminati)
             
@@ -280,20 +356,31 @@ try
             
             %f_format = '%s, %s, %03i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
             %1:5
+
             %time0,time0,qualityfactor,mean(SAA),mean(Illuminati)
-            str1=sprintf('%s, %s, %03i, %07.3f, %03.2f,',fout{k,5}{1,1},fout{k,5}{1,2},fout{k,7},fout{k,2},fout{k,3});
+            str1=sprintf('%s, %s, %03i, %07.3f, %03.2f,',EP(k).Tarr{1,1},EP(k).Tarr{1,2},EP(k).qf,EP(k).SAA,EP(k).lum);
+            %time0,time0,qualityfactor,mean(SAA),mean(Illuminati)
+ %           str1=sprintf('%s, %s, %03i, %07.3f, %03.2f,',fout{k,5}{1,1},fout{k,5}{1,2},fout{k,7},fout{k,2},fout{k,3});
             %6:9
             %,vs,vx,Vsc,VscSigma
-            str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(15),fout{k,1}(4),fout{k,4}(1),fout{k,4}(2));
+            str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',AP(k).vs,AP(k).vx,DP(k).Vsc,DP(k).Vsigma);
+            %,vs,vx,Vsc,VscSigma
+ %           str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(15),fout{k,1}(4),fout{k,4}(1),fout{k,4}(2));
             %10:13
             %,Tph,If0,vb(lastneg) vb(firstpos),
-            str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', fout{k,1}(13),fout{k,1}(14),fout{k,1}(2),fout{k,1}(3));
+            str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph,DP(k).If0,AP(k).lastneg,AP(k).firstpos);
+            %,Tph,If0,vb(lastneg) vb(firstpos),
+%            str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', fout{k,1}(13),fout{k,1}(14),fout{k,1}(2),fout{k,1}(3));
             %14:17
             %poli(1),poli(2),pole,pole,
-            str4=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(5),fout{k,1}(6),fout{k,1}(7),fout{k,1}(8));
+            str4=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',AP(k).poli1,AP(k).poli2,AP(k).pole1,AP(k).pole2);
+            %poli(1),poli(2),pole,pole,
+     %       str4=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(5),fout{k,1}(6),fout{k,1}(7),fout{k,1}(8));
             %18:20
             %  vbinf,diinf,d2iinf
-            str5=sprintf(' %14.7e, %14.7e, %14.7e',fout{k,1}(10),fout{k,1}(11),fout{k,1}(12));
+            str5=sprintf(' %14.7e, %14.7e, %14.7e',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
+            %  vbinf,diinf,d2iinf
+       %     str5=sprintf(' %14.7e, %14.7e, %14.7e',fout{k,1}(10),fout{k,1}(11),fout{k,1}(12));
             strtot= strcat(str1,str2,str3,str4,str5);
             str6=strrep(strtot,'NaN','   ');
             
@@ -320,18 +407,18 @@ try
         an_tabindex{end,2} = strrep(wfile,rfolder,''); %shortfilename
         an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
         %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
-        an_tabindex{end,4} = length(fout(:,1)); %number of rows
+        an_tabindex{end,4} = klen; %number of rows
         an_tabindex{end,5} = 19; %number of columns
         an_tabindex{end,6} = an_ind(i);
         an_tabindex{end,7} = 'sweep'; %type
         an_tabindex{end,8} = timing;
         an_tabindex{end,9} = row_bytes;
         
-        
+        clear AP DP EP
     end
     
     cspice_unload(kernelFile);  %unload kernels when exiting function
-    
+%     
 catch err
     
     fprintf(1,'Error at loop step %i, file %s',i,tabindex{an_ind(i),1});

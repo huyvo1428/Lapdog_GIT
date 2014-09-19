@@ -172,6 +172,9 @@ try
             
             
             
+           
+            
+            
             fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
             fout{m,2} = mean(SAA(1,2*k-1:2*k));
             fout{m,3} = mean(illuminati(1,2*k-1:2*k));

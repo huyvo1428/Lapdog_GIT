@@ -57,7 +57,7 @@
 function [Ii,a,b] = LP_Ion_curr(V,I,Vsc)
 
 %global ALG;
-SM_Below_Vs =0.80;
+SM_Below_Vs =0.6;
 
 global CO;
 global efi_f_io_lp_l1bp;
@@ -79,7 +79,7 @@ l_ind = length(ind); % Need the number of data points of the vector ind
 
                      
                      
-top = floor(l_ind*SM_Below_Vs);
+top = floor(l_ind*SM_Below_Vs +0.5);
 %top = floor(l_ind*ALG.SM_Below_Vs); % The point closest to, but below, ALG.SM_Below_Vs*100% of the
                          % spacecraft potential. The function floor rounds 
                          % the calling parameter to the nearest integer 
@@ -122,12 +122,16 @@ P = polyfit(Vi,Ii,1); % The function polyfit finds the coefficients of a
 a = P(1); % This is accordingly the slope of the line...
 b = P(2); % ...and this is the crossing on the y-axis of the line 
 
+
+%P(2) = 0;
 % The negative part of this line (since having a positive ion current
 % contribution would not be sensible), extended to the full range of the
 % potential sweep, is a good approximation to the ion current, and that is
 % what is returned from this function
 Ii(1:len) = 0;
-Ii(1:length(Vi)) = polyval(P,Vi);    % The current is calculated across the entire potential
+
+Ii(1:length(Vi)) = a*Vi;
+%Ii2(1:length(Vi)) = polyval(P,Vi);    % The current is calculated across the entire potential
                       % sweep. The function polyval returns the value of the
                       % polynomial P evaluated at all the points of the vector V.
 

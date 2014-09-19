@@ -1,5 +1,5 @@
 %Vplasma
-%takes an potential array and current array, and optionally a guess for the
+%takes an sweep potential array and current array, and optionally a guess for the
 %Vplasma and its sigma (suggested sigma 3 V), outputs an estimate for the
 %plasma potential and it's confidence level (std)
 function [vPlasma,sigma] = Vplasma(Vb2,Ib2,vGuess,sigmaGuess)
@@ -14,15 +14,16 @@ diag = 0;
 
 Ib = accumarray(ic,Ib2,[],@mean);
 
-% %don't do it here, silly. it's done in d2i if you ask it too
 
-%vbzero= find(le(Vb,0));
-[junk,d2i]= leapfd(Ib,Vb,0.28);
+len= length(Vb);
+
+[di,d2i]= leapfd(Ib,Vb,0.28);
 
 
 
 [Vb,ind]=sort(Vb);
 d2i=d2i(ind);
+di=di(ind);
 
 posd2i =(abs(d2i)+d2i)/2;
 
@@ -30,20 +31,49 @@ posd2i =(abs(d2i)+d2i)/2;
 % ind1 = find(~d2i,1,'last');
 % ind0 = 1;
 
+%sort absolute values of derivative
 
-%nd2i = d2i(ind0:ind1)/(sum(d2i(ind0:ind1)));
 
 
+if nargin>2   %if a guess is given
+[junk,chosen] =min(abs(Vb-vGuess));
+else
+[junk,pos]= sort(abs(di));
+top10= floor(len*0.9+0.5); %get top 10 percent of peaks
+chosen=min(pos(top10:end)); % prioritise earlier peaks, because electron side (end) can be noisy    
+end
+
+%get a region around our chosen guesstimate.
+lo= floor(chosen-len*0.20 +0.5); %let's try 40% of the whole sweep
+hi= floor(chosen+len*0.20 +0.5); %+0.5 pointless but good practise
+
+lo = max([lo,1]); %don't move outside 1:len)
+hi = min([hi,len]);
+
+ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative) peaks
+              %or a region around our Vguess
 
 if nargin>2
-
-%[sigma,Vplasma] =gaussfit(Vb(ind0:ind1),d2i(ind0:ind1),sigmaGuess,vGuess);
-%these vGuesses are never agood!
-[sigma,vbPlasma] =gaussfit(Vb,posd2i,sigmaGuess) ;
-else
     
+    %[sigma,Vplasma] =gaussfit(Vb(ind0:ind1),d2i(ind0:ind1),sigmaGuess,vGuess);
+    %these vGuesses are never agood!
+    [sigma,vbPlasma] =gaussfit(Vb(ind),posd2i(ind),sigmaGuess,Vb(chosen));
+    
+    
+else
+    [sigma,vbPlasma] =gaussfit(Vb(ind),posd2i(ind));
+   
+
+end
+
+
+if isnan(vbPlasma)
+    %if it's NaN, try the whole spectrum, no fancy guesswork.
     [sigma,vbPlasma] =gaussfit(Vb,posd2i);
 end
+
+
+
 
 
 % tind= find(le(d2i,0));
@@ -91,6 +121,10 @@ end
 
 
 vPlasma = -vbPlasma; 
+
+if nargin>2 && isnan(vbPlasma)
+    vPlasma=vGuess; %don't guess anymore, just output input value.
+end
 
 
 end

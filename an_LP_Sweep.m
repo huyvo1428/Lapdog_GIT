@@ -9,34 +9,22 @@
 %  	This is the main function body. It is the function LP_AnalyseSweep from which all other functions are 
 %	called. It returns the determined plasma parameters; Vsc, ne, Te.  
 %
-%	1. The gain used for the probe is determined.
-%
-%   2. The calibrated currents are used and any overflows are removed.
 %
 %   3. The sweep is sorted, changing the direction of sweeping to always be
 %       up sweeps. Sweeps with both up and down sweeping is not handled
 %       however we do not plan to use this feature.
-%  
-%   4. Convert TM units to physical SI units.
 %
-%	5. find the space craft potential by calling Vsc=LP_Find_SCpot(V,I,dv)
+%	5. find the space craft potential by calling Vplasma
 %
-%	6. Following this LP_GetSunlit(time,probe) is called to get the
-%	illumination status of the probe for the present time.
 %
-%   7. If we are compensating for photo electrons  and we are
-%   illuminated then we get the UV intensity LP_GetUVIntensity for the
-%   present time and the photo electron current LP_Photo_curr(V,Vsc,F107)
-%   is subtracted from the probe current.
 %
-%	8.Now the ion current is examined by calling "LP_Ion_curr" with the current obtained by removing the 
-%	   photo-current in step 7 above. Returned are the ion current and the coefficients for the polynomial 
+%	8.Now the ion current is examined by calling "LP_Ion_curr". Returned are the ion current and the coefficients for the polynomial 
 %	   fitting the low probe potential values.
 %
-%	9.The Ion current is removed from the combined ion-electron current, hopefully leaving only the plasma 
-%	   electron current; Ie = Iie - Ii.
+%	9.The Ion current is removed from the combined  current, hopefully leaving only the plasma 
+%	   electron current and Iph; Ie+Iph = I - Ii.
 %
-%   10. Recompute the space craft potential using Ie, Vsc=LP_Find_SCpot(V,Ie,dv)
+%   10. Recompute the spacecraft potential using  Vplasma
 %
 %	11.The remains are smoothed to reduce the effects of noise, using a function called "LP_MA.m". See
 %	   the header for this function for more information.
@@ -48,11 +36,11 @@
 %	   function.                     
 %                                                                  
 % Input:  
-%    time   UTC time in seconds
-%           ISP packet time+instrument timestamp+corrections
-%
-%	 P      Plasma structure
-%    S      Sweep configuration and data structure
+%     V             bias potential
+%     I             sweep current
+%     Vguess        spacecraft potential guess from previous analysis
+%     illuminated   if the probe is sunlit or not (from SPICE Kernel
+%     evaluation)
 %    probe  The probe we are presently analyzing                                                               
 %    sm_cal_status    Status if data has been current and offset compensated
 % Output: 
@@ -67,7 +55,7 @@
 %                    value.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function DP = an_LP_Sweep(V, I,time,Vguess,illuminated)
+function DP = an_LP_Sweep(V, I,Vguess,illuminated)
 
 %global IN;         % Instrument information
 %global LP_IS;      % Instrument constants
@@ -105,7 +93,13 @@ dv = V(2)-V(1);
 
 % First determine the spacecraft potential
 %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-[Vsc, sigma] = Vplasma(V,I,Vguess,3);
+[Vsc, sigma] = Vplasma(V,I);
+
+
+if isnan(Vsc)    
+   Vsc = Vguess;
+end
+
 
 
 
@@ -115,23 +109,21 @@ figure(33);
 end
 
 
-%illuminated = LP_GetSunlit(time,probe); % Get illumination for probe "probe"
-
- % Are we compensating for photo electrons  and are we in sunlight?
-%if(efi_lp_photo_emission_model && illuminated) 
-
-
 % Next we determine the ion current, Vsc need to be included in order 
 % to determine the probe potential. However Vsc do not need to be that
 % accurate here.In addition to the ion current, the coefficients from 
 % the linear fit  are also returned
+% [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
 [Ii,ia,ib] = LP_Ion_curr(V,I,Vsc); % The ion current is denoted Ii,
                                    % the coefficients a and b
 
-% Now, removing the linearly fitted ion-current from the electron ion 
-% current will leave the collected electron current, Remember we have 
-% already subtracted  Iph
-Itemp = I - Ii; % The electron current is denoted Ie
+                                   
+%ib is a good guess for If0;
+
+
+% Now, removing the linearly fitted ion-current from the 
+% current will leave the collected plasma electron current & photoelectron current 
+Itemp = I - Ii; %
 
 
 if (efi_f_io_lp_l1bp>1)
@@ -142,10 +134,12 @@ end
 
 %Ie_s = LP_MA(Ie); % Now we smooth the data using a 9-point moving average
 
+%Determine the electron current (above Vsc and positive), use a moving average 
+[Te,ne,Ie,ea,eb,rms]=LP_Electron_curr(V,Itemp,Vsc);
 
-[Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc);
+%[Te,ne,Ie,ea,eb,rms]=LP_Electron_curr(V,LP_MA(Itemp),Vsc);
 
-Itemp = Itemp - Ie;
+Itemp = Itemp - Ie; %the resultant current should only be photoelectron current (or zero)
 
 
 
@@ -158,9 +152,7 @@ end
 
 
 % Redetermine s/c potential, without ions and plasma electron currents
-
-
-[Vsc, sigma] = Vplasma(V,Itemp,Vsc,sigma); 
+[Vsc, sigma] = Vplasma(V,Itemp,Vsc,sigma); %if unsuccesful, Vplasma returns our Vsc Guess
 
 if(illuminated)
     
@@ -170,9 +162,18 @@ if(illuminated)
 %     iph = ip(pos) - iecoll;
 %     vbh = vb(pos);
 %     
+% 
+%        
+%         % Use curve above vinf:
+%         pos = find(V >= Vsc);
+%         
+%         % Subtract collected electrons, whose current is put to zero if
+%         % linear fit gives negative value:
+%         iph = ip(pos) - iecoll;
+%         vbh = vb(pos);
     
     % Do log fit to first 4 V:
-    phind = find(V < Vsc + 4);
+    phind = find(V < -Vsc + 6 & V>=-Vsc);
     phpol = polyfit(V(phind),log(abs(Iph(phind))),1);
     Tph = -1/phpol(1);
     Iftmp = -exp(phpol(2));
@@ -186,13 +187,35 @@ if(illuminated)
     % Calculate If0:
     If0 = Iftmp * exp(vs/Tph);
     
-    
-    
+    DP.If0     = If0;
+    DP.Tph     = Tph;
+    DP.Vintersect = vs;
 else
-%  Iie = I; % Skip compensation for photo electrons.
+    
+    DP.If0     = NaN;
+    DP.Tph     = NaN;
+    DP.Vintersect = NaN;
 end
 
-% if (efi_f_io_lp_l1bp>1)
+%DP.If0     = NaN;
+%DP.Tph     = NaN;%defined elsewhere...
+
+DP.Te      = Te;
+DP.ne      = ne;
+DP.Vsc     = Vsc;
+DP.Vsigma  = sigma;
+DP.ia      = ia;
+DP.ib      = ib;
+DP.ea      = ea;
+DP.eb      = eb;
+DP.Quality = sum(Q);
+
+
+ if (efi_f_io_lp_l1bp>1)
+     
+     
+     subplot(2,2,4)
+     y = V*ia+V*ea+eb+
 %     
 %     
 %     x = V(1):0.2:V(end);
@@ -205,7 +228,7 @@ end
 %     y = gaussmf(x,[1, Vsc2]);    
 % 	subplot(2,2,2),plot(V,Ie,'g',x,y*max(I),'b');grid on;
 % 	title('V & I and Vsc Guess number 2');
-% end
+ end
 
 
 
@@ -214,17 +237,6 @@ end
 % [Te1,Te2,n1,n2,Ie1,Ie2,f,e,Vsc,Q] = LP_Electron_curr(V,Ie_s,Vsc,dv,Q);
 
 
-
-DP.Te      = Te;
-DP.ne      = ne;
-DP.Vs      = Vsc;
-DP.If0     = If0;
-DP.Tph      = Tph;
-DP.ia      = ia;
-DP.ib      = ib;
-DP.ea      = ea;
-DP.eb      = eb;
-DP.Quality = Q;
 end
 
 

@@ -1,4 +1,4 @@
-function params = an_swp(vb,ip,ts,probenr,illuminati)
+function AP = an_swp(vb,ip,ts,probenr,illuminati)
 % an_swp.m -- analyze sweep data
 % Analyze sweep
 % Input:
@@ -12,6 +12,7 @@ function params = an_swp(vb,ip,ts,probenr,illuminati)
 %   par = zeros(1,16): vb or ip not a vector
 %   par = ones(1,16): vp or ip different length
 
+AP = [];
 
 %cspice_et2utc(ts,'ISOC',6)
 
@@ -234,7 +235,28 @@ end   % Case of no photoemission
 
 
 % Collect parameters:
-params = [ts vb(lastneg) vb(firstpos) vx poli(1) poli(2) pole(1) pole(2) probenr vbinf diinf d2iinf Tph If0 vs];
+
+
+AP.ts       = ts;
+AP.vx       = vx;
+AP.Tph      =Tph;
+AP.If0      =If0;
+AP.vs       =vs;
+AP.lastneg  = vb(lastneg);
+AP.firstpos = vb(firstpos);
+AP.poli1    = poli(1);
+AP.poli2    = poli(2);
+AP.pole1    = pole(1);
+AP.pole2    = pole(2);
+AP.probe    =probenr;
+AP.vbinf    =vbinf;
+AP.diinf    =diinf;
+AP.d2iinf   =d2iinf;
+
+
+
+% 
+% params = [ts vb(lastneg) vb(firstpos) vx poli(1) poli(2) pole(1) pole(2) probenr vbinf diinf d2iinf Tph If0 vs];
 
 %p_out= num2cell(params);
 % ind = isnan(params);
