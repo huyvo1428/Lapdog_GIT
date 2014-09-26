@@ -6,18 +6,18 @@ function []= an_sweepmain(an_ind,tabindex,targetfullname)
 global an_tabindex;
 global target;
 
-dynampath = strrep(mfilename('fullpath'),'/an_swp2','');
+dynampath = strrep(mfilename('fullpath'),'/an_sweepmain','');
 kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
 paths();
 
 cspice_furnsh(kernelFile);
 
-% 
-% 
+
+
 
 try
     
-    for i=10:length(an_ind)
+    for i=1:length(an_ind)
         
         
         
@@ -156,7 +156,7 @@ try
         %  cspice_str2et(
         
         
-        %% initialise and clear output struct
+        %% initialise output struct
         AP(len).ts       = [];
         AP(len).vx       = [];
         AP(len).Tph      = [];
@@ -173,6 +173,7 @@ try
         AP(len).diinf    = [];
         AP(len).d2iinf   = [];
         
+
         
         EP(len).tstamp   = [];
         EP(len).SAA      = [];
@@ -183,14 +184,22 @@ try
         
         DP(len).If0      = [];
         DP(len).Tph      = [];
+        DP(len).Vintersect = [];
         DP(len).Te       = [];
         DP(len).ne       = [];
         DP(len).Vsc      = [];
+        DP(len).Vplasma  = [];
         DP(len).Vsigma   = [];
         DP(len).ia       = [];
         DP(len).ib       = [];
         DP(len).ea       = [];
         DP(len).eb       = [];
+        
+        DP(len).Ts       = [];
+        DP(len).ns       = [];
+        DP(len).sa       = [];
+        DP(len).sb       = [];
+       
         DP(len).Quality  = [];
         %%
         
@@ -229,6 +238,8 @@ try
 %            fout{m,3} = mean(illuminati(1,2*k-1:2*k));
             
 %           %new LP sweep analysis
+
+%            test= an_LP_Sweep(Vb, Iarr(:,k),AP(k).vs,EP(k).lum);
             DP(k)= an_LP_Sweep(Vb, Iarr(:,k),AP(k).vs,EP(k).lum);
             
             
@@ -344,6 +355,15 @@ try
         awID= fopen(wfile,'w');
         r2 = 0;
         
+        fprintf(awID,strcat('EP(k).Tarr{1},EP(k).Tarr{2},EP(k).qf,EP(k).SAA,EP(k).lum',...
+            ',AP(k).vs,AP(k).vx,DP(k).Vsc,DP(k).Vsigma, AP(k).Tph,AP(k).If0,AP(k).lastneg,AP(k).firstpos',...
+            ',AP(k).poli1,AP(k).poli2,AP(k).pole1,AP(k).pole2',...
+            ',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf',...
+            ',DP(k).Quality,DP(k).Tph,DP(k).Vintersect,DP(k).Vplasma,DP(k).Te',...
+            ',DP(k).ne,DP(k).ia,DP(k).ib,DP(k).ea,DP(k).eb',...
+            ',DP(k).Ts,DP(k).ns,DP(k).sa,DP(k).sb\n'));
+        
+        
         
         % fpformat = '%s, %s, %03i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e  %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
         for k=1:klen
@@ -357,6 +377,8 @@ try
             %f_format = '%s, %s, %03i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
             %1:5
 
+            
+                
             %time0,time0,qualityfactor,mean(SAA),mean(Illuminati)
             str1=sprintf('%s, %s, %03i, %07.3f, %03.2f,',EP(k).Tarr{1,1},EP(k).Tarr{1,2},EP(k).qf,EP(k).SAA,EP(k).lum);
             %time0,time0,qualityfactor,mean(SAA),mean(Illuminati)
@@ -368,7 +390,7 @@ try
  %           str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(15),fout{k,1}(4),fout{k,4}(1),fout{k,4}(2));
             %10:13
             %,Tph,If0,vb(lastneg) vb(firstpos),
-            str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph,DP(k).If0,AP(k).lastneg,AP(k).firstpos);
+            str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph,AP(k).If0,AP(k).lastneg,AP(k).firstpos);
             %,Tph,If0,vb(lastneg) vb(firstpos),
 %            str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', fout{k,1}(13),fout{k,1}(14),fout{k,1}(2),fout{k,1}(3));
             %14:17
@@ -378,16 +400,41 @@ try
      %       str4=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(5),fout{k,1}(6),fout{k,1}(7),fout{k,1}(8));
             %18:20
             %  vbinf,diinf,d2iinf
-            str5=sprintf(' %14.7e, %14.7e, %14.7e',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
+            str5=sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
             %  vbinf,diinf,d2iinf
        %     str5=sprintf(' %14.7e, %14.7e, %14.7e',fout{k,1}(10),fout{k,1}(11),fout{k,1}(12));
-            strtot= strcat(str1,str2,str3,str4,str5);
-            str6=strrep(strtot,'NaN','   ');
+       
+       
+            
+            str6 = sprintf( '%03i, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Quality,DP(k).Tph,DP(k).Vintersect,DP(k).Vplasma,DP(k).Te);
+            
+            str7 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ne,DP(k).ia,DP(k).ib,DP(k).ea,DP(k).eb);
+            
+            str8 = sprintf( ' %14.7e, %14.7e, %14.7e, %14.7e',DP(k).Ts,DP(k).ns,DP(k).sa,DP(k).sb);
+
+            
+            strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8);
+            strtot=strrep(strtot,'NaN','   ');
+            
+%                     DP(len).If0      = [];
+%         DP(len).Tph      = [];
+%         DP(len).Vintersect = [];
+%         DP(len).Te       = [];
+%         DP(len).ne       = [];
+%         DP(len).Vsc      = [];
+%         DP(len).Vsigma   = [];
+%         DP(len).ia       = [];
+%         DP(len).ib       = [];
+%         DP(len).ea       = [];
+%         DP(len).eb       = [];
+%         DP(len).Quality  = [];
+%             
+%             
             
             %If you need to change NaN to something (e.g. N/A, as accepted by Rosetta Archiving Guidelines) change it here!
             
             
-            row_bytes =fprintf(awID,'%s\n',str6);
+            row_bytes =fprintf(awID,'%s\n',strtot);
             %             if (row_bytes ~= r2 && r2~= 0)
             %                 s= strcat(str6,r3)
             %
@@ -414,6 +461,7 @@ try
         an_tabindex{end,8} = timing;
         an_tabindex{end,9} = row_bytes;
         
+        %clear output structs before looping again
         clear AP DP EP
     end
     

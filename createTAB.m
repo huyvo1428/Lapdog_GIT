@@ -70,19 +70,25 @@ tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 
 % Now with hardcoded current offset (possibly due to a constant stray
 % current during calibration which is not present during measurements)
-%probably unnecessary, but good practice.
+
 CURRENTOFFSET = 0;
 CURRENTO1 = 0;
 CURRENTO2 = 0;
 
-if fileflag(2) =='1'
-    CURRENTOFFSET = -1.8E-9;
+if fileflag(2) =='1' 
+    CURRENTOFFSET = +1E-9;
 elseif fileflag(2) =='2'
-    CURRENTOFFSET = 6.1E-9;
+    CURRENTOFFSET = 6.5E-9;
 elseif fileflag(2) =='3'
     CURRENTO1 = -1.8E-9;
     CURRENTO2 = 6.1E-9;
 end
+if(~index(tabind(1)).sweep) % if not a sweep
+    CURRENTOFFSET = 0;
+    CURRENTO1 = 0;
+    CURRENTO2 = 0;
+end
+
 
 
 filename = sprintf('%sRPCLAP_%s_%s_%d_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),macroNo,fileflag); %%
@@ -381,8 +387,13 @@ else %% if sweep, do:
             
         end%if LDL macro check & downsampling
         
-
-        %%LET'S PRINT!
+% 
+%         %%LET'S PRINT!
+%         figure(1)
+%         plot(1:length(curArray),curArray,'b',1:length(curArray),curArray+CURRENTOFFSET,'r',1:length(curArray),0,'og')
+%         grid on;
+%         axis([0 200 -9E-9 10E-9]);
+%         
         
         curArray=curArray+ CURRENTOFFSET;
         

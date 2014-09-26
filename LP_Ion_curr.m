@@ -56,6 +56,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [Ii,a,b] = LP_Ion_curr(V,I,Vsc)
 
+Ii = I;
+Ii(1:end)=0;
+a = NaN;
+b = NaN;
+
 %global ALG;
 SM_Below_Vs =0.6;
 
@@ -70,7 +75,11 @@ V = V+Vsc; % Setting the probe potential
 % Find the data points below the spacecraft potential
 ind = find(V < Vsc); % Saving indices of all potential values below the spacecraft potential.
 	             % This can be done using a for-loop
+if isempty(ind)
+    return
+end
 
+                 
 % Use the lowest ALG.SM_Below_Vs*100% of the bias voltage, below the spacecraft potential
 % The data is sorted from lowest bias voltage to highest bias voltage so 
 % the first ALG.SM_Below_Vs*100% is OK to use
@@ -128,14 +137,18 @@ b = P(2); % ...and this is the crossing on the y-axis of the line
 % contribution would not be sensible), extended to the full range of the
 % potential sweep, is a good approximation to the ion current, and that is
 % what is returned from this function
-Ii(1:len) = 0;
 
-Ii(1:length(Vi)) = a*Vi;
+Ii(1:len) = a*V;%let's try removing it everywhere
+
+%Ii(1:len) = 0;
+
+%Ii(1:length(Vi)) = a*Vi;
+
 %Ii2(1:length(Vi)) = polyval(P,Vi);    % The current is calculated across the entire potential
                       % sweep. The function polyval returns the value of the
                       % polynomial P evaluated at all the points of the vector V.
 
-Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
+%Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
                       % current contribution. This is the return current
                       % The function abs returns the absolute value of the
                       % elements of the calling parameter.

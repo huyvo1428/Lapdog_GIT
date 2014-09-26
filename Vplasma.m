@@ -2,7 +2,11 @@
 %takes an sweep potential array and current array, and optionally a guess for the
 %Vplasma and its sigma (suggested sigma 3 V), outputs an estimate for the
 %plasma potential and it's confidence level (std)
-function [vPlasma,sigma] = Vplasma(Vb2,Ib2,vGuess,sigmaGuess)
+function [vPlasma,sigma,vSC] = Vplasma(Vb2,Ib2,vGuess,sigmaGuess)
+
+VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
+VB_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+
 
 %narginchk(2,4); %nargin should be between 2 and 4, this throws an error if else
 %undefined function in old MATLAB........!!
@@ -36,7 +40,11 @@ posd2i =(abs(d2i)+d2i)/2;
 
 
 if nargin>2   %if a guess is given
-[junk,chosen] =min(abs(Vb-vGuess));
+    
+    vSC=vGuess/VSC_TO_VPLASMA;
+    vbGuess=vGuess-vSC;
+    
+[junk,chosen] =min(abs(Vb-vbGuess));
 else
 [junk,pos]= sort(abs(di));
 top10= floor(len*0.9+0.5); %get top 10 percent of peaks
@@ -119,11 +127,24 @@ if diag
 end
     
 
+% vSC + vbPlasma = vPlasma, since a 10V s/c gives a peak at  -3.6 Vb, or
+% 6.4 Vp (Vb = Vp-Vsc)
 
-vPlasma = -vbPlasma; 
+vSC= vbPlasma*VB_TO_VSC; %vSC = vbplasma * -1 /0.36
+vPlasma=vSC*VSC_TO_VPLASMA;  %vPlasma = 0.64*vSC;
+sigma = sigma*abs(VB_TO_VSC); %
+
+
+%vPlasma=vSC+vbPlasma;
+
 
 if nargin>2 && isnan(vbPlasma)
-    vPlasma=vGuess; %don't guess anymore, just output input value.
+    vPlasma=vGuess;  %don't guess anymore, just output input value.
+    vSC=vPlasma/VSC_TO_VPLASMA;
+    sigma = NaN;
+%    sigma = sigma*abs(VB_TO_VSC); %
+
+        
 end
 
 

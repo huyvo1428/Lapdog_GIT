@@ -62,152 +62,171 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [Te,ne,Ie,a,b,currvar] = LP_Electron_curr(V,I,Vsc)
-SM_Below_Vs= 0.75;
+function [Te,ne,Ie,a,b] = LP_Electron_curr(V,I,Vsc)
+SM_Below_Vsc= 0.75;
 
 
 m_e = 9.10938291E-31;
 q_e = 1.60217657E-19;
 
+%init outputs
+Te=NaN;
+ne=NaN;
+Ie=I;
+Ie(1:end)=0;
+a=NaN;
+b=NaN;
+currvar=NaN;
 
 %start by smoothing current
 
 % The length of the data set is saved in the variable "len"
 len = length(V);
 
-Vp = V+Vsc; % Compute probe potential as bias potential added to spacecraft potential.
-Te=NaN;
-ne=NaN;
+Ve = V+Vsc; % Compute probe potential as bias potential added to spacecraft potential.
+
 
 
 % Find the data points above the spacecraft potential
 
 
-ind = find(Vp > 0); % Saving indices of all potential values above the spacecraft potential.
+ind = find(Ve > 0); % Saving indices of all potential values above the spacecraft potential.
+if isempty(ind)
+    return
+end
 
-firstpos=ind(1);
-
-
-% Use the lowest ALG.SM_Below_Vs*100% of the bias voltage, below the spacecraft potential
-% The data is sorted from lowest bias voltage to highest bias voltage so 
-% the first ALG.SM_Below_Vs*100% is OK to use
-l_ind = length(ind); % Need the number of data points of the vector ind
-                     % the function length returns the length of vector ind
-
-bot = floor(ind(1)+l_ind*SM_Below_Vs +0.5);
+    firstpos=ind(1);
+    
+    
+    % Use the lowest ALG.SM_Below_Vs*100% of the bias voltage, below the spacecraft potential
+    % The data is sorted from lowest bias voltage to highest bias voltage so
+    % the first ALG.SM_Below_Vs*100% is OK to use
+    l_ind = length(ind); % Need the number of data points of the vector ind
+    % the function length returns the length of vector ind
+    
+    bot = floor(ind(1)+l_ind*SM_Below_Vsc +0.5);
+    
+    %top = floor(l_ind*ALG.SM_Below_Vs); % The point closest to, but below, ALG.SM_Below_Vs*100% of the
+    % spacecraft potential. The function floor rounds
+    % the calling parameter to the nearest integer
+    % towards minus infinity.
+    bot= bot -1 + find(I(bot:end)>0,1,'first');    %currents above z
+    %choose starting point some points away from Vsc and has a positive
+    %current value.
+    
+    
+    %bot = max([ind(1),bot]);
+    
+    ind = bot:len; % Only the first ALG.SM_Below_Vs*100% above the spacecraft potential is now
+    
+    
+    Vr  = Ve(ind);     % kept of the vector ind
+    Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note that this
+    
+    
+    %The log doesnt work if V
+    % Ilog = log(Ir); % Take the logarithm of the retarded current
+    %
+    % P = polyfit(Vr,Ilog,1); % Fitting linearly we have the temperature directly as
+    % a = P(1);
+    % b = P(2);
+    
+    % The inverse slope gives Te
+    %Te = 1/a;
+    
+    % Compute the residual
+    %residual = Ir - exp(b+a*Vr); % Retarded current subtracted from fitted current
+    
+    %Ie0 = exp(b);
+    
+    
+    P = polyfit(Vr,Ir,1);
+    a = P(1); % This is accordingly the slope of the line...
+    b = P(2); % ...and this is the crossing on the y-axis of the line
+    
+    %I = Ie0(1+Vp/Te). a = Ie0/Te, b = Ie0.
+    Ie0 =  b;
+    Te = b/a;
+    
+    
+    residual = Ir - b+a*Vr;
+    
+    % Compute the rms error and scale by the current Ie0 at Vr=Vp=0
+    currvar = sqrt(sum((residual).^2)/len)/Ie0; % Compute the relative rms error
+    
+    
+    
+    % If Te is positive we can get the density as follows
+    if(Te>=0 & ~isinf(Te))
+        %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
+        ne = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));
         
-%top = floor(l_ind*ALG.SM_Below_Vs); % The point closest to, but below, ALG.SM_Below_Vs*100% of the
-                         % spacecraft potential. The function floor rounds 
-                         % the calling parameter to the nearest integer 
-                         % towards minus infinity.
-bot= bot -1 + find(I(bot:end)>0,1,'first');    %currents above z
-%choose starting point some points away from Vsc and has a positive
-%current value.
-
-
-%bot = max([ind(1),bot]);
-
-ind = bot:len; % Only the first ALG.SM_Below_Vs*100% above the spacecraft potential is now
-
-
-Vr  = Vp(ind);     % kept of the vector ind    
-Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note that this
-
-
-%The log doesnt work if V
-% Ilog = log(Ir); % Take the logarithm of the retarded current
-% 
-% P = polyfit(Vr,Ilog,1); % Fitting linearly we have the temperature directly as
-% a = P(1);
-% b = P(2);
-
-% The inverse slope gives Te
-%Te = 1/a;
-
-% Compute the residual
-%residual = Ir - exp(b+a*Vr); % Retarded current subtracted from fitted current
-
-%Ie0 = exp(b);
-
-
-P = polyfit(Vr,Ir,1);
-a = P(1); % This is accordingly the slope of the line...
-b = P(2); % ...and this is the crossing on the y-axis of the line 
-
-%I = Ie0(1+Vp/Te). a = Ie0/Te, b = Ie0.
-Ie0 =  b;
-Te = b/a;  
-
-
-residual = Ir - b+a*Vr;
-
-% Compute the rms error and scale by the current Ie0 at Vr=Vp=0
-currvar = sqrt(sum((residual).^2)/len)/Ie0; % Compute the relative rms error
-
-
-
-% If Te is positive we can get the density as follows
-if(Te>=0 & ~isinf(Te))
-%    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
-    ne = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));
-    %   ne = Ie0/(IN.probe_area*CO.qe*1e6*sqrt(CO.qe*Te/(2*pi*CO.me)));
-    if(ne<0)
-        ne=NaN;
+        %OBS. LP is not in perfect 0 V vaccuum, so expect the LP to be shielded from low energy electrons
+        %i.e. giving a larger mean Te, and a lower ne. (see SPIS simulations)
+        %think of it as if the LP is sampling a electron distribution with a
+        %cut-off at certain temperatures.
+        
+        %   ne = Ie0/(IN.probe_area*CO.qe*1e6*sqrt(CO.qe*Te/(2*pi*CO.me)));
+        if(ne<0)
+            ne=NaN;
+        end
+        
+        Ie(1:firstpos)=0;
+        %Ie(1:firstpos)=Ie0*exp(Vp(1:firstpos)/Te); %in the absence of
+        %spacecraft photoelectrons analysis, this approximation will have a
+        %too large effect on the ion side of the sweep.
+        Ie(firstpos:len)= Ie0*(1+Ve(firstpos:len)/Te);
+        Ie = (Ie+abs(Ie))./2; % The negative part is removed, leaving only a positive
+        % current contribution. This is the return current
+        % The function abs returns the absolute value of the
+        % elements of the calling parameter.
+        
+    else  
+        
+        Te=NaN;
+       
     end
     
     
-    Ie(1:firstpos)=Ie0*exp(Vp(1:firstpos)/Te);
-    Ie(firstpos:len)= Ie0*(1+Vp(firstpos:len)/Te);
-    Ie = (Ie+abs(Ie))./2; % The negative part is removed, leaving only a positive
-    % current contribution. This is the return current
-    % The function abs returns the absolute value of the
-    % elements of the calling parameter.
     
-else
-    Te=NaN;
-    Ie = 0;
+    %Ie = polyval(P,V);    % The current is calculated across the entire potential
+    % sweep. The function polyval returns the value of the
+    % polynomial P evaluated at all the points of the vector V.
+    %                       Ie = Ie0exp(Vp/Te)
     
+    
+    
+    
+    
+    
+    
+    
+    %     q_index=1;
+    %     second_digit=LP_Quality.SD0_Nominal;
+    %     if(currvar>LP_Quality.SM_Currv0) q_index=q_index+1; end;
+    %     if(currvar>LP_Quality.SM_Currv1) q_index=q_index+1; end;
+    %     if(currvar>LP_Quality.SM_Currv2) q_index=q_index+1; end;
+    %     if(q_index>1)
+    %         second_digit=LP_Quality.SD3_LargeVariations;
+    %     end
+    % Qtmp =0;
+    %         Qtmp=LP_Quality.FD(q_index)*10+second_digit;
+    % end
+    % end
+    
+    % % If Te is not NaNs
+    % if(~isnan(Te))
+    %     Q(1)=Qtmp;
+    % end
+    %
+    % % If Ne is not NaNs
+    % if(~isnan(ne))
+    %     Q(2)=Qtmp;
+    % end
+    % % If Vs is not NaNs
+    % if(~isnan(Vsc))
+    %     Q(3)=Qtmp;
+    % end
 end
 
-
-
-%Ie = polyval(P,V);    % The current is calculated across the entire potential
-                      % sweep. The function polyval returns the value of the
-                      % polynomial P evaluated at all the points of the vector V.
-%                       Ie = Ie0exp(Vp/Te)
-
-
-
-
-                      
-                      
-
-
-%     q_index=1;
-%     second_digit=LP_Quality.SD0_Nominal;
-%     if(currvar>LP_Quality.SM_Currv0) q_index=q_index+1; end;
-%     if(currvar>LP_Quality.SM_Currv1) q_index=q_index+1; end;
-%     if(currvar>LP_Quality.SM_Currv2) q_index=q_index+1; end;
-%     if(q_index>1)
-%         second_digit=LP_Quality.SD3_LargeVariations;
-%     end
-% Qtmp =0;
-%         Qtmp=LP_Quality.FD(q_index)*10+second_digit;
-% end
-% end
-
-% % If Te is not NaNs
-% if(~isnan(Te))
-%     Q(1)=Qtmp;
-% end
-% 
-% % If Ne is not NaNs
-% if(~isnan(ne))
-%     Q(2)=Qtmp;
-% end
-% % If Vs is not NaNs
-% if(~isnan(Vsc))
-%     Q(3)=Qtmp;
-% end
-end
 

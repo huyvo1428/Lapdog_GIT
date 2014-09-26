@@ -18,8 +18,24 @@ AP = [];
 
 probenr =str2double(probenr);
 % Set default output:
-params = [NaN NaN NaN NaN NaN NaN NaN NaN NaN probenr NaN NaN NaN NaN NaN NaN];
 
+% initialise and clear output struct
+AP.ts       = NaN;
+AP.vx       = NaN;
+AP.Tph      = NaN;
+AP.If0      = NaN;
+AP.vs       = NaN;
+AP.lastneg  = NaN;
+AP.firstpos = NaN;
+AP.poli1    = NaN;
+AP.poli2    = NaN;
+AP.pole1    = NaN;
+AP.pole2    = NaN;
+AP.probe    = NaN;
+AP.vbinf    = NaN;
+AP.diinf    = NaN;
+AP.d2iinf   = NaN;
+       
 diag = 0;  % Set to one if diagnostic
 if(diag)
     figure(159);

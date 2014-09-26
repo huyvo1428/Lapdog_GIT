@@ -63,14 +63,41 @@ function DP = an_LP_Sweep(V, I,Vguess,illuminated)
 %global ALG;        % Various algorithm constants
 
 global efi_f_io_lp_l1bp; % Verbosity level
-efi_f_io_lp_l1bp = 10; %debugging!
+efi_f_io_lp_l1bp = 0; %debugging!
+
+VPLASMA_TO_VSC = 0.64; %from simulation experiments
+
 
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
+Q    = [0 0 0 0];   % Quality vector
+
 
 % Initialize DP to ensure a return value:
 DP = [];
 
-Q    = [0 0 0 0];   % Quality vector
+DP.If0     = NaN;
+DP.Tph     = NaN;
+DP.Vintersect = NaN;
+DP.Te       = NaN;
+DP.ne      = NaN;
+
+DP.Vsc     = NaN;
+DP.Vplasma = NaN;
+DP.Vsigma  = NaN;
+
+DP.ia      = NaN;
+DP.ib      = NaN;
+DP.ea      = NaN;
+DP.eb      = NaN;
+
+DP.Ts      = NaN;
+DP.ns      = NaN;
+DP.sa      = NaN;
+DP.sb      = NaN;
+
+DP.Quality = sum(Q);
+
+
 
 
 % Sort the data
@@ -93,12 +120,17 @@ dv = V(2)-V(1);
 
 % First determine the spacecraft potential
 %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-[Vsc, sigma] = Vplasma(V,I);
+[vPlasma, sigma,Vsc] = an_Vplasma(V,I);
 
+%this is not
 
 if isnan(Vsc)    
    Vsc = Vguess;
+   vPlasma=Vsc*VPLASMA_TO_VSC; % from simulations
+   
 end
+
+
 
 
 
@@ -135,7 +167,28 @@ end
 %Ie_s = LP_MA(Ie); % Now we smooth the data using a 9-point moving average
 
 %Determine the electron current (above Vsc and positive), use a moving average 
-[Te,ne,Ie,ea,eb,rms]=LP_Electron_curr(V,Itemp,Vsc);
+[Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc);
+
+
+
+%if the plasma electron current fail, try the spacecraft photoelectron
+%cloud current analyser
+if isnan(Te)
+
+    
+    cloudflag = 1;
+    
+    [Ts,ns,Ie,sa,sb]=LP_S_curr(V,Itemp,Vsc,vPlasma);
+
+    DP.Ts      = Ts;
+    DP.ns      = ns;
+    DP.sa      = sa;
+    DP.sb      = sb;
+
+    %note that Ie is now current from photo electron cloud
+
+end
+
 
 %[Te,ne,Ie,ea,eb,rms]=LP_Electron_curr(V,LP_MA(Itemp),Vsc);
 
@@ -146,13 +199,14 @@ Itemp = Itemp - Ie; %the resultant current should only be photoelectron current 
 if (efi_f_io_lp_l1bp>1)
 
     
-	subplot(2,2,2),plot(V,I,'b',V,Itemp,'g');grid on;
+	subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
 	title('I & I - ions - electrons');
 end
 
 
-% Redetermine s/c potential, without ions and plasma electron currents
-[Vsc, sigma] = Vplasma(V,Itemp,Vsc,sigma); %if unsuccesful, Vplasma returns our Vsc Guess
+% Redetermine s/c potential, without ions and plasma electron /photoelectron cloud currents
+[vPlasma, sigma, Vsc] = an_Vplasma(V,Itemp,vPlasma,sigma); 
+%if unsuccesful, Vplasma returns our guess
 
 if(illuminated)
     
@@ -172,15 +226,15 @@ if(illuminated)
 %         iph = ip(pos) - iecoll;
 %         vbh = vb(pos);
     
-    % Do log fit to first 4 V:
-    phind = find(V < -Vsc + 6 & V>=-Vsc);
+    % Do log fit to first 6 V:
+    phind = find(V < (vPlasma-Vsc) + 6 & V>=(vPlasma-Vsc));
     phpol = polyfit(V(phind),log(abs(Iph(phind))),1);
     Tph = -1/phpol(1);
     Iftmp = -exp(phpol(2));
     
     % Find Vsc as intersection of ion and photoemission current:
     % Iterative solution:
-    vs = -Vsc;
+    vs = vPlasma-Vsc;
     for(i=1:10)
         vs = -(log(-polyval([ia,ib],-vs)) - phpol(2))/phpol(1);
     end
@@ -190,11 +244,7 @@ if(illuminated)
     DP.If0     = If0;
     DP.Tph     = Tph;
     DP.Vintersect = vs;
-else
-    
-    DP.If0     = NaN;
-    DP.Tph     = NaN;
-    DP.Vintersect = NaN;
+
 end
 
 %DP.If0     = NaN;
@@ -203,6 +253,7 @@ end
 DP.Te      = Te;
 DP.ne      = ne;
 DP.Vsc     = Vsc;
+DP.Vplasma = vPlasma;
 DP.Vsigma  = sigma;
 DP.ia      = ia;
 DP.ib      = ib;
@@ -210,14 +261,50 @@ DP.ea      = ea;
 DP.eb      = eb;
 DP.Quality = sum(Q);
 
-
  if (efi_f_io_lp_l1bp>1)
      
-     
+     if(illuminated)
+         subplot(2,2,4)
+         
+         Iph=Itemp;    %just to get the dimension right)
+         len=length(Itemp);
+         
+         pos=find(V>-vs,1,'first');
+         Iph(1:pos)=If0;
+         
+         for i=pos:1:len
+             Iph(i)=(If0*(1+((V(i)+Vsc-vs)/Tph))*exp(-(V(i)+Vsc-vs)/Tph));
+         end
+         
+         Izero=Itemp-Iph;
+         Itot = Ii+Ie+Iph;
+         
+         %      Izero(pos:end)=Itemp(pos:end)-(If0*(1+((V(pos:end)-vs)/Tph))*exp(-(V(pos:end)-vs)/Tph));
+         %
+         %      a=exp((V(pos:len)-vs)/Tph);
+         %      adsasd=(If0(1+((V(pos:len)-vs)/Tph))*a);
+         %      Izero(pos:len)=Itemp(pos:len)-adsasd;
+
+         
+         
+     else
+         
+         Izero = Itemp;
+         Itot = Ie+Ii;
+         
+     end
+     subplot(2,2,2)
+     plot(V,Izero,'og');
+     grid on;
+      title('V vs I - ions - electrons-photoelectrons');
      subplot(2,2,4)
-     y = V*ia+V*ea+eb+
-%     
-%     
+     plot(V-Vsc,I,'b',V-Vsc,Itot,'g');
+           title('Vp vs I & Itot ions ');
+
+     grid on;
+     
+     %
+     %
 %     x = V(1):0.2:V(end);
 %     y = gaussmf(x,[sigma Vsc]);    
 % 	subplot(2,2,1),plot(V,Ie,'g',x,y*abs(max(I))/4,'b');grid on;
