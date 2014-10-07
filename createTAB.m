@@ -80,8 +80,8 @@ if fileflag(2) =='1'
 elseif fileflag(2) =='2'
     CURRENTOFFSET = 6.5E-9;
 elseif fileflag(2) =='3'
-    CURRENTO1 = -1.8E-9;
-    CURRENTO2 = 6.1E-9;
+    CURRENTO1 = +1E-9;
+    CURRENTO2 = 6.5E-9;
 end
 if(~index(tabind(1)).sweep) % if not a sweep
     CURRENTOFFSET = 0;

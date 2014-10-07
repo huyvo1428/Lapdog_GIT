@@ -12,7 +12,19 @@ foutarr=cell(1,7);
 
 %fprintf(awID,'%s,%16.6f,,,,\n',UTC_time,(0.5*intval+tday0+(j-1)*intval));
 %outputarr =
+
+% QUALITYFLAG:
+% is an 3 digit integer 
+% from 000 (best) to 332 (worst quality)
+
+% sweep during measurement  = +100
+% bug during measurement    = +200
+% Rotation "  "    "        = +10
+% Bias change " "           = +20
 %
+% low sample size(for avgs) = +2
+% some zeropadding(for psd) = +2
+    
 
 j=0;
 
@@ -38,7 +50,7 @@ for i=1:length(an_ind)
     
     
     
- timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
+    timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
     
       
  
@@ -54,92 +66,18 @@ for i=1:length(an_ind)
     UTCpart2= datestr(((1:3600*24/intval)-0.5)*intval/(24*60*60), 'HH:MM:SS.FFF'); %calculate time of each interval, as fraction of a day
     tfoutarr{1,1} = strcat(UTCpart1,UTCpart2);
     tfoutarr{1,2} = [tday0 + ((1:3600*24/intval)-0.5)*intval]; 
-    
-    %     for j=1:3600*24/intval;
-    %
-    %         UTCpart2= datestr((0.5*intval+(j-1)*intval)/(24*60*60), 'HH:MM:SS.FFF'); %calculate time of each interval, as fraction of a day
-    %         UTC_time =sprintf('%s%s',UTCpart1,UTCpart2); %collect date and time in one variable
-    %         strcat(
-    %
-    %         tfoutarr{1,1}{j,1} = UTC_time;
-    %         tfoutarr{1,2}(j) = tday0+ 0.5*intval+(j-1)*intval; %spaceclock time of measurement mean (
-    %
-    %     end
-    %
-    
-    %  if count == 0 %first time going through loop! initialise things!
-    %afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-6:end),sprintf('%s%i%s%iSEC.TAB',flag1,p,flag3,intval));
 
-    
-    %After Discussion 24/1 2014
-    %FILE CONVENTION: RPCLAP_YYMMDD_hhmmss_###_QPO.TAB OR
-    %RPCLAP_YYMMDD_hhmmss_BLKLIST.TAB
-    %
-    % ### can be three integers, or 'PSD' or 'FRQ', or two integers + 'S'
-    %
-    % if ### = number between 000-999, then ### = MACROID (exists only for 
-    % mode'H'/'L'/'S')
-    % if ### = 'PSD' power spectrum of high frequency data (exists only for
-    % mode 'H')
-    % if ### = 'FRQ',corresponding frequency list to PSD data (exists only 
-    % for mode 'H')
-    % if ##S = 00S-99S downsampled data in seconds (only for mode 'D')
-    %
-    %  or if downsampled (O='D'), then MMM =XXS, where X is number of seconds.
-    % Q= Measured quantity ('B'/'I'/'V'/'A')
-    % P=Probe number(1/2/3), 
-    % (Probe 3 = combined Probe 1 & Probe 2 measurement)
-    % M = Mode ('H'/'L'/'S'/'D')
-    %
-    % B = probe bias voltage, exists only for mode = S
-    % I = Current , all modes
-    % V = Potential , only for mode = H/L
-    % A = Derived (analysed) variables results, exists only for mode = S
-    %
-    % H = High frequency measurements
-    % L = Low frequency measurements
-    % S = Voltage sweep measurements
-    % D = low frequency downsampled measurements, if O=D, then MMM = XXS, where XX = downsampling period (in seconds)
-    
-    %RPCLAP_YYMMDD_hhmmss_MMM_V1D
-    %collect files of same macro? or skip macro information, but contain inside LBL file
-    %RPCLAP_YYMMDD_DWNSMP_32S_V1L
-    %RPCLAP_YYMMDD_hhmmss_32S_V1D
+
     afname =tabindex{an_ind(i),1};
     afname(end-10:end-8) =sprintf('%02iS',intval);
     
     
     %afname = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),1}(end-10:end-8),sprintf('%02iS',intval));
     afname(end-4) = 'D';
-    %afname = strrep(afname,afname(end-4),'D');
     affolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
     
-    
-% QUALITYFLAG:
-% is an 3 digit integer 
-% from 000 (best) to 332 (worst quality)
+     mode = afname(end-6);
 
-% sweep during measurement  = +100
-% bug during measurement    = +200
-% Rotation "  "    "        = +10
-% Bias change " "           = +20
-%
-% low sample size(for avgs) = +2
-% some zeropadding(for psd) = +2
-    
-    
-    
-    
-    
-    %t=scantemp{1,2}(:);
-    
-    
-    %  tt = ( tday0+intval*floor((t(1)-tday0)/intval):1*intval:tday0+intval*ceil((t(end)-tday0)/intval) )'; %tidst?mplar med 32 sekunder mellan varje st?mpel, startar p? en multipel av 32 p? dygnet
-    %tt = ( floor(t(1)):1*spacing:ceil(t(end)) )';
-    % //        I would do this in three fully vectorized lines of code. First, if the breaks were arbitrary and potentially unequal in spacing,
-    %//I would use histc to determine which intervals the data series falls in. Given they are uniform, just do this:
-    
-    
     
     
     %    inter = 1 + floor((t - tday0)/intval); %prepare subset selection to accumarray
@@ -155,27 +93,83 @@ for i=1:length(an_ind)
     
     
     
-    imu = accumarray(inter,scantemp{1,3}(:),[],@mean); %select measurements during specific intervals, accumulate mean to array and print zero otherwise
+    imu = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN); %select measurements during specific intervals, accumulate mean to array and print NaN otherwise
     isd = accumarray(inter,scantemp{1,3}(:),[],@std); %select measurements during specific intervals, accumulate standard deviation to array and print zero otherwise
     
-    vmu = accumarray(inter,scantemp{1,4}(:),[],@mean);
+    vmu = accumarray(inter,scantemp{1,4}(:),[],@mean,NaN);
     vsd = accumarray(inter,scantemp{1,4}(:),[],@std);
-    
-    
-    
-  %  sumunique= @(x) sum(unique(x));
-    
-    
     qf = accumarray(inter,scantemp{1,5}(:),[],@(x) sum(unique(x)));
+
+    
+    switch mode   %find bias changes and fix terrible std function
+        
+        case 'V'
+            %let's not do anything fancy, the bias current/potential are written by
+            %software, not a measuremeant
+            sdtemp = isd;
+            isd(:) = 0;
+            
+            %matlab is terrible with std...
+            
+%             meanbias = nanmean(imu); %get mean bias, disregard NaN values.        
+%             junk(1:20)=meanbias;    % set 20 values to this value, diff(junk) = 0 everywhere          
+%             sdlimit = std(junk)*100; % this should be zero, but it isn't.
+%             isd(isd < sdlimit) = 0;% remove precision error from matlab std function
+
+
+             qind = find(abs(diff(imu)/nanmean(imu)) > 1E-10); % find bias changes (NB, length(diff(imu))=length(imu) -1 )                         
+             %be wary of precision errors
+             
+             %     qind = find(abs(diff(imu)) > 0); % find bias changes (NB, length(diff(imu))=length(imu) -1 )        
+            if ~isempty(qind);
+                qind = qind +1; % correction
+                qf(qind) = qf(qind)+20;% add + 20  qualityfactor for bias changes 
+                
+                isd(qind) = sdtemp(qind); %this might be interesting to know. or not.                      
+            end
+            
+            
+        case 'I'
+            
+            
+            %let's not do anything fancy, the bias current/potential are written by
+            %software, not a measuremeant
+            
+            sdtemp = vsd;
+            vsd(:) = 0;
+                       
+%             meanbias = nanmean(vmu); %get mean bias, disregard NaN values.
+%             junk(1:20)=meanbias;    % set 20 values to this value, diff(junk) = 0 everywhere
+%             sdlimit = std(junk)*100; % this should be zero, but it isn't.
+%             vsd(vsd < sdlimit) = 0;% remove precision error from matlab std function
+
+
+            %be wary of precision errors
+            qind = find(abs(diff(vmu)/nanmean(vmu)) > 1E-10); % find bias changes (NB, length(diff(imu))=length(imu) -1 )           
+            if ~isempty(qind);                
+                qind = qind +1;       % correction         
+                qf(qind) = qf(qind)+20;% add + 20  qualityfactor for bias changes
+                
+                vsd(qind) = sdtemp(qind); %this might be interesting to know. or not.
+            end
+            
+            
+      
+    end
+    
+    
+    %  sumunique= @(x) sum(unique(x));
+    
+    
     
     
     foutarr{1,3}(inter(1):inter(end),1)=imu(inter(1):inter(end)); %prepare for printing results
     foutarr{1,4}(inter(1):inter(end),1)=isd(inter(1):inter(end));
     foutarr{1,5}(inter(1):inter(end),1)=vmu(inter(1):inter(end));
     foutarr{1,6}(inter(1):inter(end),1)=vsd(inter(1):inter(end));
-    foutarr{1,7}(inter(1):inter(end),1)=1; %%flag to determine if row should be written.
+    %foutarr{1,7}(inter(1):inter(end),1)=1; %%flag to determine if row should be written.
     foutarr{1,8}(inter(1):inter(end),1)=qf(inter(1):inter(end));
-    
+    foutarr{1,7}(unique(inter))=1; %%flag to determine if row should be written.
     
     
     
@@ -214,7 +208,6 @@ for i=1:length(an_ind)
         
         
         
-        mode = afname(end-6);
         
         if mode == 'V' %analyse electric field mode
             
@@ -234,19 +227,11 @@ for i=1:length(an_ind)
     
     
     
-    clear imu isd vmu vsd inter %save electricity kids!
+    clear scantemp imu isd vmu vsd inter junk %save electricity kids!
     
     
     
-    
-    
-    %     tabindex
-    
-    
-     
-    %For LBL file genesis, we need an index with name, shortname,
-    %original file
-    
+
     
     awID= fopen(afname,'w');
     for j =1:length(foutarr{1,3})
@@ -266,7 +251,6 @@ for i=1:length(an_ind)
     an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
     an_tabindex{end,4} = length(foutarr{1,3}); %number of rows
     an_tabindex{end,5} = 7; %number of columns
-    
     an_tabindex{end,6} = an_ind(i);
     an_tabindex{end,7} = 'downsample'; %type
     an_tabindex{end,8} = timing;

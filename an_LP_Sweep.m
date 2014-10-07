@@ -63,7 +63,7 @@ function DP = an_LP_Sweep(V, I,Vguess,illuminated)
 %global ALG;        % Various algorithm constants
 
 global efi_f_io_lp_l1bp; % Verbosity level
-efi_f_io_lp_l1bp = 0; %debugging!
+efi_f_io_lp_l1bp = 10; %debugging!
 
 VPLASMA_TO_VSC = 0.64; %from simulation experiments
 
