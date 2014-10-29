@@ -12,7 +12,7 @@ VB_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
 %undefined function in old MATLAB........!!
 
 
-diag = 0;
+diag = 1;
 
 [Vb, junk, ic] = unique(Vb2);
 

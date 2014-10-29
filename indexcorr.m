@@ -6,10 +6,6 @@ count = 0;
 lindex = length(index);
 
 
-scResetCount=str2double(index(1).sct0str(2));
-
-
-
 %mkdir(sprintf('%s/temp',archivepath))
 
 
@@ -102,8 +98,8 @@ for i=1:length(index)
                     
                     index(end).tabfile = tempfilename;
                     index(end).t0str = scantemp{1,1}{j,1}(1:23);
-                    index(end).sct0str = obt2sct(scantemp{1,2}(j),scResetCount);
-                 %   index(end).sct0str = sprintf('"%s/%014.3f"',index(i).sct0str(2),obt2sct(scantemp{1,2}(j)));
+                    % index(end).sct0str = scantemp{1,2}(j);
+                    index(end).sct0str = sprintf('"%s/%014.3f"',index(i).sct0str(2),obt2sct(scantemp{1,2}(j)));
                     index(end).t0 = t1line;
                     
                     
@@ -111,9 +107,7 @@ for i=1:length(index)
                     
                     index(i).t1str = scantemp{1,1}{j-1,1}(1:23);
                     index(i).t1 = datenum(strrep(scantemp{1,1}{j-1,1},'T',' '));
-                    index(i).sct1str = obt2sct(scantemp{1,2}(j-1),scResetCount);
-                   
-%                    index(i).sct1str = sprintf('"%s/%014.3f"',index(i).sct0str(2),obt2sct(scantemp{1,2}(j-1)));
+                    index(i).sct1str = sprintf('"%s/%014.3f"',index(i).sct0str(2),obt2sct(scantemp{1,2}(j-1)));
                     % edit 7/8. obt =/= sct. the fraction need to be
                     % converted by function
                     %keep some information the same as , (commented)
@@ -145,8 +139,7 @@ for i=1:length(index)
             %        i
             index(end).t1 = datenum(strrep(scantemp{1,1}{j,1},'T',' '));
             index(end).t1str= scantemp{1,1}{j,1}(1:23);
-            %index(end).sct1str =sprintf('"%s/%014.3f"',index(end).sct0str(2),obt2sct(scantemp{1,2}(j)));
-            index(end).sct1str =obt2sct(scantemp{1,2}(j),scResetCount);
+            index(end).sct1str =sprintf('"%s/%014.3f"',index(end).sct0str(2),obt2sct(scantemp{1,2}(j)));
             
         end%if new file was created
         fclose(primwID);

@@ -1,3 +1,0 @@
-3rd order polynomial fit coefficients (current = aV^3+b*V^2+c*V+d), for Probe 1 and Probe 2 in TM units 
-P1grad3,P1grad2,P1grad1,P1grad0,P2grad3,P2grad2,P2grad1,P2grad0
- 6.5365581e-06,-2.4585083e-03,-3.4597495e+00, 4.7690297e+02, 5.9896163e-06,-2.2446167e-03,-1.9710053e+00, 3.0459857e+02

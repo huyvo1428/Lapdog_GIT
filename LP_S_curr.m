@@ -65,6 +65,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [Ts,ns,Is,a,b] = LP_S_curr(V,I,Vsc,Vplasma)
+
+global an_debug VSC_TO_VPLASMA VB_TO_VSC; 
+
+
 SM_Below_Vsc= 0.75;
 
 
@@ -145,16 +149,22 @@ end
     %Ie0 = exp(b);
     
     
-    P = polyfit(Vr,Ir,1);
-    a = P(1); % This is accordingly the slope of the line...
-    b = P(2); % ...and this is the crossing on the y-axis of the line
+    [P,S] = polyfit(Vr,Ir,1);
+   
+    a(1) = P(1); % This is accordingly the slope of the line...
+    b(1) = P(2); % ...and this is the crossing on the y-axis of the line
     
+    S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
+    
+    a(2) = abs(S.sigma(1)/P(1)); %Fractional error
+    b(2) = abs(S.sigma(2)/P(2)); %Fractional error
+
     %I = Ie0(1+Vp/Te). a = Ie0/Te, b = Ie0.
-    Is0 =  b;
-    Ts = b/a;
+    Is0 =  b(1);
+    Ts = b(1)/a(1);
     
     
-    residual = Ir - b+a*Vr;
+    residual = Ir - b(1)+a(1)*Vr;
     
     % Compute the rms error and scale by the current Ie0 at Vr=Vp=0
     currvar = sqrt(sum((residual).^2)/len)/Is0; % Compute the relative rms error
@@ -162,7 +172,7 @@ end
     
     
     % If Te is positive we can get the density as follows
-    if(Ts>=0 & ~isinf(Ts))
+    if(Ts>=0 && ~isinf(Ts))
         %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
         ns = Is0 /(0.25E-3*q_e*sqrt(q_e*Ts/(2*pi*m_e)));
         

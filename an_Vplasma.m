@@ -4,19 +4,17 @@
 %plasma potential and it's confidence level (std)
 function [vPlasma,sigma,vSC] = an_Vplasma(Vb2,Ib2,vGuess,sigmaGuess)
 
-VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
-VB_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+global an_debug VSC_TO_VPLASMA VBSC_TO_VSC; 
 
 
 %narginchk(2,4); %nargin should be between 2 and 4, this throws an error if else
 %undefined function in old MATLAB........!!
 
 
-diag = 0;
 
 [Vb, junk, ic] = unique(Vb2);
 
-Ib = accumarray(ic,Ib2,[],@mean);
+Ib = accumarray(ic,Ib2,[],@mean); % do I need this?
 
 
 len= length(Vb);
@@ -91,7 +89,7 @@ end
 %
 
 % [gsd,gmu] =gaussfit(Vb(10:end-10),d2i(10:end-10));'
-if diag
+if an_debug > 9
     
     
 %just for diagnostics
@@ -100,29 +98,30 @@ if diag
     subplot(2,2,1)
     x = Vb(1):0.2:Vb(end);
     y = gaussmf(x,[sigma vbPlasma]);
-    plot(x,y*max(4*d2i/sum(d2i)),'r',Vb,4*d2i/sum(d2i),'b')
+    plot(x,y*max(d2i/mean(abs(d2i))),'--r',Vb,d2i/mean(abs(d2i)),'--b',Vb,4*Ib/mean(abs(Ib)),'black')
     
     subplot(2,2,3)
     plot(Vb,Ib5);
 
+
     
-    Ib3 = accumarray(ic,Ib2,[],@mean);
-    [junk,d2i2]= leapfd(Ib3,Vb,0.14);
-    d2i2=d2i2(ind);
-     posd2i2=(abs(d2i2)+d2i2)/2;
-%     ind02= find(~d2i,1,'first');
-% ind12 = find(~d2i,1,'last');
-
-
-    [sigma2,Vbplasma2] =gaussfit(Vb,posd2i2,sigmaGuess);
-     x = Vb(1):0.2:Vb(end);
-    y = gaussmf(x,[sigma2 Vbplasma2]);
-    subplot(2,2,2)
-     plot(x,y*max(4*d2i2/sum(d2i2)),'r',Vb,4*d2i2/sum(d2i2),'b')
-    subplot(2,2,4)
-    plot(Vb,Ib3);
-
-    xlabel('gaussmf, P=[2 5]')
+    
+%     Ib3 = accumarray(ic,Ib2,[],@mean);
+%     [junk,d2i2]= leapfd(Ib3,Vb,0.14);
+%     d2i2=d2i2(ind);
+%      posd2i2=(abs(d2i2)+d2i2)/2;
+% %     ind02= find(~d2i,1,'first');
+% % ind12 = find(~d2i,1,'last');
+% 
+% 
+% %    [sigma2,Vbplasma2] =gaussfit(Vb,posd2i2,sigmaGuess);
+%      x = Vb(1):0.2:Vb(end);
+%     y = gaussmf(x,[sigma2 Vbplasma2]);
+%     subplot(2,2,2)
+%      plot(x,y*max(4*d2i2/sum(d2i2)),'r',Vb,4*d2i2/sum(d2i2),'b')
+%     subplot(2,2,4)
+%     plot(Vb,Ib3);
+%    xlabel('gaussmf, P=[2 5]')
     
 end
     
@@ -130,9 +129,9 @@ end
 % vSC + vbPlasma = vPlasma, since a 10V s/c gives a peak at  -3.6 Vb, or
 % 6.4 Vp (Vb = Vp-Vsc)
 
-vSC= vbPlasma*VB_TO_VSC; %vSC = vbplasma * -1 /0.36
+vSC= vbPlasma*VBSC_TO_VSC; %vSC = vbplasma * -1 /0.36
 vPlasma=vSC*VSC_TO_VPLASMA;  %vPlasma = 0.64*vSC;
-sigma = sigma*abs(VB_TO_VSC); %
+sigma = sigma*abs(VBSC_TO_VSC); %
 
 
 %vPlasma=vSC+vbPlasma;
@@ -142,7 +141,7 @@ if nargin>2 && isnan(vbPlasma)
     vPlasma=vGuess;  %don't guess anymore, just output input value.
     vSC=vPlasma/VSC_TO_VPLASMA;
     sigma = NaN;
-%    sigma = sigma*abs(VB_TO_VSC); %
+%    sigma = sigma*abs(VBSC_TO_VSC); %
 
         
 end

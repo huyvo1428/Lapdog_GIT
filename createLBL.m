@@ -73,14 +73,14 @@ if(~isempty(tabindex));
         tempfp{1,2}{30,1} = index(tabindex{i,3}).t0str(1:23); %UTC start time
         tempfp{1,2}{31,1} = tabindex{i,4}(1:23);             % UTC stop time
         %         tmpsct0 = index(tabindex{i,3}).sct0str(5:end-1);
-        %      atmpsct0 = index(tabindex{46,3}).sct0str;
         
         
         
-        shitstr = index(tabindex{i,3}).sct0str;
       %  tempfp{1,2}{32,1} = strcat(index(tabindex{i,3}).sct0str(1:end-1),'"');  %% sc start time
         tempfp{1,2}{32,1} = index(tabindex{i,3}).sct0str;
-        tempfp{1,2}{33,1} = obt2sct(tabindex{i,5},scResetCount);
+        tempfp{1,2}{33,1} = sprintf('"%s/%014.3f"',index(tabindex{i,3}).sct0str(2),obt2sct(tabindex{i,5})); %get resetcount from above, and calculate obt from sct
+
+%        tempfp{1,2}{33,1} = obt2sct(tabindex{i,5},scResetCount);
         
        % tempfp{1,2}{33,1} = sprintf('"%s/%017.6f"',index(tabindex{i,3}).sct0str(2),tabindex{i,5}); %% sc stop time
         %   tempfp{1,2}{56,1} = sprintf('%i',tabindex{i,6}); %% rows
@@ -130,7 +130,7 @@ if(~isempty(tabindex));
                 fprintf(fid,'END_OBJECT  = COLUMN\n');
                 
                 fprintf(fid,'OBJECT = COLUMN\n');
-                fprintf(fid,'NAME = P%i_VOLTAGE\n',Pnum);
+                fprintf(fid,'NAME = P%s_VOLTAGE\n',Pnum);
                 fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
                 fprintf(fid,'START_BYTE = %i\n',byte);
                 fprintf(fid,'BYTES = 14\n');

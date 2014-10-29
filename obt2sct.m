@@ -1,4 +1,4 @@
-% // Convert OBT time to an SCT string
+% // Convert OBT time to an SCT number
 % // Due to the fact that the point . in:
 % //
 % // SPACECRAFT_CLOCK_START/STOP_COUNT="1/21339876.237"
@@ -9,18 +9,9 @@
 % //
 % That's Reine's calculation, although I supect it is wrong, the actual
 % calculation should be 0.00123*2^6/100000
-function sct = obt2sct(obt,reset)
+function sct = obt2sct(value)
 
-
-
-integ = floor(obt);
-
-frac=floor((obt-integ)*2^16+0.5); %get fraction, multiply by 2^16, round to nearest integer
-
-
-sct = sprintf('"%u/%010u.%u"',reset,integ,frac);
-
-%integ +(frac/2^16)*100000;
-
-
+integ = floor(value);
+frac = value-integ;
+sct = integ +(frac/2^16)*100000;
 end

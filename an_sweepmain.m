@@ -17,7 +17,7 @@ cspice_furnsh(kernelFile);
 
 try
     
-    for i=5:length(an_ind)
+    for i=2:length(an_ind)
         
         
         

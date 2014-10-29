@@ -52,15 +52,6 @@ fprintf(1,'Analysing sweeps\n')
 
 
 
-if(~isempty(ind_I1S))
-
-an_sweepmain(ind_I1S,tabindex,targetfullname);
-
-
-end
-
-
-
 
 
 if(~isempty(ind_I2S))
@@ -69,6 +60,16 @@ an_sweepmain(ind_I2S,tabindex,targetfullname);
 end
 
    
+
+
+if(~isempty(ind_I1S))
+
+an_sweepmain(ind_I1S,tabindex,targetfullname);
+
+
+end
+
+
 
 
 

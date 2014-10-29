@@ -63,6 +63,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [Te,ne,Ie,a,b] = LP_Electron_curr(V,I,Vsc)
+
+global an_debug VSC_TO_VPLASMA VBSC_TO_VSC; 
+
+
 SM_Below_Vsc= 0.75;
 
 
@@ -83,14 +87,14 @@ currvar=NaN;
 % The length of the data set is saved in the variable "len"
 len = length(V);
 
-Ve = V+Vsc; % Compute probe potential as bias potential added to spacecraft potential.
+Vp = V+Vsc; % Compute absolute probe potential as bias potential added to spacecraft potential.
 
 
 
 % Find the data points above the spacecraft potential
 
 
-ind = find(Ve > 0); % Saving indices of all potential values above the spacecraft potential.
+ind = find(V > Vsc/VBSC_TO_VSC); % Saving indices of all potential values above the knee.
 if isempty(ind)
     return
 end
@@ -120,7 +124,7 @@ end
     ind = bot:len; % Only the first ALG.SM_Below_Vs*100% above the spacecraft potential is now
     
     
-    Vr  = Ve(ind);     % kept of the vector ind
+    Vr  = Vp(ind);     % kept of the vector ind
     Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note that this
     
     
@@ -140,16 +144,23 @@ end
     %Ie0 = exp(b);
     
     
-    P = polyfit(Vr,Ir,1);
-    a = P(1); % This is accordingly the slope of the line...
-    b = P(2); % ...and this is the crossing on the y-axis of the line
+    [P, S] = polyfit(Vr,Ir,1);
+
+    a(1) = P(1); % This is accordingly the slope of the line...
+    b(1) = P(2); % ...and this is the crossing on the y-axis of the line
+    
+    S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
+    
+    a(2) = abs(S.sigma(1)/P(1)); %Fractional error
+    b(2) = abs(S.sigma(2)/P(2)); %Fractional error
+
     
     %I = Ie0(1+Vp/Te). a = Ie0/Te, b = Ie0.
-    Ie0 =  b;
-    Te = b/a;
+    Ie0 =  b(1);
+    Te = b(1)/a(1);
     
     
-    residual = Ir - b+a*Vr;
+    residual = Ir - b(1)+a(1)*Vr;
     
     % Compute the rms error and scale by the current Ie0 at Vr=Vp=0
     currvar = sqrt(sum((residual).^2)/len)/Ie0; % Compute the relative rms error
@@ -157,7 +168,7 @@ end
     
     
     % If Te is positive we can get the density as follows
-    if(Te>=0 & ~isinf(Te))
+    if(Te>=0 && ~isinf(Te))
         %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
         ne = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));
         
@@ -175,7 +186,7 @@ end
         %Ie(1:firstpos)=Ie0*exp(Vp(1:firstpos)/Te); %in the absence of
         %spacecraft photoelectrons analysis, this approximation will have a
         %too large effect on the ion side of the sweep.
-        Ie(firstpos:len)= Ie0*(1+Ve(firstpos:len)/Te);
+        Ie(firstpos:len)= Ie0*(1+Vp(firstpos:len)/Te);
         Ie = (Ie+abs(Ie))./2; % The negative part is removed, leaving only a positive
         % current contribution. This is the return current
         % The function abs returns the absolute value of the

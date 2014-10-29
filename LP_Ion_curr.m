@@ -54,7 +54,7 @@
 %
 %                                                                                    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [Ii,a,b] = LP_Ion_curr(V,I,Vsc)
+function [Ii,a,b,Q] = LP_Ion_curr(V,I,Vsc,Q)
 
 Ii = I;
 Ii(1:end)=0;
@@ -64,17 +64,17 @@ b = NaN;
 %global ALG;
 SM_Below_Vs =0.6;
 
-global CO;
-global efi_f_io_lp_l1bp;
+global an_debug VSC_TO_VPLASMA VBSC_TO_VSC; 
+
 
 % Find the number of data points in the sweep
 len = length(V);  % the function length returns the length of the vector V
 
-V = V+Vsc; % Setting the probe potential
+Vp = V+Vsc; % Setting the probe potential
 
 % Find the data points below the spacecraft potential
-ind = find(V < Vsc); % Saving indices of all potential values below the spacecraft potential.
-	             % This can be done using a for-loop
+ind = find(V < Vsc/VBSC_TO_VSC); % Saving indices of all potential values below the knee potential.
+
 if isempty(ind)
     return
 end
@@ -123,13 +123,29 @@ if (size(Vi) ~= size(Ii))
 end
 
 % 'This part of our data is now linearly fitted, in a least square sense
-P = polyfit(Vi,Ii,1); % The function polyfit finds the coefficients of a
+[P,S] = polyfit(Vi,Ii,1); % The function polyfit finds the coefficients of a
                       % polynomial P(Vi) of degree 1 that fits the data Ii best
                       % in a least-squares sense. P is a row vector of length
                       % 2 containing the polynomial coefficients in descending
                       % powers, P(1)*Vi+P(2)
-a = P(1); % This is accordingly the slope of the line...
-b = P(2); % ...and this is the crossing on the y-axis of the line 
+a(1) = P(1); % This is accordingly the slope of the line...
+b(1) = P(2); % ...and this is the crossing on the y-axis of the line 
+
+S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
+
+a(2) = abs(S.sigma(1)/P(1)); %Fractional error 
+b(2) = abs(S.sigma(2)/P(2)); %Fractional error
+
+
+
+if a(2) > 1 % if error is large (!)
+    
+    a = [0 0]; % no slope
+    b = [mean(Ii) std(Ii)]; % offset    
+    Q(1) = 1;
+    
+end
+
 
 
 %P(2) = 0;
@@ -138,7 +154,10 @@ b = P(2); % ...and this is the crossing on the y-axis of the line
 % potential sweep, is a good approximation to the ion current, and that is
 % what is returned from this function
 
-Ii(1:len) = a*V;%let's try removing it everywhere
+Ii(1:len) = a(1)*V;%let's try removing it everywhere
+
+
+
 
 %Ii(1:len) = 0;
 
@@ -148,7 +167,7 @@ Ii(1:len) = a*V;%let's try removing it everywhere
                       % sweep. The function polyval returns the value of the
                       % polynomial P evaluated at all the points of the vector V.
 
-%Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
+Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
                       % current contribution. This is the return current
                       % The function abs returns the absolute value of the
                       % elements of the calling parameter.
@@ -156,9 +175,9 @@ Ii(1:len) = a*V;%let's try removing it everywhere
                       
 
                       
-if (efi_f_io_lp_l1bp>1)    
-	subplot(2,2,3),plot(V,I,'b',V,Ii,'g');grid on;
-	title('Ion/photo-side for a and b determination');
+if (an_debug>1)    
+	subplot(2,2,3),plot(Vp,I,'b',Vp,Ii,'g');grid on;
+    title([sprintf('Ion current vs Vp, Q(1)=%d',Q(1))])
 end
 
 end

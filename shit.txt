@@ -1,1 +1,0 @@
-sed: 1: "/Users/frejon/lapdog/me ...": invalid command code f
