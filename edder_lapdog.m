@@ -30,7 +30,7 @@
 %specific file type)
 %
 
-function [] = lapdog(archpath, archID, missioncalendar)
+function [] = edder_lapdog(archpath, archID, missioncalendar)
 
 
 
@@ -41,6 +41,9 @@ fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n')
 % fprintf(1,'lapdog: Reading pds.conf\r ')
 batch_control;
 
+derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-99');
+derivedpath = strrep(derivedpath,'CALIB','EDDER');
+
 % Set up PDS keywords etc:
 
 fprintf(1,'lapdog: calling preamble...\n')
@@ -50,16 +53,16 @@ preamble;
 % Load or, if not defined, generate index:
 % fprintf(1,'lapdog: load indices if existing...')
 dynampath= mfilename('fullpath'); %find path & remove/lapdog from string
-dynampath = dynampath(1:end-7);
+dynampath = dynampath(1:end-13);
 
 fprintf(1,'lapdog: %s\n',dynampath)
 
 indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
-% fp = fopen(indexfile,'r');
-% if(fp > 0)
-%     fclose(fp);
-%     load(indexfile);
-% else
+fp = fopen(indexfile,'r');
+if(fp > 0)
+     fclose(fp);
+     load(indexfile);
+ else
     
     fprintf(1,'lapdog: calling indexgen\n')    
     indexgen;
@@ -74,7 +77,7 @@ indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
     
 
     save(indexfile,'index');
-% end
+ end
 
 
 % Generate daily geometry files:
@@ -97,7 +100,7 @@ tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);
 %     else
 
 fprintf(1,'lapdog: calling process...\n')
-process;
+edder_process;
 
 
 folder= sprintf('%s/tabindex',dynampath);
@@ -110,7 +113,7 @@ save(tabindexfile,'tabindex');
 
 
 
-analysis;
+edder_analysis;
 
 
 

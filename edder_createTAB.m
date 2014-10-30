@@ -1,5 +1,5 @@
-function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
-%function [] = createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
+function []= edder_createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
+%function [] = edder_createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 %derivedpath   =  filepath
 %tabind         = data block indices for each measurement type, array
 %index          = index array from earlier creation - Ugly way to remember index

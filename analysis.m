@@ -1,23 +1,16 @@
-
 % analysis
-
+% analyses:
+% sweeps
+% hf spectra -> power spectral density
+% downsamples files
 
 
 
 global an_tabindex;
 an_tabindex = [];
 
-%for i=1:length(tabindex);
-
-%andate = tabindex{:,1}(end-47:end-35);
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));
-
-%end
-%tab_I1H =find(strfind(antype,'I1H'));%strfind(antype,'I2H'));
-
-%ind_I1H= find(strcmp('I1H', antype)|strcmp('I2H', antype));
-
 
 
 %find datasets of different modes
@@ -110,22 +103,22 @@ end
 
 
 
-%   Mill the HF data in this ob:
+  Mill the HF data in this ob:
     
-% 
-% 
-% fprintf(1,'Generating Spectra\n')
-% 
-% if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
-% if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
-% if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
-% if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
-% 
-% 
-% if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
-% if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
-% 
-% 
+
+
+fprintf(1,'Generating Spectra\n')
+
+if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
+if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
+if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
+if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
+
+
+if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
+if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
+
+
 
 
 

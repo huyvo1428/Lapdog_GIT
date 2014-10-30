@@ -1,12 +1,15 @@
-% main -- LAP Dataset Overview and Geometry (lapdog) main file
-%
-% LAP DERIVED ARCHIVE GENERATION
+%%OLD VERSION. DISCONTINUED%
+
+%LAP DERIVED ARCHIVE GENERATION
+
+
 % anders.eriksson@irfu.se 2012-03-29
 % frejon@irfu.se 2014-05-07
-%
+
+
 %For batch mode execution via script, to execute local execution in Matlab, see main.m
-%
-%
+
+
 %Quick description
 %1. The program is designed to be called by a script, and somewhat controlled in batch_control.m, with no other user
 % input necessary
@@ -30,7 +33,7 @@
 %specific file type)
 %
 
-function [] = lapdog(archpath, archID, missioncalendar)
+function [] = lapdogrerun(archpath, archID, missioncalendar)
 
 
 
@@ -50,16 +53,18 @@ preamble;
 % Load or, if not defined, generate index:
 % fprintf(1,'lapdog: load indices if existing...')
 dynampath= mfilename('fullpath'); %find path & remove/lapdog from string
-dynampath = dynampath(1:end-7);
+dynampath = dynampath(1:end-12);
 
-fprintf(1,'lapdog: %s\n',dynampath)
+fprintf(1,'lapdog: %s\n',dynampath);
 
+
+fprintf(1, 'loading index....',dynampath);
 indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
-% fp = fopen(indexfile,'r');
-% if(fp > 0)
-%     fclose(fp);
-%     load(indexfile);
-% else
+ fp = fopen(indexfile,'r');
+ if(fp > 0)
+     fclose(fp);
+     load(indexfile);
+ else
     
     fprintf(1,'lapdog: calling indexgen\n')    
     indexgen;
@@ -74,7 +79,7 @@ indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
     
 
     save(indexfile,'index');
-% end
+ end
 
 
 % Generate daily geometry files:
@@ -88,35 +93,37 @@ end
 fprintf(1,'lapdog: calling opsblocks...\n')
 opsblocks;
 
-tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);
-%     fp = fopen(tabindexfile,'r');
-%     if(fp > 0)
-%         fclose(fp);
-%         load(tabindexfile);
-%         fprintf(1,'lapdog: succesfully loaded tabfiles...\n')
-%     else
-
-fprintf(1,'lapdog: calling process...\n')
-process;
-
-
-folder= sprintf('%s/tabindex',dynampath);
-if exist(folder,'dir')~=7
-    mkdir(folder);
+if(do_mill)
+    tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);
+     fp = fopen(tabindexfile,'r');
+     if(fp > 0)
+         fclose(fp);
+         load(tabindexfile);      
+         fprintf(1,'lapdog: succesfully loaded tabfiles...\n')       
+     else
+        
+        fprintf(1,'lapdog: calling process...\n')
+        process;
+        
+        
+        folder= sprintf('%s/tabindex',dynampath);
+        if exist(folder,'dir')~=7
+            mkdir(folder);
+        end
+        
+       save(tabindexfile,'tabindex');
 end
-
-save(tabindexfile,'tabindex');
-%end
-
-
-
-analysis;
+        
+    
+    
+    analysis;
 
 
 
-fprintf(1,'lapdog: generate LBL files....\n')
-createLBL;
-
+    fprintf(1,'lapdog: generate LBL files....\n') 
+    createLBL;
+    
+end
 
 fprintf(1,'lapdog: DONE!\n')
 

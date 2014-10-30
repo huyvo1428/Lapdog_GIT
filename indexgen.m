@@ -3,7 +3,6 @@
 % anders.eriksson@irfu.se 2012-03-29
 % edited by frejon@irfu.se 2014-05-01
 %
-
 %Make sure an old index doesn't interfere with the new one
     if exist('index','var')==1
     clear index

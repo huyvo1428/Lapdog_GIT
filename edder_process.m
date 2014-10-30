@@ -94,31 +94,35 @@ for b = 1:nob   % Loop through all ops blocks
     %     %%%% Start TAB genesis
     %
     %
-    %
+%     %
     
     %Generate sweep files
     %
-    if(~isempty(p1s)) createTAB(derivedpath,ob(p1s),index,index(obs(b)).t0,'B1S',sweept1); end
-    if(~isempty(p2s)) createTAB(derivedpath,ob(p2s),index,index(obs(b)).t0,'B2S',sweept1); end
+    if(~isempty(p2s)) edder_createTAB(derivedpath,ob(p2s),index,index(obs(b)).t0,'B2S',sweept1); end
+
+    if(~isempty(p1s)) edder_createTAB(derivedpath,ob(p1s),index,index(obs(b)).t0,'B1S',sweept1); end
     
     %Generate E data files
-    if(~isempty(p1el)) createTAB(derivedpath,ob(p1el),index,index(obs(b)).t0,'V1L',sweept1); end
-    if(~isempty(p2el)) createTAB(derivedpath,ob(p2el),index,index(obs(b)).t0,'V2L',sweept2); end
-    if(~isempty(p1eh)) createTAB(derivedpath,ob(p1eh),index,index(obs(b)).t0,'V1H',sweept1); end
-    if(~isempty(p2eh)) createTAB(derivedpath,ob(p2eh),index,index(obs(b)).t0,'V2H',sweept2); end
+    if(~isempty(p1el)) edder_createTAB(derivedpath,ob(p1el),index,index(obs(b)).t0,'V1L',sweept1); end
+    if(~isempty(p2el)) edder_createTAB(derivedpath,ob(p2el),index,index(obs(b)).t0,'V2L',sweept2); end
+    if(~isempty(p1eh)) edder_createTAB(derivedpath,ob(p1eh),index,index(obs(b)).t0,'V1H',sweept1); end
+    if(~isempty(p2eh)) edder_createTAB(derivedpath,ob(p2eh),index,index(obs(b)).t0,'V2H',sweept2); end
     
     
-    if(~isempty(p3el)) createTAB(derivedpath,ob(p3el),index,index(obs(b)).t0,'V3L',sweept3); end 
-    if(~isempty(p3eh)) createTAB(derivedpath,ob(p3eh),index,index(obs(b)).t0,'V3H',sweept3); end 
+    if(~isempty(p3el)) edder_createTAB(derivedpath,ob(p3el),index,index(obs(b)).t0,'V3L',sweept3); end 
+    if(~isempty(p3eh)) edder_createTAB(derivedpath,ob(p3eh),index,index(obs(b)).t0,'V3H',sweept3); end 
     %Generate N data files
-    if(~isempty(p1nl)) createTAB(derivedpath,ob(p1nl),index,index(obs(b)).t0,'I1L',sweept1); end
-    if(~isempty(p2nl)) createTAB(derivedpath,ob(p2nl),index,index(obs(b)).t0,'I2L',sweept2); end
-    if(~isempty(p1nh)) createTAB(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H',sweept1); end
-    if(~isempty(p2nh)) createTAB(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H',sweept2); end
+    if(~isempty(p1nl)) edder_createTAB(derivedpath,ob(p1nl),index,index(obs(b)).t0,'I1L',sweept1); end
+    if(~isempty(p2nl)) edder_createTAB(derivedpath,ob(p2nl),index,index(obs(b)).t0,'I2L',sweept2); end
+    if(~isempty(p1nh)) edder_createTAB(derivedpath,ob(p1nh),index,index(obs(b)).t0,'I1H',sweept1); end
+    if(~isempty(p2nh)) edder_createTAB(derivedpath,ob(p2nh),index,index(obs(b)).t0,'I2H',sweept2); end
     
-    if(~isempty(p3nl)) createTAB(derivedpath,ob(p3nl),index,index(obs(b)).t0,'I3L',sweept3); end
-    if(~isempty(p3nh)) createTAB(derivedpath,ob(p3nh),index,index(obs(b)).t0,'I3H',sweept3); end
+    if(~isempty(p3nl)) edder_createTAB(derivedpath,ob(p3nl),index,index(obs(b)).t0,'I3L',sweept3); end
+    if(~isempty(p3nh)) edder_createTAB(derivedpath,ob(p3nh),index,index(obs(b)).t0,'I3H',sweept3); end
 
+
+    
+    
  fprintf(1,'Macroblock %i out of  %i.\n Latest file created from %s\n ',b,nob,index(obe(b)).t1str);
     
 end %observation block for loop

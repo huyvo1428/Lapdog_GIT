@@ -8,12 +8,10 @@
 
 % 1. User info?
 % ============
-ume_user = 'liza';  % Your username on vroom.irf.umea.se
+%ume_user = 'liza';  % Your username on vroom.irf.umea.se
 
 producerfullname='Fredrik Johansson';
 producershortname='FJ';
-
-
 
 
 % 2. Control section

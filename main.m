@@ -1,4 +1,4 @@
-% main -- LAP Dataset Overview and Geometry (lapdog) main file
+ % main -- LAP Dataset Overview and Geometry (lapdog) main file
 %
 % Create overview of LAP ops and geometry files for a given data set.
 % anders.eriksson@irfu.se 2012-03-29
@@ -27,6 +27,8 @@
 %specific file type)
 %
 
+%workflow
+    
 
 
 'LAPDOG - LAP Data Overview and Geometry'
@@ -71,7 +73,6 @@ end
 'lapdog: calling opsblocks...'
 opsblocks;
 
-if(do_mill)
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(tabindexfile,'r');
 %fp = -2;
@@ -101,8 +102,6 @@ analysis;
     
 'lapdog: generate LBL files....'
 createLBL;
-
-end
 
 
 

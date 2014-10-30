@@ -1,4 +1,5 @@
 *.m~
 *.DS_Store
 irfu-matlab/*
+server/*
 mice/*
