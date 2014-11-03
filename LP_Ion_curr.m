@@ -76,6 +76,7 @@ Vp = V+Vsc; % Setting the probe potential
 ind = find(V < Vsc/VBSC_TO_VSC); % Saving indices of all potential values below the knee potential.
 
 if isempty(ind)
+    Q(1) = 2;
     return
 end
 
@@ -96,7 +97,7 @@ top = floor(l_ind*SM_Below_Vs +0.5);
 
 ind = ind(1:top); % Only the first ALG.SM_Below_Vs*100% below the spacecraft potential is now
 Vi  = V(ind);     % kept of the vector ind    
-Ii  = I(ind);     % The "ion-voltage" and "ion-current" are set. Note that this
+Ir  = I(ind);     % The "ion-voltage" and "ion-current" are set. Note that this
                   % is not the ion-voltage or ion-current in the physical sense
 		          % as there may be contamination from other sources
                   % but the notation is used for convenience in the coding 
@@ -113,17 +114,22 @@ clear ind l_ind; % Clearing the previous data, the function clear clears the
 % Vi = Vi(ind);            % farther from -Vsc than ALG.SM_Bias_Limit V. These are kept, the rest
 % Ii = Ii(ind);            % of the data points are discarded
 
-ind = find(Ii < 0); % There may be no positive current values and thus all 
+ind = find(Ir < 0); % There may be no positive current values and thus all 
+if(isempty(ind) || length(ind) < 2 )
+    return
+end
+
+
 Vi = Vi(ind);       % negative current values in our vector are kept, the
-Ii = Ii(ind);       % rest of the data points are, again, discarded
+Ir = Ir(ind);       % rest of the data points are, again, discarded
 
 
-if (size(Vi) ~= size(Ii)) 
+if (size(Vi) ~= size(Ir)) 
   Vi = Vi';
 end
 
 % 'This part of our data is now linearly fitted, in a least square sense
-[P,S] = polyfit(Vi,Ii,1); % The function polyfit finds the coefficients of a
+[P,S] = polyfit(Vi,Ir,1); % The function polyfit finds the coefficients of a
                       % polynomial P(Vi) of degree 1 that fits the data Ii best
                       % in a least-squares sense. P is a row vector of length
                       % 2 containing the polynomial coefficients in descending
@@ -141,7 +147,7 @@ b(2) = abs(S.sigma(2)/P(2)); %Fractional error
 if a(2) > 1 % if error is large (!)
     
     a = [0 0]; % no slope
-    b = [mean(Ii) std(Ii)]; % offset    
+    b = [mean(Ir) std(Ir)]; % offset    
     Q(1) = 1;
     
 end
