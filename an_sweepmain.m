@@ -5,7 +5,7 @@ function []= an_sweepmain(an_ind,tabindex,targetfullname)
 
 global an_tabindex;
 global target;
-
+global diag_P_macro
 dynampath = strrep(mfilename('fullpath'),'/an_sweepmain','');
 kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
 paths();
@@ -17,7 +17,7 @@ cspice_furnsh(kernelFile);
 
 try
     
-    for i=2:length(an_ind)
+    for i=1:length(an_ind)
         
         
         
@@ -30,7 +30,8 @@ try
         rfolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
         mode=rfile(end-6:end-4);
         diagmacro=rfile(end-10:end-8);
-        
+        probe = rfile(end-5);
+        diag_P_macro = strcat('P',probe,'M',diagmacro);
         
         arID = fopen(tabindex{an_ind(i),1},'r');
         
@@ -495,13 +496,19 @@ try
 catch err
     
     fprintf(1,'Error at loop step %i, file %s',i,tabindex{an_ind(i),1});
-    
-    err
-    err.stack.name
-    err.stack.line
+    if ~isempty(k)
+        fprintf(1,'\n Error at loop step k=%i,',k);
+    end
+    err.identifier
+    err.message
+    len = length(err.stack);
+    if (~isempty(len))
+        for i=1:len
+            fprintf(1,'%s, %i,',err.stack(i).name,err.stack(i).line);
+        end
+    end
     cspice_unload(kernelFile);
-    
-    
+        
     
 end
 

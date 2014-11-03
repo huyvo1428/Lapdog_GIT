@@ -275,12 +275,15 @@ end%for main loop
 catch err
     
     fprintf(1,'Error at loop step %i or  foutarr{}(%i), file %s',i,j,tabindex{an_ind(i),1});
-
-    err
-    err.stack.name
-    err.stack.line
-
-    
+ 
+    err.identifier
+    err.message
+    len = length(err.stack);
+    if (~isempty(len))
+        for i=1:len
+            fprintf(1,'%s, %i,',err.stack(i).name,err.stack(i).line);
+        end
+    end
 end
 
 end%function
