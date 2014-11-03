@@ -2,7 +2,7 @@
 %takes an sweep potential array and current array, and optionally a guess for the
 %Vplasma and its sigma (suggested sigma 3 V), outputs an estimate for the
 %plasma potential and it's confidence level (std)
-function [vPlasma,sigma,vSC,vbPlasma] = an_Vplasma(Vb,Ib,vGuess,sigmaGuess)
+function [vPlasma,sigma,vSC] = an_Vplasma(Vb2,Ib2,vGuess,sigmaGuess)
 
 global an_debug VSC_TO_VPLASMA VBSC_TO_VSC; 
 
@@ -11,6 +11,10 @@ global an_debug VSC_TO_VPLASMA VBSC_TO_VSC;
 %undefined function in old MATLAB........!!
 
 
+
+[Vb, junk, ic] = unique(Vb2);
+
+Ib = accumarray(ic,Ib2,[],@mean); % do I need this?
 
 
 len= length(Vb);
@@ -102,7 +106,7 @@ if an_debug > 9
 
     
     
-%     Ib3 = accumarray(ic,Ib,[],@mean);
+%     Ib3 = accumarray(ic,Ib2,[],@mean);
 %     [junk,d2i2]= leapfd(Ib3,Vb,0.14);
 %     d2i2=d2i2(ind);
 %      posd2i2=(abs(d2i2)+d2i2)/2;

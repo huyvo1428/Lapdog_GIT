@@ -68,59 +68,26 @@ dirM = upper(datestr(index(tabind(1)).t0,'mmm'));
 dirD = strcat('D',datestr(index(tabind(1)).t0,'dd'));
 tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 
-%offset handling
 % Now with hardcoded current offset (possibly due to a constant stray
 % current during calibration which is not present during measurements)
-Offset = [];
-Offset.I1L = -23E-9;
-Offset.B1S = +1E-9;
-Offset.I2L = -23E-9;
-Offset.B2S = +6.5E-9;
-Offset.I3L = 0;
-Offset.V1L = 0;
-Offset.V2L = 0;
-Offset.V3L = 0;
 
+CURRENTOFFSET = 0;
+CURRENTO1 = 0;
+CURRENTO2 = 0;
 
-switch fileflag     %we have detected different offset on different modes
-    case 'I1L'        
-        if macroNo == 604
-            CURRENTOFFSET = -12E-9;
-        else
-            CURRENTOFFSET = Offset.I1L;
-        end
-    case 'B1S'
-        CURRENTOFFSET = Offset.B1S;
-    case 'I2L'
-        if macroNo == 604
-            CURRENTOFFSET = -12E-9;
-        else
-            CURRENTOFFSET = Offset.I2L;          
-        end
-    case 'B2S'
-        CURRENTOFFSET = Offset.B2S;
-    otherwise
-        CURRENTOFFSET = 0;
+if fileflag(2) =='1' 
+    CURRENTOFFSET = +1E-9;
+elseif fileflag(2) =='2'
+    CURRENTOFFSET = 6.5E-9;
+elseif fileflag(2) =='3'
+    CURRENTO1 = +1E-9;
+    CURRENTO2 = 6.5E-9;
 end
-% 
-% 
-% CURRENTOFFSET = 0;
-% CURRENTO1 = 0;
-% CURRENTO2 = 0;
-% 
-% if fileflag(2) =='1' 
-%     CURRENTOFFSET = +1E-9;
-% elseif fileflag(2) =='2'
-%     CURRENTOFFSET = 6.5E-9;
-% elseif fileflag(2) =='3'
-%     CURRENTO1 = +1E-9;
-%     CURRENTO2 = 6.5E-9;
-% end
-% if(~index(tabind(1)).sweep) % if not a sweep
-%     CURRENTOFFSET = 0;
-%     CURRENTO1 = 0;
-%     CURRENTO2 = 0;
-% end
+if(~index(tabind(1)).sweep) % if not a sweep
+    CURRENTOFFSET = 0;
+    CURRENTO1 = 0;
+    CURRENTO2 = 0;
+end
 
 
 
@@ -166,24 +133,20 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
         end % if I/O error
         
         
-        
-        
-        if fileflag(2) =='3' % read file probe 3
+        if fileflag(2) =='3'
             
             scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
             
             
             %apply offset, but keep it in cell array format.
             if fileflag(1) =='V'  %for macro 700,701,702,705,706
-                scantemp(:,3)=cellfun(@(x) x+Offset.V1L,scantemp(:,3),'un',0);
-                scantemp(:,4)=cellfun(@(x) x+Offset.V2L,scantemp(:,4),'un',0);
+                scantemp(:,3)=cellfun(@(x) x+CURRENTO1,scantemp(:,3),'un',0);
+                scantemp(:,4)=cellfun(@(x) x+CURRENTO2,scantemp(:,4),'un',0);
             else  %hypothetically, we could have I1-I2. (no current macro)
-                scantemp(:,3)=cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
+                scantemp(:,3)=cellfun(@(x) x+CURRENTO1-CURRENTO2,scantemp(:,3),'un',0);
             end
             
-            
-        else %other probes
-            
+        else
             
             scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
             
@@ -199,7 +162,9 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
             
             lee= length(scantemp{1,2}(:));
             del = false(1,lee);
-
+            if macroNo == 604
+            %'hello'
+            end
 
             if scantemp{1,2}(end)<sweept(1,1) || scantemp{1,2}(1)>sweept(2,end)
             
@@ -264,7 +229,7 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
         if (i==len) %finalisation
             
             fileinfo = dir(filename);
-            if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)          
+            if fileinfo.bytes ==0 %happens if the entire collected file is empty (all unvalid values)          
                 if delfile == 1 %doublecheck!
                     delete(filename); %will this work on any OS, any user?
                 end

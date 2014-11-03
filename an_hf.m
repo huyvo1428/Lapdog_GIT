@@ -398,14 +398,10 @@ catch err
     
     fprintf(1,'Error at loop step %i and fout{}(%i), file %s, outputfile %s',i,k,tabindex{an_ind(i),1},sname);
     
-    err.identifier
-    err.message
-    len = length(err.stack);
-    if (~isempty(len))
-        for i=1:len
-            fprintf(1,'%s, %i,',err.stack(i).name,err.stack(i).line);
-        end
-    end
+    err
+    err.stack.name
+    err.stack.line
+
     
 end
 

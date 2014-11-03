@@ -75,7 +75,7 @@ opsblocks;
 
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(tabindexfile,'r');
-fp = -2;
+%fp = -2;
 
 if(fp > 0)
     fclose(fp);
