@@ -63,10 +63,10 @@ function DP = an_LP_Sweep(V, I,Vguess,illuminated)
 %global ALG;        % Various algorithm constants
 
 global an_debug VSC_TO_VPLASMA VBSC_TO_VSC;
-an_debug = 9; %debugging on or off!
+an_debug = 0; %debugging on or off!
 VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
 VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
-global diag_P_macro
+global diag_info
 
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
 Q    = [0 0 0 0];   % Quality vector
@@ -107,7 +107,7 @@ try
     dv = V(2)-V(1);
     
     
-    % I've given up on analysing raw data, it's just too nosiy.
+    % I've given up on analysing unfiltered data, it's just too nosiy.
     %Let's do a classic LP moving average, that doesn't move the knee
     
     I = LP_MA(I);
@@ -364,13 +364,13 @@ try
         plot(V,Izero,'og');
         grid on;
         %  title('V vs I - ions - electrons-photoelectrons');
-        title([sprintf('V vs I - ions -elec -ph macro: %s',diag_P_macro)])
+        title([sprintf('V vs I - ions -elec -ph macro: %s',diag_info{1})])
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(2,2,4)
         plot(V+Vsc,I,'b',V+Vsc,Itot,'g');
         %        title('Vp vs I & Itot ions ');
-        title([sprintf('Vp vs I & Itot ions macro: %s',diag_P_macro)])
+        title([sprintf('Vp vs I & Itot ions macro: %s',diag_info{1})])
         
         grid on;
         
@@ -395,7 +395,9 @@ try
 catch err
     
     
-    fprintf(1,'\nAnalysis Error for %s, \nVguess= %f , illum=%2.1f\n-error message:%s\n',diag_P_macro,Vguess,illuminated,err.message);
+    fprintf(1,'\nlapdog:Analysis Error for %s, \nVguess= %f , illum=%2.1f\n error message:%s\n',diag_info{2},Vguess,illuminated,err.message);
+    
+    
     
     len = length(err.stack);
     if (~isempty(len))
@@ -405,10 +407,13 @@ catch err
     end
     
     fprintf(1,'V & I = \n');
-    fprintf(1,'%5.3e,%5.3e,',V,I);
+    fprintf(1,'%e,',V);
+    fprintf(1,'\n');
+    fprintf(1,'%e,',I);
     
     DP.Quality = sum(Q)+200;
 
+    fprintf(1,'\nlapdog: continuing analysis...');
     return
     
     

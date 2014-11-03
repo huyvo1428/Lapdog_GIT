@@ -5,7 +5,7 @@ function []= an_sweepmain(an_ind,tabindex,targetfullname)
 
 global an_tabindex;
 global target;
-global diag_P_macro
+global diag_info
 dynampath = strrep(mfilename('fullpath'),'/an_sweepmain','');
 kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
 paths();
@@ -31,8 +31,10 @@ try
         mode=rfile(end-6:end-4);
         diagmacro=rfile(end-10:end-8);
         probe = rfile(end-5);
-        diag_P_macro = strcat('P',probe,'M',diagmacro);
-        
+        diag_info{1} = strcat(diagmacro,'P',probe);
+
+%        diag_info{1} = strcat('P',probe,'M',diagmacro);
+        diag_info{2} = rfile; %let's also remember the full name
         arID = fopen(tabindex{an_ind(i),1},'r');
         
         if arID < 0
@@ -207,6 +209,9 @@ try
         
         % analyse!
         for k=1:len
+            
+
+            
             %  a= cspice_str2et(timing{1,k});
             m = k;
             
@@ -241,7 +246,15 @@ try
 %           %new LP sweep analysis
 
 %            test= an_LP_Sweep(Vb, Iarr(:,k),AP(k).vs,EP(k).lum);
-            DP(k)= an_LP_Sweep(Vb, Iarr(:,k),AP(k).vs,EP(k).lum);
+                        
+            if k>1
+                Vguess=DP(k-1).Vplasma;
+            else
+                Vguess=AP(k).vs;
+            end
+
+
+            DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
             
             
            % DP = [DP;temp];
@@ -302,7 +315,14 @@ try
                 %          fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
                 %                fout{m,2} = mean(SAA(1,2*k-1:2*k));
 
-                DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),AP(m).vs,EP(m).lum);
+                
+                if k>1
+                    Vguess=DP(m-1).Vplasma;
+                else
+                    Vguess=AP(m).vs; %use last calculation as a first guess
+                end
+
+                DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),Vguess,EP(m).lum);
 
                 
                 %
@@ -381,6 +401,10 @@ try
 %             ',T_s(photoelectroncloud),n_s,photelectroncloud_slope,photelectroncloud_y_intersect.\n'));   
 
 
+
+
+                %IF THIS HEADER IS REMOVED (WHICH IT SHOULD BE BEFORE ESA
+                %DELIVERY) NOTIFY TONY ALLEN!
                 fprintf(awID,strcat('START_TIME(UTC),STOP_TIME(UTC),Qualityfactor,SAA,Illumination(1=sunlit)',...
             ',old.Vintersect,old.vx,Vsc,Vsigma, old.Tph,old.If0,vb_lastnegcurrent,vb_firstposcurrent',...
             ',old.ion_slope,old.ion_yintersect,old.plasma_e_slope,old.plasmae_yintersect',...
