@@ -28,8 +28,9 @@
 %specific file type)
 %
 
-function [] = lapdogrerun(archpath, archID, missioncalendar,redotabfiles)
+function [] = rerunlapdog(archpath, archID, missioncalendar,redo_resampling)
 
+redo_resampling = str2double(redo_resampling);
 
 
 fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n');
@@ -104,10 +105,12 @@ end
 fprintf(1,'lapdog: calling opsblocks...\n');
 opsblocks;
 
-
+% Resample data
 tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);
 fp = fopen(tabindexfile,'r');
-if(redotabfiles)
+if(redo_resampling>0)
+    fprintf(1,'lapdog: redoing resampled archive...\n');
+
     fclose(fp);
     fp=-1;
 end
@@ -141,11 +144,14 @@ else
 end
 
 
+%analyse
 
-analysis;
+if(redo_resampling<3) %overload variable for skipping analysis
+	analysis;
+end
 
 
-
+%create all LBL files
 fprintf(1,'lapdog: generate LBL files....\n');
 createLBL;
 
