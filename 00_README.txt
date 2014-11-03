@@ -3,7 +3,7 @@ LAPDOG -- LAP Dataset Overview and Geometry
 
 Matlab code to grind a LAP PDS Calibrated archive, generating a full Derived archive. 
 
-two modes of executions: main.m or lapdog.m (for script execution)
+There are two modes of execution: main.m or lapdog.m (for script execution)
 
 
 Outdated info:
