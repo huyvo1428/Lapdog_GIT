@@ -1,10 +1,4 @@
-% // Convert OBT time to the SCT number part
-% NOTE: THERE IS NO OBT2SCT DOESN'T GENERATE A FULL SCT STRING, IT OUTPUTS
-% ONLY THE 
-%21339876.237 
-%PART OF THE SCT STRING 
-% "1/21339876.237"
-% this needs to be added wheneever calling obt2sct.
+% // Convert SCT time to an OBT string
 % // Due to the fact that the point . in:
 % //
 % // SPACECRAFT_CLOCK_START/STOP_COUNT="1/21339876.237"
@@ -15,9 +9,11 @@
 % //
 % That's Reine's calculation, although I supect it is wrong, the actual
 % calculation should be 0.00123*2^6/100000
-function sct = obt2sct(value)
+function obt = sct2obt(value)
 
 integ = floor(value);
 frac = value-integ;
-sct = integ +(frac/2^16)*100000;
+
+obt = integ +(frac*2^16) /100000;
+
 end

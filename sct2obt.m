@@ -1,4 +1,6 @@
-% // Convert SCT time to an OBT string
+% // Convert SCT time string to an OBT number
+% NOTE THAT THERE IS NO 1:1 REVERSAL OF THIS FUNCTION. OBT2SCT IS SLIGHTLY
+% DIFFERENT, WITH NO STRING HANDLING.
 % // Due to the fact that the point . in:
 % //
 % // SPACECRAFT_CLOCK_START/STOP_COUNT="1/21339876.237"
@@ -9,11 +11,37 @@
 % //
 % That's Reine's calculation, although I supect it is wrong, the actual
 % calculation should be 0.00123*2^6/100000
-function obt = sct2obt(value)
+function varargout= sct2obt(str)
 
-integ = floor(value);
-frac = value-integ;
+str= strtrim(strrep(str,'"',' '));
 
-obt = integ +(frac*2^16) /100000;
+reset= str2double(str(1));
+
+
+obtsec = str2double(str(3:12));
+sctfrac = str(14:end); % don't know how long string it is, but fake decimal at pos 14, and integer afterwards
+
+frac = str2double(sctfrac);
+
+frac = frac/2^16;
+
+obt = obtsec+frac;
+
+
+if (nargout == 1)
+
+    varargout= {obt};
+    
+else 
+    
+    varargout={obt,reset};
+end
+
+
+% 
+% integ = floor(value);
+% frac = value-integ;
+% 
+% obt = integ +(frac*2^16) /100000;
 
 end
