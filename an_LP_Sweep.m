@@ -63,9 +63,13 @@ function DP = an_LP_Sweep(V, I,Vguess,illuminated)
 %global ALG;        % Various algorithm constants
 
 global an_debug VSC_TO_VPLASMA VBSC_TO_VSC;
-an_debug = 0; %debugging on or off!
-VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
-VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+an_debug = 9; %debugging on or off!
+%VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
+%VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+VSC_TO_VPLASMA=1; 
+VBSC_TO_VSC = -1;
+
+
 global diag_info
 
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
