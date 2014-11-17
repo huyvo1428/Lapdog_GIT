@@ -13,11 +13,13 @@ paths();
 cspice_furnsh(kernelFile);
 
 
+If0_start = -8.55e-09;
 
+k=1;
 
 try
     
-    for i=7:length(an_ind)
+    for i=1:length(an_ind)
         
         
         
@@ -204,7 +206,31 @@ try
         DP(len).sb       = [];
        
         DP(len).Quality  = [];
-        %%
+        %% initial estimate
+        
+        
+        
+        if len > 1
+            if len > 50
+                lmax= 50;
+            else
+                lmax = len;
+            end
+            
+                        
+        lind=logical(floor((mean(reshape(illuminati,2,len),1))));% logical index of all sunlit sweeps
+        
+        I_50 = mean(Iarr(:,1:lind(lmax)),2);         
+        
+        
+        [vPlasma,sigma,vSC,vbPlasma]=an_Vplasma(Vb,I_50); %get Vplasma estimate from that.
+        
+        
+        init = an_LP_Sweep(Vb, I_50,vPlasma,1);  %get initial estimate of all variables in that sweep.
+        
+        end
+        
+               
         
         
         % analyse!
@@ -218,7 +244,7 @@ try
             %% quality factor check
             qf= Qfarr(k);
             
-            if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.01) %rotation of more than 0.01 degrees  %arbitrary chosen value... seems decent
+            if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.05) %rotation of more than 0.05 degrees  %arbitrary chosen value... seems decent
                 qf = qf+20; %rotation
             end
             
@@ -325,35 +351,6 @@ try
                 DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),Vguess,EP(m).lum);
 
                 
-                %
-%                 if fout{m,3}==1
-%                     %      [fout{l+len,4}{1},fout{l+len,4}{2}] = Vplasma(Vb2,Iarr2(:,k));
-%                     
-%                     %estimates plasma potential from second derivative gaussian
-%                     %fit, using qualified guesses of the plasma potential from
-%                     %an_swp (,fout{l,1}(15)=vs = Vsc as intersection of ion and photoemission
-%                     %current)
-%                     [vP,vPStd] = Vplasma(Vb2,Iarr2(:,k),fout{m,1}(15),4);
-%                     %have to do this in three steps since old matlab version on server
-%                     fout{m,4}(1) = vP;
-%                     fout{m,4}(2) = vPStd;
-%                     
-%                     if max(Vb)<(vP+vPStd) || min(Vb)>(vP-vPStd) %
-%                         qf=qf+1; %poor fit for analysis method
-%                     end
-%                     
-%                     
-%                 else
-%                     fout{m,4}(1) = NaN;
-%                     fout{m,4}(2) = NaN;
-%                 end%if
-%                 
-% %                fout{m,5}={Tarr{:,k}};
-%                 fout{m,6}= Tarr{4,k}; %%obs, not Tarr{3,k};
-%                 
-%                 
-%                 
-%                 fout{m,7}=qf;
                 
                 
             end%for
@@ -405,13 +402,15 @@ try
 
                 %IF THIS HEADER IS REMOVED (WHICH IT SHOULD BE BEFORE ESA
                 %DELIVERY) NOTIFY TONY ALLEN!
-                fprintf(awID,strcat('START_TIME(UTC),STOP_TIME(UTC),Qualityfactor,SAA,Illumination(1=sunlit)',...
+                fprintf(awID,strcat('START_TIME(UTC),STOP_TIME(UTC),Qualityfactor,SAA,Illumination',...
             ',old.Vintersect,old.vx,Vsc,Vsigma, old.Tph,old.If0,vb_lastnegcurrent,vb_firstposcurrent',...
             ',old.ion_slope,old.ion_yintersect,old.plasma_e_slope,old.plasmae_yintersect',...
             ',old.Vb_inflection,old.diinf,old.d2iinf',...
             ',If0,Tph,Vintersect,Vplasma,Te(plasma)',...
             ',ne(plasma),ion_slope,ion_y_intersect,plasma_e_slope,plasma_e_yintersect',...
-            ',Ts(photoelectroncloud),ns(photoelectroncloud),s_slope,s_yintersect\n'));
+            ',Ts(photoelectroncloud),ns(photoelectroncloud),s_slope,s_yintersect',...
+            ',split',...
+            '\n'));
         
         
         
@@ -461,6 +460,8 @@ try
             str7 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ne,DP(k).ia,DP(k).ib,DP(k).ea,DP(k).eb);
             
             str8 = sprintf( ' %14.7e, %14.7e, %14.7e, %14.7e',DP(k).Ts,DP(k).ns,DP(k).sa,DP(k).sb);
+            
+    %        str9 = sprintf( ' %1i, %14.7e, %14.7e, %14.7e',split,DP(k).ns,DP(k).sa,DP(k).sb);
 
             
             strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8);
