@@ -4,10 +4,9 @@
 % hf spectra -> power spectral density
 % downsamples files
 
-
-
-global an_tabindex;
+global an_tabindex an_debug;
 an_tabindex = [];
+an_debug = 9; %debugging on or off!
 
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));

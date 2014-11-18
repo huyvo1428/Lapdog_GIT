@@ -53,7 +53,8 @@
 %                    value.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function DP = an_LP_Sweep(V, I,Vguess,illuminated)
+%with assumptions
+function DP = an_LP_Sweep_with_assmpt(V, I,Vguess,illuminated)
 
 %global IN;         % Instrument information
 %global LP_IS;      % Instrument constants
@@ -65,9 +66,8 @@ global an_debug VSC_TO_VPLASMA VBSC_TO_VSC;
 %VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
 VSC_TO_VPLASMA=1; 
 VBSC_TO_VSC = -1;
-
-
 global diag_info
+
 
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
 Q    = [0 0 0 0];   % Quality vector
