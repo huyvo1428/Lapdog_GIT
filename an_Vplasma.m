@@ -5,7 +5,7 @@
 function [vPlasma,sigma,vSC,vbPlasma] = an_Vplasma(Vb,Ib,vGuess,sigmaGuess)
 
 global an_debug VSC_TO_VPLASMA VBSC_TO_VSC; 
-
+% should VSC etc be decided here? Why? 
 
 %narginchk(2,4); %nargin should be between 2 and 4, this throws an error if else
 %undefined function in old MATLAB........!!
@@ -125,7 +125,7 @@ end
 % vSC + vbPlasma = vPlasma, since a 10V s/c gives a peak at  -3.6 Vb, or
 % 6.4 Vp (Vb = Vp-Vsc)
 
-vSC= vbPlasma*VBSC_TO_VSC; %vSC = vbplasma * -1 /0.36
+vSC= vbPlasma*VBSC_TO_VSC; %vSC = vbPlasma * -1 /0.36
 vPlasma=vSC*VSC_TO_VPLASMA;  %vPlasma = 0.64*vSC;
 sigma = sigma*abs(VBSC_TO_VSC); %
 

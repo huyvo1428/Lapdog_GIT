@@ -1,8 +1,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Name: LP_AnalyseSweep.m
-% Author: Claes Weyde
-%         Reine Gill modified UV and sunlight or not
+% Name: an_LP_Sweep.m
+% Author: Fredrik Johansson, developed from original script by Claes Weyde
+%
 % Description:
 %       DP = LP_AnalyseSweep(P,S,probe,time)
 %
@@ -41,8 +41,7 @@
 %     Vguess        spacecraft potential guess from previous analysis
 %     illuminated   if the probe is sunlit or not (from SPICE Kernel
 %     evaluation)
-%    probe  The probe we are presently analyzing
-%    sm_cal_status    Status if data has been current and offset compensated
+%   
 % Output:
 %	  DP	 Physical paramater information structure
 %
@@ -136,15 +135,11 @@ try
         
     end
     
-    
-    
     if isnan(Vsc)
         Vsc = Vguess;
         vPlasma=Vsc*VSC_TO_VPLASMA; % from simulations
         
     end
-    
-    
     
     
     

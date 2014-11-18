@@ -209,24 +209,37 @@ try
         %% initial estimate
         
         
+        %lets take the first, up to 50.  
+	%note: do this for every 50th sweep?
+	
+	if len > 1
+
+		lmax=min(len,50) %lmax is whichever is smallest, len or 50.	      
+                        	 % 50 sweeps would correspond to ~ 30 minutes of sweeps
+
+        	lind=logical(floor(mean(reshape(illuminati,2,len),1)));% logical index of all sunlit sweeps
+		dind=~logical((mean(reshape(illuminati,2,len),1)); %logical index of all fully shadowed sweeps
+		
+
+     		%one or both of these conditions will be triggered
+		if unique(lind(1:lmax)) % if we have sunlit sweeps, do this
+       			I_50 = mean(Iarr(:,lind),2);   %average each potential step current      
+        		[vPlasma,sigma,vSC,vbPlasma]=an_Vplasma(Vb,I_50); %get Vplasma estimate from that.
+	        	init_1 = an_LP_Sweep(Vb, I_50,vPlasma,0);  %get initial estimate of all variables in that sweep.
+		end
+	
+		if (unique(~(lind(1:lmax)))) % if we also) have non-sunlit sweeps…
+
+	        	I_50 = mean(Iarr(:,~lind),2);         
+			[junk,sigma,junk,-vSC]=an_Vplasma(Vb,I_50); %get Vsc estimate from that.
+	        	init_2 = an_LP_Sweep(Vb, I_50,vSC,1);  %get initial estimate of all variables in that sweep.
+
+% non-sunlit sweep V_SC should have priority!!
+
+%what to do with illum 0.4???
+
+		end        
         
-        if len > 1
-            if len > 50
-                lmax= 50;
-            else
-                lmax = len;
-            end
-            
-                        
-        lind=logical(floor((mean(reshape(illuminati,2,len),1))));% logical index of all sunlit sweeps
-        
-        I_50 = mean(Iarr(:,1:lind(lmax)),2);         
-        
-        
-        [vPlasma,sigma,vSC,vbPlasma]=an_Vplasma(Vb,I_50); %get Vplasma estimate from that.
-        
-        
-        init = an_LP_Sweep(Vb, I_50,vPlasma,1);  %get initial estimate of all variables in that sweep.
         
         end
         
@@ -461,10 +474,12 @@ try
             
             str8 = sprintf( ' %14.7e, %14.7e, %14.7e, %14.7e',DP(k).Ts,DP(k).ns,DP(k).sa,DP(k).sb);
             
-    %        str9 = sprintf( ' %1i, %14.7e, %14.7e, %14.7e',split,DP(k).ns,DP(k).sa,DP(k).sb);
+            str9 = sprintf( ' %1i’,abs(split));
+
+% %14.7e, %14.7e, %14.7e',split,DP(k).ns,DP(k).sa,DP(k).sb);
 
             
-            strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8);
+            strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9);
             strtot=strrep(strtot,'NaN','   ');
             
 %                     DP(len).If0      = [];
