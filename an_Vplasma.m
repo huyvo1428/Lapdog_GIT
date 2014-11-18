@@ -2,9 +2,9 @@
 %takes an sweep potential array and current array, and optionally a guess for the
 %Vplasma and its sigma (suggested sigma 3 V), outputs an estimate for the
 %plasma potential and it's confidence level (std)
-function [vPlasma,sigma,vSC,vbPlasma] = an_Vplasma(Vb,Ib,vGuess,sigmaGuess)
+function [vKnee,sigma] = an_Vplasma(Vb,Ib,vGuess,sigmaGuess)
 
-global an_debug VSC_TO_VPLASMA VBSC_TO_VSC; 
+global an_debug ; 
 % should VSC etc be decided here? Why? 
 
 %narginchk(2,4); %nargin should be between 2 and 4, this throws an error if else
@@ -25,19 +25,16 @@ di=di(ind);
 
 posd2i =(abs(d2i)+d2i)/2;
 
-% ind0= find(~d2i,1,'first');
-% ind1 = find(~d2i,1,'last');
-% ind0 = 1;
-
 %sort absolute values of derivative
-
-
 
 if nargin>2   %if a guess is given
     
-    vSC=vGuess/VSC_TO_VPLASMA;
-    vbGuess=vGuess-vSC;
+%    vSC=vGuess/VSC_TO_VPLASMA;
+%    vbGuess=vGuess-vSC;
+
+    vbGuess=-vGuess;
     
+
 [junk,chosen] =min(abs(Vb-vbGuess));
 else
 [junk,pos]= sort(abs(di));
@@ -59,32 +56,24 @@ if nargin>2
     
     %[sigma,Vplasma] =gaussfit(Vb(ind0:ind1),d2i(ind0:ind1),sigmaGuess,vGuess);
     %these vGuesses are never agood!
-    [sigma,vbPlasma] =gaussfit(Vb(ind),posd2i(ind),sigmaGuess,Vb(chosen));
+    [sigma,vbKnee] =gaussfit(Vb(ind),posd2i(ind),sigmaGuess,Vb(chosen));
     
     
 else
-    [sigma,vbPlasma] =gaussfit(Vb(ind),posd2i(ind));
+    [sigma,vbKnee] =gaussfit(Vb(ind),posd2i(ind));
    
 
 end
 
 
-if isnan(vbPlasma)
+if isnan(vbKnee)
     %if it's NaN, try the whole spectrum, no fancy guesswork.
-    [sigma,vbPlasma] =gaussfit(Vb,posd2i);
+    [sigma,vbKnee] =gaussfit(Vb,posd2i);
 end
 
 
 
 
-
-% tind= find(le(d2i,0));
-% d2i(tind) =0;
-%
-% %temp = d2lfvb/mean(d2lfvb);
-%
-
-% [gsd,gmu] =gaussfit(Vb(10:end-10),d2i(10:end-10));'
 if an_debug > 9
     
     
@@ -93,7 +82,7 @@ if an_debug > 9
     figure(3)
     subplot(2,2,1)
     x = Vb(1):0.2:Vb(end);
-    y = gaussmf(x,[sigma vbPlasma]);
+    y = gaussmf(x,[sigma vbKnee]);
     plot(x,y*max(d2i/mean(abs(d2i))),'--r',Vb,d2i/mean(abs(d2i)),'--b',Vb,4*Ib/mean(abs(Ib)),'black')
     
     subplot(2,2,3)
@@ -122,23 +111,15 @@ if an_debug > 9
 end
     
 
-% vSC + vbPlasma = vPlasma, since a 10V s/c gives a peak at  -3.6 Vb, or
-% 6.4 Vp (Vb = Vp-Vsc)
 
-vSC= vbPlasma*VBSC_TO_VSC; %vSC = vbPlasma * -1 /0.36
-vPlasma=vSC*VSC_TO_VPLASMA;  %vPlasma = 0.64*vSC;
-sigma = sigma*abs(VBSC_TO_VSC); %
-
+vKnee = -vbKnee;
 
 %vPlasma=vSC+vbPlasma;
 
 
-if nargin>2 && isnan(vbPlasma)
-    vPlasma=vGuess;  %don't guess anymore, just output input value.
-    vSC=vPlasma/VSC_TO_VPLASMA;
+if nargin>2 && isnan(vbKnee)
+    vKnee=vGuess;  %don't guess anymore, just output input value.
     sigma = NaN;
-%    sigma = sigma*abs(VBSC_TO_VSC); %
-
         
 end
 

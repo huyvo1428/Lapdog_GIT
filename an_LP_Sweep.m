@@ -60,11 +60,12 @@ function DP = an_LP_Sweep(V, I,Vguess,illuminated)
 %global CO          % Physical constants
 %global ALG;        % Various algorithm constants
 
-global an_debug VSC_TO_VPLASMA VBSC_TO_VSC;
+
+global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
 %VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
-%VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+%VSC_TO_VKNEE = 0.36;
 VSC_TO_VPLASMA=1; 
-VBSC_TO_VSC = -1;
+VSC_TO_VKNEE = 1;
 
 
 global diag_info
@@ -122,22 +123,43 @@ try
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [vPlasma, Vsigma,Vsc,vbPlasma] = an_Vplasma(V,I);
-    
-    %this is not
+    [Vknee, Vsigma] = an_Vplasma(V,I);
     
     
-    if(~illuminated)
-        Vsc=-vbPlasma; %no photoelectrons, so current only function of Vp (absolute)
-        vPlasma=Vsc*VSC_TO_VPLASMA;
+        
+    
+    if isnan(Vknee)
+        Vknee = Vguess;
+        
+    end
+       
+    %test these partial shadow conditions
+    if illuminated > 0 && illuminated < 1
+        Q(1)=1;
+        test= find(abs(V +Vknee)<1.5,1,'first');
+        if I_50(test) > 0 %if current is positive, then it's not sunlit
+            illuminated = 0;
+        else %current is negative, so we see photoelectron knee.
+            illuminated = 1;
+        end
+    end
+    
+
+    if(illuminated)
+        Vsc= Vknee/VSC_TO_VKNEE;
+        Vplasma=Vsc*VSC_TO_VPLASMA;
+        
+        %VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
+%VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+        
+    else
+        
+        Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
+        Vplasma=NaN;
         
     end
     
-    if isnan(Vsc)
-        Vsc = Vguess;
-        vPlasma=Vsc*VSC_TO_VPLASMA; % from simulations
-        
-    end
+
     
     
     
@@ -145,6 +167,9 @@ try
         figure(33);
         
     end
+    
+    
+    
     
     
     % Next we determine the ion current, Vsc need to be included in order
@@ -182,7 +207,7 @@ try
 
         cloudflag = 1;
         
-        [Ts,ns,Ie,sa,sb]=LP_S_curr(V,Itemp,vPlasma,illuminated);
+        [Ts,ns,Ie,sa,sb]=LP_S_curr(V,Itemp,Vplasma,illuminated);
         
         DP.Ts      = Ts;
         DP.ns      = ns;
@@ -248,7 +273,7 @@ try
         %     Iph0 = Iftmp * exp(vs/Tph);
         
         
-        Vdagger = V + Vsc - vPlasma;
+        Vdagger = V + Vsc - Vplasma;
         
         phind = find(Vdagger < 6 & Vdagger>0);
         
@@ -261,7 +286,7 @@ try
         %get V intersection:
         
         %diph = abs(  ion current(tempV)  - photelectron log current(Vdagger) )
-        diph = abs(ia(1)*V + ib(1) -Iftmp*exp(-(V+Vsc-vPlasma)/Tph));
+        diph = abs(ia(1)*V + ib(1) -Iftmp*exp(-(V+Vsc-Vplasma)/Tph));
         %find minimum
         idx1 = find(diph==min(diph),1);
         
@@ -276,7 +301,7 @@ try
         %     y3(idx-1)
         % add 1E5 accuracy on min, and try it again
         tempV = V(idx1)-1:1E-5:(V(idx1)+1);
-        diph = abs(ia(1)*tempV + ib(1) -Iftmp*exp(-(tempV+Vsc-vPlasma)/Tph));
+        diph = abs(ia(1)*tempV + ib(1) -Iftmp*exp(-(tempV+Vsc-Vplasma)/Tph));
         eps = abs(Iftmp)/1000;  %good order estimate of minimum accuracy
         idx = find(diph==min(diph) & diph < eps,1);
         
@@ -287,7 +312,7 @@ try
             DP.Iph0 = NaN;
         else
             DP.Vintersect = tempV(idx);
-            DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vsc-vPlasma)/Tph);
+            DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vsc-Vplasma)/Tph);
         end
         
         DP.Tph     = Tph;
@@ -296,7 +321,7 @@ try
         Iph(:) = 0;  %set everything to zero
         
         %idx is the at point where Iion and Iph converges
-        Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-vPlasma)/Tph);
+        Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
         %Iph0 and Ii is both an approximation of that part of the sweep, so we
         %remove that region of the Iph current (and maybe add it later)
         
@@ -308,7 +333,7 @@ try
     DP.Te      = Te;
     DP.ne      = ne;
     DP.Vsc     = Vsc;
-    DP.Vplasma = vPlasma;
+    DP.Vplasma = Vplasma;
     DP.Vsigma  = Vsigma;
     DP.ia      = ia(1);
     DP.ib      = ib(1);

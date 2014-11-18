@@ -54,18 +54,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %with assumptions
-function DP = an_LP_Sweep_with_assmpt(V, I,Vguess,illuminated)
+function DP = an_LP_Sweep_with_assmpt(V, I,assmpt,illuminated)
+
+
+
 
 %global IN;         % Instrument information
 %global LP_IS;      % Instrument constants
 %global CO          % Physical constants
 %global ALG;        % Various algorithm constants
 
-global an_debug VSC_TO_VPLASMA VBSC_TO_VSC;
+global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
 %VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
-%VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+%VSC_TO_VKNEE = 0.36;
 VSC_TO_VPLASMA=1; 
-VBSC_TO_VSC = -1;
+VSC_TO_VKNEE = 1;
+
 global diag_info
 
 
@@ -101,6 +105,9 @@ DP.Quality = sum(Q);
 
 try
     
+  
+    
+    
     % Sort the data
     [V,I] = LP_Sort_Sweep(V',I');
     
@@ -116,35 +123,48 @@ try
     
     
     
-    
     % Now the actual fitting starts
     %---------------------------------------------------
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [vPlasma, Vsigma,Vsc,vbPlasma] = an_Vplasma(V,I);
-    
-    %this is not
+    [Vknee, Vsigma] = an_Vplasma(V,I);
     
     
-    if(~illuminated)
-        Vsc=-vbPlasma; %no photoelectrons, so current only function of Vp (absolute)
-        vPlasma=Vsc*VSC_TO_VPLASMA;
+        
+    
+    if isnan(Vknee)
+        Vknee = assmpt.Vknee;        
+    end
+       
+    %test these partial shadow conditions
+    if illuminated > 0 && illuminated < 1
+        Q(1)=1;
+        test= find(abs(V +Vknee)<1.5,1,'first');
+        if I_50(test) > 0 %if current is positive, then it's not sunlit
+            illuminated = 0;
+        else %current is negative, so we see photoelectron knee.
+            illuminated = 1;
+        end
+    end
+    
+    
+    if(illuminated)
+        Vsc= Vknee/VSC_TO_VKNEE;
+        Vplasma=Vsc*VSC_TO_VPLASMA;
+        
+        %VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
+%VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+        
+    else
+        
+        Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
+        Vplasma=NaN;
         
     end
     
-    if isnan(Vsc)
-        Vsc = Vguess;
-        vPlasma=Vsc*VSC_TO_VPLASMA; % from simulations
-        
-    end
+    Itemp = I;
     
-    
-    
-    if (an_debug>1)
-        figure(33);
-        
-    end
     
     
     % Next we determine the ion current, Vsc need to be included in order
@@ -152,7 +172,7 @@ try
     % accurate here.In addition to the ion current, the coefficients from
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
-    [Ii,ia,ib,Q] = LP_Ion_curr(V,I,Vsc,Q); % The ion current is denoted Ii,
+    [Ii,ia,ib,Q] = LP_Ion_curr(V,Itemp,Vsc,Q); % The ion current is denoted Ii,
     % the coefficients a and b
     
     
@@ -161,7 +181,7 @@ try
     
     % Now, removing the linearly fitted ion-current from the
     % current will leave the collected plasma electron current & photoelectron current
-    Itemp = I - Ii; %
+    Itemp = Itemp - Ii; %
     
     if (an_debug>1)
         subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
@@ -169,8 +189,56 @@ try
     end
     
     
-    %Ie_s = LP_MA(Ie); % Now we smooth the data using a 9-point moving average
     
+    
+    
+    
+    if illuminated
+        Iph = gen_ph_current(V,-Vplasma,assmpt.Iph0,assmpt.Tph,1);
+        
+        Itemp = Itemp - Iph;
+        
+        [Vsc, Vsigma2] = an_Vplasma(V,Itemp);
+        
+        
+        if (an_debug>1)
+            subplot(2,2,4),plot(V,I,'b',V,Itemp,'g');grid on;
+            title('I & I - Iph current');
+        end
+    
+                Tph = assmpt.Tph;
+        Iftmp = assmpt.Iph0;
+        
+        %get V intersection:
+        
+        %diph = abs(  ion current(tempV)  - photelectron log current(Vdagger) )
+        diph = abs(ia(1)*V + ib(1) -Iftmp*exp(-(V+Vsc-Vplasma)/Tph));
+        %find minimum
+        idx1 = find(diph==min(diph),1);
+        
+        % add 1E5 accuracy on min, and try it again
+        tempV = V(idx1)-1:1E-5:(V(idx1)+1);
+        diph = abs(ia(1)*tempV + ib(1) -Iftmp*exp(-(tempV+Vsc-Vplasma)/Tph));
+        eps = abs(Iftmp)/1000;  %good order estimate of minimum accuracy
+        idx = find(diph==min(diph) & diph < eps,1);
+        
+        
+        
+        if(isempty(idx))
+            DP.Vintersect = NaN;
+            Q(4) = 1;
+            DP.Iph0 = NaN;
+        else
+            DP.Vintersect = tempV(idx);
+            DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vsc-Vplasma)/Tph);
+        end
+        
+        
+    end
+
+    
+    
+        
     %Determine the electron current (above Vsc and positive), use a moving average
     [Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
     
@@ -182,7 +250,7 @@ try
 
         cloudflag = 1;
         
-        [Ts,ns,Ie,sa,sb]=LP_S_curr(V,Itemp,vPlasma,illuminated);
+        [Ts,ns,Ie,sa,sb]=LP_S_curr(V,Itemp,Vplasma,illuminated);
         
         DP.Ts      = Ts;
         DP.ns      = ns;
@@ -217,38 +285,11 @@ try
         Iph = Itemp;
         
         
-        %     iph = ip(pos) - iecoll;
-        %     vbh = vb(pos);
-        %
-        %
-        %
-        %         % Use curve above vinf:
-        %         pos = find(V >= Vsc);
-        %
-        %         % Subtract collected electrons, whose current is put to zero if
-        %         % linear fit gives negative value:
-        %         iph = ip(pos) - iecoll;
-        %         vbh = vb(pos);
-        
-        % Do log fit to first 6 V:
-        %     phind = find(V < (vPlasma-Vsc) + 6 & V>=(vPlasma-Vsc));
-        %     [phpol,S] = polyfit(V(phind),log(abs(Iph(phind))),1);
-        %     S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df);
-        %
-        %     Tph = -1/phpol(1);
-        %     Iftmp = -exp(phpol(2));
-        %
-        %     % Find Vsc as intersection of ion and photoemission current:
-        %     % Iterative solution:
-        %     vs = vPlasma-Vsc;
-        %     for(i=1:10)
-        %         vs = -(log(-polyval([ia(1),ib(1)],-vs)) - phpol(2))/phpol(1);
-        %     end
-        %     % Calculate Iph0:
+
         %     Iph0 = Iftmp * exp(vs/Tph);
         
         
-        Vdagger = V + Vsc - vPlasma;
+        Vdagger = V + Vsc - Vplasma;
         
         phind = find(Vdagger < 6 & Vdagger>0);
         
@@ -261,22 +302,13 @@ try
         %get V intersection:
         
         %diph = abs(  ion current(tempV)  - photelectron log current(Vdagger) )
-        diph = abs(ia(1)*V + ib(1) -Iftmp*exp(-(V+Vsc-vPlasma)/Tph));
+        diph = abs(ia(1)*V + ib(1) -Iftmp*exp(-(V+Vsc-Vplasma)/Tph));
         %find minimum
         idx1 = find(diph==min(diph),1);
         
-        
-        
-        
-        %     V(idx)
-        %     V(idx+1)
-        %     V(idx-1)
-        %     y3(idx)
-        %     y3(idx+1)
-        %     y3(idx-1)
         % add 1E5 accuracy on min, and try it again
         tempV = V(idx1)-1:1E-5:(V(idx1)+1);
-        diph = abs(ia(1)*tempV + ib(1) -Iftmp*exp(-(tempV+Vsc-vPlasma)/Tph));
+        diph = abs(ia(1)*tempV + ib(1) -Iftmp*exp(-(tempV+Vsc-Vplasma)/Tph));
         eps = abs(Iftmp)/1000;  %good order estimate of minimum accuracy
         idx = find(diph==min(diph) & diph < eps,1);
         
@@ -287,7 +319,7 @@ try
             DP.Iph0 = NaN;
         else
             DP.Vintersect = tempV(idx);
-            DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vsc-vPlasma)/Tph);
+            DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vsc-Vplasma)/Tph);
         end
         
         DP.Tph     = Tph;
@@ -296,7 +328,7 @@ try
         Iph(:) = 0;  %set everything to zero
         
         %idx is the at point where Iion and Iph converges
-        Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-vPlasma)/Tph);
+        Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
         %Iph0 and Ii is both an approximation of that part of the sweep, so we
         %remove that region of the Iph current (and maybe add it later)
         
@@ -308,7 +340,7 @@ try
     DP.Te      = Te;
     DP.ne      = ne;
     DP.Vsc     = Vsc;
-    DP.Vplasma = vPlasma;
+    DP.Vplasma = Vplasma;
     DP.Vsigma  = Vsigma;
     DP.ia      = ia(1);
     DP.ib      = ib(1);
@@ -392,7 +424,7 @@ try
 catch err
     
     
-    fprintf(1,'\nlapdog:Analysis Error for %s, \nVguess= %f , illum=%2.1f\n error message:%s\n',diag_info{2},Vguess,illuminated,err.message);
+    fprintf(1,'\nlapdog:Analysis Error for %s, \nVguess= %f , illum=%2.1f\n error message:%s\n',diag_info{2},assmpt.Vknee,illuminated,err.message);
     
     
     
@@ -419,5 +451,4 @@ end
 
 
 end
-
 

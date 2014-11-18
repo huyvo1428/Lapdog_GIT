@@ -64,7 +64,7 @@ b = NaN;
 %global ALG;
 SM_Below_Vs =0.6;
 
-global an_debug VSC_TO_VPLASMA VBSC_TO_VSC; 
+global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE; 
 
 
 % Find the number of data points in the sweep
@@ -73,7 +73,7 @@ len = length(V);  % the function length returns the length of the vector V
 Vp = V+Vsc; % Setting the probe potential
 
 % Find the data points below the spacecraft potential
-ind = find(V < Vsc/VBSC_TO_VSC); % Saving indices of all potential values below the knee potential.
+ind = find(V < Vsc*VSC_TO_VKNEE); % Saving indices of all potential values below the knee potential.
 
 if isempty(ind)
     Q(1) = 2;

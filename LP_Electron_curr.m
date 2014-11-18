@@ -64,7 +64,7 @@
 
 function [Te,ne,Ie,a,b] = LP_Electron_curr(V,I,Vsc,illuminated)
 
-global an_debug VSC_TO_VPLASMA VBSC_TO_VSC;
+global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
 
 
 
@@ -93,7 +93,7 @@ Vp = V+Vsc; % Compute absolute probe potential as bias potential added to spacec
 
 if illuminated
     SM_Below_Vsc= 0.75;
-    ind = find(V > Vsc/VBSC_TO_VSC);% Saving indices of all potential values above the knee.
+    ind = find(V > Vsc*VSC_TO_VKNEE);% Saving indices of all potential values above the knee.
     firstpos=find(V > -Vsc,1,'first');
 
 else
