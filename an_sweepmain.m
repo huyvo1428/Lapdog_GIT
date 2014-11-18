@@ -132,7 +132,7 @@ try
         [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
         clear junk
         
-        if strcmp(mode(2),'1');
+        if strcmp(mode(2),'1'); %probe 1…
             %current (Elias) SAA = z axis, Anders = x axis.
             % *Anders values* (converted to the present solar aspect angle definition
             % by ADDING 90 degrees) :
@@ -216,28 +216,40 @@ try
 
 		lmax=min(len,50) %lmax is whichever is smallest, len or 50.	      
                         	 % 50 sweeps would correspond to ~ 30 minutes of sweeps
+        	lind=logical(floor(mean(reshape(illuminati,2,len),1)));% logical index of all sunlit sweeps
 
         	lind=logical(floor(mean(reshape(illuminati,2,len),1)));% logical index of all sunlit sweeps
 		dind=~logical((mean(reshape(illuminati,2,len),1)); %logical index of all fully shadowed sweeps
-		
+
 
      		%one or both of these conditions will be triggered
 		if unique(lind(1:lmax)) % if we have sunlit sweeps, do this
        			I_50 = mean(Iarr(:,lind),2);   %average each potential step current      
         		[vPlasma,sigma,vSC,vbPlasma]=an_Vplasma(Vb,I_50); %get Vplasma estimate from that.
-	        	init_1 = an_LP_Sweep(Vb, I_50,vPlasma,0);  %get initial estimate of all variables in that sweep.
+	        	init_1 = an_LP_Sweep(Vb, I_50,vPlasma,1);  %get initial estimate of all variables in that sweep.
 		end
 	
 		if (unique(~(lind(1:lmax)))) % if we also) have non-sunlit sweeps…
 
 	        	I_50 = mean(Iarr(:,~lind),2);         
 			[junk,sigma,junk,-vSC]=an_Vplasma(Vb,I_50); %get Vsc estimate from that.
-	        	init_2 = an_LP_Sweep(Vb, I_50,vSC,1);  %get initial estimate of all variables in that sweep.
-
+	        	init_2 = an_LP_Sweep(Vb, I_50,vSC,0);  %get initial estimate of all variables in that sweep.
+		end
 % non-sunlit sweep V_SC should have priority!!
 
 %what to do with illum 0.4???
 
+		if unique(lind+dind)==0 %if everything is in partial shade…
+			pind= ~dind & ~lind; %partial shade is neither dind nor not lind		
+			I_50 = mean(Iarr(:,pind),2);         
+        		[vPlasma,sigma,vSC,vbPlasma]=an_Vplasma(Vb,I_50); %get Vplasma estimate from that.
+			test= find(abs(Vb -vbPlasma)<1.5,1,’first’)
+			if I_50(test) > 0 %if current is positive, then it’s not sunlit
+		        	init_1 = an_LP_Sweep(Vb, I_50,vPlasma,0);  %get initial estimate of all variables in that sweep.
+			else
+		        	init_2 = an_LP_Sweep(Vb, I_50,vPlasma,1);  %get initial estimate of all variables in that sweep.
+			end
+	
 		end        
         
         
