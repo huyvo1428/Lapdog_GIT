@@ -6,6 +6,20 @@
 
 export_geometry = 0;
 
+
+global CO IN          % Physical &Instrument constants
+CO=[];
+CO.e = 1.60217657E-19;
+CO.me = 9.10938291E-31;
+CO.mp = 1.67262178E-27;
+
+IN.probe_r = 0.025; %rosetta probe radius.
+IN.probe_A = 4*pi*IN.probe_r^2;
+IN.probe_cA = pi*IN.probe_r^2;
+
+
+
+
 % Set up automatic ssh login on vroom.umea.irf.se (assumes you have generated a
 % public rsa key in your .ssh directory on squid and copied it to the known_hosts
 % file in your .ssh directory on vroom)

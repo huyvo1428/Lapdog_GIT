@@ -54,7 +54,7 @@
 %
 %                                                                                    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [out,Q] = LP_Ion_curr(V,I,Vsc,Q)
+function [out,Q] = LP_Ion_curr2(V,I,Vsc,Q)
 
 
 
@@ -177,7 +177,7 @@ end
 % potential sweep, is a good approximation to the ion current, and that is
 % what is returned from this function
 
-Ii(1:len) = a(1)*V;%let's try removing it everywhere
+Ii(1:len) = a(1)*V+b(1);%let's try removing it everywhere
 
 
 

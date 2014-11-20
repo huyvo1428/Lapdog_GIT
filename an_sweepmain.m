@@ -6,6 +6,8 @@ function []= an_sweepmain(an_ind,tabindex,targetfullname)
 global an_tabindex;
 global target;
 global diag_info
+global CO IN     % Physica &instrumental constants
+
 dynampath = strrep(mfilename('fullpath'),'/an_sweepmain','');
 kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
 paths();
@@ -88,7 +90,7 @@ try
         %     for k=1:size/steps
         %
         %         Iuni(k) = accumarray(ic,Iarr(:,k),[],@mean);
-        %         foutarr(k,1:2)=Vplasma(Vb,Iarr(:,k));
+        %         foutarr(k,1:2)=Vph_knee(Vb,Iarr(:,k));
         %
         %
         %
@@ -177,33 +179,40 @@ try
         AP(len).vbinf    = [];
         AP(len).diinf    = [];
         AP(len).d2iinf   = [];
-        
-
+     
+        %EP = extra parameters, not from functions
         
         EP(len).tstamp   = [];
         EP(len).SAA      = [];
         EP(len).qf       = [];
         EP(len).Tarr     = {};
         EP(len).lum      = [];
-        EP(len).split    = [];
+        EP(len).split    = [];        
+        EP(len).ni_ram = [];
+      %  EP(len).ni_thermal = [];%1e-6*DP(k).ion_slope*assmpt.ionM*CO.mp*assmpt.vram/(IN.probe_cA*2*CO.e*CO.e);
+     %   EP(len).ni_SW = [];%1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.v_SW;
+        EP(len).ne_5eV = [];%1e-6*DP(k).e_slope
+        %need to make this as a function of Vsc...
+        % EP(len).i_v = [];%sqrt(2*assmpt.ionZ*CO.e*DP(k)DP(k).ion_y_intersect/(DP(k).ion_slope*assmpt.ionM*CO.mp);
+
         
-        DP(len).Iph0      = [];
+        DP(len).Iph0     = [];
         DP(len).Tph      = [];
-        DP(len).Vintersect = [];
+        DP(len).Vsi      = [];
         DP(len).Te       = [];
         DP(len).ne       = [];
-        DP(len).Vsc      = [];
-        DP(len).Vplasma  = [];
-        DP(len).Vsigma   = [];
-        DP(len).ia       = [];
-        DP(len).ib       = [];
-        DP(len).ea       = [];
-        DP(len).eb       = [];
+        DP(len).Vsg      = [];
+        DP(len).Vph_knee = [];
+        DP(len).Vsg_sigma = [];
+        DP(len).ion_slope       = [];
+        DP(len).ion_y_intersect       = [];
+        DP(len).e_slope       = [];
+        DP(len).e_y_intersect       = [];
         
-        DP(len).Ts       = [];
-        DP(len).ns       = [];
-        DP(len).sa       = [];
-        DP(len).sb       = [];
+        DP(len).Tphc       = [];
+        DP(len).nphc       = [];
+        DP(len).phc_slope       = [];
+        DP(len).phc_y_intersect       = [];
        
         DP(len).Quality  = [];
         %% initial estimate
@@ -215,9 +224,21 @@ try
     
     assmpt =[];
     
-    assmpt.Vknee = 0;
-    assmpt.Tph = 2;
-    assmpt.Iph0 = -8.55e-09;
+    assmpt.Vknee = 0; %dummy
+    assmpt.Tph = 2; %eC
+    assmpt.Iph0 = -8.55e-09; %Amp
+    assmpt.vram = 700; %m/s
+    assmpt.ionZ = +1; % ion charge
+    assmpt.ionM = 16; % proton mass
+    assmpt.v_SW = 5E5; %500 km/s
+        
+    %assmpt.probearea =0.25E-3;
+    
+
+    
+            %Iion0 = ?Aram qion nion vd,
+    
+    
     
     
     if len > 1
@@ -233,7 +254,7 @@ try
         %one or both of these conditions will be triggered
         if unique(lind(1:lmax)) % if we have sunlit sweeps, do this
             I_50 = mean(Iarr(:,lind),2);   %average each potential step current
-            [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vplasma estimate from that.
+            [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vph_knee estimate from that.
             
             assmpt.Vknee =Vknee;
             
@@ -243,7 +264,7 @@ try
         if (unique(~(lind(1:lmax)))) % if we also) have non-sunlit sweeps?
             
             I_50 = mean(Iarr(:,~lind),2);
-            [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vsc estimate from that.
+            [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vsg estimate from that.
             assmpt.Vknee = Vknee;
             init_2 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0);  %get initial estimate of all variables in that sweep.
         end
@@ -253,7 +274,7 @@ try
             %            pind= ~dind & ~lind; %partial shade is neither dind nor not lind
             
             I_50 = mean(Iarr(:,1:lmax),2); %all
-            [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vplasma estimate from that.
+            [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vph_knee estimate from that.
             
             assmpt.Vknee =Vknee;
             
@@ -307,14 +328,30 @@ try
 %            test= an_LP_Sweep(Vb, Iarr(:,k),AP(k).vs,EP(k).lum);
                         
             if k>1
-                Vguess=DP(k-1).Vplasma;
+                Vguess=DP(k-1).Vph_knee;
             else
                 Vguess=AP(k).vs;
             end
 
 
             DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
+           
+
+            %need to make this as a function of Vsc...
+%            EP(k).i_v = sqrt(2*assmpt.ionZ*CO.e*DP(k)DP(k).ion_y_intersect/(DP(k).ion_slope*assmpt.ionM*CO.mp);
             
+            EP(k).ni_ram      = 1e-6 * DP(k).ion_slope*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2);
+           
+%            EP(k).ni_ram = 1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.vram; %(CO.probearea*assmpt.qion*assmpt.vram);
+            %EP(k).ni_SW = 1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.v_SW;
+            
+            Te_guess = 5;%eV
+            EP(k).ne_5eV = 1e-6*DP(k).e_y_intersect/(IN.probe_A*CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me)));
+                        
+            
+            
+            %
+                        
         end%for
         
         
@@ -349,7 +386,7 @@ try
 
                 
                 if k>1
-                    Vguess=DP(m-1).Vplasma;
+                    Vguess=DP(m-1).Vph_knee;
                 else
                     Vguess=AP(m).vs; %use last calculation as a first guess
                 end
@@ -380,23 +417,23 @@ try
         r2 = 0;
         
 %         fprintf(awID,strcat('EP(k).Tarr{1},EP(k).Tarr{2},EP(k).qf,EP(k).SAA,EP(k).lum',...
-%             ',AP(k).vs,AP(k).vx,DP(k).Vsc,DP(k).Vsigma, AP(k).Tph,AP(k).Iph0,AP(k).lastneg,AP(k).firstpos',...
+%             ',AP(k).vs,AP(k).vx,DP(k).Vsg,DP(k).Vsg_sigma, AP(k).Tph,AP(k).Iph0,AP(k).lastneg,AP(k).firstpos',...
 %             ',AP(k).poli1,AP(k).poli2,AP(k).pole1,AP(k).pole2',...
 %             ',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf',...
-%             ',DP(k).Quality,DP(k).Tph,DP(k).Vintersect,DP(k).Vplasma,DP(k).Te',...
-%             ',DP(k).ne,DP(k).ia,DP(k).ib,DP(k).ea,DP(k).eb',...
-%             ',DP(k).Ts,DP(k).ns,DP(k).sa,DP(k).sb\n'));
+%             ',DP(k).Quality,DP(k).Tph,DP(k).Vsi,DP(k).Vph_knee,DP(k).Te',...
+%             ',DP(k).ne,DP(k).ion_slope,DP(k).ion_y_intersect,DP(k).e_slope,DP(k).e_y_intersect',...
+%             ',DP(k).Tphc,DP(k).nphc,DP(k).ph_slope,DP(k).ph_y_intersect\n'));
         %        fprintf(awID,strcat('EP(k).Tarr{1},EP(k).Tarr{2},EP(k).qf,EP(k).SAA,EP(k).lum',...
-%            ',AP(k).vs,AP(k).vx,DP(k).Vsc,DP(k).Vsigma, AP(k).Tph,AP(k).Iph0,AP(k).lastneg,AP(k).firstpos',...
+%            ',AP(k).vs,AP(k).vx,DP(k).Vsg,DP(k).Vsg_sigma, AP(k).Tph,AP(k).Iph0,AP(k).lastneg,AP(k).firstpos',...
 %            ',AP(k).poli1,AP(k).poli2,AP(k).pole1,AP(k).pole2',...
 %           ',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf',...
-%            ',DP(k).Iph0,DP(k).Tph,DP(k).Vintersect,DP(k).Vplasma,DP(k).Te',...
-%           ',DP(k).ne,DP(k).ia,DP(k).ib,DP(k).ea,DP(k).eb',...
-%            ',DP(k).Ts,DP(k).ns,DP(k).sa,DP(k).sb\n'));
+%            ',DP(k).Iph0,DP(k).Tph,DP(k).Vsi,DP(k).Vph_knee,DP(k).Te',...
+%           ',DP(k).ne,DP(k).ion_slope,DP(k).ion_y_intersect,DP(k).e_slope,DP(k).e_y_intersect',...
+%            ',DP(k).Tphc,DP(k).nphc,DP(k).ph_slope,DP(k).ph_y_intersect\n'));
 
 % 
 %         fprintf(awID,strcat('START_TIME(UTC),STOP_TIME(UTC),QualityFactor,SAA,illumination(1=sunlit)',...
-%             ',old.V_intersect,old.vx,Vsc,Vsc_sigma,old.Tph,old.Iph0,lastneg,firstpos',...
+%             ',old.V_intersect,old.vx,Vsg,Vsg_sigma,old.Tph,old.Iph0,lastneg,firstpos',...
 %             ',old.ion_slope,old.ion_y_cross,old.plasma_e_slope,old.plasma_e_y_cross',...
 %             ',old.vb_inflection,old.di_inflection,old.d2i_inflection',...
 %             ',Iph0,Tph,V_intersect,V_plasma,Te',...
@@ -409,12 +446,11 @@ try
                 %IF THIS HEADER IS REMOVED (WHICH IT SHOULD BE BEFORE ESA
                 %DELIVERY) NOTIFY TONY ALLEN!
                 fprintf(awID,strcat('START_TIME(UTC),STOP_TIME(UTC),Qualityfactor,SAA,Illumination',...
-            ',old.Vintersect,old.vx,Vsc,Vsigma, old.Tph,old.Iph0,vb_lastnegcurrent,vb_firstposcurrent',...
-            ',old.ion_slope,old.ion_yintersect,old.plasma_e_slope,old.plasmae_yintersect',...
+            ',old.Vsi,old.Vx,Vsg,Vsg_sigma, old.Tph,old.Iph0,Vb_lastnegcurrent,Vb_firstposcurrent',...
             ',old.Vb_inflection,old.diinf,old.d2iinf',...
-            ',Iph0,Tph,Vintersect,Vplasma,Te(plasma)',...
-            ',ne(plasma),ion_slope,ion_y_intersect,plasma_e_slope,plasma_e_yintersect',...
-            ',Ts(photoelectroncloud),ns(photoelectroncloud),s_slope,s_yintersect',...
+            ',Iph0,Tph,Vsi,Vph_knee,Te',...
+            ',ne,ion_slope,ion_y_intersect,plasma_e_slope,plasma_e_yintersect',...
+            ',Tphc,nphc,phc_slope,phc_yintersect',...
             ',split',...
             '\n'));
         
@@ -425,6 +461,10 @@ try
             %params = [ts vb(lastneg) vb(firstpos) vx poli(1) poli(2) pole(1) pole(2) p vbinf diinf d2iinf Tph Iph0 vs];
             %time0,time0,quality,mean(SAA),mean(Illuminati)
             
+            
+            
+            DP(k).ne = DP(k).ne /1E6; %convert to #/cm^3
+            DP(k).nphc = DP(k).nphc / 1E6;  %convert to #/cm^3
             
             
             %           '1,  2,   3  ,   4   ,   5   ;   6   ,   7   ,    8  ,   9  ;   10  ,   11  ,   12  ,   13  ;   14  ,   15  ,   16  ,   18  ;   19  ,   20  ,   21  \n
@@ -439,9 +479,9 @@ try
             %time0,time0,qualityfactor,mean(SAA),mean(Illuminati)
  %           str1=sprintf('%s, %s, %03i, %07.3f, %03.2f,',fout{k,5}{1,1},fout{k,5}{1,2},fout{k,7},fout{k,2},fout{k,3});
             %6:9
-            %,vs,vx,Vsc,VscSigma
-            str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',AP(k).vs,AP(k).vx,DP(k).Vsc,DP(k).Vsigma);
-            %,vs,vx,Vsc,VscSigma
+            %,vs,vx,Vsg,VsgSigma
+            str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',AP(k).vs,AP(k).vx,DP(k).Vsg,DP(k).Vsg_sigma);
+            %,vs,vx,Vsg,VsgSigma
  %           str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(15),fout{k,1}(4),fout{k,4}(1),fout{k,4}(2));
             %10:13
             %,Tph,Iph0,vb(lastneg) vb(firstpos),
@@ -450,8 +490,8 @@ try
 %            str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', fout{k,1}(13),fout{k,1}(14),fout{k,1}(2),fout{k,1}(3));
             %14:17
             %poli(1),poli(2),pole,pole,
-            str4=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',AP(k).poli1,AP(k).poli2,AP(k).pole1,AP(k).pole2);
             %poli(1),poli(2),pole,pole,
+            str4='';
      %       str4=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(5),fout{k,1}(6),fout{k,1}(7),fout{k,1}(8));
             %18:20
             %  vbinf,diinf,d2iinf
@@ -461,15 +501,15 @@ try
        
        
             
-            str6 = sprintf( '%03i, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Iph0,DP(k).Tph,DP(k).Vintersect,DP(k).Vplasma,DP(k).Te);
+            str6 = sprintf( '%03i, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Iph0,DP(k).Tph,DP(k).Vsi,DP(k).Vph_knee,DP(k).Te);
             
-            str7 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ne,DP(k).ia,DP(k).ib,DP(k).ea,DP(k).eb);
+            str7 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ne,DP(k).ion_slope,DP(k).ion_y_intersect,DP(k).e_slope,DP(k).e_y_intersect);
             
-            str8 = sprintf( ' %14.7e, %14.7e, %14.7e, %14.7e',DP(k).Ts,DP(k).ns,DP(k).sa,DP(k).sb);
+            str8 = sprintf( ' %14.7e, %14.7e, %14.7e, %14.7e',DP(k).Tphc,DP(k).nphc,DP(k).ph_slope,DP(k).ph_y_intersect);
             
             str9 = sprintf( ' %1i',abs(split));
 
-% %14.7e, %14.7e, %14.7e',split,DP(k).ns,DP(k).sa,DP(k).sb);
+% %14.7e, %14.7e, %14.7e',split,DP(k).nphc,DP(k).ph_slope,DP(k).ph_y_intersect);
 
             
             strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9);
@@ -477,15 +517,15 @@ try
             
 %                     DP(len).Iph0      = [];
 %         DP(len).Tph      = [];
-%         DP(len).Vintersect = [];
+%         DP(len).Vsi = [];
 %         DP(len).Te       = [];
 %         DP(len).ne       = [];
-%         DP(len).Vsc      = [];
-%         DP(len).Vsigma   = [];
-%         DP(len).ia       = [];
-%         DP(len).ib       = [];
-%         DP(len).ea       = [];
-%         DP(len).eb       = [];
+%         DP(len).Vsg      = [];
+%         DP(len).Vsg_sigma   = [];
+%         DP(len).ion_slope       = [];
+%         DP(len).ion_y_intersect       = [];
+%         DP(len).e_slope       = [];
+%         DP(len).e_y_intersect       = [];
 %         DP(len).Quality  = [];
 %             
 %             

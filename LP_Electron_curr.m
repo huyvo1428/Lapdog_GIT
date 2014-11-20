@@ -62,11 +62,10 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [Te,ne,Ie,a,b] = LP_Electron_curr(V,I,Vsc,illuminated)
+function [out] = LP_Electron_curr(V,I,Vsc,illuminated)
 
 global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
-
-
+global CO IN          % Physical &instrument constants
 
 m_e = 9.10938291E-31;
 q_e = 1.60217657E-19;
@@ -79,6 +78,18 @@ Ie(1:end)=0;
 a=NaN;
 b=NaN;
 currvar=NaN;
+
+out = [];
+
+out.I = Ie;
+out.Vpa = a; %NaN;
+out.Vpb = a;
+out.a = a;
+out.b = a;
+out.Te = a;
+out.ne = a;
+
+
 
 %start by smoothing current
 
@@ -129,8 +140,8 @@ bot= bot -1 + find(I(bot:end)>0,1,'first');    %currents above z
 
 ind = bot:len; % Only the first ALG.SM_Below_Vs*100% above the spacecraft potential is now
 
-
-Vr  = Vp(ind);     % kept of the vector ind
+Vr = V(ind);
+Vpr  = Vp(ind);     % kept of the vector ind
 Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note that this
 
 
@@ -153,7 +164,9 @@ if (isempty(ind) || length(ind) < 2)
     return
 end
 
-[P, S] = polyfit(Vr,Ir,1);
+[P, S] = polyfit(Vpr,Ir,1);
+[P2, junk] = polyfit(Vr,Ir,1);
+
 
 a(1) = P(1); % This is accordingly the slope of the line...
 b(1) = P(2); % ...and this is the crossing on the y-axis of the line
@@ -169,7 +182,7 @@ Ie0 =  b(1);
 Te = b(1)/a(1);
 
 
-residual = Ir - b(1)+a(1)*Vr;
+residual = Ir - b(1)+a(1)*Vpr;
 
 % Compute the rms error and scale by the current Ie0 at Vr=Vp=0
 currvar = sqrt(sum((residual).^2)/len)/Ie0; % Compute the relative rms error
@@ -179,7 +192,13 @@ currvar = sqrt(sum((residual).^2)/len)/Ie0; % Compute the relative rms error
 % If Te is positive we can get the density as follows
 if(Te>=0 && ~isinf(Te))
     %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
-    ne = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));
+    % current = charge*density * area *velocity
+    % ne = Ie0 / area*charge*velocity
+    ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me)));
+
+    ne = ne /1E6;
+    
+    %ne2 = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));
     
     %OBS. LP is not in perfect 0 V vaccuum, so expect the LP to be shielded from low energy electrons
     %i.e. giving a larger mean Te, and a lower ne. (see SPIS simulations)
@@ -218,6 +237,13 @@ end
 %                       Ie = Ie0exp(Vp/Te)
 
 
+out.I = Ie;
+out.Vpa = a;
+out.Vpb = b;
+out.Te = Te;
+out.ne = ne;
+out.a = [P2(1) a(2)];
+out.b = [P2(2) b(2)];
 
 
 

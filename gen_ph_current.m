@@ -14,12 +14,18 @@ if model == 1  % photoelectrons from a sphere
     
 
        
-    Iph(ind:end) =Iph0*exp((V(ind:end)-Vbplasma)/Tph);
+    Iph(ind:end) =Iph0*exp(-(V(ind:end)-Vbplasma)/Tph);
    
 elseif model == 2 %photoelectrons from a point
+    
+    for i=ind:length(V)
+        Iph(i) = Iph0*(1+(V(i)-Vbplasma)/Tph)*exp(-(V(i)-Vbplasma)/Tph);
         
-       
-    Iph(ind:end) =Iph0*((V(ind:end)-Vbplasma)/Tph)*exp((V(ind:end)-Vbplasma)/Tph);
+    end
+
+    
+    
+   % Iph(ind:end) =Iph0*((V(ind:end)-Vbplasma)/Tph)*exp(-(V(ind:end)-Vbplasma)/Tph);
     
 end
 

@@ -386,8 +386,7 @@ if(~isempty(blockTAB));
         fprintf(fid,'RECORD_BYTES = %d\n',fileinfo.bytes);
         fprintf(fid,'FILE_RECORDS = %d\n',blockTAB{i,3});
         fprintf(fid,'FILE_NAME = "%s"\n',lname);
-        fprintf(fid,'^TABLE = "%s"\n',tname);
-        
+        fprintf(fid,'^TABLE = "%s"\n',tname);      
         fprintf(fid,'DATA_SET_ID = "%s"\n', strrep(datasetid,sprintf('-3-%s-CALIB',shortphase),sprintf('-5-%s-DERIV',shortphase)));
         fprintf(fid,'DATA_SET_NAME = "%s"\n',strrep(datasetname,sprintf('3 %s CALIB',shortphase),sprintf('5 %s DERIV',shortphase)));
         fprintf(fid,'DATA_QUALITY_ID = 1\n');
@@ -400,7 +399,7 @@ if(~isempty(blockTAB));
         fprintf(fid,'LABEL_REVISION_NOTE = "%s, %s, %s"\n',lbltime,lbleditor,lblrev);
         % mm = length(tname);
         fprintf(fid,'PRODUCT_ID = "%s"\n',tname(1:(end-4)));
-        fprintf(fid,'PRODUCT_TYPE = "DDR"\n');  % No idea what this means...
+        fprintf(fid,'PRODUCT_TYPE = "DDR"\n');  % somewhat of an idea what this means...
         fprintf(fid,'PRODUCT_CREATION_TIME = %s\n',strnow);
         fprintf(fid,'INSTRUMENT_HOST_ID = RO\n');
         fprintf(fid,'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\n');
@@ -524,30 +523,7 @@ if(~isempty(an_tabindex));
         %
         
         tempfp{1,2}{19,1} = strnow; %product creation time
-        % %
-        %         %Time Stamps
-        %
-        %
-        %         tempfp{1,2}{30} = an_tabindex{i,8}{1,1}(1:23); %UTC start
-        %         tempfp{1,2}{31} = an_tabindex{i,8}{1,2}(1:23); %UTC stop
-        %         tempfp{1,2}{32} = sprintf('"%s/%014.3f"',tempfp{1,2}{32}(2),an_tabindex{i,8}{1,3}); %SC start
-        %         tempfp{1,2}{33} = sprintf('"%s/%014.3f"',tempfp{1,2}{32}(2),an_tabindex{i,8}{1,4}); %SC stop
-        %
-        % %         ind = find(strcmp(tempfp{1,1}(),'START_TIME  '),1,'first');
-        % %
-        % %
-        % %         tempfp{1,2}{ind} = an_tabindex{i,8}{1,1}(1:23); %UTC start
-        %         tempfp{1,2}{ind+1} = an_tabindex{i,8}{1,2}(1:23); %UTC stop
-        %         tempfp{1,2}{ind+2} = sprintf('"%s/%014.3f"',tempfp{1,2}{32}(2),an_tabindex{i,8}{1,3}); %SC start
-        %         tempfp{1,2}{ind+3} = sprintf('"%s/%014.3f"',tempfp{1,2}{32}(2),an_tabindex{i,8}{1,4}); %SC stop
-        %
-        %since this is 1:1 mapping for downsampling, this can stay "as is"
-        %28START_TIME =2007-11-07T02:32:42.861
-        %29STOP_TIME =2007-11-07T23:59:59.141888
-        %30SPACECRAFT_CLOCK_START_COUNT =153023530.1600
-        %31SPACECRAFT_CLOCK_STOP_COUNT =153100766.291081
-        
-        
+
         fid = fopen(strrep(an_tabindex{i,1},'TAB','LBL'),'w');
         
         %%%%%PRINT HEADER

@@ -23,7 +23,7 @@ probenr =str2double(probenr);
 AP.ts       = NaN;
 AP.vx       = NaN;
 AP.Tph      = NaN;
-AP.If0      = NaN;
+AP.Iph0      = NaN;
 AP.vs       = NaN;
 AP.lastneg  = NaN;
 AP.firstpos = NaN;
@@ -256,7 +256,7 @@ end   % Case of no photoemission
 AP.ts       = ts;
 AP.vx       = vx;
 AP.Tph      =Tph;
-AP.If0      =If0;
+AP.Iph0      =If0;
 AP.vs       =vs;
 AP.lastneg  = vb(lastneg);
 AP.firstpos = vb(firstpos);

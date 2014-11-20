@@ -67,10 +67,7 @@
 function [Ts,ns,Is,a,b] = LP_S_curr(V,I,Vplasma,illuminated)
 
 global an_debug VSC_TO_VPLASMA VB_TO_VSC;
-
-
-m_e = 9.10938291E-31;
-q_e = 1.60217657E-19;
+global CO; %constants
 
 %init outputs
 Ts=NaN;
@@ -188,8 +185,13 @@ currvar = sqrt(sum((residual).^2)/len)/Is0; % Compute the relative rms error
 
 % If Te is positive we can get the density as follows
 if(Ts>=0 && ~isinf(Ts))
+    
+    
+    ns = Is0 / IN.probeA*CO.e*sqrt(CO.e*Ts/2*pi*CO.me);
+    
+    
     %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
-    ns = Is0 /(0.25E-3*q_e*sqrt(q_e*Ts/(2*pi*m_e)));
+%    ns = Is0 /(0.25E-3*q_e*sqrt(q_e*Ts/(2*pi*m_e)));
     
     %OBS. LP is not in perfect 0 V vaccuum, so expect the LP to be shielded from low energy electrons
     %i.e. giving a larger mean Te, and a lower ne. (see SPIS simulations)
