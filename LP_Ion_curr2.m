@@ -201,6 +201,7 @@ Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
 if (an_debug>1)    
 	subplot(2,2,3),plot(Vp,I,'b',Vp,Ii,'g');grid on;
     title([sprintf('Ion current vs Vp, Q(1)=%d',Q(1))])
+    legend('I','I_i_o_n')
 end
 
 

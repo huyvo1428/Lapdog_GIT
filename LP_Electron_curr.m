@@ -104,7 +104,7 @@ Vp = V+Vsc; % Compute absolute probe potential as bias potential added to spacec
 
 if illuminated
     SM_Below_Vsc= 0.75;
-    ind = find(V > Vsc*VSC_TO_VKNEE);% Saving indices of all potential values above the knee.
+    ind = find(V > -Vsc*VSC_TO_VKNEE);% Saving indices of all potential values above the knee.
     firstpos=find(V > -Vsc,1,'first');
 
 else

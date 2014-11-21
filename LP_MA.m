@@ -34,10 +34,20 @@ y_av = [];
 ly = length(y);
 
 % For first points a forward average is taken
-y_av(1)      = (y(1)+y(2)+y(3)+y(4)+y(5)+y(6)+y(7)+y(8)+y(9))/9;
-y_av(2)      = (y(2)+y(3)+y(4)+y(5)+y(6)+y(7)+y(8)+y(9)+y(10))/9;
-y_av(3)      = (y(3)+y(4)+y(5)+y(6)+y(7)+y(8)+y(9)+y(10)+y(11))/9;
-y_av(4)      = (y(4)+y(5)+y(6)+y(7)+y(8)+y(9)+y(10)+y(11)+y(12))/9;
+% y_av(1)      = (y(1)+y(2)+y(3)+y(4)+y(5)+y(6)+y(7)+y(8)+y(9))/9;
+% y_av(2)      = (y(2)+y(3)+y(4)+y(5)+y(6)+y(7)+y(8)+y(9)+y(10))/9;
+% y_av(3)      = (y(3)+y(4)+y(5)+y(6)+y(7)+y(8)+y(9)+y(10)+y(11))/9;
+% y_av(4)      = (y(4)+y(5)+y(6)+y(7)+y(8)+y(9)+y(10)+y(11)+y(12))/9;
+
+%forward 5
+y_av(1)      = (y(1)+y(2)+y(3)+y(4)+y(5)+y(6))/6;
+%forward 5, back 1
+y_av(2)      = (y(2)+y(3)+y(4)+y(5)+y(6)+y(7)+y(1))/7;
+%forward 5, back 2
+y_av(3)      = (y(3)+y(4)+y(5)+y(6)+y(7)+y(8)+y(1)+y(2))/8;
+%forward 5, back 3
+y_av(4)      = (y(4)+y(5)+y(6)+y(7)+y(8)+y(9)+y(1)+y(2)+y(3))/9;
+
 
 % For the middle points using a symmetric average
 y_av(5:ly-4) = (y(1:ly-8)+y(2:ly-7)+y(3:ly-6)+y(4:ly-5)+y(5:ly-4)+...

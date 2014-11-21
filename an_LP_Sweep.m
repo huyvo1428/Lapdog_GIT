@@ -97,6 +97,9 @@ DP.nphc             = NaN;
 DP.phc_slope        = NaN;
 DP.phc_y_intersect  = NaN;
 
+DP.Te_exp           = NaN;
+DP.Ie0_exp          = NaN;
+
 DP.Quality          = sum(Q);
 
 try
@@ -172,47 +175,54 @@ try
     
     
     % Next we determine the ion current, Vsc need to be included in order
-    % to determine the probe potential. However Vsc do not need to be that
-    % accurate here.In addition to the ion current, the coefficients from
+    % to determine the probe potential..In addition to the ion current,
+    % the coefficients from
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
-    if(illuminated)
+    
+    [ion,Q] = LP_Ion_curr(V,I,Vsc,Q); % The ion current is denoted ion.I,
+    %ion.I here doesn't contain the ion.b offset. as it shouldn't if we
+    % want to get Iph0 individually.
 
-        [ion,Q] = LP_Ion_curr(V,I,Vsc,Q); % The ion current is denoted ion.I,
+
+    
+    %this is all we need to get a good estimate of Te from an
+    %exponential fit
+    
+    expfit= LP_expfit_Te(V,I-ion.I,Vsc);
+    DP.Te_exp = expfit.Te; %contains both value and sigma frac.
+    DP.Ie0_exp = expfit.Ie0;
+    
+    
+    
         
-    else
-        [ion,Q] = LP_Ion_curr2(V,I,Vsc,Q);
-        
-    end
-    %%% something wrong here, Ii removes everything
-
-
-
-    % the coefficients a and b
-    
-    
-    %ion.b is a good guess for Iph0;
-    
-    
-    % Now, removing the linearly fitted ion-current from the
+    %%% Now, removing the linearly fitted ion-current from the
     % current will leave the collected plasma electron current & photoelectron current
+   
     
-    %NB. Only the slope coefficient is subtracted in the current form of
-    %LP_ion_curr, as the 
-    
-    
-    
+    if(illuminated)
+        % if we want to determine Iph0 seperately, we need to remove the
+        % ion.b component of the ion current before we accidentally remove
+        % it everywhere. ion.b is otherwise a good guess for Iph0;
+        ion.I = ion.I-ion.b(1);         
+    end
     
     Itemp = I - ion.I; %
     
+    %%%
+   
     if (an_debug>1)
+                figure(33);
+
         subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
-        title('I & I - ion current');
+
+       title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
+
+        legend('I','I-Iion','Location','Northwest')
     end
-    
-    
-    %Ie_s = LP_MA(Ie); % Now we smooth the data using a 9-point moving average
-    
+            
+
+
     %Determine the electron current (above Vsc and positive), use a moving average
 %    [Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
     [elec]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
@@ -225,7 +235,7 @@ try
 
         cloudflag = 1;
         
-        [Ts,ns,Ie,sa,sb]=LP_S_curr(V,Itemp,Vplasma,illuminated);
+        [Ts,ns,elec.I,sa,sb]=LP_S_curr(V,Itemp,Vplasma,illuminated);
         
         DP.Tphc      = Ts;
         DP.nphc      = ns;
@@ -244,9 +254,15 @@ try
     
     
     if (an_debug>1)
-        
+                figure(33);
+
         subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
-        title('I & I - ions - electrons');
+        title('Vb vs I');
+        
+        title([sprintf('Vb vs I, macro:%s date:%s',diag_info{1},diag_info{1,2}(end-26:end-12))])
+        
+        legend('I','I-(ions+electrons)','Location','Northwest')
+
     end
     
     
@@ -363,9 +379,10 @@ try
     DP.Quality = sum(Q);
     
     if (an_debug>1)
-        
+        figure(33);
+
         if(illuminated)
-            subplot(2,2,4)
+         %   subplot(2,2,4)
             %
             %          Iph=Itemp;    %just to get the dimension right)
             %          len=length(Itemp); 
@@ -404,17 +421,20 @@ try
             
         end
         subplot(2,2,2)
-        plot(V,Izero,'og');
+        plot(V+Vsc,Izero,'og');
         grid on;
         %  title('V vs I - ions - electrons-photoelectrons');
-        title([sprintf('V vs I - ions -elec -ph macro: %s',diag_info{1})])
+        title([sprintf('Vp vs I-Itot, fully auto,lum=%d, %s',illuminated,diag_info{1})])
+        legend('residual(I-Itot)','Location','Northwest')
+        
+        
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(2,2,4)
         plot(V+Vsc,I,'b',V+Vsc,Itot,'g');
         %        title('Vp vs I & Itot ions ');
-        title([sprintf('Vp vs I & Itot ions macro: %s',diag_info{1})])
-        
+        title([sprintf('Vp vs I, macro: %s',diag_info{1})])
+        legend('I','Itot','Location','Northwest')
         grid on;
         
         %

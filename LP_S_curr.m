@@ -67,7 +67,7 @@
 function [Ts,ns,Is,a,b] = LP_S_curr(V,I,Vplasma,illuminated)
 
 global an_debug VSC_TO_VPLASMA VB_TO_VSC;
-global CO; %constants
+global CO IN; %constants
 
 %init outputs
 Ts=NaN;
@@ -187,7 +187,8 @@ currvar = sqrt(sum((residual).^2)/len)/Is0; % Compute the relative rms error
 if(Ts>=0 && ~isinf(Ts))
     
     
-    ns = Is0 / IN.probeA*CO.e*sqrt(CO.e*Ts/2*pi*CO.me);
+    ns = Is0 / IN.probe_A*CO.e*sqrt(CO.e*Ts/2*pi*CO.me);
+    ns = ns *1e-6;
     
     
     %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));

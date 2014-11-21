@@ -54,6 +54,11 @@ VSC_TO_VKNEE = 1;
 
 global diag_info
 
+   
+    if (an_debug>1)
+        figure(34);
+        
+    end
 
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
 Q    = [0 0 0 0];   % Quality vector
@@ -62,8 +67,8 @@ Q    = [0 0 0 0];   % Quality vector
 % Initialize DP to ensure a return value:
 DP = [];
 
-DP.Iph0             = NaN;
-DP.Tph              = NaN;
+DP.Iph0             = assmpt.Iph0;
+DP.Tph              = assmpt.Tph;
 DP.Vsi              = NaN;
 DP.Te               = NaN;
 DP.ne               = NaN;
@@ -81,6 +86,11 @@ DP.Tphc             = NaN;
 DP.nphc             = NaN;
 DP.phc_slope        = NaN;
 DP.phc_y_intersect  = NaN;
+
+DP.Te_exp           = NaN;
+DP.Ie0_exp          = NaN;
+
+
 
 DP.Quality          = sum(Q);
 
@@ -123,7 +133,7 @@ try
     if illuminated > 0 && illuminated < 1
         Q(1)=1;
         test= find(abs(V +Vknee)<1.5,1,'first');
-        if I_50(test) > 0 %if current is positive, then it's not sunlit
+        if I(test) > 0 %if current is positive, then it's not sunlit
             illuminated = 0;
         else %current is negative, so we see photoelectron knee.
             illuminated = 1;
@@ -158,8 +168,12 @@ try
         
         
         if (an_debug>1)
+                    figure(34);
+
             subplot(2,2,4),plot(V,I,'b',V,Itemp,'g');grid on;
             title('I & I - Iph current');
+            legend('I','I-Iph','Location','Northwest')
+
         end
         
     end
@@ -174,24 +188,27 @@ try
     % accurate here.In addition to the ion current, the coefficients from
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
-    [ion,Q] = LP_Ion_curr2(V,Itemp,Vsc,Q); % The ion current is denoted Ii,
-    % the coefficients a and b
-    
-    
-    %ion.b is a good guess for Iph0;
-    
-    
+    [ion,Q] = LP_Ion_curr(V,Itemp,Vsc,Q); % The ion current is denoted Ii,
+
+
+
     % Now, removing the linearly fitted ion-current from the
-    % current will leave the collected plasma electron current & photoelectron current
+    % current will leave the collected plasma electron current 
+
+    Itemp = Itemp - ion.I; 
     
-    
-    %NB. Only the slope coefficient is subtracted in the current form of
-    %ion.I from LP_ion_curr.
-    Itemp = Itemp - ion.I; % add ion.b
     
     if (an_debug>1)
+                figure(34);
+
         subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
-        title('I & I - ion current -ph');
+       % title('I & I - ion current -ph');
+       
+       %      title([sprintf('I & I - ion&ph. illumination=%d',illuminated)])
+       
+       title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
+       
+       legend('I','I-(ph+ion)','Location','NorthWest')
     end
     
 
@@ -199,9 +216,15 @@ try
     
         
     %Determine the electron current (above Vsc and positive), use a moving average
-  %  [Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
-    [elec]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
-
+    %[Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
+    %this time, we have already removed Iph component, so we can assume no
+    %sunlight effect
+    [elec]=LP_Electron_curr(V,Itemp,Vsc,0);
+    
+    temp= LP_expfit_Te(V,Itemp,Vsc);
+    
+    DP.Te_exp = temp.Te;
+    DP.Ie0_exp = temp.Ie0;
     
     %if the plasma electron current fail, try the spacecraft photoelectron
     %cloud current analyser
@@ -227,13 +250,13 @@ try
     Itemp = Itemp - elec.I; %the resultant current should only be photoelectron current (or zero)
     
     
-    
-    if (an_debug>1)
-        
-        subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
-        title('I & I - ions - e - ph');
-    end
-    
+%     
+%     if (an_debug>1)
+%         
+%         subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
+%         title('I & I - ions - e - ph');
+%     end
+%     
     
            
     if illuminated
@@ -285,9 +308,9 @@ try
     DP.Quality      = sum(Q);
     
     if (an_debug>1)
-        
+        figure(34);
+
         if(illuminated)
-            subplot(2,2,4)
             %
             %          Iph=Itemp;    %just to get the dimension right)
             %          len=length(Itemp);
@@ -326,17 +349,20 @@ try
             
         end
         subplot(2,2,2)
-        plot(V,Izero,'og');
+        plot(V+Vsc,Izero,'og');
         grid on;
         %  title('V vs I - ions - electrons-photoelectrons');
-        title([sprintf('V vs I - ions -elec -ph macro: %s',diag_info{1})])
+        title([sprintf('WITH ASSUMPTIONS lum=%d, %s',illuminated,diag_info{1})])
+        legend('IvsVp','I-Itot','Location','NorthWest')
+
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(2,2,4)
         plot(V+Vsc,I,'b',V+Vsc,Itot,'g');
         %        title('Vp vs I & Itot ions ');
-        title([sprintf('Vp vs I & Itot ions macro: %s',diag_info{1})])
-        
+        title([sprintf('Vp vs I, macro: %s',diag_info{1})])
+        legend('I','Itot','Location','NorthWest')
+
         grid on;
         
         %
