@@ -5,37 +5,35 @@
 %
 % Description:
 %
-%  	This is the main function body. It is the function LP_AnalyseSweep from which all other functions are
-%	called. It returns the determined plasma parameters; Vsc, ne, Te.
+%  	This is the main function body. It is the function an_LP_Sweep_with_assmpt
+% from which all other functions are called.
 %   
 %   differences from an_LP_Sweep:
 %   instead of isolating and removing the ion current slope from the
 %   current first, we instead remove an assumed photoelectron contribution
 %   (if sunlit)
 %   
+%
+%
 %   
 %
 %
 % Input:
 %     V             bias potential
 %     I             sweep current
-%     Vguess        spacecraft potential guess from previous analysis
+%     assmpt        structure with various assumptions on Tph Iph0, etc
 %     illuminated   if the probe is sunlit or not (from SPICE Kernel
 %     evaluation)
 %   
 % Output:
-%	  DP	 Physical paramater information structure
+%	  DP	 Physical parameter information structure
 %
 % Notes:
 %	1. The quality vector consists of four elements: the first is a measure of the overflow while
 %	   the second, third and fourth are quality estimates for Vsc, Te and ne respectively.
 %	   The first one is between 0 and 1, the other three are rounded values between 0 and 10.
 %
-% Changes: 20070920: JK Burchill (University of Calgary): ensure a return
-%                    value.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%with assumptions
 function DP = an_LP_Sweep_with_assmpt(V, I,assmpt,illuminated)
 
 
@@ -43,7 +41,7 @@ function DP = an_LP_Sweep_with_assmpt(V, I,assmpt,illuminated)
 
 %global IN;         % Instrument information
 %global LP_IS;      % Instrument constants
-global CO          % Physical & Instrument constants
+global CO          % Physical constants
 %global ALG;        % Various algorithm constants
 
 global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
@@ -52,12 +50,11 @@ global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
 VSC_TO_VPLASMA=1; 
 VSC_TO_VKNEE = 1;
 
-global diag_info
+global diag_info %contains information of current sweep 
 
    
     if (an_debug>1)
-        figure(34);
-        
+        figure(34);        
     end
 
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
@@ -123,13 +120,11 @@ try
     [Vknee, Vsigma] = an_Vplasma(V,I);
     
     
-        
-    
     if isnan(Vknee)
-        Vknee = assmpt.Vknee;        
+        Vknee = assmpt.Vknee;  %from first 50 sweeps       
     end
        
-    %test these partial shadow conditions
+    %test partial shadow conditions
     if illuminated > 0 && illuminated < 1
         Q(1)=1;
         test= find(abs(V +Vknee)<1.5,1,'first');
@@ -143,19 +138,13 @@ try
     
     if(illuminated)
         Vsc= Vknee/VSC_TO_VKNEE;
-        Vplasma=Vsc*VSC_TO_VPLASMA;
-        
-        %VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
-%VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
-        
-    else
-        
+        Vplasma=Vsc*VSC_TO_VPLASMA;                
+    else        
         Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
-        Vplasma=NaN;
-        
+        Vplasma=NaN;         
     end
     
-    Itemp = I;
+    Itemp = I; 
     
 
     
@@ -168,12 +157,10 @@ try
         
         
         if (an_debug>1)
-                    figure(34);
-
+            figure(34);
             subplot(2,2,4),plot(V,I,'b',V,Itemp,'g');grid on;
             title('I & I - Iph current');
             legend('I','I-Iph','Location','Northwest')
-
         end
         
     end

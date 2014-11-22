@@ -15,8 +15,6 @@ paths();
 cspice_furnsh(kernelFile);
 
 
-Iph0_start = -8.55e-09;
-
 k=1;
 
 try
@@ -252,18 +250,17 @@ try
     
     
     
-    
+    %% try whole batch of sweep analysis at once, why not?
+    % 50 sweeps would correspond to ~ 30 minutes of sweeps
+
     if len > 1
         
         lmax=min(len,50); %lmax is whichever is smallest, len or 50.
-        % 50 sweeps would correspond to ~ 30 minutes of sweeps
-        %lind=logical(floor(mean(reshape(illuminati,2,len),1)));% logical index of all sunlit sweeps
         
         lind=logical(floor(mean(reshape(illuminati,2,len),1)));% logical index of all sunlit sweeps
         dind=~logical((mean(reshape(illuminati,2,len),1))); %logical index of all fully shadowed sweeps
         
         
-        %one or both of these conditions will be triggered
         if unique(lind(1:lmax)) % if we have sunlit sweeps, do this
             I_50 = mean(Iarr(:,lind),2);   %average each potential step current
             [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vph_knee estimate from that.
@@ -282,12 +279,13 @@ try
         end
         % non-sunlit sweep V_SC should have priority!!
         
+
+
         if unique(lind+dind)==0 %if everything is in partial shade
-            %            pind= ~dind & ~lind; %partial shade is neither dind nor not lind
             
             I_50 = mean(Iarr(:,1:lmax),2); %all
             [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vph_knee estimate from that.
-            
+             
             assmpt.Vknee =Vknee;
             
             init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0.4);  %get initial estimate of all variables in that sweep.
@@ -506,31 +504,25 @@ try
                 
             %time0,time0,qualityfactor,mean(SAA),mean(Illuminati)
             str1=sprintf('%s, %s, %03i, %07.3f, %03.2f,',EP(k).Tarr{1,1},EP(k).Tarr{1,2},EP(k).qf,EP(k).SAA,EP(k).lum);
-            %time0,time0,qualityfactor,mean(SAA),mean(Illuminati)
- %           str1=sprintf('%s, %s, %03i, %07.3f, %03.2f,',fout{k,5}{1,1},fout{k,5}{1,2},fout{k,7},fout{k,2},fout{k,3});
-            %6:9
+
             %,vs,vx,Vsg,VsgSigma
             str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',AP(k).vs,AP(k).vx,DP(k).Vsg,DP(k).Vsg_sigma);
-            %,vs,vx,Vsg,VsgSigma
- %           str2=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(15),fout{k,1}(4),fout{k,4}(1),fout{k,4}(2));
+
             %10:13
             %,Tph,Iph0,vb(lastneg) vb(firstpos),
+
             str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph,AP(k).Iph0,AP(k).lastneg,AP(k).firstpos);
-            %,Tph,Iph0,vb(lastneg) vb(firstpos),
-%            str3=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', fout{k,1}(13),fout{k,1}(14),fout{k,1}(2),fout{k,1}(3));
+
+
             %14:17
-            %poli(1),poli(2),pole,pole,
-            %poli(1),poli(2),pole,pole,
+
             str4='';
-     %       str4=sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(5),fout{k,1}(6),fout{k,1}(7),fout{k,1}(8));
+
             %18:20
             %  vbinf,diinf,d2iinf
             str5=sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
-            %  vbinf,diinf,d2iinf
-       %     str5=sprintf(' %14.7e, %14.7e, %14.7e',fout{k,1}(10),fout{k,1}(11),fout{k,1}(12));
-       
-       
-            
+                 
+ 
             str6 = sprintf( ' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Iph0,DP(k).Tph,DP(k).Vsi,DP(k).Vph_knee,DP(k).Te);
             
             str7 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ne,DP(k).ion_slope,DP(k).ion_y_intersect,DP(k).e_slope,DP(k).e_y_intersect);
@@ -564,21 +556,7 @@ try
             strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str15,str16,str17,str18,str19);
             %strtot=strrep(strtot,'NaN','   ');
             
-%                     DP(len).Iph0      = [];
-%         DP(len).Tph      = [];
-%         DP(len).Vsi = [];
-%         DP(len).Te       = [];
-%         DP(len).ne       = [];
-%         DP(len).Vsg      = [];
-%         DP(len).Vsg_sigma   = [];
-%         DP(len).ion_slope       = [];
-%         DP(len).ion_y_intersect       = [];
-%         DP(len).e_slope       = [];
-%         DP(len).e_y_intersect       = [];
-%         DP(len).Quality  = [];
-%             
-%             
-            
+  
             %If you need to change NaN to something (e.g. N/A, as accepted by Rosetta Archiving Guidelines) change it here!
             
             
