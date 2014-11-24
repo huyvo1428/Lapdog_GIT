@@ -13,7 +13,7 @@
 %       up sweeps. Sweeps with both up and down sweeping is not handled
 %       however we do not plan to use this feature.
 %
-%	5. find the space craft potential by calling Vplasma
+%	5. find the spacecraft potential by calling Vplasma
 %
 %
 %
@@ -114,9 +114,10 @@ try
     % I've given up on analysing unfiltered data, it's just too nosiy.
     %Let's do a classic LP moving average, that doesn't move the knee
     
-    I = LP_MA(I);
+   % Is = LP_MA(I); %Terrible for knees in end-4:end
     
-    
+    Is = smooth(I,'sgolay',1).'; %pretty heavy sgolay filter. NB transpose
+
     
     
     
@@ -125,7 +126,7 @@ try
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [Vknee, Vsg_sigma] = an_Vplasma(V,I);
+    [Vknee, Vsg_sigma] = an_Vplasma(V,Is);
     
     
         
@@ -139,7 +140,7 @@ try
     if illuminated > 0 && illuminated < 1
         Q(1)=1;
         test= find(abs(V +Vknee)<1.5,1,'first');
-        if I(test) > 0 %if current is positive, then it's not sunlit
+        if Is(test) > 0 %if current is positive, then it's not sunlit
             illuminated = 0;
         else %current is negative, so we see photoelectron knee.
             illuminated = 1;
@@ -180,7 +181,7 @@ try
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
     
-    [ion,Q] = LP_Ion_curr(V,I,Vsc,Q); % The ion current is denoted ion.I,
+    [ion,Q] = LP_Ion_curr(V,Is,Vsc,Q); % The ion current is denoted ion.I,
     %ion.I here doesn't contain the ion.b offset. as it shouldn't if we
     % want to get Iph0 individually.
 
@@ -189,7 +190,7 @@ try
     %this is all we need to get a good estimate of Te from an
     %exponential fit
     
-    expfit= LP_expfit_Te(V,I-ion.I,Vsc);
+    expfit= LP_expfit_Te(V,Is-ion.I,Vsc);
     DP.Te_exp = expfit.Te; %contains both value and sigma frac.
     DP.Ie0_exp = expfit.Ie0;
     
@@ -207,14 +208,14 @@ try
         ion.I = ion.I-ion.b(1);         
     end
     
-    Itemp = I - ion.I; %
+    Itemp = Is - ion.I; %
     
     %%%
    
     if (an_debug>1)
                 figure(33);
 
-        subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
+        subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g');grid on;
 
        title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
 
@@ -256,7 +257,7 @@ try
     if (an_debug>1)
                 figure(33);
 
-        subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
+        subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g');grid on;
         title('Vb vs I');
         
         title([sprintf('Vb vs I, macro:%s date:%s',diag_info{1},diag_info{1,2}(end-26:end-12))])
@@ -306,8 +307,14 @@ try
         %     % Calculate Iph0:
         %     Iph0 = Iftmp * exp(vs/Tph);
         
+        Vdagger = V + Vknee;
         
-        Vdagger = V + Vsc - Vplasma;
+        %Vdagger = V + Vsc - Vplasma;
+        
+        
+        phind = find(Vdagger < 6 & Vdagger>0);
+
+        
         
         phind = find(Vdagger < 6 & Vdagger>0);
         
@@ -320,7 +327,7 @@ try
         %get V intersection:
         
         %diph = abs(  ion current(tempV)  - photelectron log current(Vdagger) )
-        diph = abs(ion.a(1)*V + ion.b(1) -Iftmp*exp(-(V+Vsc-Vplasma)/Tph));
+        diph = abs(ion.a(1)*V + ion.b(1) -Iftmp*exp(-(Vdagger)/Tph));
         %find minimum
         idx1 = find(diph==min(diph),1);
         
@@ -335,7 +342,7 @@ try
         %     y3(idx-1)
         % add 1E5 accuracy on min, and try it again
         tempV = V(idx1)-1:1E-5:(V(idx1)+1);
-        diph = abs(ion.a(1)*tempV + ion.b(1) -Iftmp*exp(-(tempV+Vsc-Vplasma)/Tph));
+        diph = abs(ion.a(1)*tempV + ion.b(1) -Iftmp*exp(-(tempV+Vknee)/Tph));
         eps = abs(Iftmp)/1000;  %good order estimate of minimum accuracy
         idx = find(diph==min(diph) & diph < eps,1);
         
@@ -346,7 +353,7 @@ try
             DP.Iph0 = NaN;
         else
             DP.Vsi = tempV(idx);
-            DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vsc-Vplasma)/Tph);
+            DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vknee)/Tph);
             
             ion.b(1) = ion.b(1)-DP.Iph0;  % now that we know Iph0, we can calculate the actual y-intersect of the ion current.
         end
@@ -357,7 +364,9 @@ try
         Iph(:) = 0;  %set everything to zero
         
         %idx is the at point where Iion and Iph converges
-        Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
+        %Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
+        Iph(idx1:end)=Iftmp*exp(-Vdagger(idx1:end)/Tph);
+
         %Iph0 and ion.I is both an approximation of that part of the sweep, so we
         %remove that region of the Iph current (and maybe add it later)
         
@@ -400,7 +409,7 @@ try
             
             %            Itot= Ie+ion.I+Iph;
             
-            Izero = I-Itot;
+            Izero = Is-Itot;
             
             
             %         Izero=Itemp-Iph;
@@ -431,7 +440,7 @@ try
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(2,2,4)
-        plot(V+Vsc,I,'b',V+Vsc,Itot,'g');
+        plot(V+Vsc,Is,'b',V+Vsc,Itot,'g');
         %        title('Vp vs I & Itot ions ');
         title([sprintf('Vp vs I, macro: %s',diag_info{1})])
         legend('I','Itot','Location','Northwest')
@@ -472,7 +481,7 @@ catch err
     fprintf(1,'V & I = \n');
     fprintf(1,'%e,',V);
     fprintf(1,'\n');
-    fprintf(1,'%e,',I);
+    fprintf(1,'%e,',Is);
     
     DP.Quality = sum(Q)+200;
 

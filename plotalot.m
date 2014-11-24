@@ -1,10 +1,10 @@
 %plotalot.m
-
+addpath('/Users/frejon/Documents/RosettaArchive/lap_import')
 
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 
 
-probe = 2;
+probe = 1;
 
 str1 = sprintf('I%iS',probe); %I1S or I2S
 str2 = sprintf('A%iS',probe); %A1S or A2S
@@ -24,7 +24,7 @@ combine =[];
 for i=1:length(a_ind)
     
     
-    if i==100
+    if i==4
         break
     end
     
@@ -51,10 +51,10 @@ for i=1:length(a_ind)
     t1 =datenum(cspice_et2utc(cspice_str2et(data.START_TIME_UTC),'ISOC',0),formatin);
     
     if i > 1
-        combine = [combine;t1,data.If0,data.SAA,data.ion_y_intersect];
+        combine = [combine;t1,data.asm_ni_ram,data.asm_ne_5eV,data.asm_ne];
     else
         
-    combine =[t1,data.If0,data.SAA,data.ion_y_intersect];
+    combine =[t1,data.asm_ni_ram,data.asm_ne_5eV,data.asm_ne];
     end
        
 end

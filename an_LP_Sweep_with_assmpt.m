@@ -107,9 +107,10 @@ try
     % I've given up on analysing unfiltered data, it's just too nosiy.
     %Let's do a classic LP moving average, that doesn't move the knee
     
-    I = LP_MA(I);
+   % Is = LP_MA(I); %Terrible for knees near end-4:end
     
-    
+    Is = smooth(I,'sgolay',1).'; %pretty heavy sgolay filter. NB transpose
+
     
     
     % Now the actual fitting starts
@@ -117,7 +118,7 @@ try
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [Vknee, Vsigma] = an_Vplasma(V,I);
+    [Vknee, Vsigma] = an_Vplasma(V,Is);
     
     
     if isnan(Vknee)
@@ -128,7 +129,7 @@ try
     if illuminated > 0 && illuminated < 1
         Q(1)=1;
         test= find(abs(V +Vknee)<1.5,1,'first');
-        if I(test) > 0 %if current is positive, then it's not sunlit
+        if Is(test) > 0 %if current is positive, then it's not sunlit
             illuminated = 0;
         else %current is negative, so we see photoelectron knee.
             illuminated = 1;
@@ -144,7 +145,8 @@ try
         Vplasma=NaN;         
     end
     
-    Itemp = I; 
+
+    Itemp = Is;
     
 
     
@@ -159,6 +161,7 @@ try
         if (an_debug>1)
             figure(34);
             subplot(2,2,4),plot(V,I,'b',V,Itemp,'g');grid on;
+
             title('I & I - Iph current');
             legend('I','I-Iph','Location','Northwest')
         end
@@ -188,7 +191,7 @@ try
     if (an_debug>1)
                 figure(34);
 
-        subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
+        subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g');grid on;
        % title('I & I - ion current -ph');
        
        %      title([sprintf('I & I - ion&ph. illumination=%d',illuminated)])
@@ -315,7 +318,7 @@ try
             
             %            Itot= Ie+ion.I+Iph;
             
-            Izero = I-Itot;
+            Izero = Is-Itot;
             
             
             %         Izero=Itemp-Iph;
@@ -345,7 +348,7 @@ try
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(2,2,4)
-        plot(V+Vsc,I,'b',V+Vsc,Itot,'g');
+        plot(V+Vsc,Is,'b',V+Vsc,Itot,'g');
         %        title('Vp vs I & Itot ions ');
         title([sprintf('Vp vs I, macro: %s',diag_info{1})])
         legend('I','Itot','Location','NorthWest')
@@ -387,7 +390,7 @@ catch err
     fprintf(1,'V & I = \n');
     fprintf(1,'%e,',V);
     fprintf(1,'\n');
-    fprintf(1,'%e,',I);
+    fprintf(1,'%e,',Is);
     
     DP.Quality = sum(Q)+200;
 

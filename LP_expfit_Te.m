@@ -11,31 +11,31 @@ function [out] = LP_expfit_Te(V,I,Vknee)
 global an_debug
 
 
-out =[];
-
+out =[]; %init output    
+out.Te=[NaN NaN];
+out.Ie0 =[NaN NaN];
 
 
 Vp = V+Vknee;
 
 eps= 1; %moves 0V to the left
 
-
-ind= find(Vp+eps < 0);
-
-
-bot=find(I(ind)<0,1,'last')+1;
-
-
-rind = bot:ind(end);
-
-if isempty(rind) || length(rind)<2 % fail safe
+try
+    ind= find(Vp+eps < 0); %this could be empty (not likely)
     
+    bot=find(I(ind)<0,1,'last')+1; %this could be empty (possible)
+    rind = ind(bot):ind(end); %this could be even more empty
+
     
-    out.Te=[NaN NaN];
-    out.Ie0 =[NaN NaN];
+catch err    
     return
-    
 end
+
+
+if isempty(rind) || length(rind)<2 % fail safe    
+    return
+end
+
 
 
 % len=length(rind);
@@ -56,11 +56,15 @@ V_w= Vr;
 I_w = Ir;
 
 len=length(Vr);
-
+qbad = 0;
 %weight values according to new 
 for i=1:8
     b=floor((10-i)*len/10+0.5); %step b from 90% to 20% of len, and round
+    if ~(b>0) %this happens if length is less than two
+        qbad=1;
+    end
     
+    b= max(b,1); %b shouldn't be zero at any point.
     V_w = [Vr(b:end) V_w]; %add to V_w, I_w;
     I_w = [Ir(b:end) I_w]; 
     
@@ -75,7 +79,7 @@ end
 Te = 1/P(1);
 Ie0 = exp(P(2)*Te);
 
-try
+try  %super risky sigma calculation. 
     S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
     
     s_Te = abs(S.sigma(1)/P(1)); %Fractional error
@@ -91,6 +95,10 @@ catch err
     
 end
 
+if qbad
+    s_Te = NaN;
+    s_Ie0 = NaN;
+end
 
 out.Te=[Te s_Te];
 out.Ie0 =[Ie0 s_Ie0];
@@ -111,7 +119,7 @@ if an_debug >7 %any condition
 
     plot(Vr,Ir,'b');
     axis([Vr(1) Vr(end) Ir(1) Ir(end)])
-
+    title([sprintf('Te:%3.1f fracstd:%1.3f\%',out.Te)]);
     
     %plot(Vr,Ir,'b',Vr(ind(end)),Ir,'r');
 

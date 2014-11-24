@@ -103,12 +103,16 @@ Vp = V+Vsc; % Compute absolute probe potential as bias potential added to spacec
 % Find the data points above the spacecraft potential
 
 if illuminated
-    SM_Below_Vsc= 0.75;
+    SM_Above_Vsc= 0.75;
     ind = find(V > -Vsc*VSC_TO_VKNEE);% Saving indices of all potential values above the knee.
     firstpos=find(V > -Vsc,1,'first');
+    
+    if isempty(firstpos)
+        firstpos = ind(end);
+    end
 
 else
-    SM_Below_Vsc=0;
+    SM_Above_Vsc=0;
     ind = find(V > -Vsc);% Saving indices of all potential values above the knee.
     firstpos=ind(1);
 
@@ -125,7 +129,7 @@ end
 l_ind = length(ind); % Need the number of data points of the vector ind
 % the function length returns the length of vector ind
 
-bot = floor(ind(1)+l_ind*SM_Below_Vsc +0.5);
+bot = floor(ind(1)+l_ind*SM_Above_Vsc +0.5);
 
 %top = floor(l_ind*ALG.SM_Below_Vs); % The point closest to, but below, ALG.SM_Below_Vs*100% of the
 % spacecraft potential. The function floor rounds
