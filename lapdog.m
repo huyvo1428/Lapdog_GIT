@@ -49,17 +49,17 @@ preamble;
 
 % Load or, if not defined, generate index:
 % fprintf(1,'lapdog: load indices if existing...')
-dynampath= mfilename('fullpath'); %find path & remove/lapdog from string
+dynampath= mfilename('fullpath');   % find path & remove "/lapdog" from string.
 dynampath = dynampath(1:end-7);
 
 fprintf(1,'lapdog: %s\n',dynampath)
 
 indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
-% fp = fopen(indexfile,'r');
-% if(fp > 0)
-%     fclose(fp);
-%     load(indexfile);
-% else
+%fp = fopen(indexfile,'r');
+%if(fp > 0)
+%    fclose(fp);
+%    load(indexfile);
+%else
     
     fprintf(1,'lapdog: calling indexgen\n')    
     indexgen;
@@ -74,7 +74,7 @@ indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
     
 
     save(indexfile,'index');
-% end
+%end
 
 
 % Generate daily geometry files:
