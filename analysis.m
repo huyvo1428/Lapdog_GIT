@@ -10,7 +10,7 @@ global an_tabindex;
 an_tabindex = [];
 
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
-andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));
+andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));    % NOTE: NOT USED?!
 
 
 %find datasets of different modes
@@ -120,7 +120,8 @@ if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
 
 
 
-
+fprintf(1, 'Save best estimates')
+an_tabindex = best_estimates(an_tabindex);
 
 
 

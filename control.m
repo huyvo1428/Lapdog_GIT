@@ -6,6 +6,11 @@
 % 3. Versioning
 % 4. Dataset selection and description
 
+
+
+clear
+
+
 % 1. User info?
 % ============
 %ume_user = 'liza';  % Your username on vroom.irf.umea.se
@@ -87,8 +92,14 @@ lblrev = '4th draft';
 
 % % % % 
 % M07 calibrated:
-shortphase = 'M07';
-archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M07-CALIB-V0.1';
+%  shortphase = 'M07';
+%  archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M07-CALIB-V0.1';
+
+
+% % % % 
+% M07 calibrated:
+shortphase = 'M06b';
+archivepath = '/home/erjo/LAP_ARCHIVE_test/RO-C-RPCLAP-3-M06b-CALIB-V0.1';
 
 
 % % 
@@ -117,8 +128,9 @@ archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECO
 
 % (this path should really be dynamically read from user's pds.conf file)
 % !!!
-missioncalendar = '/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/Mission_Calendar_hacked.txt';
-
+%  missioncalendar = '/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/Mission_Calendar_hacked.txt';
+%missioncalendar = '/usr/local/src/gse/pds/Mission_Calendar_hacked.txt'       % On squid.
+missioncalendar = '~/work_files/Mission_Calendar_hacked.txt';
 
 
 % 6. Output path
@@ -126,7 +138,10 @@ missioncalendar = '/Users/frejon/Documents/RosettaArchive/Lapdog_GIT/Mission_Cal
 
 derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-5');
 derivedpath = strrep(derivedpath,'CALIB','DERIV');
+% derivedpath = [derivedpath, '___separate_run'];
 
+% WARNING: Print error warning/message if can not find directory.
+% unix(['rt ', derivedpath])
 
 
 shortphase

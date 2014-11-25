@@ -38,7 +38,7 @@ try
         arID = fopen(tabindex{an_ind(i),1},'r');
         
         if arID < 0
-            fprintf(1,'Error, cannot open file %s', tabindex{an_ind(i),1});
+            fprintf(1,'Error, cannot open file %s\n', tabindex{an_ind(i),1});
             break
         end % if I/O error
         
@@ -456,7 +456,7 @@ try
        
        
             
-            str6 = sprintf( '%03i, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).If0,DP(k).Tph,DP(k).Vintersect,DP(k).Vplasma,DP(k).Te);
+            str6 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).If0,DP(k).Tph,DP(k).Vintersect,DP(k).Vplasma,DP(k).Te);
             
             str7 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ne,DP(k).ia,DP(k).ib,DP(k).ea,DP(k).eb);
             
@@ -505,7 +505,7 @@ try
         an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
         %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
         an_tabindex{end,4} = klen; %number of rows
-        an_tabindex{end,5} = 19; %number of columns
+        an_tabindex{end,5} = 34; %number of columns
         an_tabindex{end,6} = an_ind(i);
         an_tabindex{end,7} = 'sweep'; %type
         an_tabindex{end,8} = timing;

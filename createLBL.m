@@ -1,6 +1,8 @@
 %createLBL.m
 %CREATE .LBL FILES, FROM PREVIOUS LBL FILES
 
+% save('~/temp.lapdog.createLBL.allvars.mat')   % DEBUG
+
 strnow = datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF');
 
 
@@ -211,7 +213,7 @@ if(~isempty(tabindex));
                 fprintf(fid,'UNIT = N/A\n');
                 fprintf(fid,'DESCRIPTION = " QUALITY FACTOR FROM 000(best) to 999"\n');
                 fprintf(fid,'END_OBJECT  = COLUMN\n');
-                
+%                  
                 fprintf(fid,'OBJECT = COLUMN\n');
                 fprintf(fid,'ITEMS = %i\n',tabindex{i,7}-5);
                 fprintf(fid,'NAME = P%s_SWEEP_CURRENT\n',Pnum);
@@ -981,284 +983,83 @@ if(~isempty(an_tabindex));
             
         elseif  strcmp(an_tabindex{i,7},'sweep') %%%%%%%%%%%%SWEEP FILE%%%%%%%%%
             
-            % tempfp{1,2}{34,1} = sprintf('"%s FREQUENCY LIST OF PSD SPECTRA FILE"',lname(end-10:end-9));
+            data = [];
+            data.N_rows      = an_tabindex{i,4};
+            data.N_row_bytes = an_tabindex{i,9};
+            data.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE',tabindex{an_tabindex{i,6},2});
             
-            %             ind = find(strcmp(tempfp{1,2}(),'TABLE'),1,'first');
-            %             %%%%%PRINT HEADER
-            %             for (j=1:ind-1) %print header of analysis file
-            %                 fprintf(fid,'%s=%s\n',tempfp{1,1}{j,1},tempfp{1,2}{j,1});
-            %             end
-            %             %%%%% Customise the rest!
-            %
+            cl1 = [];
+            cl1{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+            cl1{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+            cl1{end+1} = struct('NAME', 'QUALITY',        'DATA_TYPE', 'ASCII_REAL', 'BYTES',  3, 'UNIT', [],        'DESCRIPTION', ' QUALITY FACTOR FROM 000(best) to 999');
+            cl1{end+1} = struct('NAME', 'SAA',            'DATA_TYPE', 'ASCII_REAL', 'BYTES',  7, 'UNIT', 'DEGREES', 'DESCRIPTION', ' SOLAR ASPECT ANGLE FROM SPICE (DEGREES)');
+            cl1{end+1} = struct('NAME', 'SUNLIT',         'DATA_TYPE', 'ASCII_REAL', 'BYTES',  4, 'UNIT', [],        'DESCRIPTION', 'SUNLIT PROBE: 1=YES,0=NO,ELSE: SUNLIT DURING PART OF SWEEP');
+
+            cl2 = {};
+            cl2{end+1} = struct('NAME', 'Vs',                     'UNIT', 'VOLT',   'DESCRIPTION', 'Spacecraft potential from ion & photoemission current intersection, iterative solution');  % Name in TAB file's first row: old.Vintersect
+            cl2{end+1} = struct('NAME', 'Vx',                     'UNIT', 'VOLT',   'DESCRIPTION', 'Vsat + Te from electron current fit');                                                     % Name in TAB file's first row: old.vx
+            cl2{end+1} = struct('NAME', 'Vsc',                    'UNIT', 'VOLT',   'DESCRIPTION', 'Spacecraft potential from 2nd derivative gaussian fit');                                   % Name in TAB file's first row: Vsc
+            cl2{end+1} = struct('NAME', 'Vsc_sigma',              'UNIT', 'VOLT',   'DESCRIPTION', 'Spacecraft potential sigma from 2nd derivative gaussian fit');                             % Name in TAB file's first row: Vsigma
+            cl2{end+1} = struct('NAME', 'Tph',                    'UNIT', 'eV',     'DESCRIPTION', 'Photoelectron temperature from model fit');                                                % Name in TAB file's first row: old.Tph
+            cl2{end+1} = struct('NAME', 'If0',                    'UNIT', 'AMPERE', 'DESCRIPTION', 'If0');                                                                                     % Name in TAB file's first row: old.If0                   Photosaturation current ?
+            cl2{end+1} = struct('NAME', 'Vb(lastneg)',            'UNIT', 'VOLT'  , 'DESCRIPTION', 'Last negative current potential');                                                         % Name in TAB file's first row: vb_lastnegcurrent
+            cl2{end+1} = struct('NAME', 'Vb(firstpos)',           'UNIT', 'VOLT',   'DESCRIPTION', 'First positive current potential');                                                        % Name in TAB file's first row: vb_firstposcurrent
+            cl2{end+1} = struct('NAME', 'poli(1)',                'UNIT', [],       'DESCRIPTION', []);                                                                                        % Name in TAB file's first row: old.ion_slope             V/A, Ion current slope ?
+            cl2{end+1} = struct('NAME', 'poli(2)',                'UNIT', [],       'DESCRIPTION', []);                                                                                        % Name in TAB file's first row: old.ion_yintersect        A,   Ion current y intersect ?
+            cl2{end+1} = struct('NAME', 'pole(1)',                'UNIT', [],       'DESCRIPTION', []);                                                                                        % Name in TAB file's first row: old.plasma_e_slope        V/A, Plasma current slope ?
+            cl2{end+1} = struct('NAME', 'pole(2)',                'UNIT', [],       'DESCRIPTION', []);                                                                                        % Name in TAB file's first row: old.plasmae_yintersect    A,   Plasma current y intersect ?
+            cl2{end+1} = struct('NAME', 'vbinf',                  'UNIT', 'VOLT',   'DESCRIPTION', 'inflection point bias potential');                                                         % Name in TAB file's first row: old.Vb_inflection
+            cl2{end+1} = struct('NAME', 'diinf',                  'UNIT', 'A/V',    'DESCRIPTION', 'current derivative at inflection point');                                                  % Name in TAB file's first row: old.diinf
+            cl2{end+1} = struct('NAME', 'd2iinf',                 'UNIT', 'A V^-2', 'DESCRIPTION', 'current 2nd derivative at inflection point');                                              % Name in TAB file's first row: old.d2iinf
+            % --- Previously missing descriptions of existing columns in TAB files (below). ---
+            % NOTE: Only temporary names: NAME fields copied from first line of LBL file.
+            cl2{end+1} = struct('NAME', 'If0',                    'UNIT', 'A',      'DESCRIPTION', 'Photosaturation current');
+            cl2{end+1} = struct('NAME', 'Tph',                    'UNIT', 'eV',     'DESCRIPTION', 'Photoelectron current');
+            cl2{end+1} = struct('NAME', 'Vintersect',             'UNIT', 'V',      'DESCRIPTION', 'Bias potential at intersection of ion and photoelectron current');
+            cl2{end+1} = struct('NAME', 'Vplasma',                'UNIT', 'V',      'DESCRIPTION', 'Absolute potential in plasma at probe position');
+            cl2{end+1} = struct('NAME', 'Te(plasma)',             'UNIT', 'eV',     'DESCRIPTION', 'Electron temperature');
+            cl2{end+1} = struct('NAME', 'ne(plasma)',             'UNIT', 'm^-3',   'DESCRIPTION', 'Plasma density');
+            cl2{end+1} = struct('NAME', 'ion_slope',              'UNIT', 'V/A',    'DESCRIPTION', 'Ion current slope');
+            cl2{end+1} = struct('NAME', 'ion_y_intersect',        'UNIT', 'A',      'DESCRIPTION', 'Ion current y intersect');   % ?!!
+            cl2{end+1} = struct('NAME', 'plasma_e_slope',         'UNIT', [],       'DESCRIPTION', '');   % V/A, Plasma current slope       ?
+            cl2{end+1} = struct('NAME', 'plasma_e_yintersect',    'UNIT', [],       'DESCRIPTION', '');   % A,   Plasma current y intersect ?
+            cl2{end+1} = struct('NAME', 'Ts(photoelectroncloud)', 'UNIT', 'eV',     'DESCRIPTION', 'Photoelectron cloud temperature, when applicable');
+            cl2{end+1} = struct('NAME', 'ns(photoelectroncloud)', 'UNIT', 'm^-3',   'DESCRIPTION', 'Photoelectron cloud density, when applicable');
+            cl2{end+1} = struct('NAME', 's_slope',                'UNIT', 'A/V',    'DESCRIPTION', 'Photoelectron cloud current slope');
+            cl2{end+1} = struct('NAME', 's_yintersect',           'UNIT', 'A',      'DESCRIPTION', '');    % Photoelectron cloud current y intersect ?
+            for i=1:length(cl2)
+                cl2{i}.BYTES = 14;
+                cl2{i}.DATA_TYPE = 'ASCII_REAL';
+            end
+            data.column_list = [cl1, cl2];
+            createLBL_writeObjectTable(fid, data)
             
-            fprintf(fid,'OBJECT = TABLE\n');
-            fprintf(fid,'INTERCHANGE_FORMAT = ASCII\n');
-            fprintf(fid,'ROWS = %d\n',an_tabindex{i,4});
-            fprintf(fid,'COLUMNS = %d\n',an_tabindex{i,5});
-            fprintf(fid,'ROW_BYTES = %d\n',an_tabindex{i,9});   %%row_bytes here!!!
+            fprintf(fid,'END');
+        elseif  strcmp(an_tabindex{i,7},'best_estimates') %%%%%%%%%%%% BEST ESTIMATES FILE %%%%%%%%%%%%
             
-            fprintf(fid,'DESCRIPTION = "MODEL FITTED ANALYSIS OF %s SWEEP FILE"\n',tabindex{an_tabindex{i,6},2});
+            data = [];
+            data.N_rows      = an_tabindex{i,4};
+            data.N_row_bytes = an_tabindex{i,9};
+            data.DESCRIPTION = sprintf('BEST ESTIMATED PHYSICAL VALUES FROM MODEL FITTED ANALYSIS OF %s SWEEP FILE.', tabindex{an_tabindex{i,6},2});   % Bad description? To specific?
+            cl = [];
+            cl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+            cl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+            cl{end+1} = struct('NAME', 'QUALITY',        'DATA_TYPE', 'ASCII_REAL', 'BYTES',  3, 'UNIT', [],        'DESCRIPTION', 'QUALITY FACTOR FROM 000(best) to 999');
+            cl{end+1} = struct('NAME', 'npl',            'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-1',  'DESCRIPTION', 'Plasma number density');
+            cl{end+1} = struct('NAME', 'Te',             'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'eV',      'DESCRIPTION', 'Electron temperature');
+            cl{end+1} = struct('NAME', 'Vsc',            'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',       'DESCRIPTION', 'Spacecraft potential');         
+            data.column_list = cl;
             
+            createLBL_writeObjectTable(fid, data)
             
-            
-            %
-            %              %1:5
-            %
-            %         %time0,time0,QUALITY FACTOR,mean(SAA),mean(Illuminati)
-            %         b1=fprintf(awID,'%s, %s, %03i, %07.4f, %03.2f,',fout{k,5}{1,1},fout{k,5}{1,2},Qfarr(k),fout{k,2},fout{k,3});
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = START_TIME_UTC\n');
-            fprintf(fid,'DATA_TYPE = TIME\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+26+2;
-            fprintf(fid,'BYTES = 26\n');
-            fprintf(fid,'UNIT = SECONDS\n');
-            fprintf(fid,'DESCRIPTION = "START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = STOP_TIME_UTC\n');
-            fprintf(fid,'DATA_TYPE = TIME\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+26+2;
-            fprintf(fid,'BYTES = 26\n');
-            fprintf(fid,'UNIT = SECONDS\n');
-            fprintf(fid,'DESCRIPTION = "STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = QUALITY\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+3+2;
-            fprintf(fid,'BYTES = 3\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = N/A\n');
-            fprintf(fid,'DESCRIPTION = " QUALITY FACTOR FROM 000(best) to 999"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = SAA\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+7+2;
-            fprintf(fid,'BYTES = 7\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = DEGREES\n');
-            fprintf(fid,'DESCRIPTION = " SOLAR ASPECT ANGLE FROM SPICE (DEGREES)"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = SUNLIT\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+4+2;
-            fprintf(fid,'BYTES = 4\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = N/A\n');
-            fprintf(fid,'DESCRIPTION = "SUNLIT PROBE: 1=YES,0=NO,ELSE: SUNLIT DURING PART OF SWEEP"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            
-            
-            %         %6:9
-            
-            %         %,vs,vx,Vsc,VscSigma
-            %         b2=fprintf(awID,' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(15),fout{k,1}(4),fout{k,4}{1},fout{k,4}{2});
-            %
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = Vs\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = VOLT\n');
-            fprintf(fid,'DESCRIPTION = "Spacecraft potential from ion & photoemission current intersection, iterative solution"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = Vx\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = VOLT\n');
-            fprintf(fid,'DESCRIPTION = " Vsat + Te from electron current fit"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = Vsc\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = VOLT\n');
-            fprintf(fid,'DESCRIPTION = "Spacecraft potential from 2nd derivative gaussian fit"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = Vsc_sigma\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = VOLT\n');
-            fprintf(fid,'DESCRIPTION = "Spacecraft potential sigma from 2nd derivative gaussian fit"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            %10:13
-            %         %,Tph,If0,vb(lastneg), vb(firstpos),
-            %         b3= fprintf(awID,' %14.7e, %14.7e  %14.7e, %14.7e,', fout{k,1}(13),fout{k,1}(14),fout{k,1}(2),fout{k,1}(3));
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = Tph\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = eV\n');
-            fprintf(fid,'DESCRIPTION = "Photoelectron temperature from model fit"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = If0\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = AMPERE\n');
-            fprintf(fid,'DESCRIPTION = "If0"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = Vb(lastneg)\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = VOLT\n');
-            fprintf(fid,'DESCRIPTION = "Last negative current potential"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = Vb(firstpos)\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = VOLT\n');
-            fprintf(fid,'DESCRIPTION = "First positive current potential"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            %         %poli,poli,pole,pole,
-            %         b4 =fprintf(awID,' %14.7e, %14.7e, %14.7e, %14.7e,',fout{k,1}(5),fout{k,1}(6),fout{k,1}(7),fout{k,1}(8));
-            %         %14:17
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = poli(1)\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = N/A\n');
-            fprintf(fid,'DESCRIPTION = "N/A"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = poli(2)\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = N/A\n');
-            fprintf(fid,'DESCRIPTION = "N/A"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = pole(1)\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = N/A\n');
-            fprintf(fid,'DESCRIPTION = "N/A"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            fprintf(fid,'OBJECT = COLUMN\n');
-            
-            fprintf(fid,'NAME = pole(2)\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = N/A\n');
-            fprintf(fid,'DESCRIPTION = "N/A"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            %         %17:19
-            
-            %         %  vbinf,diinf,d2iinf
-            %         b5 = fprintf(awID,' %14.7e, %14.7e, %14.7e\n',fout{k,1}(10),fout{k,1}(11),fout{k,1}(12));
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = vbinf\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = VOLT\n');
-            fprintf(fid,'DESCRIPTION = "inflection point bias potential"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = diinf\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = A/s \n');
-            fprintf(fid,'DESCRIPTION = "current derivative at inflection point"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            fprintf(fid,'OBJECT = COLUMN\n');
-            fprintf(fid,'NAME = d2iinf\n');
-            fprintf(fid,'START_BYTE = %i\n',byte);
-            byte=byte+14+2;
-            fprintf(fid,'BYTES = 14\n'); %
-            fprintf(fid,'DATA_TYPE = ASCII_REAL\n');
-            fprintf(fid,'UNIT = A s^-2\n');
-            fprintf(fid,'DESCRIPTION = "current 2nd derivative at inflection point"\n');
-            fprintf(fid,'END_OBJECT  = COLUMN\n');
-            
-            
-            fprintf(fid,'END_OBJECT  = TABLE\n');
             fprintf(fid,'END');
         else
             fprintf(1,'error, bad identifier in an_tabindex{%i,7}',i);
             
         end
         fclose(fid);
+               
         
         
-        
-        
-    end
-end
-
-
+    end   % for 
+end     % if
