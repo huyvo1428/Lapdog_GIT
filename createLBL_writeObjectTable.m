@@ -40,7 +40,7 @@ function createLBL_writeObjectTable(fid, data)
     INDENTATION = '   ';
     indentation_level = 0;
     
-    disp(['Create LBL file: ', fopen(fid)]);     % DEBUG
+    %disp(['Create LBL file: ', fopen(fid)]);     % DEBUG
     
     
     
