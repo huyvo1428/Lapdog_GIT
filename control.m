@@ -89,8 +89,8 @@ lblrev = '4th draft';
 % % M07 calibrated:
 % shortphase = 'M07';
 % archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M07-CALIB-V0.1';
-
-% % M08 calibrated:
+% 
+% % % M08 calibrated:
 % shortphase = 'M08';
 % archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M08-CALIB-V0.2';
 % 

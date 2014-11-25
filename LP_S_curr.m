@@ -74,8 +74,8 @@ Ts=NaN;
 ns=NaN;
 Is=I;
 Is(1:end)=0;
-a=NaN;
-b=NaN;
+a=[NaN NaN];
+b=a;
 currvar=NaN;
 
 %start by smoothing current

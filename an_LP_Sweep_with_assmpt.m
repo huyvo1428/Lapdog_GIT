@@ -60,9 +60,11 @@ global diag_info %contains information of current sweep
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
 Q    = [0 0 0 0];   % Quality vector
 
+na = [NaN NaN]; % dummy nan
 
 % Initialize DP to ensure a return value:
 DP = [];
+
 
 DP.Iph0             = assmpt.Iph0;
 DP.Tph              = assmpt.Tph;
@@ -70,24 +72,26 @@ DP.Vsi              = NaN;
 DP.Te               = NaN;
 DP.ne               = NaN;
 
-DP.Vsg              = NaN;
+DP.Vsg              = na;
 DP.Vph_knee         = NaN;
-DP.Vsg_sigma        = NaN;
 
-DP.ion_slope        = NaN;
-DP.ion_y_intersect  = NaN;
-DP.e_slope          = NaN;
-DP.e_y_intersect    = NaN;
+DP.ion_Vb_slope     = na;
+DP.ion_Vb_intersect = na;
+DP.ion_slope        = na;
+DP.ion_intersect    = na;
+
+DP.e_Vb_slope       = na;
+DP.e_Vb_intersect   = na;
+DP.e_slope          = na;
+DP.e_intersect      = na;
 
 DP.Tphc             = NaN;
 DP.nphc             = NaN;
-DP.phc_slope        = NaN;
-DP.phc_y_intersect  = NaN;
+DP.phc_slope        = na;
+DP.phc_intersect    = na;
 
-DP.Te_exp           = NaN;
-DP.Ie0_exp          = NaN;
-
-
+DP.Te_exp           = na;
+DP.Ie0_exp          = na;
 
 DP.Quality          = sum(Q);
 
@@ -225,10 +229,10 @@ try
         
         [Ts,ns,elec.I,sa,sb]=LP_S_curr(V,Itemp,Vplasma,illuminated);
         
-        DP.Tphc      = Ts;
-        DP.nphc      = ns;
-        DP.phc_slope      = sa(1);
-        DP.phc_y_intersect      = sb(1);
+        DP.Tphc             = Ts;
+        DP.nphc             = ns;
+        DP.phc_slope        = sa;
+        DP.phc_intersect    = sb;
         
         %note that Ie is now current from photo electron cloud
         
@@ -281,21 +285,23 @@ try
         
         
     end
+    
+    DP.Te      = elec.Te;
+    DP.ne      = elec.ne;
+    DP.Vsg     = [Vsc Vsigma];
+    DP.Vph_knee = Vplasma;
 
+    DP.ion_Vb_slope      = ion.a;
+    DP.ion_Vb_intersect  = ion.b;
+    DP.ion_slope      = ion.Vpa;
+    DP.ion_intersect  = ion.Vpb;
+
+    DP.e_Vb_slope        = elec.a;
+    DP.e_Vb_intersect    = elec.b;
+    DP.e_slope        = elec.Vpa;
+    DP.e_intersect    = elec.Vpa;
+    DP.Quality = sum(Q);
     
-    
-    
-    
-    DP.Te           = elec.Te;
-    DP.ne           = elec.ne;
-    DP.Vsg          = Vsc;
-    DP.Vph_knee     = Vplasma;
-    DP.Vsg_sigma    = Vsigma;
-    DP.ion_slope    = ion.a(1);
-    DP.ion_y_intersect = ion.b(1);
-    DP.e_slope      = elec.Vpa(1);
-    DP.e_y_intersect = elec.Vpb(1);
-    DP.Quality      = sum(Q);
     
     if (an_debug>1)
         figure(34);

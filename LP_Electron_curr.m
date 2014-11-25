@@ -75,8 +75,8 @@ Te=NaN;
 ne=NaN;
 Ie=I;
 Ie(1:end)=0;
-a=NaN;
-b=NaN;
+a=[NaN NaN];
+b=a;
 currvar=NaN;
 
 out = [];
@@ -86,8 +86,8 @@ out.Vpa = a; %NaN;
 out.Vpb = a;
 out.a = a;
 out.b = a;
-out.Te = a;
-out.ne = a;
+out.Te = NaN;
+out.ne = NaN;
 
 
 

@@ -62,14 +62,17 @@ function [out,Q] = LP_Ion_curr(V,I,Vsc,Q)
 Ii = I;
 Ii(1:end)=0;
 out = [];
+
+a=[NaN NaN];
+b = a;
+
 out.I = Ii;
-out.a = NaN;
-out.b = NaN;
+out.a = a;
+out.b = a;
+out.Vpa = a;
+out.Vpb = a;
 
 
-
-a = NaN;
-b = NaN;
 
 %global ALG;
 SM_Below_Vs =0.6;
@@ -139,21 +142,21 @@ if (size(Vr) ~= size(Ir))
 end
 
 % 'This part of our data is now linearly fitted, in a least square sense
-[P,S] = polyfit(Vr,Ir,1); % The function polyfit finds the coefficients of a
+[VbP,S] = polyfit(Vr,Ir,1); % The function polyfit finds the coefficients of a
                       % polynomial P(Vi) of degree 1 that fits the data Ii best
                       % in a least-squares sense. P is a row vector of length
                       % 2 containing the polynomial coefficients in descending
                       % powers, P(1)*Vi+P(2)
-a(1) = P(1); % This is accordingly the slope of the line...
-b(1) = P(2); % ...and this is the crossing on the y-axis of the line 
+a(1) = VbP(1); % This is accordingly the slope of the line...
+b(1) = VbP(2); % ...and this is the crossing on the y-axis of the line 
 
 S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
 
-a(2) = abs(S.sigma(1)/P(1)); %Fractional error 
-b(2) = abs(S.sigma(2)/P(2)); %Fractional error
+a(2) = abs(S.sigma(1)/VbP(1)); %Fractional error 
+b(2) = abs(S.sigma(2)/VbP(2)); %Fractional error
 
 
-[P2,junk] = polyfit(Vpr,Ir,1);
+[VpP,junk] = polyfit(Vpr,Ir,1);
 
 
 
@@ -163,8 +166,8 @@ if a(2) > 1 % if error is large (!)
     b = [mean(Ir) std(Ir)]; % offset    
     Q(1) = 1;
     
-    P2(1) = a(1); % no slope
-    P2(2) = b(1);   
+    VpP(1) = a(1); % no slope
+    VpP(2) = b(1);   
 end
 
 
@@ -209,8 +212,8 @@ end
 out.I = Ii;
 out.a = a;
 out.b = b;
-out.Vpa = [P2(1) a(2)];
-out.Vpb = [P2(2) b(2)];
+out.Vpa = [VpP(1) a(2)];
+out.Vpb = [VpP(2) b(2)];
 
 
 
