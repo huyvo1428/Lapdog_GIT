@@ -1002,7 +1002,11 @@ if(~isempty(an_tabindex));
             cl2{end+1} = struct('NAME', 'Ts(photoelectroncloud)', 'UNIT', 'eV',     'DESCRIPTION', 'Photoelectron cloud temperature, when applicable');
             cl2{end+1} = struct('NAME', 'ns(photoelectroncloud)', 'UNIT', 'm^-3',   'DESCRIPTION', 'Photoelectron cloud density, when applicable');
             cl2{end+1} = struct('NAME', 's_slope',                'UNIT', 'A/V',    'DESCRIPTION', 'Photoelectron cloud current slope');
-            cl2{end+1} = struct('NAME', 's_yintersect',           'UNIT', 'A',      'DESCRIPTION', '');    % Photoelectron cloud current y intersect ?
+            cl2{end+1} = struct('NAME', 's_yintersect',           'UNIT', 'A',      'DESCRIPTION', '');    % Photoelectron cloud current y intersect ?    
+            %========================= BELOW FOR NEW AxS.TAB FILES =============================================================
+            %cl2{end+1} = struct('NAME', '',   'UNIT', '',   'DESCRIPTION', '');
+            %========================= ABOVE FOR NEW AxS.TAB FILES =============================================================
+            
             for i=1:length(cl2)
                 cl2{i}.BYTES = 14;
                 cl2{i}.DATA_TYPE = 'ASCII_REAL';
@@ -1021,9 +1025,9 @@ if(~isempty(an_tabindex));
             cl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
             cl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
             cl{end+1} = struct('NAME', 'QUALITY',        'DATA_TYPE', 'ASCII_REAL', 'BYTES',  3, 'UNIT', [],        'DESCRIPTION', 'QUALITY FACTOR FROM 000(best) to 999');
-            cl{end+1} = struct('NAME', 'npl',            'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-1',  'DESCRIPTION', 'Plasma number density');
-            cl{end+1} = struct('NAME', 'Te',             'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'eV',      'DESCRIPTION', 'Electron temperature');
-            cl{end+1} = struct('NAME', 'Vsc',            'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',       'DESCRIPTION', 'Spacecraft potential');         
+            cl{end+1} = struct('NAME', 'npl',            'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-3',  'DESCRIPTION', 'Best estimate of plasma number density.');
+            cl{end+1} = struct('NAME', 'Te',             'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'eV',      'DESCRIPTION', 'Best estimate of electron temperature.');
+            cl{end+1} = struct('NAME', 'Vsc',            'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',       'DESCRIPTION', 'Best estunate if spacecraft potential.');
             data.column_list = cl;
             
             createLBL_writeObjectTable(fid, data)

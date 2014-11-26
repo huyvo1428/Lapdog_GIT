@@ -60,9 +60,11 @@ global diag_info %contains information of current sweep
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
 Q    = [0 0 0 0];   % Quality vector
 
+na = [NaN NaN]; % dummy nan
 
 % Initialize DP to ensure a return value:
 DP = [];
+
 
 DP.Iph0             = assmpt.Iph0;
 DP.Tph              = assmpt.Tph;
@@ -70,24 +72,26 @@ DP.Vsi              = NaN;
 DP.Te               = NaN;
 DP.ne               = NaN;
 
-DP.Vsg              = NaN;
+DP.Vsg              = na;
 DP.Vph_knee         = NaN;
-DP.Vsg_sigma        = NaN;
 
-DP.ion_slope        = NaN;
-DP.ion_y_intersect  = NaN;
-DP.e_slope          = NaN;
-DP.e_y_intersect    = NaN;
+DP.ion_Vb_slope     = na;
+DP.ion_Vb_intersect = na;
+DP.ion_slope        = na;
+DP.ion_intersect    = na;
+
+DP.e_Vb_slope       = na;
+DP.e_Vb_intersect   = na;
+DP.e_slope          = na;
+DP.e_intersect      = na;
 
 DP.Tphc             = NaN;
 DP.nphc             = NaN;
-DP.phc_slope        = NaN;
-DP.phc_y_intersect  = NaN;
+DP.phc_slope        = na;
+DP.phc_intersect    = na;
 
-DP.Te_exp           = NaN;
-DP.Ie0_exp          = NaN;
-
-
+DP.Te_exp           = na;
+DP.Ie0_exp          = na;
 
 DP.Quality          = sum(Q);
 
@@ -107,9 +111,10 @@ try
     % I've given up on analysing unfiltered data, it's just too nosiy.
     %Let's do a classic LP moving average, that doesn't move the knee
     
-    I = LP_MA(I);
+   % Is = LP_MA(I); %Terrible for knees near end-4:end
     
-    
+    Is = smooth(I,'sgolay',1).'; %pretty heavy sgolay filter. NB transpose
+
     
     
     % Now the actual fitting starts
@@ -117,7 +122,7 @@ try
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [Vknee, Vsigma] = an_Vplasma(V,I);
+    [Vknee, Vsigma] = an_Vplasma(V,Is);
     
     
     if isnan(Vknee)
@@ -128,7 +133,7 @@ try
     if illuminated > 0 && illuminated < 1
         Q(1)=1;
         test= find(abs(V +Vknee)<1.5,1,'first');
-        if I(test) > 0 %if current is positive, then it's not sunlit
+        if Is(test) > 0 %if current is positive, then it's not sunlit
             illuminated = 0;
         else %current is negative, so we see photoelectron knee.
             illuminated = 1;
@@ -144,7 +149,8 @@ try
         Vplasma=NaN;         
     end
     
-    Itemp = I; 
+
+    Itemp = Is;
     
 
     
@@ -159,6 +165,7 @@ try
         if (an_debug>1)
             figure(34);
             subplot(2,2,4),plot(V,I,'b',V,Itemp,'g');grid on;
+
             title('I & I - Iph current');
             legend('I','I-Iph','Location','Northwest')
         end
@@ -188,7 +195,7 @@ try
     if (an_debug>1)
                 figure(34);
 
-        subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
+        subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g');grid on;
        % title('I & I - ion current -ph');
        
        %      title([sprintf('I & I - ion&ph. illumination=%d',illuminated)])
@@ -222,10 +229,10 @@ try
         
         [Ts,ns,elec.I,sa,sb]=LP_S_curr(V,Itemp,Vplasma,illuminated);
         
-        DP.Tphc      = Ts;
-        DP.nphc      = ns;
-        DP.phc_slope      = sa(1);
-        DP.phc_y_intersect      = sb(1);
+        DP.Tphc             = Ts;
+        DP.nphc             = ns;
+        DP.phc_slope        = sa;
+        DP.phc_intersect    = sb;
         
         %note that Ie is now current from photo electron cloud
         
@@ -278,21 +285,23 @@ try
         
         
     end
+    
+    DP.Te      = elec.Te;
+    DP.ne      = elec.ne;
+    DP.Vsg     = [Vsc Vsigma];
+    DP.Vph_knee = Vplasma;
 
+    DP.ion_Vb_slope      = ion.a;
+    DP.ion_Vb_intersect  = ion.b;
+    DP.ion_slope      = ion.Vpa;
+    DP.ion_intersect  = ion.Vpb;
+
+    DP.e_Vb_slope        = elec.a;
+    DP.e_Vb_intersect    = elec.b;
+    DP.e_slope        = elec.Vpa;
+    DP.e_intersect    = elec.Vpa;
+    DP.Quality = sum(Q);
     
-    
-    
-    
-    DP.Te           = elec.Te;
-    DP.ne           = elec.ne;
-    DP.Vsg          = Vsc;
-    DP.Vph_knee     = Vplasma;
-    DP.Vsg_sigma    = Vsigma;
-    DP.ion_slope    = ion.a(1);
-    DP.ion_y_intersect = ion.b(1);
-    DP.e_slope      = elec.Vpa(1);
-    DP.e_y_intersect = elec.Vpb(1);
-    DP.Quality      = sum(Q);
     
     if (an_debug>1)
         figure(34);
@@ -315,7 +324,7 @@ try
             
             %            Itot= Ie+ion.I+Iph;
             
-            Izero = I-Itot;
+            Izero = Is-Itot;
             
             
             %         Izero=Itemp-Iph;
@@ -345,7 +354,7 @@ try
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(2,2,4)
-        plot(V+Vsc,I,'b',V+Vsc,Itot,'g');
+        plot(V+Vsc,Is,'b',V+Vsc,Itot,'g');
         %        title('Vp vs I & Itot ions ');
         title([sprintf('Vp vs I, macro: %s',diag_info{1})])
         legend('I','Itot','Location','NorthWest')
@@ -387,7 +396,7 @@ catch err
     fprintf(1,'V & I = \n');
     fprintf(1,'%e,',V);
     fprintf(1,'\n');
-    fprintf(1,'%e,',I);
+    fprintf(1,'%e,',Is);
     
     DP.Quality = sum(Q)+200;
 

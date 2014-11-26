@@ -134,12 +134,15 @@ function an_tabindex = best_estimates(an_tabindex)
             % Convert strings to numbers.
             % NOTE: str2double converts both empty strings and the string "NaN" to the "number" NaN.
             quality_factor = str2double(data.Qualityfactor{i});
-            ne  = str2double(data.ne_plasma{i});
-            Te  = str2double(data.Te_plasma{i});
-            Vsg = str2double(data.Vsc{i});
+            %ne  = str2double(data.ne_plasma{i});
+            n = str2double(data.asm_ni_v_indep{i});        % NOTE: Variable FK recommended 2014-11-26.
+            %Te  = str2double(data.Te_plasma{i});
+            Te = str2double(data.asm_Texp{i});              % NOTE: Variable FK recommended 2014-11-26.
+            %Vsg = str2double(data.Vsc{i});
+            Vsc = str2double(data.asm_Vsg{i});               % NOTE: Variable FK recommended 2014-11-26, in particular if probe in shadow.
 
             line1 = sprintf('%s, %s, %03i, ',         data.START_TIME_UTC{i}, data.STOP_TIME_UTC{i}, quality_factor);
-            line2 = sprintf('%14.7e, %14.7e, %14.7e', ne, Te, Vsg);
+            line2 = sprintf('%14.7e, %14.7e, %14.7e', n, Te, Vsc);
             line = [line1, line2];
             line = strrep(line, 'NaN', '   ');
             N_columns = 6;
