@@ -5,12 +5,18 @@
 % rsync -r frejon@squid.irfu.se:/data/LAP_ARCHIVE/RO-C-RPCLAP-5-M07* /Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/
 
 
-%load index files
+skipindex = 1;
 
+
+
+%load index files
+control;
+
+archiveid = sprintf('%s_%d',shortphase,processlevel);
 
 s_tabindexfile = sprintf('server/tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(s_tabindexfile,'r');
-%fp = -2;
+fp = -2;
 
 if(fp > 0)
     fclose(fp);
@@ -54,7 +60,8 @@ if(fp > 0)
     'lapdog: succesfully loaded server index'
 end
 
-
+if skipindex ==0
+    
 %substring = strrep(index(1,1),tabindex(1,2),'');
 substring = '/data/LAP_ARCHIVE/cronworkfolder/';
 
@@ -64,6 +71,7 @@ index2 = index;
 'replacing substrings'
 index = struct_string_replace(index2,substring,newstring); %separate code
 
+end
 
 
 % %andate = tabindex{:,1}(end-47:end-35);

@@ -54,17 +54,27 @@
 %
 %                                                                                    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [Ii,a,b,Q] = LP_Ion_curr(V,I,Vsc,Q)
+function [out,Q] = LP_Ion_curr(V,I,Vsc,Q)
+
+
+
 
 Ii = I;
 Ii(1:end)=0;
+out = [];
+out.I = Ii;
+out.a = NaN;
+out.b = NaN;
+
+
+
 a = NaN;
 b = NaN;
 
 %global ALG;
 SM_Below_Vs =0.6;
 
-global an_debug VSC_TO_VPLASMA VBSC_TO_VSC; 
+global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE; 
 
 
 % Find the number of data points in the sweep
@@ -73,7 +83,7 @@ len = length(V);  % the function length returns the length of the vector V
 Vp = V+Vsc; % Setting the probe potential
 
 % Find the data points below the spacecraft potential
-ind = find(V < Vsc/VBSC_TO_VSC); % Saving indices of all potential values below the knee potential.
+ind = find(Vp < 0); % Saving indices of all potential values below the knee potential.
 
 if isempty(ind)
     Q(1) = 2;
@@ -96,7 +106,7 @@ top = floor(l_ind*SM_Below_Vs +0.5);
                          % towards minus infinity.
 
 ind = ind(1:top); % Only the first ALG.SM_Below_Vs*100% below the spacecraft potential is now
-Vi  = V(ind);     % kept of the vector ind    
+Vr  = V(ind);     % kept of the vector ind    
 Ir  = I(ind);     % The "ion-voltage" and "ion-current" are set. Note that this
                   % is not the ion-voltage or ion-current in the physical sense
 		          % as there may be contamination from other sources
@@ -119,17 +129,17 @@ if(isempty(ind) || length(ind) < 2 )
     return
 end
 
-
-Vi = Vi(ind);       % negative current values in our vector are kept, the
+Vpr = Vp(ind);
+Vr = Vr(ind);       % negative current values in our vector are kept, the
 Ir = Ir(ind);       % rest of the data points are, again, discarded
 
 
-if (size(Vi) ~= size(Ir)) 
-  Vi = Vi';
+if (size(Vr) ~= size(Ir)) 
+  Vr = Vr';
 end
 
 % 'This part of our data is now linearly fitted, in a least square sense
-[P,S] = polyfit(Vi,Ir,1); % The function polyfit finds the coefficients of a
+[P,S] = polyfit(Vr,Ir,1); % The function polyfit finds the coefficients of a
                       % polynomial P(Vi) of degree 1 that fits the data Ii best
                       % in a least-squares sense. P is a row vector of length
                       % 2 containing the polynomial coefficients in descending
@@ -143,6 +153,9 @@ a(2) = abs(S.sigma(1)/P(1)); %Fractional error
 b(2) = abs(S.sigma(2)/P(2)); %Fractional error
 
 
+[P2,junk] = polyfit(Vpr,Ir,1);
+
+
 
 if a(2) > 1 % if error is large (!)
     
@@ -150,7 +163,11 @@ if a(2) > 1 % if error is large (!)
     b = [mean(Ir) std(Ir)]; % offset    
     Q(1) = 1;
     
+    P2(1) = a(1); % no slope
+    P2(2) = b(1);   
 end
+
+
 
 
 
@@ -160,7 +177,7 @@ end
 % potential sweep, is a good approximation to the ion current, and that is
 % what is returned from this function
 
-Ii(1:len) = a(1)*V;%let's try removing it everywhere
+Ii(1:len) = a(1)*V+b(1);%let's try removing it everywhere
 
 
 
@@ -184,7 +201,19 @@ Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
 if (an_debug>1)    
 	subplot(2,2,3),plot(Vp,I,'b',Vp,Ii,'g');grid on;
     title([sprintf('Ion current vs Vp, Q(1)=%d',Q(1))])
+    legend('I','I_i_o_n')
+
 end
+
+
+out.I = Ii;
+out.a = a;
+out.b = b;
+out.Vpa = [P2(1) a(2)];
+out.Vpb = [P2(2) b(2)];
+
+
+
 
 end
 

@@ -1,10 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Name: LP_AnalyseSweep.m
-% Author: Claes Weyde
-%         Reine Gill modified UV and sunlight or not
+% Name: an_LP_Sweep.m
+% Author: Fredrik Johansson, developed from original script by Claes Weyde
+%
 % Description:
-%       DP = LP_AnalyseSweep(P,S,probe,time)
 %
 %  	This is the main function body. It is the function LP_AnalyseSweep from which all other functions are
 %	called. It returns the determined plasma parameters; Vsc, ne, Te.
@@ -41,8 +40,7 @@
 %     Vguess        spacecraft potential guess from previous analysis
 %     illuminated   if the probe is sunlit or not (from SPICE Kernel
 %     evaluation)
-%    probe  The probe we are presently analyzing
-%    sm_cal_status    Status if data has been current and offset compensated
+%   
 % Output:
 %	  DP	 Physical paramater information structure
 %
@@ -59,13 +57,17 @@ function DP = an_LP_Sweep(V, I,Vguess,illuminated)
 
 %global IN;         % Instrument information
 %global LP_IS;      % Instrument constants
-%global CO          % Physical constants
+global CO          % Physical & Instrument constants
 %global ALG;        % Various algorithm constants
 
-global an_debug VSC_TO_VPLASMA VBSC_TO_VSC;
-an_debug = 0; %debugging on or off!
-VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
-VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+
+global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
+%VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
+%VSC_TO_VKNEE = 0.36;
+VSC_TO_VPLASMA=1; 
+VSC_TO_VKNEE = 1;
+
+
 global diag_info
 
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
@@ -75,28 +77,30 @@ Q    = [0 0 0 0];   % Quality vector
 % Initialize DP to ensure a return value:
 DP = [];
 
-DP.If0     = NaN;
-DP.Tph     = NaN;
-DP.Vintersect = NaN;
-DP.Te       = NaN;
-DP.ne      = NaN;
+DP.Iph0             = NaN;
+DP.Tph              = NaN;
+DP.Vsi              = NaN;
+DP.Te               = NaN;
+DP.ne               = NaN;
 
-DP.Vsc     = NaN;
-DP.Vplasma = NaN;
-DP.Vsigma  = NaN;
+DP.Vsg              = NaN;
+DP.Vph_knee         = NaN;
+DP.Vsg_sigma        = NaN;
 
-DP.ia      = NaN;
-DP.ib      = NaN;
-DP.ea      = NaN;
-DP.eb      = NaN;
+DP.ion_slope        = NaN;
+DP.ion_y_intersect  = NaN;
+DP.e_slope          = NaN;
+DP.e_y_intersect    = NaN;
 
-DP.Ts      = NaN;
-DP.ns      = NaN;
-DP.sa      = NaN;
-DP.sb      = NaN;
+DP.Tphc             = NaN;
+DP.nphc             = NaN;
+DP.phc_slope        = NaN;
+DP.phc_y_intersect  = NaN;
 
-DP.Quality = sum(Q);
+DP.Te_exp           = NaN;
+DP.Ie0_exp          = NaN;
 
+DP.Quality          = sum(Q);
 
 try
     
@@ -121,26 +125,43 @@ try
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [vPlasma, Vsigma,Vsc,vbPlasma] = an_Vplasma(V,I);
-    
-    %this is not
+    [Vknee, Vsg_sigma] = an_Vplasma(V,I);
     
     
-    if(~illuminated)
-        Vsc=-vbPlasma; %no photoelectrons, so current only function of Vp (absolute)
-        vPlasma=Vsc*VSC_TO_VPLASMA;
+        
+    
+    if isnan(Vknee)
+        Vknee = Vguess;
+        
+    end
+       
+    %test these partial shadow conditions
+    if illuminated > 0 && illuminated < 1
+        Q(1)=1;
+        test= find(abs(V +Vknee)<1.5,1,'first');
+        if I(test) > 0 %if current is positive, then it's not sunlit
+            illuminated = 0;
+        else %current is negative, so we see photoelectron knee.
+            illuminated = 1;
+        end
+    end
+    
+
+    if(illuminated)
+        Vsc= Vknee/VSC_TO_VKNEE;
+        Vplasma=Vsc*VSC_TO_VPLASMA;
+        
+        %VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
+%VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
+        
+    else
+        
+        Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
+        Vplasma=NaN;
         
     end
     
-    
-    
-    if isnan(Vsc)
-        Vsc = Vguess;
-        vPlasma=Vsc*VSC_TO_VPLASMA; % from simulations
-        
-    end
-    
-    
+
     
     
     
@@ -150,47 +171,76 @@ try
     end
     
     
+    
+    
+    
     % Next we determine the ion current, Vsc need to be included in order
-    % to determine the probe potential. However Vsc do not need to be that
-    % accurate here.In addition to the ion current, the coefficients from
+    % to determine the probe potential..In addition to the ion current,
+    % the coefficients from
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
-    [Ii,ia,ib,Q] = LP_Ion_curr(V,I,Vsc,Q); % The ion current is denoted Ii,
-    % the coefficients a and b
+    
+    [ion,Q] = LP_Ion_curr(V,I,Vsc,Q); % The ion current is denoted ion.I,
+    %ion.I here doesn't contain the ion.b offset. as it shouldn't if we
+    % want to get Iph0 individually.
+
+
+    
+    %this is all we need to get a good estimate of Te from an
+    %exponential fit
+    
+    expfit= LP_expfit_Te(V,I-ion.I,Vsc);
+    DP.Te_exp = expfit.Te; %contains both value and sigma frac.
+    DP.Ie0_exp = expfit.Ie0;
     
     
-    %ib is a good guess for If0;
     
-    
-    % Now, removing the linearly fitted ion-current from the
+        
+    %%% Now, removing the linearly fitted ion-current from the
     % current will leave the collected plasma electron current & photoelectron current
-    Itemp = I - Ii; %
+   
     
-    if (an_debug>1)
-        subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
-        title('I & I - ion current');
+    if(illuminated)
+        % if we want to determine Iph0 seperately, we need to remove the
+        % ion.b component of the ion current before we accidentally remove
+        % it everywhere. ion.b is otherwise a good guess for Iph0;
+        ion.I = ion.I-ion.b(1);         
     end
     
+    Itemp = I - ion.I; %
     
-    %Ie_s = LP_MA(Ie); % Now we smooth the data using a 9-point moving average
-    
+    %%%
+   
+    if (an_debug>1)
+                figure(33);
+
+        subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
+
+       title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
+
+        legend('I','I-Iion','Location','Northwest')
+    end
+            
+
+
     %Determine the electron current (above Vsc and positive), use a moving average
-    [Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
-    
+%    [Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
+    [elec]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
+
     
     %if the plasma electron current fail, try the spacecraft photoelectron
     %cloud current analyser
-    if isnan(Te)
+    if isnan(elec.Te)
         
 
         cloudflag = 1;
         
-        [Ts,ns,Ie,sa,sb]=LP_S_curr(V,Itemp,vPlasma,illuminated);
+        [Ts,ns,elec.I,sa,sb]=LP_S_curr(V,Itemp,Vplasma,illuminated);
         
-        DP.Ts      = Ts;
-        DP.ns      = ns;
-        DP.sa      = sa(1);
-        DP.sb      = sb(1);
+        DP.Tphc      = Ts;
+        DP.nphc      = ns;
+        DP.phc_slope      = sa(1);
+        DP.phc_y_intersect      = sb(1);
         
         %note that Ie is now current from photo electron cloud
         
@@ -199,19 +249,25 @@ try
     
     %[Te,ne,Ie,ea,eb,rms]=LP_Electron_curr(V,LP_MA(Itemp),Vsc);
     
-    Itemp = Itemp - Ie; %the resultant current should only be photoelectron current (or zero)
+    Itemp = Itemp - elec.I; %the resultant current should only be photoelectron current (or ion.b(1));
     
     
     
     if (an_debug>1)
-        
+                figure(33);
+
         subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
-        title('I & I - ions - electrons');
+        title('Vb vs I');
+        
+        title([sprintf('Vb vs I, macro:%s date:%s',diag_info{1},diag_info{1,2}(end-26:end-12))])
+        
+        legend('I','I-(ions+electrons)','Location','Northwest')
+
     end
     
     
     % Redetermine s/c potential, without ions and plasma electron /photoelectron cloud currents
-    %[vPlasma, Vsigma, Vsc] = an_Vplasma(V,Itemp,vPlasma,Vsigma);
+    %[vPlasma, Vsg_sigma, Vsc] = an_Vplasma(V,Itemp,vPlasma,Vsg_sigma);
     %if unsuccesful, Vplasma returns our guess
     
     
@@ -245,13 +301,13 @@ try
         %     % Iterative solution:
         %     vs = vPlasma-Vsc;
         %     for(i=1:10)
-        %         vs = -(log(-polyval([ia(1),ib(1)],-vs)) - phpol(2))/phpol(1);
+        %         vs = -(log(-polyval([ia(1),ion.b(1)],-vs)) - phpol(2))/phpol(1);
         %     end
-        %     % Calculate If0:
-        %     If0 = Iftmp * exp(vs/Tph);
+        %     % Calculate Iph0:
+        %     Iph0 = Iftmp * exp(vs/Tph);
         
         
-        Vdagger = V + Vsc - vPlasma;
+        Vdagger = V + Vsc - Vplasma;
         
         phind = find(Vdagger < 6 & Vdagger>0);
         
@@ -264,7 +320,7 @@ try
         %get V intersection:
         
         %diph = abs(  ion current(tempV)  - photelectron log current(Vdagger) )
-        diph = abs(ia(1)*V + ib(1) -Iftmp*exp(-(V+Vsc-vPlasma)/Tph));
+        diph = abs(ion.a(1)*V + ion.b(1) -Iftmp*exp(-(V+Vsc-Vplasma)/Tph));
         %find minimum
         idx1 = find(diph==min(diph),1);
         
@@ -279,18 +335,20 @@ try
         %     y3(idx-1)
         % add 1E5 accuracy on min, and try it again
         tempV = V(idx1)-1:1E-5:(V(idx1)+1);
-        diph = abs(ia(1)*tempV + ib(1) -Iftmp*exp(-(tempV+Vsc-vPlasma)/Tph));
+        diph = abs(ion.a(1)*tempV + ion.b(1) -Iftmp*exp(-(tempV+Vsc-Vplasma)/Tph));
         eps = abs(Iftmp)/1000;  %good order estimate of minimum accuracy
         idx = find(diph==min(diph) & diph < eps,1);
         
         
         if(isempty(idx))
-            DP.Vintersect = NaN;
+            DP.Vsi = NaN;
             Q(4) = 1;
-            DP.If0 = NaN;
+            DP.Iph0 = NaN;
         else
-            DP.Vintersect = tempV(idx);
-            DP.If0 = Iftmp * exp(-(tempV(idx)+Vsc-vPlasma)/Tph);
+            DP.Vsi = tempV(idx);
+            DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vsc-Vplasma)/Tph);
+            
+            ion.b(1) = ion.b(1)-DP.Iph0;  % now that we know Iph0, we can calculate the actual y-intersect of the ion current.
         end
         
         DP.Tph     = Tph;
@@ -299,57 +357,59 @@ try
         Iph(:) = 0;  %set everything to zero
         
         %idx is the at point where Iion and Iph converges
-        Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-vPlasma)/Tph);
-        %If0 and Ii is both an approximation of that part of the sweep, so we
+        Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
+        %Iph0 and ion.I is both an approximation of that part of the sweep, so we
         %remove that region of the Iph current (and maybe add it later)
         
     end
     
-    %DP.If0     = NaN;
+    %DP.Iph0     = NaN;
     %DP.Tph     = NaN;%defined elsewhere...
     
-    DP.Te      = Te;
-    DP.ne      = ne;
-    DP.Vsc     = Vsc;
-    DP.Vplasma = vPlasma;
-    DP.Vsigma  = Vsigma;
-    DP.ia      = ia(1);
-    DP.ib      = ib(1);
-    DP.ea      = ea(1);
-    DP.eb      = eb(1);
+    DP.Te      = elec.Te;
+    DP.ne      = elec.ne;
+    DP.Vsg     = Vsc;
+    DP.Vph_knee = Vplasma;
+    DP.Vsg_sigma  = Vsg_sigma;
+    DP.ion_slope      = ion.a(1);
+    DP.ion_y_intersect      = ion.b(1);
+    DP.e_slope          = elec.Vpa(1);
+    DP.e_y_intersect    = elec.Vpb(1);
+     
     DP.Quality = sum(Q);
     
     if (an_debug>1)
-        
+        figure(33);
+
         if(illuminated)
-            subplot(2,2,4)
+         %   subplot(2,2,4)
             %
             %          Iph=Itemp;    %just to get the dimension right)
-            %          len=length(Itemp);
+            %          len=length(Itemp); 
             %
-            %          pos=find(V>-DP.Vintersect,1,'first');
-            %          Iph(1:pos)=DP.If0;
+            %          pos=find(V>-DP.Vsi,1,'first');
+            %          Iph(1:pos)=DP.Iph0;
             %
             %          for i=pos:1:len
-            %              Iph(i)=(DP.If0*(1+((V(i)+Vsc-DP.Vintersect)/Tph))*exp(-(V(i)+Vsc-DP.Vintersect)/Tph));
+            %              Iph(i)=(DP.Iph0*(1+((V(i)+Vsc-DP.Vsi)/Tph))*exp(-(V(i)+Vsc-DP.Vsi)/Tph));
             %          end
             
-            Iph(1:idx1)=ib(1); %add photosaturation current
+            Iph(1:idx1)=ion.b(1)+DP.Iph0; %add photosaturation current
             %            Itot(idx:end)=Iph(idx:end)
-            Itot=Iph+Ie+Ii;
+            Itot=Iph+elec.I+ion.I;
             
-            %            Itot= Ie+Ii+Iph;
+            %            Itot= Ie+ion.I+Iph;
             
             Izero = I-Itot;
             
             
             %         Izero=Itemp-Iph;
-            %         Itot = Ii+Ie+Iph;
+            %         Itot = ion.I+Ie+Iph;
             
-            %      Izero(pos:end)=Itemp(pos:end)-(If0*(1+((V(pos:end)-vs)/Tph))*exp(-(V(pos:end)-vs)/Tph));
+            %      Izero(pos:end)=Itemp(pos:end)-(Iph0*(1+((V(pos:end)-vs)/Tph))*exp(-(V(pos:end)-vs)/Tph));
             %
             %      a=exp((V(pos:len)-vs)/Tph);
-            %      adsasd=(If0(1+((V(pos:len)-vs)/Tph))*a);
+            %      adsasd=(Iph0(1+((V(pos:len)-vs)/Tph))*a);
             %      Izero(pos:len)=Itemp(pos:len)-adsasd;
             
             
@@ -357,21 +417,24 @@ try
         else
             
             Izero = Itemp;
-            Itot = Ie+Ii;
+            Itot = elec.I+ion.I;
             
         end
         subplot(2,2,2)
-        plot(V,Izero,'og');
+        plot(V+Vsc,Izero,'og');
         grid on;
         %  title('V vs I - ions - electrons-photoelectrons');
-        title([sprintf('V vs I - ions -elec -ph macro: %s',diag_info{1})])
+        title([sprintf('Vp vs I-Itot, fully auto,lum=%d, %s',illuminated,diag_info{1})])
+        legend('residual(I-Itot)','Location','Northwest')
+        
+        
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(2,2,4)
         plot(V+Vsc,I,'b',V+Vsc,Itot,'g');
         %        title('Vp vs I & Itot ions ');
-        title([sprintf('Vp vs I & Itot ions macro: %s',diag_info{1})])
-        
+        title([sprintf('Vp vs I, macro: %s',diag_info{1})])
+        legend('I','Itot','Location','Northwest')
         grid on;
         
         %

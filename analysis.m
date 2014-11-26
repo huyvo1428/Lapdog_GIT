@@ -4,10 +4,9 @@
 % hf spectra -> power spectral density
 % downsamples files
 
-
-
-global an_tabindex;
+global an_tabindex an_debug;
 an_tabindex = [];
+an_debug = 8; %debugging on or off!
 
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));    % NOTE: NOT USED?!
@@ -45,24 +44,16 @@ fprintf(1,'Analysing sweeps\n')
 
 
 
-
-
-if(~isempty(ind_I2S))
-an_sweepmain(ind_I2S,tabindex,targetfullname);
-
-end
-
    
 
 
 if(~isempty(ind_I1S))
-
-an_sweepmain(ind_I1S,tabindex,targetfullname);
-
-
+    an_sweepmain(ind_I1S,tabindex,targetfullname);
+end 
+ 
+if(~isempty(ind_I2S))
+    an_sweepmain(ind_I2S,tabindex,targetfullname); 
 end
-
-
 
 
 
@@ -74,34 +65,31 @@ fprintf(1,'Downsample Low frequency measurements \n')
 
 %send mode datatasets to downsampler function
 
-
-if(~isempty(ind_I1L))
-    %an_downsample(ind_I1L,tabindex,8)
-    an_downsample(ind_I1L,tabindex,32)
-end
-
-if(~isempty(ind_I2L))
-
-   % an_downsample(ind_I2L,tabindex,8)
-    an_downsample(ind_I2L,tabindex,32)
-end
-
-
-
-
-if(~isempty(ind_V1L))
-
-   % an_downsample(ind_V1L,tabindex,8)
-    an_downsample(ind_V1L,tabindex,32)
-end
-
-if(~isempty(ind_V2L))
-
-  %  an_downsample(ind_V2L,tabindex,8)
-    an_downsample(ind_V2L,tabindex,32)
-end
-
-
+ 
+ if(~isempty(ind_I1L))
+     %an_downsample(ind_I1L,tabindex,8)
+     an_downsample(ind_I1L,tabindex,32)
+ end
+ 
+ if(~isempty(ind_I2L))
+    % an_downsample(ind_I2L,tabindex,8)
+     an_downsample(ind_I2L,tabindex,32)
+ end
+ 
+ 
+ 
+ 
+ if(~isempty(ind_V1L))
+    % an_downsample(ind_V1L,tabindex,8)
+     an_downsample(ind_V1L,tabindex,32)
+ end
+ 
+ if(~isempty(ind_V2L))
+    %  an_downsample(ind_V2L,tabindex,8)
+     an_downsample(ind_V2L,tabindex,32)
+ end
+ 
+ 
 
 %  Mill the HF data in this ob:
     
@@ -120,9 +108,8 @@ if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
 
 
 
-fprintf(1, 'Save best estimates')
+fprintf(1, 'Save best estimates\n')
 an_tabindex = best_estimates(an_tabindex);
-
 
 
 

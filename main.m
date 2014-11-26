@@ -39,7 +39,7 @@
 'lapdog: calling control...'
 control;
 
-% Set up PDS keywords etc:
+% Set up PDS keywords, constants etc:
 'lapdog: calling preamble...'
 preamble;
 
