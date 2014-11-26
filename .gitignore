@@ -3,3 +3,4 @@
 irfu-matlab/*
 server/*
 mice/*
+*.mat

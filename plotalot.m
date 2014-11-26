@@ -4,7 +4,7 @@ addpath('/Users/frejon/Documents/RosettaArchive/lap_import')
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 
 
-probe = 1;
+probe = 2;
 
 str1 = sprintf('I%iS',probe); %I1S or I2S
 str2 = sprintf('A%iS',probe); %A1S or A2S
@@ -16,7 +16,7 @@ j = 1;
 
 i = length(a_ind);
 
-for i=1:length(a_ind)
+for i=4:length(a_ind)
     
     
     if i==100
@@ -58,7 +58,7 @@ for i=1:length(a_ind)
        
 end
 
-
+%enter the field names of the values you are interested in here
 fld={'t1' 'asm_ni_2comp' 'asm_ni_1comp' 'asm_ne' 'asm_ne_5eV' 'asm_Vsg', 'ni_2comp' 'ni_1comp' 'ne' 'ne_5eV' 'Vsg'};
 
 len = length(fld);
@@ -116,7 +116,7 @@ v_std=nanstd(v_ion);
 v_u2= nanmean(v_ion2);
 v_std2=nanstd(v_ion2);
 
-plot(data2.t1,v_ion,'o',data2.t1,v_u,'r',data2.t1,v_u-v_std,'r--',data2.t1,v_u+v_std,'r--')
+plot(data2.t1,v_ion,'o',data2.t1,v_u,'r',data2.t1,v_u-v_std,'r-.',data2.t1,v_u+v_std,'r-.')
 %axis([data2.t1(1) data2.t1(end) 0 1E4])
 datetick('x',20)
 grid on;
@@ -127,13 +127,16 @@ title(sprintf('Velocity estimation from ion current M09 19amu, average =%3.2f m/
 figure(72)
 
 
-plot(data2.t1,v_ion2,'o',data2.t1,v_u2,'r',data2.t1,v_u2-v_std2,'r--',data2.t1,v_u2+v_std2,'r--')
+plot(data2.t1,v_ion2,'o',data2.t1,v_u2,'r',data2.t1,v_u2-v_std2,'r-.',data2.t1,v_u2+v_std2,'r-.')
 %axis([data2.t1(1) data2.t1(end) 0 1E4])
 datetick('x',20)
 grid on;
 %axis([data2.t1(1) data2.t1(end) 0 500])
 legend('v\_ion','average','standard deviation')
 title(sprintf('Velocity estimation from ion current M09 19amu, average =%3.2f m/s',v_u2));
+
+
+
 
 % 
 % y= nanmean(combine(:,4));
