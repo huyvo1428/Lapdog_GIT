@@ -86,21 +86,21 @@ lblrev = '4th draft';
 % archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-M03-CALIB-V0.1';
 
 % % % 
-% % M07 calibrated:
+% M07 calibrated:
 % shortphase = 'M07';
 % archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M07-CALIB-V0.1';
-% 
-% % % M08 calibrated:
-% shortphase = 'M08';
-% archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M08-CALIB-V0.2';
-% 
+
+% % M08 calibrated:
+shortphase = 'M08';
+archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M08-CALIB-V0.2';
 
 
+% 
 % M09 calibrated:
 shortphase = 'M09';
 archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M09-CALIB-V0.2';
 
-% 
+% % 
 % % % 
 % %  % M04 calibrated:
 %  shortphase = 'M04';
