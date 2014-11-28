@@ -9,7 +9,11 @@ an_tabindex = [];
 an_debug = 0; %debugging on or off!
 
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
+<<<<<<< HEAD
 %andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));    % NOTE: NOT USED?!
+=======
+andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));    % NOTE: NOT USED?!
+>>>>>>> FETCH_HEAD
 
 
 %find datasets of different modes
@@ -54,6 +58,12 @@ end
 fprintf(1,'Downsample Low frequency measurements \n')
 
 
+<<<<<<< HEAD
+=======
+%send mode datatasets to downsampler function
+
+ 
+>>>>>>> FETCH_HEAD
 if(~isempty(ind_I1L))
     %an_downsample(ind_I1L,tabindex,8)
     an_downsample(ind_I1L,tabindex,32)
@@ -97,6 +107,12 @@ if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
 if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
 if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
  
+<<<<<<< HEAD
+=======
+ 
+ 
+
+>>>>>>> FETCH_HEAD
 
 
 fprintf(1, 'Save best estimates\n')
