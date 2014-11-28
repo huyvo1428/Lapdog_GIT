@@ -398,7 +398,7 @@ try
     DP.e_Vb_slope        = elec.a;  
     DP.e_Vb_intersect    = elec.b;
     DP.e_slope        = elec.Vpa;
-    DP.e_intersect    = elec.Vpa;
+    DP.e_intersect    = elec.Vpb;
     DP.Quality = sum(Q); 
     
     if (an_debug>1)
