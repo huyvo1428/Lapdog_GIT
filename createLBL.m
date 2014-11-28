@@ -957,58 +957,106 @@ if(~isempty(an_tabindex));
             fprintf(fid,'END_OBJECT  = TABLE\n');
             fprintf(fid,'END');
             
-        elseif  strcmp(an_tabindex{i,7},'sweep') %%%%%%%%%%%%SWEEP FILE%%%%%%%%%
+        elseif  strcmp(an_tabindex{i,7},'sweep') %%%%%%%%%%%% SWEEP ANALYSIS FILE %%%%%%%%%
             
             data = [];
             data.N_rows      = an_tabindex{i,4};
             data.N_row_bytes = an_tabindex{i,9};
             data.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE',tabindex{an_tabindex{i,6},2});
-            
-            cl1 = [];
-            cl1{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-            cl1{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-            cl1{end+1} = struct('NAME', 'QUALITY',        'DATA_TYPE', 'ASCII_REAL', 'BYTES',  3, 'UNIT', [],        'DESCRIPTION', ' QUALITY FACTOR FROM 000(best) to 999');
-            cl1{end+1} = struct('NAME', 'SAA',            'DATA_TYPE', 'ASCII_REAL', 'BYTES',  7, 'UNIT', 'DEGREES', 'DESCRIPTION', ' SOLAR ASPECT ANGLE FROM SPICE (DEGREES)');
-            cl1{end+1} = struct('NAME', 'SUNLIT',         'DATA_TYPE', 'ASCII_REAL', 'BYTES',  4, 'UNIT', [],        'DESCRIPTION', 'SUNLIT PROBE: 1=YES,0=NO,ELSE: SUNLIT DURING PART OF SWEEP');
 
+            cl1 = {};
+            cl1{end+1} = struct('NAME', 'START_TIME(UTC)', 'UNIT', 'SECONDS', 'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
+            cl1{end+1} = struct('NAME', 'STOP_TIME(UTC)',  'UNIT', 'SECONDS', 'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Stop time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
+            cl1{end+1} = struct('NAME', 'Qualityfactor',   'UNIT', [],        'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Quality factor from 0-100');
+            cl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'degrees', 'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle from x-axis of spacecraft');
+            cl1{end+1} = struct('NAME', 'Illumination',    'UNIT', [],        'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise');
+            cl1{end+1} = struct('NAME', 'direction',       'UNIT', [],        'BYTES',  1, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sweep bias step direction. 1 for positive  bias step, 0 for negative bias step');
+            % -- (Changing from cl1 to cl2.) --
             cl2 = {};
-            cl2{end+1} = struct('NAME', 'Vs',                     'UNIT', 'VOLT',   'DESCRIPTION', 'Spacecraft potential from ion & photoemission current intersection, iterative solution');  % Name in TAB file's first row: old.Vintersect
-            cl2{end+1} = struct('NAME', 'Vx',                     'UNIT', 'VOLT',   'DESCRIPTION', 'Vsat + Te from electron current fit');                                                     % Name in TAB file's first row: old.vx
-            cl2{end+1} = struct('NAME', 'Vsc',                    'UNIT', 'VOLT',   'DESCRIPTION', 'Spacecraft potential from 2nd derivative gaussian fit');                                   % Name in TAB file's first row: Vsc
-            cl2{end+1} = struct('NAME', 'Vsc_sigma',              'UNIT', 'VOLT',   'DESCRIPTION', 'Spacecraft potential sigma from 2nd derivative gaussian fit');                             % Name in TAB file's first row: Vsigma
-            cl2{end+1} = struct('NAME', 'Tph',                    'UNIT', 'eV',     'DESCRIPTION', 'Photoelectron temperature from model fit');                                                % Name in TAB file's first row: old.Tph
-            cl2{end+1} = struct('NAME', 'If0',                    'UNIT', 'AMPERE', 'DESCRIPTION', 'If0');                                                                                     % Name in TAB file's first row: old.If0                   Photosaturation current ?
-            cl2{end+1} = struct('NAME', 'Vb(lastneg)',            'UNIT', 'VOLT'  , 'DESCRIPTION', 'Last negative current potential');                                                         % Name in TAB file's first row: vb_lastnegcurrent
-            cl2{end+1} = struct('NAME', 'Vb(firstpos)',           'UNIT', 'VOLT',   'DESCRIPTION', 'First positive current potential');                                                        % Name in TAB file's first row: vb_firstposcurrent
-            cl2{end+1} = struct('NAME', 'poli(1)',                'UNIT', [],       'DESCRIPTION', []);                                                                                        % Name in TAB file's first row: old.ion_slope             V/A, Ion current slope ?
-            cl2{end+1} = struct('NAME', 'poli(2)',                'UNIT', [],       'DESCRIPTION', []);                                                                                        % Name in TAB file's first row: old.ion_yintersect        A,   Ion current y intersect ?
-            cl2{end+1} = struct('NAME', 'pole(1)',                'UNIT', [],       'DESCRIPTION', []);                                                                                        % Name in TAB file's first row: old.plasma_e_slope        V/A, Plasma current slope ?
-            cl2{end+1} = struct('NAME', 'pole(2)',                'UNIT', [],       'DESCRIPTION', []);                                                                                        % Name in TAB file's first row: old.plasmae_yintersect    A,   Plasma current y intersect ?
-            cl2{end+1} = struct('NAME', 'vbinf',                  'UNIT', 'VOLT',   'DESCRIPTION', 'inflection point bias potential');                                                         % Name in TAB file's first row: old.Vb_inflection
-            cl2{end+1} = struct('NAME', 'diinf',                  'UNIT', 'A/V',    'DESCRIPTION', 'current derivative at inflection point');                                                  % Name in TAB file's first row: old.diinf
-            cl2{end+1} = struct('NAME', 'd2iinf',                 'UNIT', 'A V^-2', 'DESCRIPTION', 'current 2nd derivative at inflection point');                                              % Name in TAB file's first row: old.d2iinf
-            % --- Previously missing descriptions of existing columns in TAB files (below). ---
-            % NOTE: Only temporary names: NAME fields copied from first line of LBL file.
-            cl2{end+1} = struct('NAME', 'If0',                    'UNIT', 'A',      'DESCRIPTION', 'Photosaturation current');
-            cl2{end+1} = struct('NAME', 'Tph',                    'UNIT', 'eV',     'DESCRIPTION', 'Photoelectron current');
-            cl2{end+1} = struct('NAME', 'Vintersect',             'UNIT', 'V',      'DESCRIPTION', 'Bias potential at intersection of ion and photoelectron current');
-            cl2{end+1} = struct('NAME', 'Vplasma',                'UNIT', 'V',      'DESCRIPTION', 'Absolute potential in plasma at probe position');
-            cl2{end+1} = struct('NAME', 'Te(plasma)',             'UNIT', 'eV',     'DESCRIPTION', 'Electron temperature');
-            cl2{end+1} = struct('NAME', 'ne(plasma)',             'UNIT', 'm^-3',   'DESCRIPTION', 'Plasma density');
-            cl2{end+1} = struct('NAME', 'ion_slope',              'UNIT', 'V/A',    'DESCRIPTION', 'Ion current slope');
-            cl2{end+1} = struct('NAME', 'ion_y_intersect',        'UNIT', 'A',      'DESCRIPTION', 'Ion current y intersect');   % ?!!
-            cl2{end+1} = struct('NAME', 'plasma_e_slope',         'UNIT', [],       'DESCRIPTION', '');   % V/A, Plasma current slope       ?
-            cl2{end+1} = struct('NAME', 'plasma_e_yintersect',    'UNIT', [],       'DESCRIPTION', '');   % A,   Plasma current y intersect ?
-            cl2{end+1} = struct('NAME', 'Ts(photoelectroncloud)', 'UNIT', 'eV',     'DESCRIPTION', 'Photoelectron cloud temperature, when applicable');
-            cl2{end+1} = struct('NAME', 'ns(photoelectroncloud)', 'UNIT', 'm^-3',   'DESCRIPTION', 'Photoelectron cloud density, when applicable');
-            cl2{end+1} = struct('NAME', 's_slope',                'UNIT', 'A/V',    'DESCRIPTION', 'Photoelectron cloud current slope');
-            cl2{end+1} = struct('NAME', 's_yintersect',           'UNIT', 'A',      'DESCRIPTION', '');    % Photoelectron cloud current y intersect ?    
-            %========================= BELOW FOR NEW AxS.TAB FILES =============================================================
-            %cl2{end+1} = struct('NAME', '',   'UNIT', '',   'DESCRIPTION', '');
-            %========================= ABOVE FOR NEW AxS.TAB FILES =============================================================
-            
+            cl2{end+1} = struct('NAME', 'old.Vsi',   'UNIT', 'V', 'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current. older analysis method ');
+            cl2{end+1} = struct('NAME', 'old.Vx',   'UNIT', 'V', 'DESCRIPTION', 'Spacecraft potential + Te from electron current fit. Older analysis method.');
+            cl2{end+1} = struct('NAME', 'Vsg',   'UNIT', 'V',   'DESCRIPTION', 'Spacecraft potential from gaussian fit to second derivative');
+            cl2{end+1} = struct('NAME', 'sigma_Vsg',   'UNIT', 'V', 'DESCRIPTION', 'Standard deviation of spacecraft potential from gaussian fit to second derivative');
+            cl2{end+1} = struct('NAME', 'old.Tph',   'UNIT', 'eV', 'DESCRIPTION', 'Photoelectron temperature. Older analysis method.  ');
+            cl2{end+1} = struct('NAME', 'old.Iph0',   'UNIT', 'A', 'DESCRIPTION', 'Photosaturation current. Older analysis method.');
+            cl2{end+1} = struct('NAME', 'Vb_lastnegcurrent',   'UNIT', 'V', 'DESCRIPTION', 'bias potential below zero current');
+            cl2{end+1} = struct('NAME', 'Vb_firstposcurrent',   'UNIT', 'V', 'DESCRIPTION', 'bias potential above zero current');
+            cl2{end+1} = struct('NAME', 'Vbinfl',   'UNIT', 'V', 'DESCRIPTION', 'Bias potential of inflection point in current');
+            cl2{end+1} = struct('NAME', 'dIinfl',   'UNIT', 'A/V', 'DESCRIPTION', 'Derivative of current in inflection point');
+            cl2{end+1} = struct('NAME', 'd2Iinfl',   'UNIT', 'A/V^2', 'DESCRIPTION', 'Second derivative of current in inflection point');
+            cl2{end+1} = struct('NAME', 'Iph0',   'UNIT', 'A',   'DESCRIPTION', 'Photosaturation current');
+            cl2{end+1} = struct('NAME', 'Tph',   'UNIT', 'eV',   'DESCRIPTION', 'Photoelectron temperature');
+            cl2{end+1} = struct('NAME', 'Vsi',   'UNIT', 'V',   'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current');
+            cl2{end+1} = struct('NAME', 'Vph_knee',   'UNIT', 'V', 'DESCRIPTION', 'Potential at probe position from photoelectron current knee (gaussian fit to second derivative) ');
+            cl2{end+1} = struct('NAME', 'Te_linear',   'UNIT', 'eV', 'DESCRIPTION', 'Electron temperature from linear fit to electron current');
+            cl2{end+1} = struct('NAME', 'ne_linear',   'UNIT', 'cm^-3', 'DESCRIPTION', 'Electron (plasma) density from linear fit to electron current ');
+            cl2{end+1} = struct('NAME', 'ion_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of ion current fit as a function of absolute potential ');
+            cl2{end+1} = struct('NAME', 'sigma_ion_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of ion current fit as a function of absolute potential');
+            cl2{end+1} = struct('NAME', 'ion_intersect',   'UNIT', 'A', 'DESCRIPTION', 'Y-intersection of ion current fit as a function of absolute potential');
+            cl2{end+1} = struct('NAME', 'sigma_ion_intersect',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of y-intersection of ion current fit as a function of absolute potential');
+            cl2{end+1} = struct('NAME', 'e_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of linear electron current fit as a function of absolute potential ');
+            cl2{end+1} = struct('NAME', 'sigma_e_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of linear electron current fit as a function of absolute potential ');
+            cl2{end+1} = struct('NAME', 'e_intersect',   'UNIT', '', 'DESCRIPTION', 'Y-intersection of linear electron current fit as a function of absolute potential ');
+            cl2{end+1} = struct('NAME', 'sigma_e_intersect',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of y-intersection of linear electron current fit as a function of absolute potential ');
+            cl2{end+1} = struct('NAME', 'ion_Vb_slope',   'UNIT', '', 'DESCRIPTION', 'Slope of ion current fit as a function of bias potential ');
+            cl2{end+1} = struct('NAME', 'sigma_ion_Vb_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of ion current fit as a function of bias potential');
+            cl2{end+1} = struct('NAME', 'ion_Vb_intersect',   'UNIT', 'A', 'DESCRIPTION', 'Y-intersection of ion current fit as a function of bias potential ');
+            cl2{end+1} = struct('NAME', 'sigma_ion_Vb_intersect',   'UNIT', [],   'DESCRIPTION', 'Fractional error estimate of Y-intersection of ion current fit as a function of bias potential ');
+            cl2{end+1} = struct('NAME', 'e_Vb_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of linear electron current fit as a function of bias potential ');
+            cl2{end+1} = struct('NAME', 'sigma_e_Vb_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of linear electron current fit as a function of bias potential ');
+            cl2{end+1} = struct('NAME', 'e_Vb_intersect',   'UNIT', 'A', 'DESCRIPTION', 'Y-intersection of linear electron current fit as a function of bias potential ');
+            cl2{end+1} = struct('NAME', 'sigma_e_Vb_intersect',   'UNIT', '',   'DESCRIPTION', 'Fractional error estimate of y-intersection of linear electron current fit as a function of bias potential ');
+            cl2{end+1} = struct('NAME', 'Tphc',   'UNIT', 'eV',   'DESCRIPTION', 'Photoelectron cloud temperature (if applicable)');
+            cl2{end+1} = struct('NAME', 'nphc',   'UNIT', 'cm^-3',   'DESCRIPTION', 'Photoelectron cloud density (if applicable)');
+            cl2{end+1} = struct('NAME', 'phc_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of linear photoelectron current fit as a function of bias potential');
+            cl2{end+1} = struct('NAME', 'sigma_phc_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of linear photoelectron current fit as a function of bias potential');
+            cl2{end+1} = struct('NAME', 'phc_intersect',   'UNIT', 'A', 'DESCRIPTION', 'Y-intersection of linear photoelectron current fit as a function of bias potential');
+            cl2{end+1} = struct('NAME', 'sigma_phc_intersect',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of y-intersection of linear photoelectron current fit as a function of bias potential');
+            cl2{end+1} = struct('NAME', 'ne_5eV',   'UNIT', 'cm^-3', 'DESCRIPTION', 'Electron density from linear electron current fit, assuming Te= 5eV  ');
+            cl2{end+1} = struct('NAME', 'ni_v_dep',   'UNIT', 'cm^-3', 'DESCRIPTION', 'Ion density from slope of ion current fit assuming ions of a certain mass and velocity');
+            cl2{end+1} = struct('NAME', 'ni_v_indep',   'UNIT', 'cm^-3', 'DESCRIPTION', 'Ion density from slope and intersect of ion current fit assuming ions of a certain mass. velocity independent estimate');
+            cl2{end+1} = struct('NAME', 'v_ion',   'UNIT', 'm/s', 'DESCRIPTION', 'Ion ram velocity derived from the velocity independent and dependent ion density estimate ');
+            cl2{end+1} = struct('NAME', 'Te_exp',   'UNIT', 'eV', 'DESCRIPTION', 'Electron temperature from exponential fit to electron current');
+            cl2{end+1} = struct('NAME', 'sigma_Te_exp',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of electron temperature from exponential fit to electron current');
+            cl2{end+1} = struct('NAME', 'asm_Vsg',   'UNIT', 'V', 'DESCRIPTION', 'Spacecraft potential from gaussian fit to second derivative. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_Vsg',   'UNIT', 'V', 'DESCRIPTION', 'Standard deviation of spacecraft potential from gaussian fit to second derivative. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_Iph0',   'UNIT', 'A',   'DESCRIPTION', 'Photosaturation current. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_Tph',   'UNIT', 'eV',   'DESCRIPTION', 'Photoelectron temperature. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_Vsi',   'UNIT', 'V',   'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_Vph_knee',   'UNIT', 'V', 'DESCRIPTION', 'Potential at probe position from photoelectron current knee (gaussian fit to second derivative) . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_Te_linear',   'UNIT', 'eV', 'DESCRIPTION', 'Electron temperature from linear fit to electron current. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_ne_linear',   'UNIT', 'cm^-3', 'DESCRIPTION', 'Electron (plasma) density from linear fit to electron current . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_ion_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of ion current fit as a function of absolute potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_ion_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of ion current fit as a function of absolute potential. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_ion_intersect',   'UNIT', 'A', 'DESCRIPTION', 'Y-intersection of ion current fit as a function of absolute potential. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_ion_intersect',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of y-intersection of ion current fit as a function of absolute potential. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_e_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of linear electron current fit as a function of absolute potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_e_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of linear electron current fit as a function of absolute potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_e_intersect',   'UNIT', 'A', 'DESCRIPTION', 'Y-intersection of linear electron current fit as a function of absolute potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_e_intersect',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of y-intersection of linear electron current fit as a function of absolute potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_ion_Vb_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of ion current fit as a function of bias potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_ion_Vb_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of ion current fit as a function of bias potential. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_ion_Vb_intersect',   'UNIT', 'A', 'DESCRIPTION', 'Y-intersection of ion current fit as a function of bias potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_ion_Vb_intersect',   'UNIT', '',   'DESCRIPTION', 'Fractional error estimate of Y-intersection of ion current fit as a function of bias potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_e_Vb_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of linear electron current fit as a function of bias potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_e_Vb_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of linear electron current fit as a function of bias potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_e_Vb_intersect',   'UNIT', 'A', 'DESCRIPTION', 'Y-intersection of linear electron current fit as a function of bias potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_e_Vb_intersect',   'UNIT', [],   'DESCRIPTION', 'Fractional error estimate of y-intersection of linear electron current fit as a function of bias potential . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_Tphc',   'UNIT', 'eV',   'DESCRIPTION', 'Photoelectron cloud temperature (if applicable). Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_nphc',   'UNIT', 'cm^-3',   'DESCRIPTION', 'Photoelectron cloud density (if applicable). Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_phc_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_phc_slope',   'UNIT', [], 'DESCRIPTION', 'Fractional error estimate of slope of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_phc_intersect',         'UNIT', 'A', 'DESCRIPTION', 'Y-intersection of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_phc_intersect',   'UNIT', [],  'DESCRIPTION', 'Fractional error estimate of y-intersection of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_ne_5eV',         'UNIT', 'cm^-3', 'DESCRIPTION', 'Electron density from linear electron current fit, assuming Te= 5eV  . Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_ni_v_dep',       'UNIT', 'cm^-3', 'DESCRIPTION', 'Ion density from slope of ion current fit assuming ions of a certain mass and velocity. Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_ni_v_indep',     'UNIT', 'cm^-3', 'DESCRIPTION', 'Ion density from slope and intersect of ion current fit assuming ions of a certain mass. velocity independent estimate. Fixed photoelectron current assumption');           
+            cl2{end+1} = struct('NAME', 'asm_v_ion',          'UNIT', 'm/s',   'DESCRIPTION', 'Ion ram velocity derived from the velocity independent and dependent ion density estimate.Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_Te_exp',         'UNIT', 'eV',    'DESCRIPTION', 'Electron temperature from exponential fit to electron current.Fixed photoelectron current assumption');
+            cl2{end+1} = struct('NAME', 'asm_sigma_Te_exp',   'UNIT', [],      'DESCRIPTION', 'Fractional error estimate of electron temperature from exponential fit to electron current.Fixed photoelectron current assumption');
+
             for i=1:length(cl2)
-                cl2{i}.BYTES = 14;
+                cl2{i}.BYTES     = 14;
                 cl2{i}.DATA_TYPE = 'ASCII_REAL';
             end
             data.column_list = [cl1, cl2];
@@ -1020,12 +1068,12 @@ if(~isempty(an_tabindex));
             data = [];
             data.N_rows      = an_tabindex{i,4};
             data.N_row_bytes = an_tabindex{i,9};
-            data.DESCRIPTION = sprintf('BEST ESTIMATED PHYSICAL VALUES FROM MODEL FITTED ANALYSIS OF %s SWEEP FILE.', tabindex{an_tabindex{i,6},2});   % Bad description? To specific?
+            data.DESCRIPTION = sprintf('BEST ESTIMATES OF PHYSICAL VALUES FROM MODEL FITTED ANALYSIS.');   % Bad description? To specific?
             cl = [];
             cl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
             cl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
             cl{end+1} = struct('NAME', 'QUALITY',        'DATA_TYPE', 'ASCII_REAL', 'BYTES',  3, 'UNIT', [],        'DESCRIPTION', 'QUALITY FACTOR FROM 000(best) to 999');
-            cl{end+1} = struct('NAME', 'npl',            'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-3',  'DESCRIPTION', 'Best estimate of plasma number density.');
+            cl{end+1} = struct('NAME', 'n_pl',           'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-3',  'DESCRIPTION', 'Best estimate of plasma number density.');
             cl{end+1} = struct('NAME', 'Te',             'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'eV',      'DESCRIPTION', 'Best estimate of electron temperature.');
             cl{end+1} = struct('NAME', 'Vsc',            'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',       'DESCRIPTION', 'Best estunate if spacecraft potential.');
             data.column_list = cl;

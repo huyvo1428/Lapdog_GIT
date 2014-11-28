@@ -100,8 +100,8 @@ archivepath = '/home/erjo/LAP_ARCHIVE_test/RO-C-RPCLAP-3-M06b-CALIB-V0.1';
 % archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M07-CALIB-V0.1';
 
 % % M08 calibrated:
-shortphase = 'M08';
-archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M08-CALIB-V0.2';
+%shortphase = 'M08';
+%archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-C-RPCLAP-3-M08-CALIB-V0.2';
 
 
 % 

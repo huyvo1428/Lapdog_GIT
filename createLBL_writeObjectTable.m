@@ -1,4 +1,4 @@
-% Function to write a table object in an ODL file.
+% Function to write the commands for a table object in an ODL file.
 % ("ObjectTable" refers to "OBJECT = TABLE" in ODL files.)
 %
 % Should ideally be part of createLBL.m but can not yet since createLBL.m is not a function itself.
@@ -44,16 +44,19 @@ function createLBL_writeObjectTable(fid, data)
     
     
     
-    % -------- EXPERIMENTAL --------
+    % -------- EXPERIMENTAL / DEBUG (below) --------
     % Calculate "row_bytes" rather than take from argument (which takes from an_tabindex).
     % NOTE: Only works if fprintf prints correctly when creates correct
-    %calc_N_row_bytes = 0;
-    %for i = 1:length(data.column_list)
-    %    calc_N_row_bytes = calc_N_row_bytes + data.column_list{i}.BYTES + BYTES_BETWEEN_COLUMNS;
-    %end
-    %calc_N_row_bytes = calc_N_row_bytes - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;
-    %calc_N_row_bytes                                                 % DEBUG
-    %disp(['data.N_row_bytes = ', num2str(data.N_row_bytes)])         % DEBUG
+    if 0
+        calc_N_row_bytes = 0;
+        for i = 1:length(data.column_list)
+            calc_N_row_bytes = calc_N_row_bytes + data.column_list{i}.BYTES + BYTES_BETWEEN_COLUMNS;
+        end
+        calc_N_row_bytes = calc_N_row_bytes - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;
+        disp(['calc_N_row_bytes = ', num2str(calc_N_row_bytes)])
+        disp(['data.N_row_bytes = ', num2str(data.N_row_bytes)])
+    end
+    % -------- EXPERIMENTAL / DEBUG (above) --------
     
     
     
