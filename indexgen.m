@@ -94,7 +94,7 @@ for ii=1:n  % Loop the label files
     %i % Print to see where we are in the processing
     
     if mod(i,5000) ==0
-        fprintf(1,'index generation loop #%i out of%i\r ',i,n)
+        fprintf(1,'index generation loop #%i out of %i\r ',i,n)
     end
         
     % Path to label file:
