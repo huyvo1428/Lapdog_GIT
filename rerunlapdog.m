@@ -54,56 +54,61 @@ dynampath = dynampath(1:end-12);
 fprintf(1,'lapdog: %s\n',dynampath);
 
 
-fprintf(1, 'loading index....\n',dynampath);
-indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
-fp = fopen(indexfile,'r');
+if redo_resampling ~= 0
+    
+    fprintf(1, 'loading index....\n',dynampath);
+    indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
+    fp = fopen(indexfile,'r');
+    
 
 
-
-
-if(fp > 0)
-    fclose(fp);
-    load(indexfile);
-    fprintf(1, 'lapdog: succesfully loaded server index\n');
-    
-    
-    substring = '/data/LAP_ARCHIVE/cronworkfolder/';
-    newstring= '/data/LAP_ARCHIVE/';
-    fprintf(1,'replacing substrings...\n');
-    
-    index = struct_string_replace(index,substring,newstring); %separate code
-    
-    
-else
-    
-    fprintf(1,'lapdog: calling indexgen\n');
-    indexgen;
-    fprintf(1,'lapdog: splitting files at midnight..\n');
-    indexcorr;
-    
-    
-    folder= sprintf('%s/index',dynampath);
-    if exist(folder,'dir')~=7
-        mkdir(folder);
+    if(fp > 0)
+        fclose(fp);
+        load(indexfile);
+        fprintf(1, 'lapdog: succesfully loaded server index\n');
+        
+        
+        substring = '/data/LAP_ARCHIVE/cronworkfolder/';
+        newstring= '/data/LAP_ARCHIVE/';
+        fprintf(1,'replacing substrings...\n');
+        
+        index = struct_string_replace(index,substring,newstring); %separate code
+        
+        
+    else
+        
+        fprintf(1,'lapdog: calling indexgen\n');
+        indexgen;
+        fprintf(1,'lapdog: splitting files at midnight..\n');
+        indexcorr;
+        
+        
+        folder= sprintf('%s/index',dynampath);
+        if exist(folder,'dir')~=7
+            mkdir(folder);
+        end
+        
+        
+        save(indexfile,'index');
     end
     
     
-    save(indexfile,'index');
+    
+    
+    % Generate daily geometry files:
+    if(do_geom)
+        fprintf(1,'lapdog: calling geometry...\n');
+        geometry;
+    end
+    
+    % Generate block list file:
+    
+    fprintf(1,'lapdog: calling opsblocks...\n');
+    opsblocks;
+    
+
 end
 
-
-
-
-% Generate daily geometry files:
-if(do_geom)
-    fprintf(1,'lapdog: calling geometry...\n');
-    geometry;
-end
-
-% Generate block list file:
-
-fprintf(1,'lapdog: calling opsblocks...\n');
-opsblocks;
 
 % Resample data
 tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);

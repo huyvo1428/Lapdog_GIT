@@ -16,18 +16,21 @@ archiveid = sprintf('%s_%d',shortphase,processlevel);
 
 s_tabindexfile = sprintf('server/tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(s_tabindexfile,'r');
-fp = -2;
+%fp = -2;
 
 if(fp > 0)
     fclose(fp);
     load(s_tabindexfile);
     'lapdog: successfully loaded server tabindex'
     
-end
 
 substring = strrep(tabindex(1,1),tabindex(1,2),'');
 %substring = 'ajskldjalskd/2014/MMM/DDD/'
-tabindexsubstring= substring{1,1}(1:end-42);
+
+lend = length(substring{1,1})-39-length(shortphase);
+
+tabindexsubstring= substring{1,1}(1:lend); %works for all missionphases
+%tabindexsubstring= substring{1,1}(1:33);
 
 %indexsubstring=substring(1:end-14);
 
@@ -36,6 +39,19 @@ newstring= '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_
 
 
 tabindex(:,1) = cellfun(@(x) strrep(x,tabindexsubstring,newstring),tabindex(:,1),'un',0);
+
+
+tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
+save(tabindexfile,'tabindex');
+
+else 
+    'error, file missing'
+
+end
+
+
+
+
 % 
 % tabindex
 % 
@@ -58,7 +74,6 @@ if(fp > 0)
     fclose(fp);
     load(s_indexfile);
     'lapdog: succesfully loaded server index'
-end
 
 if skipindex ==0
     
@@ -68,9 +83,15 @@ substring = '/data/LAP_ARCHIVE/cronworkfolder/';
 
 newstring= '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/';
 index2 = index;
-'replacing substrings'
+'replacing substrings...'
 index = struct_string_replace(index2,substring,newstring); %separate code
+indexfile = sprintf('index/index_%s.mat',archiveid);
 
+save(indexfile,'index');
+end
+
+else
+    'error, file missing'
 end
 
 

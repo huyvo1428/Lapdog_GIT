@@ -70,9 +70,9 @@ end
 fprintf(1,'Downsample Low frequency measurements \n')
 
    
-
-%send mode datatasets to downsampler function
-
+% 
+% send mode datatasets to downsampler function
+% 
 % 
 % if(~isempty(ind_I1L))
 %     %an_downsample(ind_I1L,tabindex,8)
@@ -99,15 +99,15 @@ fprintf(1,'Downsample Low frequency measurements \n')
 %   %  an_downsample(ind_V2L,tabindex,8)
 %     an_downsample(ind_V2L,tabindex,32)
 % end
-% 
-% 
-% 
-% %  Mill the HF data in this ob:
-%     
-% 
-% 
-% fprintf(1,'Generating Spectra\n')
-% 
+
+
+
+%  Mill the HF data in this ob:
+    
+
+
+fprintf(1,'Generating Spectra\n')
+
 % if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
 % if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
 % if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
@@ -119,7 +119,7 @@ fprintf(1,'Downsample Low frequency measurements \n')
 % 
 % 
 % 
-
+% 
 
 
 
