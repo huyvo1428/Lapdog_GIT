@@ -14,7 +14,7 @@ paths();
 cspice_furnsh(kernelFile);
 
 
-k=1; %needed for error output
+k=0; %needed for error output
 
 try
     
@@ -187,7 +187,7 @@ try
         EP(len).asm_v_ion = [];
 
       %  EP(len).ni_thermal = [];%1e-6*DP(k).ion_slope*assmpt.ionM*CO.mp*assmpt.vram/(IN.probe_cA*2*CO.e*CO.e);
-     %   EP(len).ni_SW = [];%1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.v_SW;
+      %  EP(len).ni_SW = [];%1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.v_SW;
         EP(len).ne_5eV = [];%1e-6*DP(k).e_slope
         %need to make this as a function of Vsc...
         % EP(len).i_vel = [];%sqrt(2*assmpt.ionZ*CO.e*DP(k)DP(k).ion_y_intersect/(DP(k).ion_slope*assmpt.ionM*CO.mp);
@@ -245,17 +245,14 @@ try
     assmpt.Vknee = 0; %dummy
     assmpt.Tph = 2; %eV
     assmpt.Iph0 = -8.55e-09; %Amp
-    assmpt.vram = 7000; %m/s
+    assmpt.vram = 550; %m/s
     assmpt.ionZ = +1; % ion charge
     assmpt.ionM = 19; % proton mass
-    assmpt.v_SW = 5E5; %500 km/s
-        
-    %assmpt.probearea =0.25E-3;
+    %assmpt.v_SW = 5E5; %500 km/s
+            
     
-
-    
-            %Iion0 = ?Aram qion nion vd,
-    
+    %these asumptions should be printed somewhere. Maybe in the LBL file?
+    %print in description of LBL file?
     
     
     %% try whole batch of sweep analysis at once, why not?
@@ -275,7 +272,7 @@ try
             
             assmpt.Vknee =Vknee;
             
-            init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,1);  %get initial estimate of all variables in that sweep.
+%             init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,1);  %get initial estimate of all variables in that sweep.
         end
         
         if (unique(~(lind(1:lmax)))) % if we also) have non-sunlit sweeps?
@@ -283,7 +280,7 @@ try
             I_50 = mean(Iarr(:,~lind),2);
             [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vsg estimate from that.
             assmpt.Vknee = Vknee;
-            init_2 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0);  %get initial estimate of all variables in that sweep.
+%             init_2 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0);  %get initial estimate of all variables in that sweep.
         end
         % non-sunlit sweep V_SC should have priority!!
         
@@ -296,7 +293,7 @@ try
              
             assmpt.Vknee =Vknee;
             
-            init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0.4);  %get initial estimate of all variables in that sweep.
+%             init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0.4);  %get initial estimate of all variables in that sweep.
             
             
         end
@@ -403,7 +400,7 @@ try
                 EP(m).split= split; % 1 for V form, -1 for upsidedownV
                 EP(m).dir = upd(2); 
 
-                AP(m)     =  an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(m).lum);
+                AP(m)     =  an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(m).lum);
                 %          fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
                 %                fout{m,2} = mean(SAA(1,2*k-1:2*k));
 
@@ -423,17 +420,26 @@ try
  
        
                 EP(m).ni_1comp = abs(1e-6 * DP(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-                EP(m).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP(k).ion_intersect(1)-DP(k).Iph0)*DP(k).ion_slope(1)/(2*CO.e)));
- 
+                EP(m).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP(k).ion_intersect(1)-DP(k).Iph0)*DP(k).ion_slope(1)/(2*CO.e)));                
+                EP(m).v_ion =  EP(m).ni_2comp*assmpt.vram/EP(m).ni_1comp;
+
+                
                 EP(m).asm_ni_1comp = abs(1e-6 * DP_assmpt(m).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
                 EP(m).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP_assmpt(m).ion_intersect(1)-DP_assmpt(m).Iph0)*DP_assmpt(m).ion_slope(1)/(2*CO.e)));
-                
+                EP(m).asm_v_ion =  EP(m).asm_ni_2comp*assmpt.vram/EP(m).asm_ni_1comp;
+
 
                 Te_guess = 5;%eV
                 EP(m).ne_5eV = abs(1e-6*DP(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
                 EP(m).asm_ne_5eV = abs(1e-6*DP_assmpt(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-		
                 
+                
+                
+                %%estimate
+                Te_guess = 5;%eV
+                EP(k).ne_5eV = abs(1e-6*DP(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
+                EP(k).asm_ne_5eV = abs(1e-6*DP_assmpt(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
+
                 
             %
                 
@@ -456,7 +462,6 @@ try
         wfile= rfile;
         wfile(end-6)='A';
         awID= fopen(wfile,'w');
-        r2 = 0;
 
 
 
@@ -469,13 +474,13 @@ try
             ', Vbinfl, dIinfl, d2Iinfl',...
             ', Iph0, Tph, Vsi, Vph_knee, Te_linear, ne_linear',...
             ', ion_slope, sigma_ion_slope, ion_intersect, sigma_ion_intersect, e_slope, sigma_e_slope, e_intersect, sigma_e_intersect',...
-            ', ion_Vb_slope, sigma_ion_Vb_slope, ion_Vb_intersect, sigma_ion_Vb_intersect, e_Vb_slope, sigma_e_Vb_slope, e_Vb_intersect, sigma_e_Vb_intersect',...
+            ', ion_Vb_intersect, sigma_ion_Vb_intersect, e_Vb_intersect, sigma_e_Vb_intersect',...
             ', Tphc, nphc, phc_slope, sigma_phc_slope, phc_intersect, sigma_phc_intersect',...
             ', ne_5eV, ni_v_dep, ni_v_indep, v_ion, Te_exp, sigma_Te_exp',...
             ', asm_Vsg, asm_sigma_Vsg',...
             ', asm_Iph0, asm_Tph, asm_Vsi, asm_Vph_knee, asm_Te_linear, asm_ne_linear',...
             ', asm_ion_slope, asm_sigma_ion_slope, asm_ion_intersect, asm_sigma_ion_intersect, asm_e_slope, asm_sigma_e_slope, asm_e_intersect, asm_sigma_e_intersect',...
-            ', asm_ion_Vb_slope, asm_sigma_ion_Vb_slope, asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_slope, sigma_asm_e_Vb_slope, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
+            ', asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
             ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
             ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp',...       
             '\n'));
@@ -494,13 +499,13 @@ try
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);                 
             str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Iph0,DP(k).Tph,DP(k).Vsi,DP(k).Vph_knee,DP(k).Te,DP(k).ne);           
             str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
-            str7  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_Vb_slope,DP(k).ion_Vb_intersect,DP(k).e_Vb_slope,DP(k).e_Vb_intersect);  
+            str7  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_Vb_intersect,DP(k).e_Vb_intersect);  
             str8  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Tphc,DP(k).nphc,DP(k).phc_slope,DP(k).phc_intersect);                                                                                                      %NB DP(k).Te_exp is vector size 2, so two ouputs.           
             str9  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).ne_5eV,EP(k).ni_1comp,EP(k).ni_2comp,EP(k).v_ion,DP(k).Te_exp);
             str10 = sprintf(' %14.7e, %14.7e,',DP_assmpt(k).Vsg);            
             str11 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).Iph0,DP_assmpt(k).Tph,DP_assmpt(k).Vsi,DP_assmpt(k).Vph_knee,DP_assmpt(k).Te,DP_assmpt(k).ne);        
             str12 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).ion_slope,DP_assmpt(k).ion_intersect,DP_assmpt(k).e_slope,DP_assmpt(k).e_intersect);            
-            str13 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).ion_Vb_slope,DP_assmpt(k).ion_Vb_intersect,DP_assmpt(k).e_Vb_slope,DP_assmpt(k).e_Vb_intersect);           
+            str13 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).ion_Vb_intersect,DP_assmpt(k).e_Vb_intersect);           
             str14 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).Tphc,DP_assmpt(k).nphc,DP_assmpt(k).phc_slope,DP_assmpt(k).phc_intersect);
             str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e',EP(k).asm_ne_5eV,EP(k).asm_ni_1comp,EP(k).asm_ni_2comp,EP(k).asm_v_ion,DP_assmpt(k).Te_exp);
 

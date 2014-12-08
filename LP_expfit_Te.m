@@ -24,6 +24,10 @@ try
     ind= find(Vp+eps < 0); %this could be empty (not likely)
     
     bot=find(I(ind)<0,1,'last')+1; %this could be empty (possible)
+    if isempty(bot)
+        bot = 1;
+    end
+    
     rind = ind(bot):ind(end); %this could be even more empty
 
     
