@@ -272,7 +272,7 @@ try
             
             assmpt.Vknee =Vknee;
             
-%             init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,1);  %get initial estimate of all variables in that sweep.
+             init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,1);  %get initial estimate of all variables in that sweep.
         end
         
         if (unique(~(lind(1:lmax)))) % if we also) have non-sunlit sweeps?
@@ -280,7 +280,7 @@ try
             I_50 = mean(Iarr(:,~lind),2);
             [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vsg estimate from that.
             assmpt.Vknee = Vknee;
-%             init_2 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0);  %get initial estimate of all variables in that sweep.
+             init_2 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0);  %get initial estimate of all variables in that sweep.
         end
         % non-sunlit sweep V_SC should have priority!!
         
@@ -293,7 +293,7 @@ try
              
             assmpt.Vknee =Vknee;
             
-%             init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0.4);  %get initial estimate of all variables in that sweep.
+             init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0.4);  %get initial estimate of all variables in that sweep.
             
             
         end

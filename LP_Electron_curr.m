@@ -89,6 +89,7 @@ out.b = a;
 out.Te = NaN;
 out.ne = NaN;
 
+exp = [];
 
 
 %start by smoothing current
@@ -97,8 +98,6 @@ out.ne = NaN;
 len = length(V);
 
 Vp = V+Vsc; % Compute absolute probe potential as bias potential added to spacecraft potential.
-
-
 
 % Find the data points above the spacecraft potential
 

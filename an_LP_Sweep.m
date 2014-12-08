@@ -135,16 +135,18 @@ try
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [Vknee, Vsg_sigma] = an_Vplasma(V,Is);
+    [Vknee, Vknee_sigma] = an_Vplasma(V,Is);
+    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
     
-    
-        
+
     
     if isnan(Vknee)
         Vknee = Vguess;
         
     end
-       
+
+    
+    
     %test these partial shadow conditions
     if illuminated > 0 && illuminated < 1
         Q(1)=1;
@@ -157,23 +159,19 @@ try
     end
     
 
-    if(illuminated)
-        Vsc= Vknee/VSC_TO_VKNEE;
-        Vplasma=Vsc*VSC_TO_VPLASMA;
-        
-        %VSC_TO_VPLASMA=0.64; %from SPIS simulation experiments
-%VBSC_TO_VSC = -1/(1-VSC_TO_VPLASMA); %-1/0.36
-        
+    if(illuminated)        
+        if isnan(Vsc)
+            Vsc= Vknee/VSC_TO_VKNEE;
+            Vsc_sigma =Vknee_sigma/VSC_TO_VKNEE;           
+        end       
+        Vplasma=(Vknee/VSC_TO_VKNEE)/VSC_TO_VPLASMA;        
+     
     else
-        
-        Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
+        %Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
         Vplasma=NaN;
-        
     end
     
 
-    
-    
     
     if (an_debug>1)
         figure(33);
@@ -190,7 +188,7 @@ try
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
     
-    [ion,Q] = LP_Ion_curr(V,Is,Vsc,Q); % The ion current is denoted ion.I,
+    [ion,Q] = LP_Ion_curr(V,Is,Vknee,Vsc,Q); % The ion current is denoted ion.I,
     %ion.I here doesn't contain the ion.b offset. as it shouldn't if we
     % want to get Iph0 individually.
 
@@ -386,7 +384,7 @@ try
     
     DP.Te      = elec.Te;
     DP.ne      = elec.ne;
-    DP.Vsg     = [Vsc Vsg_sigma];
+    DP.Vsg     = [Vsc Vknee_sigma];
     DP.Vph_knee = Vplasma;
 
     

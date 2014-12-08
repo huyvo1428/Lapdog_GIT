@@ -122,7 +122,8 @@ try
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [Vknee, Vsigma] = an_Vplasma(V,Is);
+    [Vknee, Vknee_sigma] = an_Vplasma(V,Is);
+    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
     
     
     if isnan(Vknee)
@@ -140,14 +141,22 @@ try
         end
     end
     
-    
-    if(illuminated)
-        Vsc= Vknee/VSC_TO_VKNEE;
-        Vplasma=Vsc*VSC_TO_VPLASMA;                
-    else        
-        Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
-        Vplasma=NaN;         
+  
+    if(illuminated)        
+        if isnan(Vsc)
+            Vsc= Vknee/VSC_TO_VKNEE;
+            Vsc_sigma =Vknee_sigma/VSC_TO_VKNEE;           
+        end       
+        Vplasma=(Vknee/VSC_TO_VKNEE)/VSC_TO_VPLASMA;        
+     
+    else
+        %Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
+        Vplasma=NaN;
     end
+    
+    
+    
+    
     
 
     Itemp = Is;
@@ -159,7 +168,7 @@ try
         
         Itemp = Itemp - Iph;
         
-        [Vsc, Vsigma2] = an_Vplasma(V,Itemp);
+        [Vsc, Vsigma2] = an_Vsc(V,Itemp);
         
         
         if (an_debug>1)
@@ -182,8 +191,7 @@ try
     % accurate here.In addition to the ion current, the coefficients from
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
-    [ion,Q] = LP_Ion_curr(V,Itemp,Vsc,Q); % The ion current is denoted Ii,
-
+    [ion,Q] = LP_Ion_curr(V,Itemp,Vknee,Vsc,Q); % The ion current is denoted Ii,
 
 
     % Now, removing the linearly fitted ion-current from the
@@ -288,7 +296,7 @@ try
     
     DP.Te      = elec.Te;
     DP.ne      = elec.ne;
-    DP.Vsg     = [Vsc Vsigma];
+    DP.Vsg     = [Vsc Vknee_sigma];
     DP.Vph_knee = Vplasma;
 
     DP.ion_Vb_slope      = ion.a;

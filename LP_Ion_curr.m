@@ -54,7 +54,7 @@
 %
 %                                                                                    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [out,Q] = LP_Ion_curr(V,I,Vsc,Q)
+function [out,Q] = LP_Ion_curr(V,I,Vknee,Vsc,Q)
 
 
 
@@ -86,7 +86,7 @@ len = length(V);  % the function length returns the length of the vector V
 Vp = V+Vsc; % Setting the probe potential
 
 % Find the data points below the spacecraft potential
-ind = find(Vp < 0); % Saving indices of all potential values below the knee potential.
+ind = find(V < -Vknee ); % Saving indices of all potential values below the knee potential.
 
 if isempty(ind)
     Q(1) = 2;
