@@ -60,40 +60,41 @@ global diag_info %contains information of current sweep
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
 Q    = [0 0 0 0];   % Quality vector
 
-na = [NaN NaN]; % dummy nan
-
 % Initialize DP to ensure a return value:
 DP = [];
-
 
 DP.Iph0             = assmpt.Iph0;
 DP.Tph              = assmpt.Tph;
 DP.Vsi              = NaN;
-DP.Te               = NaN;
-DP.ne               = NaN;
+DP.Te               = nan(1,2);
+DP.ne               = nan(1,2);
 
-DP.Vsg              = na;
-DP.Vph_knee         = NaN;
+DP.Vsg              = nan(1,2);
+DP.Vph_knee         = nan(1,2);
 
-DP.ion_Vb_slope     = na;
-DP.ion_Vb_intersect = na;
-DP.ion_slope        = na;
-DP.ion_intersect    = na;
+DP.ion_Vb_slope     = nan(1,2);
+DP.ion_Vb_intersect = nan(1,2);
+DP.ion_slope        = nan(1,2);
+DP.ion_intersect    = nan(1,2);
 
-DP.e_Vb_slope       = na;
-DP.e_Vb_intersect   = na;
-DP.e_slope          = na;
-DP.e_intersect      = na;
+DP.e_Vb_slope       = nan(1,2);
+DP.e_Vb_intersect   = nan(1,2);
+DP.e_slope          = nan(1,2);
+DP.e_intersect      = nan(1,2);
 
 DP.Tphc             = NaN;
 DP.nphc             = NaN;
-DP.phc_slope        = na;
-DP.phc_intersect    = na;
+DP.phc_slope        = nan(1,2);
+DP.phc_intersect    = nan(1,2);
 
-DP.Te_exp           = na;
-DP.Ie0_exp          = na;
+DP.Te_exp           = nan(1,2);
+DP.Ie0_exp          = nan(1,2);
+DP.ne_exp           = nan(1,2);
 
 DP.Quality          = sum(Q);
+
+
+Iph= 0;
 
 
 try
@@ -122,8 +123,8 @@ try
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [Vknee, Vknee_sigma] = an_Vplasma(V,Is);
-    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
+    [Vknee, Vknee_sigma]    = an_Vplasma(V,Is);
+    [Vsc, Vsc_sigma]        = an_Vsc(V,Is);
     
     
     if isnan(Vknee)
@@ -160,7 +161,11 @@ try
     
 
     Itemp = Is;
-    
+            
+    if (an_debug>1)
+        figure(34);
+        
+    end
 
     
     if illuminated
@@ -172,7 +177,6 @@ try
         
         
         if (an_debug>1)
-            figure(34);
             subplot(2,2,4),plot(V,I,'b',V,Itemp,'g');grid on;
 
             title('I & I - Iph current');
@@ -185,7 +189,7 @@ try
     
     
     
-    
+
     % Next we determine the ion current, Vsc need to be included in order
     % to determine the probe potential. However Vsc do not need to be that
     % accurate here.In addition to the ion current, the coefficients from
@@ -221,12 +225,14 @@ try
     %[Te,ne,Ie,ea,eb]=LP_Electron_curr(V,Itemp,Vsc,illuminated);
     %this time, we have already removed Iph component, so we can assume no
     %sunlight effect
-    [elec]=LP_Electron_curr(V,Itemp,Vsc,0);
+
+    [elec]=LP_Electron_curr(V,Itemp,Vsc,Vknee,0);
+
+    expfit= LP_expfit_Te(V,Itemp,Vsc);
     
-    temp= LP_expfit_Te(V,Itemp,Vsc);
-    
-    DP.Te_exp = temp.Te;
-    DP.Ie0_exp = temp.Ie0;
+    DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
+    DP.Ie0_exp          = expfit.Ie0;
+    DP.ne_exp           = expfit.ne;
     
     %if the plasma electron current fail, try the spacecraft photoelectron
     %cloud current analyser
@@ -248,16 +254,26 @@ try
     
     
     %[Te,ne,Ie,ea,eb,rms]=LP_Electron_curr(V,LP_MA(Itemp),Vsc);
-    
+    Itemp2 = Itemp -expfit.I;
     Itemp = Itemp - elec.I; %the resultant current should only be photoelectron current (or zero)
     
     
 %     
-%     if (an_debug>1)
-%         
-%         subplot(2,2,1),plot(V,I,'b',V,Itemp,'g');grid on;
-%         title('I & I - ions - e - ph');
-%     end
+    if (an_debug>1)
+                        figure(34);
+
+       % title('I & I - ion current -ph');
+       
+       %      title([sprintf('I & I - ion&ph. illumination=%d',illuminated)])
+       
+
+        subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g',V,Itemp2,'r');grid on;
+        
+        title([sprintf('I, I-all_liner, I-all_exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
+       
+       legend('I','I-I_linear','I-I_exp','Location','NorthWest')
+        title('I & I - ions - e - ph');
+    end
 %     
     
            
@@ -296,8 +312,8 @@ try
     
     DP.Te      = elec.Te;
     DP.ne      = elec.ne;
-    DP.Vsg     = [Vsc Vknee_sigma];
-    DP.Vph_knee = Vplasma;
+    DP.Vsg     = [Vsc Vsc_sigma];
+    DP.Vph_knee = [Vplasma Vknee_sigma];
 
     DP.ion_Vb_slope      = ion.a;
     DP.ion_Vb_intersect  = ion.b;
@@ -314,58 +330,29 @@ try
     if (an_debug>1)
         figure(34);
 
-        if(illuminated)
-            %
-            %          Iph=Itemp;    %just to get the dimension right)
-            %          len=length(Itemp);
-            %
-            %          pos=find(V>-DP.Vsi,1,'first');
-            %          Iph(1:pos)=DP.Iph0;
-            %
-            %          for i=pos:1:len
-            %              Iph(i)=(DP.Iph0*(1+((V(i)+Vsc-DP.Vsi)/Tph))*exp(-(V(i)+Vsc-DP.Vsi)/Tph));
-            %          end
-            %Iph(1:idx1)=Iph(1:idx1)+ion.b(1)
-       %     Iph(1:idx1)=ion.b(1); %add photosaturation current
-            %            Itot(idx:end)=Iph(idx:end)
-            Itot=Iph+elec.I+ion.I;
             
-            %            Itot= Ie+ion.I+Iph;
-            
-            Izero = Is-Itot;
-            
-            
-            %         Izero=Itemp-Iph;
-            %         Itot = ion.I+Ie+Iph;
-            
-            %      Izero(pos:end)=Itemp(pos:end)-(Iph0*(1+((V(pos:end)-vs)/Tph))*exp(-(V(pos:end)-vs)/Tph));
-            %
-            %      a=exp((V(pos:len)-vs)/Tph);
-            %      adsasd=(Iph0(1+((V(pos:len)-vs)/Tph))*a);
-            %      Izero(pos:len)=Itemp(pos:len)-adsasd;
-            
-            
-            
-        else
-            
-            Izero = Itemp;
-            Itot = elec.I+ion.I;
-            
-        end
+        
+        Itot_linear=Iph+elec.I+ion.I;
+        Itot_exp=Itot_linear-elec.I+expfit.I;
+        Izero_linear = Is-Itot_linear;
+        Izero_exp = Is - Itot_exp;
+        
+        
+        
         subplot(2,2,2)
-        plot(V+Vsc,Izero,'og');
+        plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or');
         grid on;
         %  title('V vs I - ions - electrons-photoelectrons');
         title([sprintf('WITH ASSUMPTIONS lum=%d, %s',illuminated,diag_info{1})])
-        legend('IvsVp','I-Itot','Location','NorthWest')
+        legend('residual(I-Itot linear)','residual(I-Itot exp)','Location','Northwest')
 
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(2,2,4)
-        plot(V+Vsc,Is,'b',V+Vsc,Itot,'g');
+        plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r');
         %        title('Vp vs I & Itot ions ');
         title([sprintf('Vp vs I, macro: %s',diag_info{1})])
-        legend('I','Itot','Location','NorthWest')
+        legend('I','Itot linear','Itot exp','Location','NorthWest')
 
         grid on;
         

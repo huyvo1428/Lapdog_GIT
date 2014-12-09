@@ -12,6 +12,7 @@ CO=[];
 CO.e = 1.60217657E-19;
 CO.me = 9.10938291E-31;
 CO.mp = 1.67262178E-27;
+CO.kb = 8.6173324E-5; %eV/K
 
 IN.probe_r = 0.025; %rosetta probe radius.
 IN.probe_A = 4*pi*IN.probe_r^2;

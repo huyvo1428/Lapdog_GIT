@@ -19,19 +19,24 @@ out =[];
 out.I = Ie;
 out.Vpa = nan(1,2); %NaN;
 out.Vpb = nan(1,2);
-%out.a = a;
-%out.b = a;
+
 out.Te = nan(1,2);
 out.ne = nan(1,2);
+%out.ne = nan(1,2);
 out.Ie0 = nan(1,2);
 
-
+ne=NaN;
 Vp = V+Vknee;
 
 eps= 1; %moves "0V" to the left
 
 try
     firstpos=find(Vp>0,1,'first');
+    if isempty(firstpos)
+        firstpos=length(Vp);
+    end
+    
+    
 
     ind= find(Vp+eps < 0); %this could be empty (not likely)
     
@@ -101,7 +106,8 @@ try  %super risky sigma calculation.
     S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
     
     s_Te = abs(S.sigma(1)/Ps(1)); %Fractional error
-    s_Ie0 = abs(S.sigma(2)/Ps(2)); %Fractional error
+    
+    s_Ie0 = abs(S.sigma(2)); %Fractional error from function of dq/q=dq/dx * dx. q=e^x-> dq/q=dx
 catch err % don't care if this throws error, continue
     
     s_Te = NaN;
@@ -123,6 +129,8 @@ if(Te>=0 && ~isinf(Te))
     % ne = Ie0 / area*charge*velocity
     ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me)));
     
+    
+    
    % ne = sqrt(2*pi*CO.me*Te/CO.e)*a(1) / (IN.probe_A*CO.e.^1.5); %sensitivity to Vsc
 
     ne = ne /1E6;
@@ -139,6 +147,8 @@ if(Te>=0 && ~isinf(Te))
         ne=NaN;
     end
     
+    
+
     
     Ie(1:firstpos-1)=Ie0*exp(Vp(1:firstpos-1)/Te);
     
@@ -157,14 +167,19 @@ else
     Te=NaN;
     
 end
+s_ne = sqrt(s_Ie0.^2 +(0.5*s_Te/sqrt(Te)).^2);
 
+%s_ne = sqrt(s_Ie0.^2 + 0.5*s_Te.^2);
 
 out.I = Ie;
 out.Te=[Te s_Te];
 out.Ie0 =[Ie0 s_Ie0];
 out.Vpa = [P(1),s_Te];
 out.Vpb = [P(2),s_Ie0];
-out.ne = ne;
+%out.ne = ne;
+out.ne = [ne, s_ne];
+
+
 %out.a = [P2(1) a(2)];
 %out.b = [P2(2) b(2)];
 

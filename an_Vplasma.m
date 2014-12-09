@@ -5,12 +5,6 @@
 function [vKnee,sigma] = an_Vplasma(Vb,Ib,vGuess,sigmaGuess)
 
 global an_debug ; 
-% should VSC etc be decided here? Why? 
-
-%narginchk(2,4); %nargin should be between 2 and 4, this throws an error if else
-%undefined function in old MATLAB........!!
-
-
 
 
 len= length(Vb);
@@ -43,8 +37,8 @@ chosen=min(pos(top10:end)); % prioritise earlier peaks, because electron side (e
 end
 
 %get a region around our chosen guesstimate.
-lo= floor(chosen-len*0.20 +0.5); %let's try 40% of the whole sweep
-hi= floor(chosen+len*0.20 +0.5); %+0.5 pointless but good practise
+lo= floor(chosen-len*0.10 +0.5); %let's try 20% of the whole sweep
+hi= floor(chosen+len*0.10 +0.5); %+0.5 pointless but good practise
 
 lo = max([lo,1]); %don't move outside 1:len)
 hi = min([hi,len]);
@@ -74,7 +68,7 @@ end
 
 
 
-if an_debug > 9
+if an_debug > 8
     
     figure(40);
 %just for diagnostics
@@ -83,9 +77,10 @@ if an_debug > 9
     x = Vb(1):0.2:Vb(end);
     y = gaussmf(x,[sigma vbKnee]);
     plot(x,y*max(d2i/mean(abs(d2i))),'--r',Vb,d2i/mean(abs(d2i)),'--b',Vb,4*Ib/mean(abs(Ib)),'black')
-    
+    title('anVplasma');
+
     subplot(2,2,3)
-    plot(Vb,Ib5);
+    plot(Vb,di,'g',Vb,d2i,'r');
 
 
     
@@ -109,7 +104,7 @@ if an_debug > 9
     
 end
     
-
+sigma = abs(sigma/vbKnee);
 
 vKnee = -vbKnee;
 
