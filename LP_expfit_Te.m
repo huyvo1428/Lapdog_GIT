@@ -122,9 +122,11 @@ if(Te>=0 && ~isinf(Te))
     % current = charge*density * area *velocity
     % ne = Ie0 / area*charge*velocity
     ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me)));
+    
+   % ne = sqrt(2*pi*CO.me*Te/CO.e)*a(1) / (IN.probe_A*CO.e.^1.5); %sensitivity to Vsc
 
     ne = ne /1E6;
-    
+            
     %ne2 = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));
     
     %OBS. LP is not in perfect 0 V vaccuum, so expect the LP to be shielded from low energy electrons

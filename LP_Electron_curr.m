@@ -197,8 +197,12 @@ if(Te>=0 && ~isinf(Te))
     %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
     % current = charge*density * area *velocity
     % ne = Ie0 / area*charge*velocity
-    ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me)));
+%    ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me))); %from
+%    intersect, but it is very sensitive to Vsc errors 
 
+    ne = sqrt(2*pi*CO.me*Te/CO.e)*a(1) / (IN.probe_A*CO.e.^1.5); %sensitivity to Vsc
+    % errors still comes from Te, but we can substitute for that with assumptions on Te Later
+     
     ne = ne /1E6;
     
     %ne2 = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));

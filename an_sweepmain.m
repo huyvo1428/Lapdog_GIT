@@ -365,9 +365,14 @@ try
                    
             %%estimate
             Te_guess = 5;%eV
-            EP(k).ne_5eV = abs(1e-6*DP(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-            EP(k).asm_ne_5eV = abs(1e-6*DP_assmpt(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-
+            %EP(k).ne_5eV = abs(1e-6*DP(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
+            %EP(k).asm_ne_5eV = abs(1e-6*DP_assmpt(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
+            EP(k).ne_5eV= abs(1e-6*sqrt(2*pi*CO.me*Te_guess/CO.e) * DP(k).e_intersect(1) / (IN.probe_A*CO.e.^1.5));
+            EP(k).asm_ne_5eV = abs(1e-6*sqrt(2*pi*CO.me*Te_guess/CO.e) * DP_assmpt(k).e_intersect(1) / (IN.probe_A*CO.e.^1.5));
+            
+            
+            
+            
                     
 
                         
@@ -430,17 +435,13 @@ try
 
 
                 Te_guess = 5;%eV
-                EP(m).ne_5eV = abs(1e-6*DP(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-                EP(m).asm_ne_5eV = abs(1e-6*DP_assmpt(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-                
-                
-                
-                %%estimate
-                Te_guess = 5;%eV
-                EP(k).ne_5eV = abs(1e-6*DP(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-                EP(k).asm_ne_5eV = abs(1e-6*DP_assmpt(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
+                %EP(m).ne_5eV = abs(1e-6*DP(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
+                %EP(m).asm_ne_5eV = abs(1e-6*DP_assmpt(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));                
+                EP(m).ne_5eV= abs(1e-6*sqrt(2*pi*CO.me*Te_guess/CO.e) * DP(m).e_intersect(1) / (IN.probe_A*CO.e.^1.5)); 
+                EP(m).asm_ne_5eV = abs(1e-6*sqrt(2*pi*CO.me*Te_guess/CO.e) * DP_assmpt(m).e_intersect(1) / (IN.probe_A*CO.e.^1.5)); 
 
                 
+              
             %
                 
                 
