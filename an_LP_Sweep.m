@@ -8,31 +8,25 @@
 %  	This is the main function body. It is the function LP_AnalyseSweep from which all other functions are
 %	called. It returns the determined plasma parameters; Vsc, ne, Te.
 %
+%   1. The sweep is sorted upwards and smoothed
 %
-%   3. The sweep is sorted, changing the direction of sweeping to always be
-%       up sweeps. Sweeps with both up and down sweeping is not handled
-%       however we do not plan to use this feature.
+%   2. find the spacecraft potential (Vsc) and Vph_knee by calling an_Vsc and
+%   an_Vplasma. if sunlit: Vph_knee = Vplasma is the plasma at the probe 
+% potential from finding the knee of the photoelectron current
 %
-%	5. find the spacecraft potential by calling Vplasma
+%   3. evaluate if the sweep is truly sunlit or not, in the case of
+%   ambiguous illumination input. 
 %
-%
-%
-%	8.Now the ion current is examined by calling "LP_Ion_curr". Returned are the ion current and the coefficients for the polynomial
-%	   fitting the low probe potential values.
-%
-%	9.The Ion current is removed from the combined  current, hopefully leaving only the plasma
-%	   electron current and Iph; Ie+Iph = I - Ii.
-%
-%   10. Recompute the spacecraft potential using  Vplasma
-%
-%	11.The remains are smoothed to reduce the effects of noise, using a function called "LP_MA.m". See
-%	   the header for this function for more information.
-%
-%	12.Now, having the clean electron current, "LP_Electron_curr" is called with this current as input.
-%	   Returned are the electron density and electron temperature as well as the spacecraft potential.
-%
-%	13.Now the physical parameters; Vsc, ne and Te as well as the quality vector are returned to the calling
-%	   function.
+%   4. Fitting an ion current to the part of the sweep below the knee (and
+%   below Vsc). And then subtracting the current contribution from the ions
+%   from the sweep.
+%   
+%   5. Fitting an electron current by a linear fit (LP_electron_curr.m) 
+%   above Vsc or an exponential fit (LP_expfit_Te.m) below Vknee. removing
+%   the linear fit electron current contribution from the sweep.
+%   
+%   6. Fitting a photoelectron current (if sunlit) to the remainding
+%   current.
 %
 % Input:
 %     V             bias potential
@@ -45,12 +39,6 @@
 %	  DP	 Physical paramater information structure
 %
 % Notes:
-%	1. The quality vector consists of four elements: the first is a measure of the overflow while
-%	   the second, third and fourth are quality estimates for Vsc, Te and ne respectively.
-%	   The first one is between 0 and 1, the other three are rounded values between 0 and 10.
-%
-% Changes: 20070920: JK Burchill (University of Calgary): ensure a return
-%                    value.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function DP = an_LP_Sweep(V, I,Vguess,illuminated)
@@ -186,7 +174,8 @@ try
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
     
-    [ion,Q] = LP_Ion_curr(V,Is,Vknee,Vsc,Q); % The ion current is denoted ion.I,
+    [ion] = LP_Ion_curr(V,Is,Vsc,Vknee); % The ion current is denoted ion.I,
+    Q(2) = ion.Q;
     %ion.I here doesn't contain the ion.b offset. as it shouldn't if we
     % want to get Iph0 individually.
 
@@ -195,7 +184,7 @@ try
     %this is all we need to get a good estimate of Te from an
     %exponential fit
     
-    expfit= LP_expfit_Te(V,Is-ion.I,Vsc);
+    expfit= LP_expfit_Te(V,Is-ion.I,Vsc,Vknee);
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
     DP.Ie0_exp          = expfit.Ie0;
     DP.ne_exp           = expfit.ne;

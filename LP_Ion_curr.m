@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                                    
 % Name:  LP_Ion_curr.m
-% Author: Clas Weyde, RG modified not to use hardcoded constants
+% Author: Fredrik Johansson, original script from Clas Weyde, RG modified not to use hardcoded constants
 % Description:                                                                       
 %        Ii = LP_Ion_curr(V,I,Vsc)
 %
@@ -54,8 +54,7 @@
 %
 %                                                                                    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [out,Q] = LP_Ion_curr(V,I,Vknee,Vsc,Q)
-
+function [out] = LP_Ion_curr(V,I,Vsc,Vknee)
 
 
 
@@ -71,7 +70,7 @@ out.a = a;
 out.b = a;
 out.Vpa = a;
 out.Vpb = a;
-
+out.Q = Q;
 
 
 %global ALG;
@@ -89,7 +88,7 @@ Vp = V+Vsc; % Setting the probe potential
 ind = find(V < -Vknee ); % Saving indices of all potential values below the knee potential.
 
 if isempty(ind)
-    Q(1) = 2;
+    out.Q = 2;
     return
 end
 

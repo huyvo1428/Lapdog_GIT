@@ -1,5 +1,5 @@
 %Computes a central difference derivative and second derivative, with some
-%smoothing if asked.
+%smoothing if asked to.
 function [dx,d2x] = leapfd(x,y,varargin)
 
 

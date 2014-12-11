@@ -1,12 +1,26 @@
-function [out] = LP_expfit_Te(V,I,Vknee)
-%inputs: 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Name: LP_expfit_Te.m
+% Author: Fredrik Johansson 2014 IRFU
+% Description:
+%   Function that takes a LP sweep, finds region 1V below the knee and 
+%   currents above 0 (assuming it is electron dominated). Weights the arrays 
+%   with importance on the higher current values (closer to Vknee).
+%   Fits the weighted arrays with a Vp vs logI fit, outputs electron parameters
+% Inputs:
 %   V: sorted(increasing) Voltage bias array 
 %   I: sweep current array
 %   Vknee: Voltage at the knee of the LP sweep (either sunlit or not)
-%takes a LP sweep, finds region 1V below the knee and currents above 0
-% weights the arrays with importance on the higher current values (closer
-% to Vknee)
-%fits the weighted arrays with a VvslogI, outputs Te, Ie0 and sigmas.
+% Outputs:
+%   out.I: current contribution from electron current?[A]
+%   out.Te: electron Temperature [eV]
+%   out.ne: electron density [cm^-3]
+%   out.Ie0: Ie0 [A]
+%   out.Vpa: slope of log I vs Vp fit
+%   out.Vpb: y-intersection of log I vs Vp fit.
+function [out] = LP_expfit_Te(V,I,Vknee)
+
 
 global an_debug IN CO
 

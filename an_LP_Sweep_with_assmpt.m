@@ -1,3 +1,4 @@
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % Name: an_LP_Sweep_with_assmpt.m
@@ -14,10 +15,26 @@
 %   (if sunlit)
 %   
 %
+%   1. The sweep is sorted upwards and smoothed
 %
+%   2. find the spacecraft potential (Vsc) and Vph_knee by calling an_Vsc and
+%   an_Vplasma. if sunlit: Vph_knee = Vplasma is the plasma at the probe 
+% potential from finding the knee of the photoelectron current
+%
+%   3. evaluate if the sweep is truly sunlit or not, in the case of
+%   ambiguous illumination input. 
 %   
+%   4. Generate photoelectron current (if sunlit) from assumed parameters 
+%   and remove from sweep
 %
-%
+%   5. Fitting an ion current to the part of the sweep below the knee (and
+%   below Vsc). And then subtracting the current contribution from the ions
+%   from the sweep.
+%   
+%   6. Fitting an electron current by a linear fit (LP_electron_curr.m) 
+%   above Vsc or an exponential fit (LP_expfit_Te.m) below Vknee. removing
+%   the linear fit electron current contribution from the sweep.
+%   %
 % Input:
 %     V             bias potential
 %     I             sweep current
@@ -28,20 +45,13 @@
 % Output:
 %	  DP	 Physical parameter information structure
 %
-% Notes:
-%	1. The quality vector consists of four elements: the first is a measure of the overflow while
-%	   the second, third and fourth are quality estimates for Vsc, Te and ne respectively.
-%	   The first one is between 0 and 1, the other three are rounded values between 0 and 10.
-%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function DP = an_LP_Sweep_with_assmpt(V, I,assmpt,illuminated)
 
 
-
-
 %global IN;         % Instrument information
 %global LP_IS;      % Instrument constants
-global CO          % Physical constants
+%global CO          % Physical constants
 %global ALG;        % Various algorithm constants
 
 global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
@@ -109,7 +119,7 @@ try
     dv = V(2)-V(1);
     
     
-    % I've given up on analysing unfiltered data, it's just too nosiy.
+    % I've given up on analysing unfiltered Rosetta data, it's just too nosiy.
     %Let's do a classic LP moving average, that doesn't move the knee
     
    % Is = LP_MA(I); %Terrible for knees near end-4:end
@@ -195,8 +205,9 @@ try
     % accurate here.In addition to the ion current, the coefficients from
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
-    [ion,Q] = LP_Ion_curr(V,Itemp,Vknee,Vsc,Q); % The ion current is denoted Ii,
-
+    [ion] = LP_Ion_curr(V,Itemp,Vsc,Vknee); % The ion current is denoted Ii,
+    Q(2) = ion.Q;
+    
 
     % Now, removing the linearly fitted ion-current from the
     % current will leave the collected plasma electron current 
@@ -228,7 +239,7 @@ try
 
     [elec]=LP_Electron_curr(V,Itemp,Vsc,Vknee,0);
 
-    expfit= LP_expfit_Te(V,Itemp,Vsc);
+    expfit= LP_expfit_Te(V,Itemp,Vsc,Vknee);
     
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
     DP.Ie0_exp          = expfit.Ie0;
