@@ -115,7 +115,7 @@ analysis;
 
 
 fprintf(1,'lapdog: generate LBL files....\n')
-createLBL;
+createLBL(an_tabindex, tabindex, index, shortphase, producershortname, producerfullname, blockTAB, datasetid, datasetname, missionphase, lbltime, lbleditor, lblrev, targetfullname, targettype)
 
 
 fprintf(1,'lapdog: DONE!\n')

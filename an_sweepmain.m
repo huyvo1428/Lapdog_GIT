@@ -18,15 +18,10 @@ k=1; %needed for error output
 
 try
     
-    for i=1:length(an_ind)
-        
-        
-        
-        
+    for i=1:length(an_ind)     % iterate over sweep files...
+                
         % get file, read variables etcc
-        split = 0;
-        
-        rfile =tabindex{an_ind(i),1};
+        rfile =tabindex{an_ind(i),1};                  % Sweep file
         rfolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
         mode=rfile(end-6:end-4);
         diagmacro=rfile(end-10:end-8);
@@ -35,43 +30,43 @@ try
 
 %        diag_info{1} = strcat('P',probe,'M',diagmacro);
         diag_info{2} = rfile; %let's also remember the full name
-        arID = fopen(tabindex{an_ind(i),1},'r');
+        arID = fopen(tabindex{an_ind(i),1},'r');                   % Open sweep file.
         
         if arID < 0
             fprintf(1,'Error, cannot open file %s\n', tabindex{an_ind(i),1});
             break
         end % if I/O error
         
-        scantemp = textscan(arID,'%s','delimiter',',','CollectOutput', true);
+        scantemp = textscan(arID,'%s','delimiter',',','CollectOutput', true);   % Reads all values into one long 1D vector of strings.
         
         fclose(arID);
         
         rfile(end-6)='B';
-        arID = fopen(rfile,'r');
-        scantemp2=textscan(arID,'%*f%f','delimiter',',');
+        arID = fopen(rfile,'r');                                 % Open sweep potentials/times file.
+        scantemp2 = textscan(arID,'%f%f','delimiter',',');
         
         
         % scantemp=textscan(arID,'%s%f%f%f%d','delimiter',',');
         fclose(arID);
         
-        steps=    length(scantemp2{1,1})+5; %current + 4 timestamps + 1 QF
+        steps=    length(scantemp2{1,2})+5;     % Nbr of values per sweep: currents/voltages + 4 timestamps + 1 QF
+        N_file_values = numel(scantemp{1,1});   % Nbr of values in sweep data file (all sweeps & columns).
+        N_sp = N_file_values/steps;             % Nbr of sweep/pairs. sp = sweep/pair
         
-        size=    numel(scantemp{1,1});
-        
-        if mod(size,steps) ~=0
+        if mod(N_file_values,steps) ~=0
             fprintf(1,'error, bad sweepfile at \n %s \n, aborting %s mode analysis\n',rfile,mode);
             return
         end
         
         
-        A= reshape(scantemp{1,1},steps,size/steps);
-        Iarr= str2double(A(6:end,1:end));
-        timing={A{1,1},A{2,end},A{3,1},A{4,end}};
+        A= reshape(scantemp{1,1},steps,N_file_values/steps);        % Matrix of STRINGS (<column nbr>, <sweep/pair index>)
+        Iarr= str2double(A(6:end,1:end));                  % Matrix of doubles (<sweep voltage nbr>, <sweep/pair index>)
+        timing = {A{1,1},A{2,end},A{3,1},A{4,end}};        % Timing for entire analysis file.
         Qfarr =str2double(A(5,:));
         
-        Vb=scantemp2{1,1};
+        Vb = scantemp2{1,2};              % Voltage, for each sweep/pair.
         
-        Tarr= A(1:4,1:end);       
+        Tarr= A(1:4,1:end);               % Matrix for individual sweep times: (<column nbr>, <sweep/pair index>)
         
         %special case where V increases e.g. +15to -15 to +15, or -15 to +15 to -15V
         potdiff=diff(Vb);    
@@ -80,41 +75,52 @@ try
         
         if potdiff(1) > 0 && Vb(end)~=max(Vb) % potbias looks like a V
             
-            
-            %split data
             mind=find(Vb==max(Vb));
-            Vb2=Vb(mind:end);
-            Iarr2=Iarr(mind:end,:);
-            
-            Vb=Vb(1:mind);
-            Iarr= Iarr(1:mind,:);
-            
             split = 1;
-            
             upd = [ 0 1]; %...or it's an array of size two
             %downup
-            
-            
             
         elseif potdiff(1) <0 && Vb(end)~=min(Vb)
             %%potbias looks like upside-down V
             
-            %split data
             mind=find(Vb==min(Vb));
+            split = -1;            
+            upd = [ 1 0];
+            %updown
+        else
+            split = 0;
+        end
+        
+        
+        
+        if split
+            
+            % Split data for first and second sweep in sweep pair.
             Vb2=Vb(mind:end);
             Iarr2=Iarr(mind:end,:);
             
             Vb=Vb(1:mind);
             Iarr= Iarr(1:mind,:);
-            split = 1;
             
-            upd = [ 1 0];
-            %updown
+            Tarr2 = Tarr;
+            t_sweep_rel = scantemp2{1,1};     % Time, relative to beginning of sweep/pair sequence (one/two sweeps).
+            t_diff = t_sweep_rel(mind);
             
-            
-            
-            
+            for i_sp = 1:N_sp         % sp = sweep pair
+                
+                % Take start time and add time interval.
+                % NOTE: Not important which time system is used for converting UTC string, since converts back to UTC string anyway.
+                t_spm_utc_str = cspice_et2utc(   cspice_str2et(Tarr{ 1, i_sp}) + t_diff, 'ISOC', 6);    % spm = sweep pair middle
+                t_spm_nbr_str = num2str( str2double(Tarr{ 4, i_sp}) + t_diff,   '%f' );
+                
+                Tarr{  2, i_sp} = t_spm_utc_str;
+                Tarr{  4, i_sp} = t_spm_nbr_str;
+                Tarr2{ 1, i_sp} = t_spm_utc_str;
+                Tarr2{ 3, i_sp} = t_spm_nbr_str;
+            end
         end
+
+        
         
         %'preloaded' is a dummy entry, just so orbit realises spice kernels
         %are already loaded
@@ -146,8 +152,9 @@ try
         
         
         
-        len = length(Iarr(1,:));
+        len = length(Iarr(1,:));     % Number of sweeps/pairs. Should be identical to N_sp. Kept for now.
         %  cspice_str2et(
+         
         
         
         %% initialise output struct
@@ -306,10 +313,8 @@ try
     
         
         % analyse!
-        for k=1:len
-            
-
-            
+        for k=1:len    % Iterate over first sweep in every potential sweep/pair (one/two sweeps)
+                        
             %  a= cspice_str2et(timing{1,k});
             m = k;
             
@@ -320,21 +325,18 @@ try
                 qf = qf+20; %rotation
             end
             
-            EP(k).SAA = mean(SAA(1,2*k-1:2*k));
-            EP(k).lum = mean(illuminati(1,2*k-1:2*k));
-            
             EP(k).split = 0;
+            EP(k).SAA = mean(SAA(1,2*k-1:2*k));
+            EP(k).lum = mean(illuminati(1,2*k-1:2*k));            
             EP(k).Tarr = {Tarr{:,k}};
             
             %       fout{m,5}={Tarr{:,k}};
             EP(k).tstamp = Tarr{3,k};
             EP(k).qf = qf;
             EP(k).dir = upd(1);
-            
-            
+
             %Anders LP sweep analysis
             AP(k)=  an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(k).lum);
-
                         
             if k>1
                 Vguess=DP(k-1).Vph_knee;
@@ -342,46 +344,37 @@ try
                 Vguess=AP(k).vs;
             end
 
-
             DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
             DP_assmpt(k) = an_LP_Sweep_with_assmpt(Vb,Iarr(:,k),assmpt,EP(k).lum);
 
             %need to make this as a function of Vsc...
 %            EP(k).i_v = sqrt(2*assmpt.ionZ*CO.e*DP(k)DP(k).ion_y_intersect/(DP(k).ion_slope*assmpt.ionM*CO.mp);
-            
-           
+                       
 %            EP(k).ni_ram = 1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.vram; %(CO.probearea*assmpt.qion*assmpt.vram);
             %EP(k).ni_SW = 1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.v_SW;
-            
-            
+                        
             EP(k).ni_1comp = abs(1e-6 * DP(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
             EP(k).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(CO.mp*(DP(k).ion_intersect(1)-DP(k).Iph0)*DP(k).ion_slope(1)/(2*CO.e)));
 
-     	    EP(k).v_ion =  EP(k).ni_2comp*assmpt.vram/EP(k).ni_1comp;
-
+     	    EP(k).v_ion =  EP(k).ni_2comp*assmpt.vram/EP(k).ni_1comp;    % NOTE/BUG?: Has no counterpart for second sweep (in sweep pair)?!
                                                      
             EP(k).asm_ni_1comp = abs(1e-6 * DP_assmpt(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
             EP(k).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(CO.mp*(DP_assmpt(k).ion_intersect(1)-DP_assmpt(k).Iph0)*DP_assmpt(k).ion_slope(1)/(2*CO.e)));
 
      	    EP(k).asm_v_ion =  EP(k).asm_ni_2comp*assmpt.vram/EP(k).asm_ni_1comp;
-
                    
             %%estimate
             Te_guess = 5;%eV
             EP(k).ne_5eV = abs(1e-6*DP(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
             EP(k).asm_ne_5eV = abs(1e-6*DP_assmpt(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
 
-                    
-
-                        
         end%for
         
         
         
-        if (split~=0)
-            
-            
-            for k=1:length(Iarr2(1,:))
+        if (split~=0)    % If every sweep/pair is really two sweeps...
+                        
+            for k=1:length(Iarr2(1,:))     % Iterate over second sweep in every sweep pair (two sweeps together)
                 m=k+len;          %add to end of output array (fout{})
                 %note Vb =! Vb2, Iarr =! Iarr2, etc.
                 %% quality factor check
@@ -395,18 +388,18 @@ try
                 %                fout{m,2} = mean(SAA(1,2*k-1:2*k)); %every pair...
                 %                fout{m,3} = mean(illuminati(1,2*k-1:2*k));
                 
+                EP(m).split = split; % 1 for V form, -1 for upsidedownV
                 EP(m).SAA = mean(SAA(1,2*k-1:2*k));
                 EP(m).lum = mean(illuminati(1,2*k-1:2*k));
-                EP(m).Tarr = {Tarr{:,k}};
-                EP(m).tstamp = Tarr{4,k};
+                EP(m).Tarr = {Tarr2{:,k}};
+                
+                EP(m).tstamp = Tarr2{4,k};
                 EP(m).qf = qf;
-                EP(m).split= split; % 1 for V form, -1 for upsidedownV
                 EP(m).dir = upd(2); 
 
-                AP(m)     =  an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(m).lum);
+                AP(m)     =  an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr2{1,k}),mode(2),EP(m).lum);               % BUG?: Should use Iarr2, Vb2, Tarr2?
                 %          fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
                 %                fout{m,2} = mean(SAA(1,2*k-1:2*k));
-
                 
                 if k>1
                     Vguess=DP(m-1).Vph_knee;
@@ -414,8 +407,7 @@ try
                     Vguess=AP(m).vs; %use last calculation as a first guess
                 end
                 
-                DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),Vguess,EP(m).lum);
-                
+                DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),Vguess,EP(m).lum);                
                 DP_assmpt(m) = an_LP_Sweep_with_assmpt(Vb2,Iarr2(:,k),assmpt,EP(m).lum);
                 
                 %need to make this as a function of Vsc...
@@ -428,15 +420,9 @@ try
                 EP(m).asm_ni_1comp = abs(1e-6 * DP_assmpt(m).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
                 EP(m).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP_assmpt(m).ion_intersect(1)-DP_assmpt(m).Iph0)*DP_assmpt(m).ion_slope(1)/(2*CO.e)));
                 
-
                 Te_guess = 5;%eV
                 EP(m).ne_5eV = abs(1e-6*DP(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
                 EP(m).asm_ne_5eV = abs(1e-6*DP_assmpt(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-		
-                
-                
-            %
-                
                 
             end%for
         end%if split
@@ -464,7 +450,7 @@ try
                 %DELIVERY) NOTIFY TONY ALLEN!
 
 
-            fprintf(awID,strcat('START_TIME(UTC), STOP_TIME(UTC), Qualityfactor, SAA, Illumination, direction',...
+            fprintf(awID,strcat('START_TIME(UTC), STOP_TIME(UTC), START_TIME_OBT, STOP_TIME_OBT, Qualityfactor, SAA, Illumination, direction',...
             ', old.Vsi, old.Vx, Vsg, sigma_Vsg,  old.Tph, old.Iph0, Vb_lastnegcurrent, Vb_firstposcurrent',...
             ', Vbinfl, dIinfl, d2Iinfl',...
             ', Iph0, Tph, Vsi, Vph_knee, Te_linear, ne_linear',...
@@ -475,7 +461,7 @@ try
             ', asm_Vsg, asm_sigma_Vsg',...
             ', asm_Iph0, asm_Tph, asm_Vsi, asm_Vph_knee, asm_Te_linear, asm_ne_linear',...
             ', asm_ion_slope, asm_sigma_ion_slope, asm_ion_intersect, asm_sigma_ion_intersect, asm_e_slope, asm_sigma_e_slope, asm_e_intersect, asm_sigma_e_intersect',...
-            ', asm_ion_Vb_slope, asm_sigma_ion_Vb_slope, asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_slope, sigma_asm_e_Vb_slope, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
+            ', asm_ion_Vb_slope, asm_sigma_ion_Vb_slope, asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_slope, asm_sigma_e_Vb_slope, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
             ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
             ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp',...       
             '\n'));
@@ -488,7 +474,7 @@ try
             % print variables to file. separated into substrings.
             
                 
-            str1  = sprintf('%s, %s, %03i, %07.3f, %03.2f, %1i,',EP(k).Tarr{1,1},EP(k).Tarr{1,2},EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
+            str1  = sprintf('%s, %s, %16s, %16s, %03i, %07.3f, %03.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
             str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',AP(k).vs,AP(k).vx,DP(k).Vsg);
             str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph,AP(k).Iph0,AP(k).lastneg,AP(k).firstpos);
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);                 
@@ -526,7 +512,7 @@ try
         an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
         %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
         an_tabindex{end,4} = klen; %number of rows
-        an_tabindex{end,5} = 87; %number of columns
+        an_tabindex{end,5} = 89; %number of columns
         an_tabindex{end,6} = an_ind(i);
         an_tabindex{end,7} = 'sweep'; %type
         an_tabindex{end,8} = timing;
@@ -558,7 +544,7 @@ catch err
 end
 
 
-end
+end    % function
 
 
 %             

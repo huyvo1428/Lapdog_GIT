@@ -145,7 +145,7 @@ global LDLMACROS; %global constant list
 tabindex{end+1,1} = filename; %% Let's remember all TABfiles we create
 tabindex{end,2} = filenamep; %%their shortform name
 tabindex{end,3} = tabind(1); %% and the first index number
-
+%tabindex{end,9} = tabind(end);  % Last "index" number.
 
 
 len = length(tabind);

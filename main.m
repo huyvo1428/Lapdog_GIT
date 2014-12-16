@@ -47,10 +47,9 @@ preamble;
 'lapdog: load indices if existing...'
 indexfile = sprintf('index/index_%s.mat',archiveid);
 fp = fopen(indexfile,'r');
-%fp =-1;
 if(fp > 0)
-    fclose(fp);
-    load(indexfile);
+     fclose(fp);
+     load(indexfile);
 else
 
     'lapdog: calling indexgen...'
@@ -58,8 +57,7 @@ else
     'lapdog: splitting files at midnight..'
     indexcorr;
     save(indexfile,'index');
-    
-end
+%end
 
 scResetCount=str2double(index(1).sct0str(2));
 
@@ -75,8 +73,6 @@ opsblocks;
 
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(tabindexfile,'r');
-%fp = -2;
-
 if(fp > 0)
     fclose(fp);
     load(tabindexfile);
@@ -101,8 +97,7 @@ analysis;
     
     
 'lapdog: generate LBL files....'
-createLBL;
-
+createLBL(an_tabindex, tabindex, index, shortphase, producershortname, producerfullname, blockTAB, datasetid, datasetname, missionphase, lbltime, lbleditor, lblrev, targetfullname, targettype)
 
 
 'lapdog: Parmesan -Done!'
