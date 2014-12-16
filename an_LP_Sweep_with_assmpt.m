@@ -62,10 +62,6 @@ VSC_TO_VKNEE = 1;
 
 global diag_info %contains information of current sweep 
 
-   
-    if (an_debug>1)
-        figure(34);        
-    end
 
 warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
 Q    = [0 0 0 0];   % Quality vector
@@ -135,7 +131,7 @@ try
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
     [Vknee, Vknee_sigma]    = an_Vplasma(V,Is);
     [Vsc, Vsc_sigma]        = an_Vsc(V,Is);
-    
+
     
     if isnan(Vknee)
         Vknee = assmpt.Vknee;  %from first 50 sweeps       
@@ -172,10 +168,6 @@ try
 
     Itemp = Is;
             
-    if (an_debug>1)
-        figure(34);
-        
-    end
 
     
     if illuminated
@@ -187,8 +179,10 @@ try
         
         
         if (an_debug>1)
-            subplot(2,2,4),plot(V,I,'b',V,Itemp,'g');grid on;
-
+            figure(34);
+            
+            subplot(3,2,4),plot(V,I,'b',V,Itemp,'g');grid on;
+            
             title('I & I - Iph current');
             legend('I','I-Iph','Location','Northwest')
         end
@@ -208,6 +202,16 @@ try
     [ion] = LP_Ion_curr(V,Itemp,Vsc,Vknee); % The ion current is denoted Ii,
     Q(2) = ion.Q;
     
+    if (an_debug>1)
+        figure(34);
+        
+        subplot(3,2,3),plot(V+Vsc,I,'b',V+Vsc,ion.I,'g');grid on;
+        title([sprintf('Ion current vs Vp, out.Q(1)=%d',ion.Q(1))])
+        legend('I','I_i_o_n')
+        
+    end
+    
+    
 
     % Now, removing the linearly fitted ion-current from the
     % current will leave the collected plasma electron current 
@@ -216,16 +220,14 @@ try
     
     
     if (an_debug>1)
-                figure(34);
-
-        subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g');grid on;
-       % title('I & I - ion current -ph');
-       
-       %      title([sprintf('I & I - ion&ph. illumination=%d',illuminated)])
-       
-       title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
-       
-       legend('I','I-(ph+ion)','Location','NorthWest')
+        
+        subplot(3,2,6),plot(V,Is,'b',V,Itemp,'g');grid on;
+        % title('I & I - ion current -ph');
+        %      title([sprintf('I & I - ion&ph. illumination=%d',illuminated)])
+        
+        title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
+        
+        legend('I','I-(ph+ion)','Location','NorthWest')
     end
     
 
@@ -239,7 +241,7 @@ try
 
     [elec]=LP_Electron_curr(V,Itemp,Vsc,Vknee,0);
 
-    expfit= LP_expfit_Te(V,Itemp,Vsc,Vknee);
+    expfit= LP_expfit_Te(V,Itemp,Vsc);
     
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
     DP.Ie0_exp          = expfit.Ie0;
@@ -278,7 +280,7 @@ try
        %      title([sprintf('I & I - ion&ph. illumination=%d',illuminated)])
        
 
-        subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g',V,Itemp2,'r');grid on;
+        subplot(3,2,1),plot(V,Is,'b',V,Itemp,'g',V,Itemp2,'r');grid on;
         
         title([sprintf('I, I-all_liner, I-all_exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
        
@@ -349,8 +351,9 @@ try
         Izero_exp = Is - Itot_exp;
         
         
+ 
         
-        subplot(2,2,2)
+        subplot(3,2,2)
         plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or');
         grid on;
         %  title('V vs I - ions - electrons-photoelectrons');
@@ -359,7 +362,7 @@ try
 
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
-        subplot(2,2,4)
+        subplot(3,2,4)
         plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r');
         %        title('Vp vs I & Itot ions ');
         title([sprintf('Vp vs I, macro: %s',diag_info{1})])
@@ -367,17 +370,25 @@ try
 
         grid on;
         
+        
+        subplot(3,2,5)
+        plot(V+Vsc,I,'b',V+Vsc,(ion.I+elec.I)+ion.mean(1),'g',V+Vsc,ion.I+expfit.I+ion.mean(1),'r',V+Vsc,Iph,'black')
+        grid on;
+        title([sprintf('Vp vs I-Itot, fully auto,lum=%d, %s',illuminated,diag_info{1})])
+        legend('I','ions+electrons(linear)','Ions+electrons(exp)','photoelectrons','Location','Northwest')
+        axis([min(V)+Vsc max(V)+Vsc min(I) max(I)])
+        
         %
         %
         %     x = V(1):0.2:V(end);
         %     y = gaussmf(x,[sigma Vsc]);
-        % 	subplot(2,2,1),plot(V,Ie,'g',x,y*abs(max(I))/4,'b');grid on;
+        % 	subplot(3,2,1),plot(V,Ie,'g',x,y*abs(max(I))/4,'b');grid on;
         % 	title('V & I and Vsc Guess');
         %
         %     Vsc2 = LP_Find_SCpot(V,Ie,dv);
         %     x = V(1):0.2:V(end);
         %     y = gaussmf(x,[1, Vsc2]);
-        % 	subplot(2,2,2),plot(V,Ie,'g',x,y*max(I),'b');grid on;
+        % 	subplot(3,2,2),plot(V,Ie,'g',x,y*max(I),'b');grid on;
         % 	title('V & I and Vsc Guess number 2');
     end
     

@@ -158,11 +158,7 @@ try
     end
     
 
-    
-    if (an_debug>1)
-        figure(33);
-        
-    end
+
     
     
     
@@ -175,16 +171,25 @@ try
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
     
     [ion] = LP_Ion_curr(V,Is,Vsc,Vknee); % The ion current is denoted ion.I,
-    Q(2) = ion.Q;
+    %Q(2) = ion.Q;
     %ion.I here doesn't contain the ion.b offset. as it shouldn't if we
     % want to get Iph0 individually.
 
+                        
+if (an_debug>1)    
+	subplot(3,2,3),plot(V+Vsc,I,'b',V+Vsc,ion.I,'g');grid on;
+    title([sprintf('Ion current vs Vp, out.Q(1)=%d',ion.Q(1))])
+    legend('I','I_i_o_n')
 
+end
+
+    
+    
     
     %this is all we need to get a good estimate of Te from an
     %exponential fit
     
-    expfit= LP_expfit_Te(V,Is-ion.I,Vsc,Vknee);
+    expfit= LP_expfit_Te(V,Is-ion.I,Vsc);
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
     DP.Ie0_exp          = expfit.Ie0;
     DP.ne_exp           = expfit.ne;
@@ -210,7 +215,7 @@ try
     if (an_debug>1)
                 figure(33);
 
-        subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g');grid on;
+        subplot(3,2,6),plot(V,Is,'b',V,Itemp,'g');grid on;
 
        title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
 
@@ -260,7 +265,7 @@ try
        %      title([sprintf('I & I - ion&ph. illumination=%d',illuminated)])
        
 
-        subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g',V,Itemp2,'r');grid on;
+        subplot(3,2,1),plot(V,Is,'b',V,Itemp,'g',V,Itemp2,'r');grid on;
         
         title([sprintf('I, I-Ii-Ie liner, I-Ii-Ie exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])      
         legend('I','I-I linear','I-I exp','Location','NorthWest')
@@ -271,7 +276,7 @@ try
 %     if (an_debug>1)
 %                 figure(33);
 % 
-%         subplot(2,2,1),plot(V,Is,'b',V,Itemp,'g');grid on;
+%         subplot(3,2,1),plot(V,Is,'b',V,Itemp,'g');grid on;
 %         title('Vb vs I');
 %         
 %         title([sprintf('Vb vs I, macro:%s date:%s',diag_info{1},diag_info{1,2}(end-26:end-12))])
@@ -370,6 +375,7 @@ try
             DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vknee)/Tph);
             
             ion.b(1) = ion.b(1)-DP.Iph0;  % now that we know Iph0, we can calculate the actual y-intersect of the ion current.
+            ion.Vpb(1) = ion.Vpb(1)-DP.Iph0;
         end
         
         DP.Tph     = Tph;
@@ -416,14 +422,14 @@ try
             %            Itot(idx:end)=Iph(idx:end)
             
         end
-        
+    
         
         Itot_linear=Iph+elec.I+ion.I;
         Itot_exp=Itot_linear-elec.I+expfit.I;
         Izero_linear = Is-Itot_linear;
         Izero_exp = Is - Itot_exp;
         
-        subplot(2,2,2)
+        subplot(3,2,2)
         plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or');
         grid on;
         %  title('V vs I - ions - electrons-photoelectrons');
@@ -433,7 +439,7 @@ try
         
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
-        subplot(2,2,4)
+        subplot(3,2,4)
         plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r');
         
         %        title('Vp vs I & Itot ions ');
@@ -442,17 +448,27 @@ try
         
         grid on;
         
+            
+        subplot(3,2,5)
+        plot(V+Vsc,I,'b',V+Vsc,(ion.I+elec.I)+ion.mean(1),'g',V+Vsc,ion.I+expfit.I+ion.mean(1),'r',V+Vsc,Iph,'black')
+        axis([min(V)+Vsc max(V)+Vsc min(I) max(I)])
+        title([sprintf('Vp vs I-Itot, fully auto,lum=%d, %s',illuminated,diag_info{1})])
+        legend('I','ions+electrons(linear)','Ions+electrons(exp)','photoelectrons','Location','Northwest')
+        
+        
+        grid on;
+
         %
         %
         %     x = V(1):0.2:V(end);
         %     y = gaussmf(x,[sigma Vsc]);
-        % 	subplot(2,2,1),plot(V,Ie,'g',x,y*abs(max(I))/4,'b');grid on;
+        % 	subplot(3,2,1),plot(V,Ie,'g',x,y*abs(max(I))/4,'b');grid on;
         % 	title('V & I and Vsc Guess');
         %
         %     Vsc2 = LP_Find_SCpot(V,Ie,dv);
         %     x = V(1):0.2:V(end);
         %     y = gaussmf(x,[1, Vsc2]);
-        % 	subplot(2,2,2),plot(V,Ie,'g',x,y*max(I),'b');grid on;
+        % 	subplot(3,2,2),plot(V,Ie,'g',x,y*max(I),'b');grid on;
         % 	title('V & I and Vsc Guess number 2');
     end
     

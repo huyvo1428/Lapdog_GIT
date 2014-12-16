@@ -246,7 +246,9 @@ try
     
     assmpt.Vknee = 0; %dummy
     assmpt.Tph = 2; %eV
-    assmpt.Iph0 = -8.55e-09; %Amp
+    
+    assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
+%    assmpt.Iph0 = -8.55e-09; %from mean of M08, probably too high.
     assmpt.vram = 550; %m/s
     assmpt.ionZ = +1; % ion charge
     assmpt.ionM = 19; % proton mass
@@ -354,13 +356,13 @@ try
             
             
             EP(k).ni_1comp = abs(1e-6 * DP(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-            EP(k).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(CO.mp*(DP(k).ion_intersect(1)-DP(k).Iph0)*DP(k).ion_slope(1)/(2*CO.e)));
+            EP(k).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(CO.mp*(DP(k).ion_intersect(1))*DP(k).ion_slope(1)/(2*CO.e)));
 
      	    EP(k).v_ion =  EP(k).ni_2comp*assmpt.vram/EP(k).ni_1comp;
 
                                                      
             EP(k).asm_ni_1comp = abs(1e-6 * DP_assmpt(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-            EP(k).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(CO.mp*(DP_assmpt(k).ion_intersect(1)-DP_assmpt(k).Iph0)*DP_assmpt(k).ion_slope(1)/(2*CO.e)));
+            EP(k).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(CO.mp*(DP_assmpt(k).ion_intersect(1))*DP_assmpt(k).ion_slope(1)/(2*CO.e)));
 
      	    EP(k).asm_v_ion =  EP(k).asm_ni_2comp*assmpt.vram/EP(k).asm_ni_1comp;
 
@@ -369,10 +371,10 @@ try
             Te_guess = 5;%eV
             %EP(k).ne_5eV = abs(1e-6*DP(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
             %EP(k).asm_ne_5eV = abs(1e-6*DP_assmpt(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-            EP(k).ne_5eV= abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(k).e_intersect(1) / (IN.probe_A*CO.e.^1.5));
-            EP(k).asm_ne_5eV = abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_assmpt(k).e_intersect(1) / (IN.probe_A*CO.e.^1.5));
+            EP(k).ne_5eV= abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(k).e_slope(1) / (IN.probe_A*CO.e.^1.5));
+            EP(k).asm_ne_5eV = abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_assmpt(k).e_slope(1) / (IN.probe_A*CO.e.^1.5));
             
-            
+
             
             
                     
@@ -427,12 +429,12 @@ try
  
        
                 EP(m).ni_1comp = abs(1e-6 * DP(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-                EP(m).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP(k).ion_intersect(1)-DP(k).Iph0)*DP(k).ion_slope(1)/(2*CO.e)));                
+                EP(m).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP(k).ion_intersect(1))*DP(k).ion_slope(1)/(2*CO.e)));                
                 EP(m).v_ion =  EP(m).ni_2comp*assmpt.vram/EP(m).ni_1comp;
 
                 
                 EP(m).asm_ni_1comp = abs(1e-6 * DP_assmpt(m).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-                EP(m).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP_assmpt(m).ion_intersect(1)-DP_assmpt(m).Iph0)*DP_assmpt(m).ion_slope(1)/(2*CO.e)));
+                EP(m).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP_assmpt(m).ion_intersect(1))*DP_assmpt(m).ion_slope(1)/(2*CO.e)));
                 EP(m).asm_v_ion =  EP(m).asm_ni_2comp*assmpt.vram/EP(m).asm_ni_1comp;
 
 
