@@ -61,7 +61,6 @@ if(~isempty(ind_I1L))
 end
  
 if(~isempty(ind_I2L))
-
    % an_downsample(ind_I2L,tabindex,8)
     an_downsample(ind_I2L,tabindex,32)
 end
@@ -70,13 +69,11 @@ end
  
  
 if(~isempty(ind_V1L))
-
    % an_downsample(ind_V1L,tabindex,8)
     an_downsample(ind_V1L,tabindex,32)
 end
  
 if(~isempty(ind_V2L))
-
   %  an_downsample(ind_V2L,tabindex,8)
     an_downsample(ind_V2L,tabindex,32)
 end

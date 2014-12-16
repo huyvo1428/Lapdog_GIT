@@ -46,18 +46,17 @@ preamble;
 % Load or, if not defined, generate index:
 'lapdog: load indices if existing...'
 indexfile = sprintf('index/index_%s.mat',archiveid);
-fp = fopen(indexfile,'r');
-if(fp > 0)
-     fclose(fp);
-     load(indexfile);
+if index_cache_enabled & (exist(indexfile) == 2)
+    load(indexfile);
 else
-
     'lapdog: calling indexgen...'
     indexgen;
     'lapdog: splitting files at midnight..'
     indexcorr;
     save(indexfile,'index');
-%end
+end
+
+
 
 scResetCount=str2double(index(1).sct0str(2));
 
@@ -72,22 +71,19 @@ end
 opsblocks;
 
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
-fp = fopen(tabindexfile,'r');
-if(fp > 0)
-    fclose(fp);
+if tabindex_cache_enabled & (exist(tabindexfile) == 2)
     load(tabindexfile);
     'lapdog: succesfully loaded tabfiles'
-    
 else
-'lapdog: calling process...'
-  process;
+    'lapdog: calling process...'
+    process;  
   
-  
-  if exist('tabindex','dir')~=7
-      mkdir('tabindex');
-  end
-   save(tabindexfile,'tabindex');
+    if exist('tabindex','dir')~=7
+        mkdir('tabindex');
+    end
+    save(tabindexfile,'tabindex');
 end
+
 
 
 analysis;

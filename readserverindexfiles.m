@@ -11,6 +11,8 @@ skipindex = 1;
 
 %load index files
 control;
+processlevel =3;
+
 
 archiveid = sprintf('%s_%d',shortphase,processlevel);
 
@@ -39,6 +41,8 @@ newstring= '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_
 
 
 tabindex(:,1) = cellfun(@(x) strrep(x,tabindexsubstring,newstring),tabindex(:,1),'un',0);
+
+    'lapdog: converted server to local tabindex'
 
 
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);

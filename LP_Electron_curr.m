@@ -62,7 +62,7 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [out] = LP_Electron_curr(V,I,Vsc,illuminated)
+function [out] = LP_Electron_curr(V,I,Vsc,Vknee,illuminated)
 
 global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
 global CO IN          % Physical &instrument constants
@@ -75,50 +75,52 @@ Te=NaN;
 ne=NaN;
 Ie=I;
 Ie(1:end)=0;
-a=[NaN NaN];
-b=a;
+a=nan(1,2);
+b=nan(1,2);
 currvar=NaN;
 
 out = [];
 
 out.I = Ie;
-out.Vpa = a; %NaN;
-out.Vpb = a;
-out.a = a;
-out.b = a;
-out.Te = NaN;
-out.ne = NaN;
+out.Vpa = nan(1,2); %NaN;
+out.Vpb = nan(1,2);
+out.a = nan(1,2);
+out.b = nan(1,2);
+out.Te = nan(1,2);
+out.ne = nan(1,2);
+out.Q = 0;
 
 
-
-%start by smoothing current
 
 % The length of the data set is saved in the variable "len"
 len = length(V);
 
 Vp = V+Vsc; % Compute absolute probe potential as bias potential added to spacecraft potential.
 
-
-
-% Find the data points above the spacecraft potential
+% Find the data points above Vknee 
 
 if illuminated
-    SM_Above_Vsc= 0.75;
-    ind = find(V > -Vsc*VSC_TO_VKNEE);% Saving indices of all potential values above the knee.
-    firstpos=find(V > -Vsc,1,'first');
-    
-    if isempty(firstpos)
-        firstpos = ind(end);
-    end
+    SM_Above_Vknee= 0.75;
 
 else
-    SM_Above_Vsc=0;
-    ind = find(V > -Vsc);% Saving indices of all potential values above the knee.
-    firstpos=ind(1);
-
+    SM_Above_Vknee=0;
 end
+
+
+ind = find(V > -Vknee);% Saving indices of all potential values above the knee.
+firstpos=find(V > -Vsc,1,'first');
+
+
 if (isempty(ind) || length(ind) < 2)
-    return
+    out.Q = 1;
+    ind = len-4:len; %no region found, just try to fit something to the 
+    
+end
+%firstpos = ind(1);
+
+
+if isempty(firstpos)
+    firstpos = len;
 end
 
 
@@ -129,13 +131,13 @@ end
 l_ind = length(ind); % Need the number of data points of the vector ind
 % the function length returns the length of vector ind
 
-bot = floor(ind(1)+l_ind*SM_Above_Vsc +0.5);
+bot = floor(ind(1)+l_ind*SM_Above_Vknee +0.5);
 
 %top = floor(l_ind*ALG.SM_Below_Vs); % The point closest to, but below, ALG.SM_Below_Vs*100% of the
 % spacecraft potential. The function floor rounds
 % the calling parameter to the nearest integer
 % towards minus infinity.
-bot= bot -1 + find(I(bot:end)>0,1,'first');    %currents above z
+bot= bot -1 + find(I(bot:end)>0,1,'first');    %only choose currents above 0
 %choose starting point some points away from Vsc and has a positive
 %current value.
 
@@ -143,6 +145,13 @@ bot= bot -1 + find(I(bot:end)>0,1,'first');    %currents above z
 %bot = max([ind(1),bot]);
 
 ind = bot:len; % Only the first ALG.SM_Below_Vs*100% above the spacecraft potential is now
+
+if (isempty(ind) || length(ind) < 2)
+    %all values negative
+    return
+end
+
+
 
 Vr = V(ind);
 Vpr  = Vp(ind);     % kept of the vector ind
@@ -164,9 +173,6 @@ Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note 
 
 %Ie0 = exp(b);
 
-if (isempty(ind) || length(ind) < 2)
-    return
-end
 
 [P, S] = polyfit(Vpr,Ir,1);
 [P2, junk] = polyfit(Vr,Ir,1);
@@ -185,11 +191,15 @@ b(2) = abs(S.sigma(2)/P(2)); %Fractional error
 Ie0 =  b(1);
 Te = b(1)/a(1);
 
+s_Te=sqrt(a(2).^2+b(2).^2); %fractional error of Te, 
 
 residual = Ir - b(1)+a(1)*Vpr;
 
 % Compute the rms error and scale by the current Ie0 at Vr=Vp=0
 currvar = sqrt(sum((residual).^2)/len)/Ie0; % Compute the relative rms error
+if currvar > 0.02
+    out.Q = out.Q+2;
+end
 
 
 
@@ -198,9 +208,14 @@ if(Te>=0 && ~isinf(Te))
     %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
     % current = charge*density * area *velocity
     % ne = Ie0 / area*charge*velocity
-    ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me)));
+%    ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me))); %from
+%    intersect, but it is very sensitive to Vsc errors 
 
+    ne = sqrt(2*pi*CO.me*Te)*a(1) / (IN.probe_A*CO.e.^1.5); %sensitivity to Vsc
+    % errors still comes from Te, but we can substitute for that with assumptions on Te Later
+     
     ne = ne /1E6;
+    s_ne = sqrt((0.5*s_Te/sqrt(Te)).^2 +a(2).^2);
     
     %ne2 = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));
     
@@ -214,7 +229,8 @@ if(Te>=0 && ~isinf(Te))
         ne=NaN;
     end
     
-    
+    out.ne = [ne s_ne];
+
     Ie(1:firstpos-1)=Ie0*exp(Vp(1:firstpos-1)/Te);
     
     %Ie(1:firstpos)=0;
@@ -244,8 +260,7 @@ end
 out.I = Ie;
 out.Vpa = a;
 out.Vpb = b;
-out.Te = Te;
-out.ne = ne;
+out.Te = [Te s_Te];
 out.a = [P2(1) a(2)];
 out.b = [P2(2) b(2)];
 

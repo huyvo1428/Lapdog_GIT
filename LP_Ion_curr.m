@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                                    
 % Name:  LP_Ion_curr.m
-% Author: Clas Weyde, RG modified not to use hardcoded constants
+% Author: Fredrik Johansson, original script from Clas Weyde, RG modified not to use hardcoded constants
 % Description:                                                                       
 %        Ii = LP_Ion_curr(V,I,Vsc)
 %
@@ -54,8 +54,7 @@
 %
 %                                                                                    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [out,Q] = LP_Ion_curr(V,I,Vsc,Q)
-
+function [out] = LP_Ion_curr(V,I,Vsc,Vknee)
 
 
 
@@ -71,7 +70,7 @@ out.a = a;
 out.b = a;
 out.Vpa = a;
 out.Vpb = a;
-
+out.Q = 0;
 
 
 %global ALG;
@@ -86,10 +85,10 @@ len = length(V);  % the function length returns the length of the vector V
 Vp = V+Vsc; % Setting the probe potential
 
 % Find the data points below the spacecraft potential
-ind = find(Vp < 0); % Saving indices of all potential values below the knee potential.
+ind = find(V < -Vknee ); % Saving indices of all potential values below the knee potential.
 
 if isempty(ind)
-    Q(1) = 2;
+    out.Q = 2;
     return
 end
 
@@ -164,7 +163,7 @@ if a(2) > 1 % if error is large (!)
     
     a = [0 0]; % no slope
     b = [mean(Ir) std(Ir)]; % offset    
-    Q(1) = 1;
+    out.Q(1) = 1;
     
     VpP(1) = a(1); % no slope
     VpP(2) = b(1);   
@@ -200,21 +199,14 @@ Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
                       
                       
 
-                      
-if (an_debug>1)    
-	subplot(2,2,3),plot(Vp,I,'b',Vp,Ii,'g');grid on;
-    title([sprintf('Ion current vs Vp, Q(1)=%d',Q(1))])
-    legend('I','I_i_o_n')
-
-end
-
+  
 
 out.I = Ii;
 out.a = a;
 out.b = b;
 out.Vpa = [VpP(1) a(2)];
 out.Vpb = [VpP(2) b(2)];
-
+out.mean = [mean(Ir) std(Ir)]; % offset  
 
 
 

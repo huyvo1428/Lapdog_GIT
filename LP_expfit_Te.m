@@ -1,29 +1,64 @@
-function [out] = LP_expfit_Te(V,I,Vknee)
-%inputs: 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Name: LP_expfit_Te.m
+% Author: Fredrik Johansson 2014 IRFU
+% Description:
+%   Function that takes a LP sweep, finds region 1V below the knee and 
+%   currents above 0 (assuming it is electron dominated). Weights the arrays 
+%   with importance on the higher current values (closer to Vknee).
+%   Fits the weighted arrays with a Vp vs logI fit, outputs electron parameters
+% Inputs:
 %   V: sorted(increasing) Voltage bias array 
 %   I: sweep current array
 %   Vknee: Voltage at the knee of the LP sweep (either sunlit or not)
-%takes a LP sweep, finds region 1V below the knee and currents above 0
-% weights the arrays with importance on the higher current values (closer
-% to Vknee)
-%fits the weighted arrays with a VvslogI, outputs Te, Ie0 and sigmas.
-
-global an_debug
-
-
-out =[]; %init output    
-out.Te=[NaN NaN];
-out.Ie0 =[NaN NaN];
+% Outputs:
+%   out.I: current contribution from electron current?[A]
+%   out.Te: electron Temperature [eV]
+%   out.ne: electron density [cm^-3]
+%   out.Ie0: Ie0 [A]
+%   out.Vpa: slope of log I vs Vp fit
+%   out.Vpb: y-intersection of log I vs Vp fit.
+function [out] = LP_expfit_Te(V,I,Vknee)
 
 
+global an_debug IN CO
+
+
+%init outputs
+Ie=I;
+Ie(1:end)=0;
+out =[];
+
+out.I = Ie;
+out.Vpa = nan(1,2); %NaN;
+out.Vpb = nan(1,2);
+
+out.Te = nan(1,2);
+out.ne = nan(1,2);
+%out.ne = nan(1,2);
+out.Ie0 = nan(1,2);
+
+ne=NaN;
 Vp = V+Vknee;
 
-eps= 1; %moves 0V to the left
+eps= 1; %moves "0V" to the left
 
 try
+    firstpos=find(Vp>0,1,'first');
+    if isempty(firstpos)
+        firstpos=length(Vp);
+    end
+    
+    
+
     ind= find(Vp+eps < 0); %this could be empty (not likely)
     
     bot=find(I(ind)<0,1,'last')+1; %this could be empty (possible)
+    if isempty(bot)
+        bot = 1;
+    end
+    
     rind = ind(bot):ind(end); %this could be even more empty
 
     
@@ -50,7 +85,7 @@ end
 
 
 Ir = I(rind);
-Vr = V(rind);
+Vr = Vp(rind);
 
 V_w= Vr;
 I_w = Ir;
@@ -72,27 +107,28 @@ for i=1:8
 end
 
 
-[P,S]= polyfit(V_w,log(I_w),1);
+[P,junk]= polyfit(V_w,log(I_w),1); %sigma calculation doesn't make sense with weighted fit. Do sigma analysis on Ir,Vr fit
 
 
 
 Te = 1/P(1);
-Ie0 = exp(P(2)*Te);
+Ie0 = exp(P(2));
 
 try  %super risky sigma calculation. 
+    [Ps,S]= polyfit(Vr,log(Ir),1);
+
     S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
     
-    s_Te = abs(S.sigma(1)/P(1)); %Fractional error
-    s_Ie0 = abs(S.sigma(2)/P(2)); %Fractional error
-catch err
+    s_Te = abs(S.sigma(1)/Ps(1)); %Fractional error
+    
+    s_Ie0 = abs(S.sigma(2)); %Fractional error from function of dq/q=dq/dx * dx. q=e^x-> dq/q=dx
+catch err % don't care if this throws error, continue
     
     s_Te = NaN;
     s_Ie0= NaN;
     
-    out.Te=[Te s_Te];
-    out.Ie0 =[Ie0 s_Ie0];
-    return
-    
+
+    %return
 end
 
 if qbad
@@ -100,10 +136,70 @@ if qbad
     s_Ie0 = NaN;
 end
 
+
+if(Te>=0 && ~isinf(Te))
+    %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
+    % current = charge*density * area *velocity
+    % ne = Ie0 / area*charge*velocity
+    ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me)));
+    
+    
+    
+   % ne = sqrt(2*pi*CO.me*Te/CO.e)*a(1) / (IN.probe_A*CO.e.^1.5); %sensitivity to Vsc
+
+    ne = ne /1E6;
+            
+    %ne2 = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));
+    
+    %OBS. LP is not in perfect 0 V vaccuum, so expect the LP to be shielded from low energy electrons
+    %i.e. giving a larger mean Te, and a lower ne. (see SPIS simulations)
+    %think of it as if the LP is sampling a electron distribution with a
+    %cut-off at certain temperatures.
+    
+    %   ne = Ie0/(IN.probe_area*CO.qe*1e6*sqrt(CO.qe*Te/(2*pi*CO.me)));
+    if(ne<0)
+        ne=NaN;
+    end
+    
+    
+
+    
+    Ie(1:firstpos-1)=Ie0*exp(Vp(1:firstpos-1)/Te);
+    
+    %Ie(1:firstpos)=0;
+    %Ie(1:firstpos)=Ie0*exp(Vp(1:firstpos)/Te); %in the absence of
+    %spacecraft photoelectrons analysis, this approximation will have a
+    %too large effect on the ion side of the sweep.
+    Ie(firstpos:end)= Ie0*(1+Vp(firstpos:end)/Te);
+    Ie = (Ie+abs(Ie))./2; % The negative part is removed, leaving only a positive
+    % current contribution. This is the return current
+    % The function abs returns the absolute value of the
+    % elements of the calling parameter.
+    
+else
+    
+    Te=NaN;
+    
+end
+s_ne = sqrt(s_Ie0.^2 +(0.5*s_Te/sqrt(Te)).^2);
+
+%s_ne = sqrt(s_Ie0.^2 + 0.5*s_Te.^2);
+
+out.I = Ie;
 out.Te=[Te s_Te];
 out.Ie0 =[Ie0 s_Ie0];
+out.Vpa = [P(1),s_Te];
+out.Vpb = [P(2),s_Ie0];
+%out.ne = ne;
+out.ne = [ne, s_ne];
 
-if an_debug >7 %any condition
+
+%out.a = [P2(1) a(2)];
+%out.b = [P2(2) b(2)];
+
+
+
+if an_debug >7 %debug condition
     
     figure(35)
     
@@ -113,17 +209,20 @@ if an_debug >7 %any condition
     plot(Vr,log(Ir),'b',Vr,Vr*P(1)+P(2),'--');
     
     axis([Vr(1) Vr(end) log(Ir(1)) log(Ir(end))])
+    title([sprintf('Te:%3.1f fracstd:%1.3f\%',out.Te)]);
 
     subplot(1,3,3)
 
 
     plot(Vr,Ir,'b');
     axis([Vr(1) Vr(end) Ir(1) Ir(end)])
-    title([sprintf('Te:%3.1f fracstd:%1.3f\%',out.Te)]);
+    title([sprintf('Ie0:%4.2e fracstd:%1.3f\%',out.Ie0)]);
     
     %plot(Vr,Ir,'b',Vr(ind(end)),Ir,'r');
 
 end
+
+
 
 end
 
