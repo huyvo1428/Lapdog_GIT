@@ -21,7 +21,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 %     NOTE: "S" hints of sweep.
 %     NOTE: "B" hints of "bias potential during sweep"
 %
-% NOTE: In principle: Not one BES file per A1S/A2S file, but
+% NOTE: In principle: Not one EST file per A1S/A2S file, but
 % per operations block (both probes together). 
 %
 % NOTE: importdata omits columns without numbers.
@@ -382,14 +382,14 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         end
         
         
-        
+
         % ----------------------------
         % Select P2 sweep to use: i_P2
         % ----------------------------
         % NOTE: Can probably be shortened if the idea is to select sweep with
         % preceeding voltage (low freq. bias or sweep) positive.
         % NOTE: Uses && so not to require i_P2_p1.
-        has_P2_updn_pair = ~isempty(i_P2_p1) && (data.direction(i_P2_p1) == 1) && isempty(i_P2_p2) && (data.direction(i_P2_p2) == 0);   % NOTE: Uses && so not to require i_P2_p1.
+        has_P2_updn_pair = ~isempty(i_P2_p1) && (data.direction(i_P2_p1) == 1) && ~isempty(i_P2_p2) && (data.direction(i_P2_p2) == 0);   % NOTE: Uses && so not to require i_P2_p1.
         if has_P2_updn_pair && (data.V_LF_HF_before_sweep(i_P2_p1) > 0)
             i_P2 = i_P2_p2;
         elseif ~isempty(i_P2_up)
@@ -588,7 +588,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         if fid < 0
             warning(sprintf('Can not read file: %s', file_path))
         end
-        disp(sprintf('Reading file: %s\n', file_path))        
+        fprintf(1, 'Reading file: %s\n', file_path)
         file_contents = textscan(fid, '%s%f%s%f%s', 'delimiter', ',');        
         N_rows = length(file_contents{1});
         fclose(fid);

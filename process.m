@@ -14,9 +14,6 @@ sctconv=@sct2obt;
 
 for b = 1:nob   % Loop through all ops blocks
     
-
-    
-    
     
  %   day = datestr(index(obs(b)).t0,'yyyymmdd');  % convert block start time index to time string, convert to yyyymmdd format
     
@@ -25,13 +22,9 @@ for b = 1:nob   % Loop through all ops blocks
     
     % Find sweeps:
     p1s = find([index(ob).sweep] & ([index(ob).probe] == 1)); %%returns indices of all sweeps for probe 1 for macro operation block
-    p2s = find([index(ob).sweep] & ([index(ob).probe] == 2));
-    
-    
+    p2s = find([index(ob).sweep] & ([index(ob).probe] == 2));    
     
     % Find E data:
-    
-    
     p1el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 1));
     p2el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 2));
     p1eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 1));
@@ -95,7 +88,7 @@ for b = 1:nob   % Loop through all ops blocks
     %
     %
     %
-    
+
     %Generate sweep files
     %
     if(~isempty(p1s)) createTAB(derivedpath,ob(p1s),index,index(obs(b)).t0,'B1S',sweept1); end

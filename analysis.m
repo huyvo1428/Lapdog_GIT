@@ -97,6 +97,6 @@ if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
  
 
 
-fprintf(1, 'Save best estimates\n')
-save('~/temp.lapdog.calling_best_estimates.all_var.mat')       % DEBUG
+fprintf(1, 'Derive/select best estimates\n')
+%save('~/temp.lapdog.calling_best_estimates.all_var.mat')       % DEBUG
 an_tabindex = best_estimates(an_tabindex, tabindex, index, obe);

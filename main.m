@@ -34,8 +34,9 @@
 'LAPDOG - LAP Data Overview and Geometry'
 ''
 
-% Define the dataset:
+tic
 
+% Define the dataset:
 'lapdog: calling control...'
 control;
 
@@ -93,8 +94,9 @@ analysis;
     
     
 'lapdog: generate LBL files....'
-createLBL(an_tabindex, tabindex, index, shortphase, producershortname, producerfullname, blockTAB, datasetid, datasetname, missionphase, lbltime, lbleditor, lblrev, targetfullname, targettype)
+createLBL
 
 
 'lapdog: Parmesan -Done!'
+toc
 % End of main.m
