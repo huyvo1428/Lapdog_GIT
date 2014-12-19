@@ -34,8 +34,9 @@
 'LAPDOG - LAP Data Overview and Geometry'
 ''
 
-% Define the dataset:
+tic
 
+% Define the dataset:
 'lapdog: calling control...'
 control;
 
@@ -50,20 +51,18 @@ preamble;
 
 indexversion = '2'; %index updated with a new variable 17Dec 2014
 indexfile = sprintf('index/index_%s_v%s.mat',archiveid,indexversion);
-fp = fopen(indexfile,'r');
-%fp =-1;
-if(fp > 0)
-    fclose(fp);
+
+if index_cache_enabled & (exist(indexfile) == 2)
     load(indexfile);
 else
-
     'lapdog: calling indexgen...'
     indexgen;
     'lapdog: splitting files at midnight..'
     indexcorr;
     save(indexfile,'index');
-    
 end
+
+
 
 scResetCount=str2double(index(1).sct0str(2));
 
@@ -78,24 +77,19 @@ end
 opsblocks;
 
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
-fp = fopen(tabindexfile,'r');
-%fp = -2;
-
-if(fp > 0)
-    fclose(fp);
+if tabindex_cache_enabled & (exist(tabindexfile) == 2)
     load(tabindexfile);
     'lapdog: succesfully loaded tabfiles'
-    
 else
-'lapdog: calling process...'
-  process;
+    'lapdog: calling process...'
+    process;  
   
-  
-  if exist('tabindex','dir')~=7
-      mkdir('tabindex');
-  end
-   save(tabindexfile,'tabindex');
+    if exist('tabindex','dir')~=7
+        mkdir('tabindex');
+    end
+    save(tabindexfile,'tabindex');
 end
+
 
 
 analysis;
@@ -105,9 +99,9 @@ analysis;
     
     
 'lapdog: generate LBL files....'
-createLBL;
-
+createLBL
 
 
 'lapdog: Parmesan -Done!'
+toc
 % End of main.m

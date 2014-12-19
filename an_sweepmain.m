@@ -355,6 +355,7 @@ try
             EP(k).ni_1comp     = abs(1e-6 * DP(k).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
             EP(k).asm_ni_1comp = abs(1e-6 * DP_assmpt(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
 
+            
             EP(k).ni_2comp     = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP(k).ion_intersect(1))       *DP(k).ion_slope(1)       /(2*CO.e)));
             EP(k).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP_assmpt(k).ion_intersect(1))*DP_assmpt(k).ion_slope(1)/(2*CO.e)));
 
@@ -429,11 +430,11 @@ try
                 Te_guess = 5;%eV
                 %EP(m).ne_5eV = abs(1e-6*DP(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
                 %EP(m).asm_ne_5eV = abs(1e-6*DP_assmpt(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));                
+
                 EP(m).ne_5eV= abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)); 
                 EP(m).asm_ne_5eV = abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_assmpt(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)); 
             
-                
-                
+
                 
             end%for
         end%if split

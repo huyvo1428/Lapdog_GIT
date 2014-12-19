@@ -115,7 +115,7 @@ analysis;
 
 
 fprintf(1,'lapdog: generate LBL files....\n')
-createLBL;
+createLBL
 
 
 fprintf(1,'lapdog: DONE!\n')

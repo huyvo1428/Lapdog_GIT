@@ -49,66 +49,35 @@ if(~isempty(ind_I2S))
     an_sweepmain(ind_I2S,tabindex,targetfullname); 
 end
 
-% 
-% 
-% 
-% fprintf(1,'Downsample Low frequency measurements \n')
-% 
-% 
-% if(~isempty(ind_I1L))
-%     %an_downsample(ind_I1L,tabindex,8)
-%     an_downsample(ind_I1L,tabindex,32)
-% end
-%  
-% if(~isempty(ind_I2L))
-% 
-%    % an_downsample(ind_I2L,tabindex,8)
-%     an_downsample(ind_I2L,tabindex,32)
-% end
-%  
-%  
-%  
-%  
-% if(~isempty(ind_V1L))
-% 
-%    % an_downsample(ind_V1L,tabindex,8)
-%     an_downsample(ind_V1L,tabindex,32)
-% end
-%  
-% if(~isempty(ind_V2L))
-% 
-%   %  an_downsample(ind_V2L,tabindex,8)
-%     an_downsample(ind_V2L,tabindex,32)
-% end
-% % 
-%  
-%  
-% %  Mill the HF data in this ob:
-%      
-%  
-%  
-% fprintf(1,'Generating Spectra\n')
-%  
-% if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
-% if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
-% if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
-% if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
-%  
-%  
-% if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
-% if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
-%  
+
+fprintf(1,'Downsample Low frequency measurements \n')
+
+if(~isempty(ind_V1L))
+
+   % an_downsample(ind_V1L,tabindex,8)
+    an_downsample(ind_V1L,tabindex,32)
+end
+ 
+if(~isempty(ind_V2L))
+
+  %  an_downsample(ind_V2L,tabindex,8)
+    an_downsample(ind_V2L,tabindex,32)
+end 
+  
+ 
+fprintf(1,'Generating Spectra\n')
+ 
+if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
+if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
+if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
+if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
+ 
+ 
+if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
+if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
+ 
 
 
-fprintf(1, 'Save best estimates\n')
-an_tabindex = best_estimates(an_tabindex);
-
-
-
-
-
-
-
-
-
-
+fprintf(1, 'Derive/select best estimates\n')
+%save('~/temp.lapdog.calling_best_estimates.all_var.mat')       % DEBUG
+an_tabindex = best_estimates(an_tabindex, tabindex, index, obe);

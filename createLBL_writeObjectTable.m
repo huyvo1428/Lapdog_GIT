@@ -26,6 +26,8 @@ function createLBL_writeObjectTable(fid, data)
 % 
 % PROPOSAL: Derive ROW_BYTES rather than take value from "data".
 % PROPOSAL: Use derived ROW_BYTES value to check corresponding value in "data".
+% PROPOSAL: Handle FORMAT. What does PDS say?
+% PROPOSAL: Handle ITEMS.
 % 
 % QUESTION: Use ODL field names as structure field names?
 %    CON: ODL names can be unclear.
@@ -61,11 +63,11 @@ function createLBL_writeObjectTable(fid, data)
     
     
     ip(+1, 'OBJECT = TABLE\n');
-    ip( 0, 'INTERCHANGE_FORMAT = ASCII\n');
-    ip( 0, 'ROWS = %d\n',          data.N_rows );
-    ip( 0, 'COLUMNS = %d\n',       length(data.column_list));
-    ip( 0, 'ROW_BYTES = %d\n',     data.N_row_bytes);
-    ip( 0, 'DESCRIPTION = "%s"\n', data.DESCRIPTION);
+    ip( 0,    'INTERCHANGE_FORMAT = ASCII\n');
+    ip( 0,    'ROWS = %d\n',          data.N_rows );
+    ip( 0,    'COLUMNS = %d\n',       length(data.column_list));
+    ip( 0,    'ROW_BYTES = %d\n',     data.N_row_bytes);
+    ip( 0,    'DESCRIPTION = "%s"\n', data.DESCRIPTION);
 
     current_row_byte = 1;    % Starts with one, not zero.
     for i = 1:length(data.column_list)
@@ -76,7 +78,7 @@ function createLBL_writeObjectTable(fid, data)
         end
         if isempty(cd.DESCRIPTION)
             cd.DESCRIPTION = 'N/A';
-        end        
+        end
         
         ip(+1, 'OBJECT = COLUMN\n');
         ip( 0,    'NAME = %s\n',          cd.NAME);
@@ -84,6 +86,9 @@ function createLBL_writeObjectTable(fid, data)
         ip( 0,    'BYTES = %i\n',         cd.BYTES); %
         ip( 0,    'DATA_TYPE = %s\n',     cd.DATA_TYPE);
         ip( 0,    'UNIT = %s\n',          cd.UNIT);
+        if isfield(cd, 'FORMAT')
+            ip( 0, 'FORMAT = %s\n',       cd.FORMAT);
+        end
         ip( 0,    'DESCRIPTION = "%s"\n', cd.DESCRIPTION);      % NOTE: Added quotes.
         ip(-1, 'END_OBJECT  = COLUMN\n');
         
@@ -99,6 +104,7 @@ function createLBL_writeObjectTable(fid, data)
     % Arguments: indentation increment, printf arguments (multiple; no fid)
     % NOTE: Uses "global" variables (fid, INDENTATION, indentation_level)
     % defined in outer function for simplicity & speed(?).
+    % NOTE: Indentation increment takes before/after printf depending on decrement/increment.
     function ip(varargin)
         indentation_increment = varargin{1};        
         printf_str = varargin{2};
@@ -108,7 +114,7 @@ function createLBL_writeObjectTable(fid, data)
             indentation_level = indentation_level + indentation_increment;        
         end
         
-        printf_str = [repmat(INDENTATION, 1, indentation_level), printf_str];
+        printf_str = [repmat(INDENTATION, 1, indentation_level), printf_str];    % Add indentation.
         fprintf(fid, printf_str, printf_arg{:});
         
         if indentation_increment > 0 

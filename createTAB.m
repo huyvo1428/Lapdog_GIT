@@ -291,7 +291,7 @@ try
         
         
         
-        for(i=1:len); %read&write loop
+        for(i=1:len); %read&write loop iterate over all files, create B*S.TAB and I*S.TAB
             qualityF = 0;     % qualityfactor initialised!
             trID = fopen(index(tabind(i)).tabfile);
             
@@ -423,7 +423,7 @@ try
             
             %%Finalise
             
-            if (i==len)
+            if (i==len) %if last iteration
                 
                 tabindex(end,4:7)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),length(potbias),2}; %one index for bias voltages
                 tabindex{end,8}=b1;

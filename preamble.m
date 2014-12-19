@@ -90,7 +90,7 @@ end
 %some macros need to be handled with special care
 %constant list known everywhere
 global LDLMACROS;
-LDLMACROS = [807,804,803,805,703,704];
+LDLMACROS = [807,805,804,803, 703,704];
 
     
 
