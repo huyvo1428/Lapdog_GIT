@@ -53,8 +53,8 @@ dynampath= mfilename('fullpath');   % find path & remove "/lapdog" from string.
 dynampath = dynampath(1:end-7);
 
 fprintf(1,'lapdog: %s\n',dynampath)
-
-indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
+indexversion = '2'; %index updated with new variable 17Dec 2014
+indexfile = sprintf('%s/index/index_%s_v%s.mat',dynampath,archiveid,indexversion);
 %fp = fopen(indexfile,'r');
 %if(fp > 0)
 %    fclose(fp);

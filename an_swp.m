@@ -97,8 +97,8 @@ end
 % 
 %     'hello'
 % end
-
-Iarray = smooth(ip,0.14,'rloess'); %gentle moving average (4% steps) needed for error prone statistics like 2nd deriv
+Iarray = smooth(ip,0.14,'sgolay'); %rloess is really slow
+%Iarray = smooth(ip,0.14,'rloess'); %gentle moving average (4% steps) needed for error prone statistics like 2nd deriv
 
 
 %ind = find(diff(vb) ~= 0); %useless now

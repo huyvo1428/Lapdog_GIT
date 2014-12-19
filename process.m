@@ -12,7 +12,7 @@ sctconv=@sct2obt;
 
 
 
-for b = 1:nob   % Loop through all ops blocks
+for b = 12:nob   % Loop through all ops blocks
     
 
     

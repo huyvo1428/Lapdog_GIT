@@ -57,7 +57,9 @@ fprintf(1,'lapdog: %s\n',dynampath);
 if redo_resampling ~= 0
     
     fprintf(1, 'loading index....\n',dynampath);
-    indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
+    indexversion = '2'; %index updated with new variable 17Dec 2014
+    indexfile = sprintf('%s/index/index_%s_v%s.mat',dynampath,archiveid,indexversion);
+    %indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
     fp = fopen(indexfile,'r');
     
 

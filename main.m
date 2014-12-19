@@ -43,9 +43,13 @@ control;
 'lapdog: calling preamble...'
 preamble;
 
+
+
 % Load or, if not defined, generate index:
 'lapdog: load indices if existing...'
-indexfile = sprintf('index/index_%s.mat',archiveid);
+
+indexversion = '2'; %index updated with a new variable 17Dec 2014
+indexfile = sprintf('index/index_%s_v%s.mat',archiveid,indexversion);
 fp = fopen(indexfile,'r');
 %fp =-1;
 if(fp > 0)

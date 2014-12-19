@@ -85,6 +85,8 @@ index(n).lf = -1;
 index(n).hf = -1;
 index(n).sweep = -1;
 index(n).probe = -1;
+index(n).pre_sweep_samples =-1;
+
 macrotemp= '41000';
 
 
@@ -118,16 +120,6 @@ for ii=1:n  % Loop the label files
           %macro = sscanf(macrostr,'%7*c%f');
           macro = str2double(macrostr(8:10));
 
-          
-          
-%           if isempty(ind)           
-%               macro
-%               macrostr
-%               i
-%           end
-%           if (length(ind) > 1)
-%           ind
-%           end            
               
           
           % Find start time:
@@ -146,7 +138,7 @@ for ii=1:n  % Loop the label files
           sct0str = strtrim(val(ind,:));
           % Find end s/c time:
           ind = find(strcmp('SPACECRAFT_CLOCK_STOP_COUNT',var));
-          ind22 = strcmp('SPACECRAFT_CLOCK_STOP_COUNT',var);
+%          ind22 = strcmp('SPACECRAFT_CLOCK_STOP_COUNT',var);
           sct1str = strtrim(val(ind,:));
           
           % Analyze file name for type of data:
@@ -171,6 +163,16 @@ for ii=1:n  % Loop the label files
           if (sweep)
               lf =  0; %% should be unnecessary, no sweeps are lf...       
               hf = 0;
+              
+              %update: sweep files have "initial sweep smpls" which is a
+              %very useful variable.
+              
+              ind = find(strcmp('ROSETTA:LAP_INITIAL_SWEEP_SMPLS',var));
+              %          ind22 = strcmp('SPACECRAFT_CLOCK_STOP_COUNT',var);
+              str = strrep(strtrim(val(ind,:)),'"',''); %trim and strip from ""
+              in_smpls = hex2dec(str(end-3:end)); %only need maximum last three, convert from hex to dec.              
+              index(i).pre_sweep_samples =in_smpls; % start collecting index
+              
           end
           
           % % File assumed to contain LF data if covering more than 16 s:
