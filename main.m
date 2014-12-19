@@ -34,8 +34,6 @@
 'LAPDOG - LAP Data Overview and Geometry'
 ''
 
-tic
-
 % Define the dataset:
 'lapdog: calling control...'
 control;
@@ -103,5 +101,4 @@ createLBL
 
 
 'lapdog: Parmesan -Done!'
-toc
 % End of main.m
