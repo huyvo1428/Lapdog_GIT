@@ -337,7 +337,9 @@ try
 
             DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
             DP_assmpt(k) = an_LP_Sweep_with_assmpt(Vb,Iarr(:,k),assmpt,EP(k).lum);
-                        
+ 
+                            % Calculate ion densities velocities
+            
             EP(k).ni_1comp     = (1e-6 * DP(k).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
             EP(k).asm_ni_1comp = (1e-6 * DP_assmpt(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
 
@@ -348,7 +350,9 @@ try
      	    EP(k).v_ion     =  EP(k).ni_2comp    *assmpt.vram/EP(k).ni_1comp;                                                     
      	    EP(k).asm_v_ion =  EP(k).asm_ni_2comp*assmpt.vram/EP(k).asm_ni_1comp;
                    
-            %%estimate
+            %%estimate electron densities
+            
+            
             Te_guess = 5;%eV
             %EP(k).ne_5eV = abs(1e-6*DP(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
             %EP(k).asm_ne_5eV = abs(1e-6*DP_assmpt(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
@@ -392,9 +396,11 @@ try
                 DP_assmpt(m) = an_LP_Sweep_with_assmpt(Vb2,Iarr2(:,k),assmpt,EP(m).lum);
                 
 
-       
+                  % Calculate ion densities     
                 EP(m).ni_1comp     = (1e-6 * DP(m).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
                 EP(m).asm_ni_1comp = (1e-6 * DP_assmpt(m).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
+                
+
                 
                 EP(m).ni_2comp     = (1e-6/(IN.probe_cA*CO.e))*sqrt(max(assmpt.ionM*CO.mp*(DP(m).ion_intersect(1))*DP(m).ion_slope(1)/(2*CO.e),0)); %max out of expression and 0 -> if >0, ni=0;
                 EP(m).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(max(assmpt.ionM*CO.mp*(DP_assmpt(m).ion_intersect(1))*DP_assmpt(m).ion_slope(1)/(2*CO.e),0)); %max out of expression and 0 -> if >0, ni=0;
@@ -402,6 +408,9 @@ try
                 EP(m).v_ion     =  EP(m).ni_2comp    *assmpt.vram/EP(m).ni_1comp;
                 EP(m).asm_v_ion =  EP(m).asm_ni_2comp*assmpt.vram/EP(m).asm_ni_1comp;
 
+                
+                %%estimate electron densities
+                
                 
                 
                 Te_guess = 5;%eV
