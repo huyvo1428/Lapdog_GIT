@@ -18,6 +18,7 @@ archiveid = sprintf('%s_%d',shortphase,processlevel);
 
 s_tabindexfile = sprintf('server/tabindex/tabindex_%s.mat',archiveid);
 fp = fopen(s_tabindexfile,'r');
+
 %fp = -2;
 
 if(fp > 0)

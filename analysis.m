@@ -6,7 +6,7 @@
 
 global an_tabindex an_debug;
 an_tabindex = [];
-an_debug = 0; %debugging on or off!
+an_debug = 9; %debugging on or off!
 
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 %andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));    % NOTE: NOT USED?!
@@ -75,7 +75,7 @@ if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
  
 if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
 if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
- 
+%  
 
 
 fprintf(1, 'Derive/select best estimates\n')
