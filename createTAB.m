@@ -474,7 +474,7 @@ catch err
         end
     end
     
-    fprintf(1,'\nlapdog: skipping file, continuing...');
+    fprintf(1,'\nlapdog: skipping file, continuing...\n');
     return
     
     

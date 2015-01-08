@@ -174,6 +174,17 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             %--------------------------------
             sim_sweep_data_grps_list = group_simultaneous_sweeps_INTERNAL(sweep_data);
             N_grps = length(sim_sweep_data_grps_list);
+            if (N_grps == 0)
+                % In case there are not enough sweeps for a single group of sweeps, do not even try to
+                % create an EST file. The below code would break anyway as "est_sweep_data" will
+                % contain no fields.
+                % NOTE: If no EST file is produced there should also be no LBL file.
+                % ---------------------------------------------------------------------------------
+                % I think the data archiving policy is that when there is no data,
+                % there should also be no file. (Source?) /Erik P G Johansson 2015-01-08.
+                break
+            end
+            
             est_sweep_data_grps_list = cell(N_grps, 1);
             for i_grp = 1:N_grps
                 est_sweep_data_grps_list{i_grp} = select_best_estimates_INTERNAL(sim_sweep_data_grps_list{i_grp});
@@ -225,7 +236,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             an_tabindex(end+1, :) = an_tabindex_amendment;
         end
         
-        warning('Implementation of function not finished yet.')              % TEMPORARY
+        %warning('Implementation of function not finished yet.')              % TEMPORARY
     end
 
     % ---------------------------------------------------------------------
@@ -453,7 +464,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         %--------------------
         % Sort data by time.
         %--------------------
-        [junk, i] = sort(data.START_TIME_UTC);             
+        [junk, i] = sort(data.START_TIME_UTC);
         O_data = select_structs_arrays_INTERNAL(data, i);        
         N_rows = length(data.START_TIME_UTC);
         

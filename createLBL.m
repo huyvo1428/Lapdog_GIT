@@ -197,6 +197,7 @@ if(~isempty(tabindex));
                     fprintf(fid,'FORMAT = E14.7\n');
                     fprintf(fid,'DESCRIPTION = "Averaged current measured of potential sweep, at different potential steps as described by %s"\n',Bfile);
                     fprintf(fid,'END_OBJECT  = COLUMN\n');
+                    fprintf(fid,'END_OBJECT  = TABLE\n');
                 end
 
 
@@ -239,10 +240,10 @@ if(~isempty(tabindex));
                 fprintf(fid,'UNIT = N/A\n');
                 fprintf(fid,'DESCRIPTION = " QUALITY FACTOR FROM 000(best) to 999"\n');
                 fprintf(fid,'END_OBJECT  = COLUMN\n');
+                fprintf(fid,'END_OBJECT  = TABLE\n');
 
             end
 
-            fprintf(fid,'END_OBJECT  = TABLE\n');
             fprintf(fid,'END');
             fclose(fid);
 
@@ -337,8 +338,8 @@ if(~isempty(tabindex));
             %         fprintf(fid,'END');% Ends file
             %         fclose(fid);
 
-        catch err    
-    
+        catch err
+            
             fprintf(1,'\nlapdog:createLBL error message:%s\n',err.message);    
     
             len = length(err.stack);
@@ -839,8 +840,6 @@ if(~isempty(an_tabindex));
                     fprintf(fid,'END_OBJECT  = COLUMN\n');
                     
                 else
-                    
-                    
                     
                     fprintf(fid,'OBJECT = COLUMN\n');
                     fprintf(fid,'NAME = P%s_CURRENT\n',Pnum);
