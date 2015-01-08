@@ -141,21 +141,26 @@ if (size(Vr) ~= size(Ir))
 end
 
 % 'This part of our data is now linearly fitted, in a least square sense
-[VbP,S] = polyfit(Vr,Ir,1); % The function polyfit finds the coefficients of a
+[P_Vb,S] = polyfit(Vr,Ir,1); % The function polyfit finds the coefficients of a
                       % polynomial P(Vi) of degree 1 that fits the data Ii best
                       % in a least-squares sense. P is a row vector of length
                       % 2 containing the polynomial coefficients in descending
                       % powers, P(1)*Vi+P(2)
-a(1) = VbP(1); % This is accordingly the slope of the line...
-b(1) = VbP(2); % ...and this is the crossing on the y-axis of the line 
+a(1) = P_Vb(1); % This is accordingly the slope of the line...
+b(1) = P_Vb(2); % ...and this is the crossing on the y-axis of the line 
 
 S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
 
-a(2) = abs(S.sigma(1)/VbP(1)); %Fractional error 
-b(2) = abs(S.sigma(2)/VbP(2)); %Fractional error
+a(2) = abs(S.sigma(1)/P_Vb(1)); %Fractional error 
+b(2) = abs(S.sigma(2)/P_Vb(2)); %Fractional error
 
 
-[VpP,junk] = polyfit(Vpr,Ir,1);
+
+
+%[PVp,junk] = polyfit(Vpr,Ir,1); %this is slow, we need only a simple
+%calculation to fit as function of Vsc.
+P_Vp = P_Vb;                  %same slope, but we need to change intersect
+P_Vp(2) = P_Vb(2)-P_Vb(1)*Vsc; %fit as function of Vsc.
 
 
 
@@ -165,8 +170,8 @@ if a(2) > 1 % if error is large (!)
     b = [mean(Ir) std(Ir)]; % offset    
     out.Q(1) = 1;
     
-    VpP(1) = a(1); % no slope
-    VpP(2) = b(1);   
+    P_Vp(1) = a(1); % no slope
+    P_Vp(2) = b(1);   
 end
 
 
@@ -204,8 +209,8 @@ Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
 out.I = Ii;
 out.a = a;
 out.b = b;
-out.Vpa = [VpP(1) a(2)];
-out.Vpb = [VpP(2) b(2)];
+out.Vpa = [P_Vp(1) a(2)];
+out.Vpb = [P_Vp(2) b(2)];
 out.mean = [mean(Ir) std(Ir)]; % offset  
 
 

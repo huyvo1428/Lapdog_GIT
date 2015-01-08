@@ -42,7 +42,7 @@ out.Ie0 = nan(1,2);
 ne=NaN;
 Vp = V+Vknee;
 
-eps= 1; %moves "0V" to the left
+eps= 0; %moves "0V" to the left
 
 try
     firstpos=find(Vp>0,1,'first');

@@ -128,12 +128,12 @@ clear dataraw
 % title('density estimations probe 1 M09 19amu')
 
 
-if strcmp(shortphase,'EAR3')
-    
-    data1.asm_ni_v_dep =   data1.asm_ni_v_dep *2/7;
-    data2.asm_ni_v_dep =   data2.asm_ni_v_dep *2/7;
-    
-end
+% if strcmp(shortphase,'EAR3')
+%     
+%     data1.asm_ni_v_dep =   data1.asm_ni_v_dep *2/7;
+%     data2.asm_ni_v_dep =   data2.asm_ni_v_dep *2/7;
+%     
+% end
 
 
 
@@ -209,7 +209,7 @@ title([sprintf('Density estimations probe 1 %s 19amu vion = 550m/s',shortphase)]
 
 
 figure(153)
-plot(data1.t1,data1.ni_v_dep,'blacko',data2.t1,data2.ni_v_dep,'black',data1.t1,data1.ne_5eV,'ro',data2.t1,data2.ne_5eV,'r',data1.t1,data1.ne_linear,'bo',data2.t1,data2.ne_linear,'b');
+plot(data1.t1,data1.asm_ni_v_dep,'blacko',data2.t1,data2.ni_v_dep,'black',data1.t1,data1.ne_5eV,'ro',data2.t1,data2.ne_5eV,'r',data1.t1,data1.ne_linear,'bo',data2.t1,data2.ne_linear,'b');
 
 %plot(data1.t1,data1.asm_ni_v_indep,'ro',data2.t1,data2.asm_ni_v_indep,'blacko',data1.t1,data1.asm_ne_linear,'bo',data2.t1,data2.asm_ne_linear,'black+');
 axis([data2.t1(1) data2.t1(end) 0 2000])
@@ -217,7 +217,7 @@ axis([data2.t1(1) data2.t1(end) 0 2000])
 set(gca, 'XTickMode', 'auto', 'XTickLabelMode', 'auto')
 datetick('x',20,'keepticks')
 grid on;
-legend('probe 1 ni\_v\_dep','probe 2 ni\_v\_dep','probe 1 ne\_5eV','probe 2 ne\_5eV','probe 1 ne\_linear','probe 2 ne\_linear');
+legend('probe 1 asm\_ni\_v\_dep','probe 2 ni\_v\_dep','probe 1 ne\_5eV','probe 2 ne\_5eV','probe 1 ne\_linear','probe 2 ne\_linear');
 
 %legend('probe 1 asm\_ni\_v\_indep','probe 2 asm\_ni\_v\_indep','probe 1 asm\_ne','probe 2 asm\_ne');
 title([sprintf('Density estimations probe 1&2 %s 19amu',shortphase)])

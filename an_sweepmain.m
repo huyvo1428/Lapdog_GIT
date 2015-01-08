@@ -14,6 +14,21 @@ paths();
 cspice_furnsh(kernelFile);
 
 
+
+assmpt =[];
+
+assmpt.Vknee = 0; %dummy
+assmpt.Tph = 2; %eV
+
+assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
+%    assmpt.Iph0 = -8.55e-09; %from mean of M08, probably too high.
+assmpt.vram = 550; %m/s
+assmpt.ionZ = +1; % ion charge
+assmpt.ionM = 19; % atomic mass units
+%assmpt.v_SW = 5E5; %500 km/s
+
+
+
 k=0; %needed for error output
 
 try
@@ -26,10 +41,10 @@ try
         mode=rfile(end-6:end-4);
         diagmacro=rfile(end-10:end-8);
         probe = rfile(end-5);
-        diag_info{1} = strcat(diagmacro,'P',probe);
-
-%        diag_info{1} = strcat('P',probe,'M',diagmacro);
+        
+        diag_info{1} = strcat(diagmacro,'P',probe); %remember probe and macro everywhere for debugging
         diag_info{2} = rfile; %let's also remember the full name
+        
         arID = fopen(tabindex{an_ind(i),1},'r');                   % Open sweep file.
         
         if arID < 0
@@ -183,25 +198,18 @@ try
         EP(len).qf       = [];
         EP(len).Tarr     = {};
         EP(len).lum      = [];
-        EP(len).split    = [];        
-        
+        EP(len).split    = [];
+        EP(len).dir      = [];
+
         EP(len).ni_1comp = [];
         EP(len).ni_2comp = [];
-        EP(len).v_ion = [];
+        EP(len).v_ion    = [];
+        EP(len).ne_5eV   = [];     
 
         EP(len).asm_ni_1comp = [];
         EP(len).asm_ni_2comp = [];
-        EP(len).asm_v_ion = [];
-
-      %  EP(len).ni_thermal = [];%1e-6*DP(k).ion_slope*assmpt.ionM*CO.mp*assmpt.vram/(IN.probe_cA*2*CO.e*CO.e);
-      %  EP(len).ni_SW = [];%1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.v_SW;
-        EP(len).ne_5eV = [];%1e-6*DP(k).e_slope
-        %need to make this as a function of Vsc...
-        % EP(len).i_vel = [];%sqrt(2*assmpt.ionZ*CO.e*DP(k)DP(k).ion_y_intersect/(DP(k).ion_slope*assmpt.ionM*CO.mp);
-
-        
-        EP(len).asm_ne_5eV = [];%1e-6*DP(k).e_slope
-        EP(len).dir = [];
+        EP(len).asm_v_ion    = [];
+        EP(len).asm_ne_5eV   = [];
         
         
         
@@ -235,38 +243,23 @@ try
         DP(len).Te_exp              = [];
         DP(len).Ie0_exp             = [];
         DP(len).ne_exp              = [];
-
-       
-        DP(len).Quality  = [];
+        
+        DP(len).Quality             = [];
 
         
         DP_assmpt= DP;
         
-        %% initial estimate
+        % initial estimate
         
-        
-        %lets take the first, up to 50.  
-	%note: do this for every 50th sweep?
     
-    
-    assmpt =[];
-    
-    assmpt.Vknee = 0; %dummy
-    assmpt.Tph = 2; %eV
-    
-    assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
-%    assmpt.Iph0 = -8.55e-09; %from mean of M08, probably too high.
-    assmpt.vram = 550; %m/s
-    assmpt.ionZ = +1; % ion charge
-    assmpt.ionM = 19; % proton mass
-    %assmpt.v_SW = 5E5; %500 km/s
+
             
     
     %these asumptions should be printed somewhere. Maybe in the LBL file?
     %print in description of LBL file?
     
     
-    %% try whole batch of sweep analysis at once, why not?
+    % try whole batch of sweep analysis at once, why not?
     % 50 sweeps would correspond to ~ 30 minutes of sweeps
 
     if len > 1
@@ -308,11 +301,11 @@ try
         end
         
         
-    end
+    end 
     
         
         % analyse!
-        for k=1:len    % Iterate over first sweep in every potential sweep/pair (one/two sweeps)
+        for k=1:len    % Iterate over first sweep in every potential sweep pair (one/two sweeps)
                         
             %  a= cspice_str2et(timing{1,k});
             m = k;
@@ -329,7 +322,6 @@ try
             EP(k).lum = mean(illuminati(1,2*k-1:2*k));            
             EP(k).Tarr = {Tarr{:,k}};
             
-            %       fout{m,5}={Tarr{:,k}};
             EP(k).tstamp = Tarr{3,k};
             EP(k).qf = qf;
             EP(k).dir = upd(1);
@@ -345,29 +337,27 @@ try
 
             DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
             DP_assmpt(k) = an_LP_Sweep_with_assmpt(Vb,Iarr(:,k),assmpt,EP(k).lum);
+ 
+                            % Calculate ion densities velocities
+            
+            EP(k).ni_1comp     = (1e-6 * DP(k).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
+            EP(k).asm_ni_1comp = (1e-6 * DP_assmpt(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
 
-            %need to make this as a function of Vsc...
-%            EP(k).i_v = sqrt(2*assmpt.ionZ*CO.e*DP(k)DP(k).ion_y_intersect/(DP(k).ion_slope*assmpt.ionM*CO.mp);
-                       
-%            EP(k).ni_ram = 1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.vram; %(CO.probearea*assmpt.qion*assmpt.vram);
-            %EP(k).ni_SW = 1e-6*DP(k).ion_y_intersect/ IN.probe_cA * assmpt.ionZ*CO.e*assmpt.v_SW;
-                        
-            EP(k).ni_1comp = abs(1e-6 * DP(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-            EP(k).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(CO.mp*(DP(k).ion_intersect(1))*DP(k).ion_slope(1)/(2*CO.e)));
+            
+            EP(k).ni_2comp     = (1e-6/(IN.probe_cA*CO.e))*sqrt(max((-assmpt.ionM*CO.mp*(DP(k).ion_intersect(1))       *DP(k).ion_slope(1)       /(2*CO.e)),0));%max out of expression and 0 -> if >0, ni=0;
+            EP(k).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(max((-assmpt.ionM*CO.mp*(DP_assmpt(k).ion_intersect(1))*DP_assmpt(k).ion_slope(1)/(2*CO.e)),0)); %max out of expression and 0 -> if >0, ni=0;
 
-     	    EP(k).v_ion =  EP(k).ni_2comp*assmpt.vram/EP(k).ni_1comp;
-                                                     
-            EP(k).asm_ni_1comp = abs(1e-6 * DP_assmpt(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-            EP(k).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(CO.mp*(DP_assmpt(k).ion_intersect(1))*DP_assmpt(k).ion_slope(1)/(2*CO.e)));
-
+     	    EP(k).v_ion     =  EP(k).ni_2comp    *assmpt.vram/EP(k).ni_1comp;                                                     
      	    EP(k).asm_v_ion =  EP(k).asm_ni_2comp*assmpt.vram/EP(k).asm_ni_1comp;
                    
-            %%estimate
+            %%estimate electron densities
+            
+            
             Te_guess = 5;%eV
             %EP(k).ne_5eV = abs(1e-6*DP(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
             %EP(k).asm_ne_5eV = abs(1e-6*DP_assmpt(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-            EP(k).ne_5eV= abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(k).e_slope(1) / (IN.probe_A*CO.e.^1.5));
-            EP(k).asm_ne_5eV = abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_assmpt(k).e_slope(1) / (IN.probe_A*CO.e.^1.5));
+            EP(k).ne_5eV     = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0); %max out of expression and 0 -> if >0, ne=0;
+            EP(k).asm_ne_5eV = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_assmpt(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0);%max out of expression and 0 -> if >0, ne=0;
             
 
         end % for
@@ -382,27 +372,20 @@ try
                 %% quality factor check
                 qf= Qfarr(k);
                 
-                if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.01) %rotation of more than 0.01 degrees
+                if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.05) %rotation of more than 0.01 degrees
                     qf = qf+20; %rotation
                 end
-                
-                %               fout{m,1} =an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati);
-                %                fout{m,2} = mean(SAA(1,2*k-1:2*k)); %every pair...
-                %                fout{m,3} = mean(illuminati(1,2*k-1:2*k));
-                
+
                 EP(m).split = split; % 1 for V form, -1 for upsidedownV
                 EP(m).SAA = mean(SAA(1,2*k-1:2*k));
                 EP(m).lum = mean(illuminati(1,2*k-1:2*k));
                 EP(m).Tarr = {Tarr2{:,k}};
-                
                 EP(m).tstamp = Tarr2{4,k};
                 EP(m).qf = qf;
                 EP(m).dir = upd(2); 
 
                 AP(m)     =  an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr2{1,k}),mode(2),EP(m).lum);
-                %          fout{m,1} = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),illuminati(k));
-                %                fout{m,2} = mean(SAA(1,2*k-1:2*k));
-                
+
                 if k>1
                     Vguess=DP(m-1).Vph_knee;
                 else
@@ -412,25 +395,32 @@ try
                 DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),Vguess,EP(m).lum);                
                 DP_assmpt(m) = an_LP_Sweep_with_assmpt(Vb2,Iarr2(:,k),assmpt,EP(m).lum);
                 
-                %need to make this as a function of Vsc...
-                %            EP(k).i_v = sqrt(2*assmpt.ionZ*CO.e*DP(k)DP(k).ion_y_intersect/(DP(k).ion_slope*assmpt.ionM*CO.mp);
- 
-       
-                EP(m).ni_1comp = abs(1e-6 * DP(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-                EP(m).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP(k).ion_intersect(1))*DP(k).ion_slope(1)/(2*CO.e)));                
-                EP(m).v_ion =  EP(m).ni_2comp*assmpt.vram/EP(m).ni_1comp;
+
+                  % Calculate ion densities     
+                EP(m).ni_1comp     = (1e-6 * DP(m).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
+                EP(m).asm_ni_1comp = (1e-6 * DP_assmpt(m).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
+                
 
                 
-                EP(m).asm_ni_1comp = abs(1e-6 * DP_assmpt(m).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-                EP(m).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(abs(assmpt.ionM*CO.mp*(DP_assmpt(m).ion_intersect(1))*DP_assmpt(m).ion_slope(1)/(2*CO.e)));
+                EP(m).ni_2comp     = (1e-6/(IN.probe_cA*CO.e))*sqrt(max(assmpt.ionM*CO.mp*(DP(m).ion_intersect(1))*DP(m).ion_slope(1)/(2*CO.e),0)); %max out of expression and 0 -> if >0, ni=0;
+                EP(m).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(max(assmpt.ionM*CO.mp*(DP_assmpt(m).ion_intersect(1))*DP_assmpt(m).ion_slope(1)/(2*CO.e),0)); %max out of expression and 0 -> if >0, ni=0;
+                
+                EP(m).v_ion     =  EP(m).ni_2comp    *assmpt.vram/EP(m).ni_1comp;
                 EP(m).asm_v_ion =  EP(m).asm_ni_2comp*assmpt.vram/EP(m).asm_ni_1comp;
 
-
+                
+                %%estimate electron densities
+                
+                
+                
                 Te_guess = 5;%eV
                 %EP(m).ne_5eV = abs(1e-6*DP(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
                 %EP(m).asm_ne_5eV = abs(1e-6*DP_assmpt(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));                
-                EP(m).ne_5eV= abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(m).e_intersect(1) / (IN.probe_A*CO.e.^1.5)); 
-                EP(m).asm_ne_5eV = abs(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_assmpt(m).e_intersect(1) / (IN.probe_A*CO.e.^1.5)); 
+
+                EP(m).ne_5eV= max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0); %max out of expression and 0 -> if >0, n=0;
+                EP(m).asm_ne_5eV = max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_assmpt(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0);  %max out of expression and 0 -> if >0, ni=0;
+            
+
                 
             end%for
         end%if split
@@ -553,29 +543,3 @@ end
 
 end    % function
 
-
-%             
-%             format4 =' %14.7e, %14.7e, %14.7e, %14.7e,';
-%             format8 =strcat(format4,format4);
-%             format2 =' %14.7e, %14.7e,';
-% 
-%             str1  = sprintf('%s, %s, %03i, %07.3f, %03.2f, %1i,',EP(k).Tarr{1,1},EP(k).Tarr{1,2},EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
-%             str2  = sprintf(format4,AP(k).vs,AP(k).vx,AP(k).Tph,AP(k).Iph0);
-%             str3  = sprintf(format4,AP(k).lastneg,AP(k).firstpos,AP(k).vbinf,AP(k).diinf,);
-%             str4  = sprintf(' %14.7e,'AP(k).d2iinf);
-%             
-%             
-%             str10 =  sprintf(format4,DP(k).,DP(k).Vsg_sigma,DP(k).Iph0,DP(k).Tph);
-%             str5  =  sprintf(format4,DP(k).Vsi,DP(k).Vph_knee,DP(k).Te,DP(k).ne);
-%             str6  = sprintf(format8,DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
-%             str7  = sprintf(format8,DP(k).ion_Vb_slope,DP(k).ion_Vb_intersect,DP(k).e_Vb_slope,DP(k).e_Vb_intersect);
-%             str8  = sprintf(format4,DP(k).Tphc,DP(k).nphc,DP(k).phc_slope,DP(k).phc_intersect);
-%             str9  = sprintf(format4 %14.7e,',EP(k).ne_5eV,EP(k).ni_1comp,EP(k).ni_2comp,DP(k).Te_exp);
-%             str10 = sprintf(' %14.7e, %14.7e,',DP_assmpt(k).Vsg,DP_assmpt(k).Vsg_sigma);
-%             str11 = sprintf(format4 %14.7e,',DP_assmpt(k).Iph0,DP_assmpt(k).Tph,DP_assmpt(k).Vsi,DP_assmpt(k).Vph_knee,DP_assmpt(k).Te,DP_assmpt(k).ne);
-%             str12 = sprintf(format8,DP_assmpt(k).ion_slope,DP_assmpt(k).ion_intersect,DP_assmpt(k).e_slope,DP_assmpt(k).e_intersect);
-%             str13 = sprintf(format8,DP_assmpt(k).ion_Vb_slope,DP_assmpt(k).ion_Vb_intersect,DP_assmpt(k).e_Vb_slope,DP_assmpt(k).e_Vb_intersect);
-%             str14 = sprintf(format4,DP_assmpt(k).Tphc,DP_assmpt(k).nphc,DP_assmpt(k).phc_slope,DP_assmpt(k).phc_intersect);
-%             str15 = sprintf( format4 %14.7e',EP(k).asm_ne_5eV,EP(k).asm_ni_1comp,EP(k).asm_ni_2comp,DP_assmpt(k).Te_exp);
-
-            

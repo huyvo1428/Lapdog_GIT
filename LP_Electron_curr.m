@@ -175,7 +175,10 @@ Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note 
 
 
 [P, S] = polyfit(Vpr,Ir,1);
-[P2, junk] = polyfit(Vr,Ir,1);
+PVb = P;
+PVb(2) = P(1)*Vsc+P(2); %remove Vsc from fit
+
+%[PVb, junk] = polyfit(Vr,Ir,1);
 
 
 a(1) = P(1); % This is accordingly the slope of the line...
@@ -261,8 +264,8 @@ out.I = Ie;
 out.Vpa = a;
 out.Vpb = b;
 out.Te = [Te s_Te];
-out.a = [P2(1) a(2)];
-out.b = [P2(2) b(2)];
+out.a = [PVb(1) a(2)];
+out.b = [PVb(2) b(2)];
 
 
 

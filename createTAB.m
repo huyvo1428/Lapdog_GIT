@@ -144,7 +144,7 @@ global LDLMACROS; %global constant list
 tabindex{end+1,1} = filename; %% Let's remember all TABfiles we create
 tabindex{end,2} = filenamep; %%their shortform name
 tabindex{end,3} = tabind(1); %% and the first index number
-
+%tabindex{end,9} = tabind(end);  % Last "index" number.
 
 
 len = length(tabind);
@@ -291,35 +291,38 @@ try
         
         
         
-        for(i=1:len); % Read & write loop. Iterate over selected files in "index" and simultaneously rows in BxS file.
+        for(i=1:len); %read&write loop iterate over all files, create B*S.TAB and I*S.TAB
             qualityF = 0;     % qualityfactor initialised!
             trID = fopen(index(tabind(i)).tabfile);
             
             if trID > 0
                 scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
                 fclose(trID); %close read file
-            else
+            else            % if I/O error
                 fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
                 break
-            end % if I/O error
-            % t0 =scantemp{1,2}(1); %absolute S/C start of measurements for each file.
-            if (i==1) % if first iteration ... Do this only once + bugfix
+            end
+            
+            step1 = index(tabind(i)).pre_sweep_samples; %some steps are not in actual sweep, but number is listed in LBL file
+            step2 = find(diff(scantemp{1,4}(1:end)),1,'first');
+
+            scantemp{1,1}(1:step1)    = [];
+            scantemp{1,2}(1:step1)    = [];
+            scantemp{1,3}(1:step1)    = [];
+            scantemp{1,4}(1:step1)    = [];
+            
+      
+            
+            if (i==1) %do this only once + bugfix
                 
                 %first values are problematic, often not in the sweep at all since
                 %spacecraft starts recording too early
-                
-                
-                step1 = find(diff(scantemp{1,4}(1:end)),1,'first'); %index of first step
-                scantemp{1,1}(1:step1)    = [];
-                scantemp{1,2}(1:step1)    = [];
-                scantemp{1,3}(1:step1)    = [];
-                scantemp{1,4}(1:step1)    = [];
-                
-                
+
+               
                 %[potbias, junk, ic] = unique(scantemp{1,4}(:),'stable'); %group potbias uniquely,get mean
                 
                 %slightly more complicated way of getting the mean
-                nStep= find(diff(scantemp{1,4}(1:end)),1,'first');  % Find the number of consecutive measurements on the same bias voltage on each sweep.
+                nStep= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
                 inter = 1+ floor((0:1:length(scantemp{1,2})-1)/nStep).'; %find which values to average together
                 
                 potbias = accumarray(inter,scantemp{1,4}(:),[],@mean); %average
@@ -332,34 +335,17 @@ try
                 
                 b1= fprintf(twID,'%14.7e, %14.7e\n',potout);
                 
-            elseif scantemp{1,4}(1) == potbias(1); %bugfix special case
-                
-                %first values are problematic, often not in the sweep at all since
-                %spacecraft starts recording too early, and the number of first
-                %values varies from file to file, so total number of rows varies
-                %unless removed properly
-                
-                %also, we have found sweep files in the same macro that happen to
-                %have the first few values on the first actual sweep step
-                %if this happens in the first file (but not necessarily in the rest
-                %we currently have no way of not deleting all measurements on that
-                %step
-                
-                step1 = find(diff(scantemp{1,4}(1:end)),1,'first')-nStep;
-                scantemp{1,1}(1:step1)    = [];
-                scantemp{1,2}(1:step1)    = [];
-                scantemp{1,3}(1:step1)    = [];
-                scantemp{1,4}(1:step1)    = [];
-                
-            else %normal bugfix
-                step1 = find(diff(scantemp{1,4}(1:end)),1,'first');
-                scantemp{1,1}(1:step1)    = [];
-                scantemp{1,2}(1:step1)    = [];
-                scantemp{1,3}(1:step1)    = [];
-                scantemp{1,4}(1:step1)    = [];
-                
+%                     
             end %if first iteration +bugfix
+
             
+                  
+            if(step2 ~= step1 &&( step2-nStep ~= step1))
+                
+                fprintf(1,'old method-> %d --%d <- new method ',step2,step1);
+                fprintf(1,'Error in file %s\n', index(tabind(i)).tabfile);
+
+            end
             
             
             %checks if macro is LDL macro, and downsamples current measurement
@@ -411,11 +397,14 @@ try
                     title('unedited sweep, factor 2&0.8');
                     grid on;
                     
+                    
+                    
                 end
                 
             else
-                curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);  % Calculate means of current measurements for identical (consecutive) bias voltages.
-
+                curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
+                
+                
             end%if LDL macro check & downsampling
             
             %
@@ -429,12 +418,12 @@ try
             curArray=curArray+ CURRENTOFFSET;
             
             b2= fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
-            b3= fprintf(twID2,', %14.7e',curArray.'); % Some steps could be "NaN" values if LDL macro.
+            b3= fprintf(twID2,', %14.7e',curArray.'); %some steps could be "NaN" values if LDL macro
             fprintf(twID2,'\n');
             
             %%Finalise
             
-            if (i==len)    % if last iteration ...
+            if (i==len) %if last iteration
                 
                 tabindex(end,4:7)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),length(potbias),2}; %one index for bias voltages
                 tabindex{end,8}=b1;
@@ -456,7 +445,7 @@ try
         end
         fclose(twID2); %write file nr 2, condensed data, terminated asap
         
-    end %% if (not sweep) ... else ... end
+    end
     fclose(twID); %write file nr 1
     
     

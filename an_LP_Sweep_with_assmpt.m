@@ -176,6 +176,7 @@ try
         Itemp = Itemp - Iph;
         
         [Vsc, Vsigma2] = an_Vsc(V,Itemp);
+                
         
         
         if (an_debug>1)
@@ -241,8 +242,21 @@ try
 
     [elec]=LP_Electron_curr(V,Itemp,Vsc,Vknee,0);
 
-    expfit= LP_expfit_Te(V,Itemp,Vsc);
+    V_filt = V;
+    I_filt = Itemp;
     
+    if illuminated
+        % find region 1 V below knee and 4V above knee
+        ph_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));
+        V_filt(ph_ind) = [];
+        I_filt(ph_ind) = [];
+      
+
+    end
+    
+    expfit= LP_expfit_Te(V_filt,I_filt,Vsc);
+ 
+   
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
     DP.Ie0_exp          = expfit.Ie0;
     DP.ne_exp           = expfit.ne;
