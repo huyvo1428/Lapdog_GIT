@@ -53,19 +53,19 @@ function kv_new = createLBL_create_EST_LBL_header(an_tabindex_record, index)
     % This causes a problem since LBL files can only have one variable (with the same name) with only ONE value.
     %
     % Example (data generated 2015-01-08):
-    % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D09/RPCLAP_20141209_010259_614_A1S.LBL:ROSETTA:LAP_SWEEP_PLATEAU_DURATION  = "0x0200"
-    % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D09/RPCLAP_20141209_010259_614_A2S.LBL:ROSETTA:LAP_SWEEP_PLATEAU_DURATION  = "0x0100"
-    % 
-    % Example (data generated 2015-01-08):
     % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D02/RPCLAP_20141202_000002_515_A1S.LBL:ROSETTA:LAP_INITIAL_SWEEP_SMPLS  = "0x0003"
     % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D02/RPCLAP_20141202_000002_515_A2S.LBL:ROSETTA:LAP_INITIAL_SWEEP_SMPLS  = "0x0004"    
     %
+    % Example (data generated 2015-01-08):
+    % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D09/RPCLAP_20141209_010259_614_A1S.LBL:ROSETTA:LAP_SWEEP_PLATEAU_DURATION  = "0x0200"
+    % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D09/RPCLAP_20141209_010259_614_A2S.LBL:ROSETTA:LAP_SWEEP_PLATEAU_DURATION  = "0x0100"
+    % 
     % TODO: Find out correct value or procedure for this situation.
     %--------------------------------------------------------------------------------------------
     kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_INITIAL_SWEEP_SMPLS', ...
         '<Does not yet know how to set this value as there are separate values for P1 and P2.>');
-    %kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_SWEEP_PLATEAU_DURATION', ...
-    %    '<Does not yet know how to set this value as there are separate values for P1 and P2.>');
+    kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_SWEEP_PLATEAU_DURATION', ...
+        '<Does not yet know how to set this value as there are separate values for P1 and P2.>');
 
     % Set start time.
     [junk, i_sort] = sort(START_TIME_list);

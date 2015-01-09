@@ -428,16 +428,21 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 
 
         % Choose probe to use for n_plasma, then select data.
-        % -----------------------------------------------------
+        %
+        % NOTE: Zero is a common non-sensical value for asm_ni_v_indep.
+        % -------------------------------------------------------------
         data.asm_ni_v_indep = str2double(data.asm_ni_v_indep);
-        if ~isempty(i_P2)   &&   ~isnan(data.asm_ni_v_indep(i_P2));
+        if ~isempty(i_P2)   &&   ~isnan(data.asm_ni_v_indep(i_P2))    &&    (data.asm_ni_v_indep(i_P2) ~= 0)
             i = i_P2;
         else
             i = i_P1;
         end
-        data.npl_est(i) = data.asm_ni_v_indep(i);
+        npl = data.asm_ni_v_indep(i);                       % NOTE: May assign/return empty matrix if i = [].
+        if ~isempty(npl) && ~isnan(npl) && (npl ~= 0)            % Use value if not obviously nonsensical...
+            data.npl_est(i) = npl;
+        end
 
-
+        
 
         % Choose probe to use for T_e & V_sc, then select data.
         % -----------------------------------------------------
@@ -606,7 +611,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         if fid < 0
             warning(sprintf('Can not read file: %s', file_path))
         end
-        fprintf(1, 'Reading file: %s\n', file_path)
+        %fprintf(1, 'Reading file: %s\n', file_path)
         file_contents = textscan(fid, '%s%f%s%f%s', 'delimiter', ',');        
         N_rows = length(file_contents{1});
         fclose(fid);

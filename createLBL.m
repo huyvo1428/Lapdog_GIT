@@ -483,6 +483,7 @@ if(~isempty(an_tabindex));
                 fprintf(1, ['ERROR: ', exc.message])
                 fprintf(1, exc.getReport)
                 break
+                %continue
             end
             
         else

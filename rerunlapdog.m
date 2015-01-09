@@ -10,7 +10,7 @@
 % input necessary
 %2. preamble defines some variables used everywhere in the script
 %3.
-%indexgen reads every .LBL file in the archive (50% of all files) as
+%indexgen reads every .LBL file in the CALIB archive (50% of all files) as
 %specified from the index.dat file in outputs it into a useful "index"
 %variable
 %4. some post-processing of the index is needed in indexcorr to split files
