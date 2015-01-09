@@ -248,13 +248,17 @@ try
     if illuminated
         % find region 1 V below knee and 4V above knee
         ph_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));
+        %make a 'filtered' version of sweep which does not contain this region
+        if ~isempty(ph_ind)  
         V_filt(ph_ind) = [];
         I_filt(ph_ind) = [];
-      
+        end
+        
 
     end
     
-    expfit= LP_expfit_Te(V_filt,I_filt,Vsc);
+    %obtain exponential fit of plasma electron current.
+    expfit= LP_expfit_Te(V_filt,I_filt,Vsc); 
  
    
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.

@@ -325,7 +325,7 @@ hist(log10(abs(ix3)),1000)
 grid on;
 title([strcat(sprintf('%s',shortphase),'log10(abs(Iph0)) both probes, histogram, 1000 bins')])
 
-title('M07 log10(abs(Iph0)) both probes, histogram, 1000 bins')
+%title('M07 log10(abs(Iph0)) both probes, histogram, 1000 bins')
 
 
 %figure(71)

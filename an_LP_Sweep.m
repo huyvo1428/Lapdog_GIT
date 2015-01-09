@@ -190,7 +190,7 @@ end
     %exponential fit
    
     V_filt = V;
-    I_filt = Itemp;
+    I_filt = Is-ion.I;
     
     if illuminated
         % find region 1 V below knee and 4V above knee
@@ -206,7 +206,7 @@ end
     
     
     
-    expfit= LP_expfit_Te(V,Is-ion.I,Vsc);
+    expfit= LP_expfit_Te(V_filt,I_filt,Vsc);
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
     DP.Ie0_exp          = expfit.Ie0;
     DP.ne_exp           = expfit.ne;
