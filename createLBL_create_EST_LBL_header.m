@@ -1,6 +1,7 @@
 %=========================================================================================
-% Create LBL header for EST.
-% Combines information from one or two LBL file headers
+% Create LBL header for EST in the form of a key-value (kv) list.
+% 
+% Combines information from one or two LBL file headers.
 % to produce information for new combined header (without writing to file).
 % 
 % ASSUMES: The two label files have identical keys on identical positions (line numbers).
@@ -45,9 +46,26 @@ function kv_new = createLBL_create_EST_LBL_header(an_tabindex_record, index)
     kv_set = createLBL_add_new_kv_pair(kv_set, 'DESCRIPTION',         '"Best estimates of physical quantities based on sweeps."');
     kv_set = createLBL_add_new_kv_pair(kv_set, 'RECORD_BYTES',        num2str(TAB_file_info.bytes));
 
-    % TODO: Find out correct value. Have observed collisions (different values in different CALIB files).
+    %--------------------------------------------------------------------------------------------
+    % TEMPORARY BUGFIX.
+    % -----------------
+    % Different LBL files may have the same variable ("key") but with two different values.
+    % This causes a problem since LBL files can only have one variable (with the same name) with only ONE value.
+    %
+    % Example (data generated 2015-01-08):
+    % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D09/RPCLAP_20141209_010259_614_A1S.LBL:ROSETTA:LAP_SWEEP_PLATEAU_DURATION  = "0x0200"
+    % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D09/RPCLAP_20141209_010259_614_A2S.LBL:ROSETTA:LAP_SWEEP_PLATEAU_DURATION  = "0x0100"
+    % 
+    % Example (data generated 2015-01-08):
+    % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D02/RPCLAP_20141202_000002_515_A1S.LBL:ROSETTA:LAP_INITIAL_SWEEP_SMPLS  = "0x0003"
+    % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D02/RPCLAP_20141202_000002_515_A2S.LBL:ROSETTA:LAP_INITIAL_SWEEP_SMPLS  = "0x0004"    
+    %
+    % TODO: Find out correct value or procedure for this situation.
+    %--------------------------------------------------------------------------------------------
     kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_INITIAL_SWEEP_SMPLS', ...
-        '<Does not know how set this value as there are separate values for P1 and P2.>');
+        '<Does not yet know how to set this value as there are separate values for P1 and P2.>');
+    %kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_SWEEP_PLATEAU_DURATION', ...
+    %    '<Does not yet know how to set this value as there are separate values for P1 and P2.>');
 
     % Set start time.
     [junk, i_sort] = sort(START_TIME_list);
@@ -88,8 +106,9 @@ function kv_new = createLBL_create_EST_LBL_header(an_tabindex_record, index)
                     kv_new.values{end+1, 1} = kv1.values{i1};
 
                 else                                      % If has no information on how to resolve collision...
-                    error(sprintf('ERROR: Does not know what to do with LBL/ODL key collision for "%s"', key))
-
+                    error_msg = sprintf('ERROR: Does not know what to do with LBL/ODL key collision for key="%s".\n', key);
+                    error_msg = [error_msg, sprintf('with two different values: value="%s", value="%s".', kv1.values{i1}, kv2.values{i1})];
+                    error(error_msg)
                 end            
 
             else  % If not key collision....

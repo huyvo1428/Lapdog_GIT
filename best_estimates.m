@@ -174,7 +174,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             %--------------------------------
             sim_sweep_data_grps_list = group_simultaneous_sweeps_INTERNAL(sweep_data);
             N_grps = length(sim_sweep_data_grps_list);
-            if (N_grps == 0)
+            if (N_grps == 0)                
                 % In case there are not enough sweeps for a single group of sweeps, do not even try to
                 % create an EST file. The below code would break anyway as "est_sweep_data" will
                 % contain no fields.
@@ -182,7 +182,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
                 % ---------------------------------------------------------------------------------
                 % I think the data archiving policy is that when there is no data,
                 % there should also be no file. (Source?) /Erik P G Johansson 2015-01-08.
-                break
+                fprintf(1, 'Too few sweeps in ops block for best estimates - skipping.\n')
+                continue
             end
             
             est_sweep_data_grps_list = cell(N_grps, 1);
@@ -241,6 +242,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 
     % ---------------------------------------------------------------------
     
+    %------------------------------------------------------------------------------------------------
     % TASK TO BE SOLVED BY THIS FUNCTION:
     % Given a set of sweeps, return groups of approximately simultaneous sweeps for
     % "select_best_estimates_INTERNAL" to work on (one group at a time), i.e. what is relevant for.
@@ -250,6 +252,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     % This depends on the exact implementation of "select_best_estimates_INTERNAL".
     %
     % sim = simultaneous; sw = sweep
+    %------------------------------------------------------------------------------------------------
     function [sim_sweep_data_grps_list] = group_simultaneous_sweeps_INTERNAL(sw_data)
     % QUESTION: How handle situation if number of sweeps is not an even multiple of natural "groups"? How handle such an ending?
     % QUESTION: Expect time-sorted data or sort oneself?    
@@ -345,6 +348,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     
     % ---------------------------------------------------------------------
     
+    %-------------------------------------------------------------------------------------------------------------------------
     % TASK TO BE SOLVED BY THIS FUNCTION:
     % Given a set of sweeps sim_sweep_data which are to be regarded as "approximately simultaneous",
     % return a set of best estimates based upon them.
@@ -356,19 +360,22 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     % NOTE: Several index variables (values are indices into other variables) also function
     % as boolean flags ([] = false; 1 or greater = true), but one has to use ~isempty() to be sure they work as intended.
     % NOTE: It is possible to assign a variable at index [] without error. Nothing happens but MATLAB permits it.
+    %-------------------------------------------------------------------------------------------------------------------------
     function data_est = select_best_estimates_INTERNAL(sim_sweep_data)
 
         data = sim_sweep_data;
         data.direction = str2double(data.direction);        
     
+        % up/dn = up/down sweep.
         i_P1_up = find((data.probe_nbr == 1) & (data.direction == 1));
         i_P1_dn = find((data.probe_nbr == 1) & (data.direction == 0));
         
         i_P2_up = find((data.probe_nbr == 2) & (data.direction == 1));
         i_P2_dn = find((data.probe_nbr == 2) & (data.direction == 0));
 
-        % Find index to first/second sweep in pair.
-        % BUG: Can NOT handle only one sweep.    ???
+        % Find index to first/second sweep in pair for P2.
+        % p1/p2 = first/second sweep (of sweep pair on the same probe).
+        % BUG: Can NOT handle only one sweep.    (false??? /2015-01-09)
         m = sort(find(data.probe_nbr == 2));     % ASSUMES: data/sweeps sorted in ascending time-order, so that index increases with time.
         i_P2_p1 = [];
         i_P2_p2 = [];

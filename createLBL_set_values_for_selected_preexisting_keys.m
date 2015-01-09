@@ -1,3 +1,7 @@
+%
+% Set key-value pairs (kv_set) for the corresponding, already existing, keys in other key-value list (kv).
+% Error otherwise.
+%
 function kv = createLBL_set_values_for_selected_preexisting_keys(kv, kv_set)
     for i_kvs = 1:length(kv_set.keys)
         key   = kv_set.keys{i_kvs};

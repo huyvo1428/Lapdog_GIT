@@ -4,6 +4,7 @@ function file_contents = createLBL_read_LBL_header(file_path)
         error(sprintf('Error, cannot open file %s', file_path))
     end
 
+    fprintf(1, 'Read LBL header from file: %s\n', file_path);   % NOTE: Not ideal place to write log message but useful for debugging. Disable?
     fc = textscan(fid,'%s %s','Delimiter','=');
     fclose(fid);
 

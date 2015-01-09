@@ -1075,7 +1075,7 @@ if(~isempty(an_tabindex));
             cl{end+1} = struct('NAME', 'QUALITY',            'DATA_TYPE', 'ASCII_REAL', 'BYTES',  3, 'UNIT', [],        'DESCRIPTION', 'QUALITY FACTOR FROM 000(best) to 999');
             cl{end+1} = struct('NAME', 'npl',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-3',  'DESCRIPTION', 'Best estimate of plasma number density.');
             cl{end+1} = struct('NAME', 'Te',                 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'eV',      'DESCRIPTION', 'Best estimate of electron temperature.');
-            cl{end+1} = struct('NAME', 'Vsc',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',       'DESCRIPTION', 'Best estimate if spacecraft potential.');
+            cl{end+1} = struct('NAME', 'Vsc',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',       'DESCRIPTION', 'Best estimate of spacecraft potential.');
             cl{end+1} = struct('NAME', 'Probe_number',       'DATA_TYPE', 'ASCII_REAL', 'BYTES',  1, 'UNIT', [],        'DESCRIPTION', 'Probe number. 1 or 2');
             cl{end+1} = struct('NAME', 'Sweep_group_number', 'DATA_TYPE', 'ASCII_REAL', 'BYTES',  5, 'UNIT', []',       'DESCRIPTION', ...
                 'Number signifying which group of the sweeps the data comes from. Groups of sweeps are formed for the purpose of deriving/selecting best estimates. All sweeps with the same group number are almost simultaneous. Mostly intended for debugging.');

@@ -51,9 +51,9 @@ indexversion = '2'; %index updated with a new variable 17Dec 2014
 indexfile = sprintf('index/index_%s_v%s.mat',archiveid,indexversion);
 
 
-if (exist(indexfile) == 2)
+%if (exist(indexfile) == 2)
 
-%if index_cache_enabled & (exist(indexfile) == 2)
+if index_cache_enabled & (exist(indexfile) == 2)
     load(indexfile);
 else
     'lapdog: calling indexgen...'
@@ -79,9 +79,9 @@ opsblocks;
 
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 
-if (exist(tabindexfile) == 2)
+%if (exist(tabindexfile) == 2)
 
-%if tabindex_cache_enabled & (exist(tabindexfile) == 2)
+if tabindex_cache_enabled & (exist(tabindexfile) == 2)
     load(tabindexfile);
     'lapdog: succesfully loaded tabfiles'
 else
@@ -96,12 +96,13 @@ end
 
 
 
+save(['~/temp.', shortphase, '.allvarsBeforeAnalysis.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
 analysis;
 
 
 
-    
-    
+
+save(['~/temp.', shortphase, '.allvarsBeforeCreateLBL.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
 'lapdog: generate LBL files....'
 createLBL
 
