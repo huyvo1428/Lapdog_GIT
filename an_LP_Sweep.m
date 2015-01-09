@@ -183,30 +183,22 @@ if (an_debug>1)
 
 end
 
+
+if illuminated
+% find region 1 V below knee and 4V above knee
+%track positions to be filtered which is in this this region
     
+    filter_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));
     
+else
+    filter_ind = [];
+end
+
     
     %this is all we need to get a good estimate of Te from an
     %exponential fit
-   
-    V_filt = V;
-    I_filt = Is-ion.I;
     
-    if illuminated
-        % find region 1 V below knee and 4V above knee
-        ph_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));
-        
-        if ~isempty(ph_ind)
-            V_filt(ph_ind) = [];
-            I_filt(ph_ind) = [];
-        end
-        
-        
-    end
-    
-    
-    
-    expfit= LP_expfit_Te(V_filt,I_filt,Vsc);
+    expfit= LP_expfit_Te(V,Is-ion.I,Vsc,filter_ind);
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
     DP.Ie0_exp          = expfit.Ie0;
     DP.ne_exp           = expfit.ne;

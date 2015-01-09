@@ -242,19 +242,18 @@ try
 
     [elec]=LP_Electron_curr(V,Itemp,Vsc,Vknee,0);
 
-    V_filt = V;
-    I_filt = Itemp;
-    
     if illuminated
         % find region 1 V below knee and 4V above knee
-        ph_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));
-        V_filt(ph_ind) = [];
-        I_filt(ph_ind) = [];
-      
-
+        %track positions to be filtered which is in this this region
+        filter_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));        
+    else
+        filter_ind = [];
     end
+        
+        
     
-    expfit= LP_expfit_Te(V_filt,I_filt,Vsc);
+    %obtain exponential fit of plasma electron current.
+    expfit= LP_expfit_Te(V,Itemp,Vsc, filter_ind); 
  
    
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
@@ -265,7 +264,6 @@ try
     %cloud current analyser
     if isnan(elec.Te)
         
-
         cloudflag = 1;
         
         [Ts,ns,elec.I,sa,sb]=LP_S_curr(V,Itemp,Vplasma,illuminated);
@@ -298,7 +296,7 @@ try
         
         title([sprintf('I, I-all_liner, I-all_exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
        
-       legend('I','I-I_linear','I-I_exp','Location','NorthWest')
+       legend('I','I-I\_linear','I-I\_exp','Location','NorthWest')
         title('I & I - ions - e - ph');
     end
 %     

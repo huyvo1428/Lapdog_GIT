@@ -19,14 +19,16 @@
 %   out.Ie0: Ie0 [A]
 %   out.Vpa: slope of log I vs Vp fit
 %   out.Vpb: y-intersection of log I vs Vp fit.
-function [out] = LP_expfit_Te(V,I,Vknee)
+function [out] = LP_expfit_Te(V_unfilt,I_unfilt,Vknee,filter_ind)
 
 
 global an_debug IN CO
 
 
+
+
 %init outputs
-Ie=I;
+Ie=I_unfilt;
 Ie(1:end)=0;
 out =[];
 
@@ -40,12 +42,27 @@ out.ne = nan(1,2);
 out.Ie0 = nan(1,2);
 
 ne=NaN;
-Vp = V+Vknee;
 
-eps= 0; %moves "0V" to the left
+
+
+%filter sweep from photoelectron dominant points? 
+V = V_unfilt;
+I = I_unfilt;
+
+if ~isempty(filter_ind)
+    V(filter_ind) = [];
+    I(filter_ind) = [];
+end
+
+Vp = V+Vknee;
+Vp_unfilt = V_unfilt+Vknee;
+
+eps= 0; %moves "0 V" to the left
+
+
 
 try
-    firstpos=find(Vp>0,1,'first');
+    firstpos=find(Vp_unfilt>0,1,'first');
     if isempty(firstpos)
         firstpos=length(Vp);
     end
@@ -164,13 +181,13 @@ if(Te>=0 && ~isinf(Te))
     
 
     
-    Ie(1:firstpos-1)=Ie0*exp(Vp(1:firstpos-1)/Te);
+    Ie(1:firstpos-1)=Ie0*exp(Vp_unfilt(1:firstpos-1)/Te);
     
     %Ie(1:firstpos)=0;
     %Ie(1:firstpos)=Ie0*exp(Vp(1:firstpos)/Te); %in the absence of
     %spacecraft photoelectrons analysis, this approximation will have a
     %too large effect on the ion side of the sweep.
-    Ie(firstpos:end)= Ie0*(1+Vp(firstpos:end)/Te);
+    Ie(firstpos:end)= Ie0*(1+Vp_unfilt(firstpos:end)/Te);
     Ie = (Ie+abs(Ie))./2; % The negative part is removed, leaving only a positive
     % current contribution. This is the return current
     % The function abs returns the absolute value of the
@@ -204,7 +221,9 @@ if an_debug >7 %debug condition
     figure(35)
     
     subplot(1,3,1)
-    plot(V,I,'b',V(ind(end)),I,'r');
+    plot(V,I,'bo',V_unfilt,I_unfilt,'b+',V(ind(end)),I,'black',V_unfilt,Ie,'ro');
+        axis([V(1) V(end) I_unfilt(1) max(I_unfilt)])
+
     subplot(1,3,2)
     plot(Vr,log(Ir),'b',Vr,Vr*P(1)+P(2),'--');
     
