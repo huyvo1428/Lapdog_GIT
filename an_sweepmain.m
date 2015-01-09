@@ -33,7 +33,7 @@ k=0; %needed for error output
 
 try
     
-    for i=1:length(an_ind)     % iterate over sweep files...
+    for i=2:length(an_ind)     % iterate over sweep files...
                 
         % get file, read variables etcc
         rfile =tabindex{an_ind(i),1};                  % Sweep file
@@ -245,6 +245,8 @@ try
         DP(len).ne_exp              = [];
         
         DP(len).Quality             = [];
+        DP(len).Rsq                 = [];
+
 
         
         DP_assmpt= DP;
@@ -276,7 +278,7 @@ try
             
             assmpt.Vknee =Vknee;
             
-            init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,1);  %get initial estimate of all variables in that sweep.
+     %       init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,1);  %get initial estimate of all variables in that sweep.
         end
         
         if (unique(~(lind(1:lmax)))) % if we also) have non-sunlit sweeps?
@@ -284,7 +286,7 @@ try
             I_50 = mean(Iarr(:,~lind),2);
             [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vsg estimate from that.
             assmpt.Vknee = Vknee;
-            init_2 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0);  %get initial estimate of all variables in that sweep.
+      %      init_2 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0);  %get initial estimate of all variables in that sweep.
         end
         % non-sunlit sweep V_SC should have priority!!
         
@@ -297,7 +299,7 @@ try
              
             assmpt.Vknee =Vknee;
             
-            init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0.4);  %get initial estimate of all variables in that sweep.            
+       %     init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0.4);  %get initial estimate of all variables in that sweep.            
         end
         
         
@@ -404,7 +406,8 @@ try
                 
                 EP(m).ni_2comp     = (1e-6/(IN.probe_cA*CO.e))*sqrt(max(assmpt.ionM*CO.mp*(DP(m).ion_intersect(1))*DP(m).ion_slope(1)/(2*CO.e),0)); %max out of expression and 0 -> if >0, ni=0;
                 EP(m).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(max(assmpt.ionM*CO.mp*(DP_assmpt(m).ion_intersect(1))*DP_assmpt(m).ion_slope(1)/(2*CO.e),0)); %max out of expression and 0 -> if >0, ni=0;
-                
+
+
                 EP(m).v_ion     =  EP(m).ni_2comp    *assmpt.vram/EP(m).ni_1comp;
                 EP(m).asm_v_ion =  EP(m).asm_ni_2comp*assmpt.vram/EP(m).asm_ni_1comp;
 
@@ -454,13 +457,13 @@ try
             ', ion_slope, sigma_ion_slope, ion_intersect, sigma_ion_intersect, e_slope, sigma_e_slope, e_intersect, sigma_e_intersect',...
             ', ion_Vb_intersect, sigma_ion_Vb_intersect, e_Vb_intersect, sigma_e_Vb_intersect',...
             ', Tphc, nphc, phc_slope, sigma_phc_slope, phc_intersect, sigma_phc_intersect',...
-            ', ne_5eV, ni_v_dep, ni_v_indep, v_ion, Te_exp, sigma_Te_exp, ne_exp, sigma_ne_exp',...
+            ', ne_5eV, ni_v_dep, ni_v_indep, v_ion, Te_exp, sigma_Te_exp, ne_exp, sigma_ne_exp, Rsquared_linear, Rsquared_exp',...
             ', asm_Vsg, asm_sigma_Vsg',...
             ', asm_Iph0, asm_Tph, asm_Vsi, asm_Vph_knee, asm_sigma_Vph_knee, asm_Te_linear, asm_sigma_Te_linear, asm_ne_linear, sigma_asm_ne_linear',...
             ', asm_ion_slope, asm_sigma_ion_slope, asm_ion_intersect, asm_sigma_ion_intersect, asm_e_slope, asm_sigma_e_slope, asm_e_intersect, asm_sigma_e_intersect',...
             ', asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
             ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
-            ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp',...       
+            ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...       
             '\n'));
 
 
@@ -479,16 +482,17 @@ try
             str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
             str7  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_Vb_intersect,DP(k).e_Vb_intersect);  
             str8  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Tphc,DP(k).nphc,DP(k).phc_slope,DP(k).phc_intersect);                                                                                                      %NB DP(k).Te_exp is vector size 2, so two ouputs.           
-            str9  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).ne_5eV,EP(k).ni_1comp,EP(k).ni_2comp,EP(k).v_ion,DP(k).Te_exp,DP(k).ne_exp);
+            str9  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).ne_5eV,EP(k).ni_1comp,EP(k).ni_2comp,EP(k).v_ion,DP(k).Te_exp,DP(k).ne_exp,DP(k).Rsq.linear,DP(k).Rsq.exp);
             str10 = sprintf(' %14.7e, %14.7e,',DP_assmpt(k).Vsg);            
             str11 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).Iph0,DP_assmpt(k).Tph,DP_assmpt(k).Vsi,DP_assmpt(k).Vph_knee,DP_assmpt(k).Te,DP_assmpt(k).ne);        
             str12 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).ion_slope,DP_assmpt(k).ion_intersect,DP_assmpt(k).e_slope,DP_assmpt(k).e_intersect);            
             str13 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', DP_assmpt(k).ion_Vb_intersect, DP_assmpt(k).e_Vb_intersect);           
             str14 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).Tphc,DP_assmpt(k).nphc,DP_assmpt(k).phc_slope,DP_assmpt(k).phc_intersect);
-            str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e',EP(k).asm_ne_5eV,EP(k).asm_ni_1comp,EP(k).asm_ni_2comp,EP(k).asm_v_ion,DP_assmpt(k).Te_exp,DP_assmpt(k).ne_exp);
+            str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,%14.7e, %14.7e',EP(k).asm_ne_5eV,EP(k).asm_ni_1comp,EP(k).asm_ni_2comp,EP(k).asm_v_ion,DP_assmpt(k).Te_exp,DP_assmpt(k).ne_exp,DP_assmpt(k).Rsq.linear,DP_assmpt(k).Rsq.exp);
 
             
             strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15);
+            strtot=strrep(strtot,'  0.0000000e+00','            NaN'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
             strtot=strrep(strtot,'Inf','NaN');
             %strtot=strrep(strtot,'NaN','   ');
             
@@ -509,7 +513,7 @@ try
         an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
         %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
         an_tabindex{end,4} = klen; %number of rows
-        an_tabindex{end,5} = 89; %number of columns
+        an_tabindex{end,5} = 95; %number of columns
         an_tabindex{end,6} = an_ind(i);
         an_tabindex{end,7} = 'sweep'; %type
         an_tabindex{end,8} = timing;
@@ -519,8 +523,8 @@ try
         clear AP DP EP
     end
     
-    cspice_unload(kernelFile);  %unload kernels when exiting function
-%     
+    cspice_kclear;  %unload ALL kernels when exiting function
+    %     
 catch err
     
     fprintf(1,'Error at loop step %i, file %s',i,tabindex{an_ind(i),1});
@@ -535,7 +539,7 @@ catch err
             fprintf(1,'%s, %i,',err.stack(i).name,err.stack(i).line);
         end
     end
-    cspice_unload(kernelFile);
+    cspice_kclear;  %unload ALL kernels when exiting function
         
     
 end

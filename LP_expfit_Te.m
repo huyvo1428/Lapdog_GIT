@@ -64,7 +64,7 @@ eps= 0; %moves "0 V" to the left
 try
     firstpos=find(Vp_unfilt>0,1,'first');
     if isempty(firstpos)
-        firstpos=length(Vp);
+        firstpos=length(Vp_unfilt);
     end
     
     
@@ -222,7 +222,7 @@ if an_debug >7 %debug condition
     
     subplot(1,3,1)
     plot(V,I,'bo',V_unfilt,I_unfilt,'b+',V(ind(end)),I,'black',V_unfilt,Ie,'ro');
-        axis([V(1) V(end) I_unfilt(1) max(I_unfilt)])
+    axis([V(1) V(end) I_unfilt(1) max(I_unfilt)])
 
     subplot(1,3,2)
     plot(Vr,log(Ir),'b',Vr,Vr*P(1)+P(2),'--');

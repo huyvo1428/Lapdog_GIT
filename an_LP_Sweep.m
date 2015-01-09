@@ -94,6 +94,10 @@ DP.ne_exp           = nan(1,2);
 
 DP.Quality          = sum(Q);
 
+DP.Rsq              = [];
+DP.Rsq.linear       = [];
+DP.Rsq.exp          = [];
+
 Iph= 0;
 
 
@@ -403,6 +407,23 @@ end
         
     end
     
+    
+        
+    %---------------------------------------------------------- 
+    % Rsquare value calculation of fit
+    
+    Itot_linear=Iph+elec.I+ion.I;
+    Itot_exp=Itot_linear-elec.I+expfit.I;
+    Izero_linear = Is-Itot_linear;
+    Izero_exp = Is - Itot_exp;
+    
+    Rsq_linear = 1 - sum((Izero_linear.^2))/sum(((Is-mean(Is)).^2));
+    Rsq_exp = 1 -  sum(Izero_exp.^2)/sum((Is-mean(Is)).^2);
+    
+
+    
+    
+    
     %DP.Iph0     = NaN;
     %DP.Tph     = NaN;%defined elsewhere...
     
@@ -423,6 +444,10 @@ end
     DP.e_intersect    = elec.Vpb;
     DP.Quality = sum(Q); 
     
+    DP.Rsq.linear       = Rsq_linear;
+    DP.Rsq.exp          = Rsq_exp;
+    
+    
     if (an_debug>1)
         figure(33);
 
@@ -434,11 +459,7 @@ end
             
         end
     
-        
-        Itot_linear=Iph+elec.I+ion.I;
-        Itot_exp=Itot_linear-elec.I+expfit.I;
-        Izero_linear = Is-Itot_linear;
-        Izero_exp = Is - Itot_exp;
+
         
         subplot(3,2,2)
         plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or');
