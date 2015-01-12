@@ -406,7 +406,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         % ----------------------------
         % NOTE: Can probably be shortened if the idea is to select sweep with
         % preceeding voltage (low freq. bias or sweep) positive.
-        % NOTE: Uses && so not to require i_P2_p1.
+        % NOTE: Uses "&&" so not to require i_P2_p1.
         has_P2_updn_pair = ~isempty(i_P2_p1) && (data.direction(i_P2_p1) == 1) && ~isempty(i_P2_p2) && (data.direction(i_P2_p2) == 0);   % NOTE: Uses && so not to require i_P2_p1.
         if has_P2_updn_pair && (data.V_LF_HF_before_sweep(i_P2_p1) > 0)
             i_P2 = i_P2_p2;
@@ -430,15 +430,17 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         % Choose probe to use for n_plasma, then select data.
         %
         % NOTE: Zero is a common non-sensical value for asm_ni_v_indep.
-        % -------------------------------------------------------------
+        % BUG(?): For non-sensical values, switches to using value from other probe,
+        % rather than the other sweep (in sweep pair) on the same probe.
+        % --------------------------------------------------------------------
         data.asm_ni_v_indep = str2double(data.asm_ni_v_indep);
         if ~isempty(i_P2)   &&   ~isnan(data.asm_ni_v_indep(i_P2))    &&    (data.asm_ni_v_indep(i_P2) ~= 0)
             i = i_P2;
         else
             i = i_P1;
         end
-        npl = data.asm_ni_v_indep(i);                       % NOTE: May assign/return empty matrix if i = [].
-        if ~isempty(npl) && ~isnan(npl) && (npl ~= 0)            % Use value if not obviously nonsensical...
+        npl = data.asm_ni_v_indep(i);                            % NOTE: May assign/return empty matrix if i = [].
+        if ~isempty(npl)   &&   ~isnan(npl)   &&   (npl ~= 0)    % Use value if not obviously nonsensical...
             data.npl_est(i) = npl;
         end
 
