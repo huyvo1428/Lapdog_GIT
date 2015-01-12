@@ -60,12 +60,22 @@ function kv_new = createLBL_create_EST_LBL_header(an_tabindex_record, index)
     % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D09/RPCLAP_20141209_010259_614_A1S.LBL:ROSETTA:LAP_SWEEP_PLATEAU_DURATION  = "0x0200"
     % RO-C-RPCLAP-5-1412-DERIV-V0.3/2014/DEC/D09/RPCLAP_20141209_010259_614_A2S.LBL:ROSETTA:LAP_SWEEP_PLATEAU_DURATION  = "0x0100"
     % 
+    % Example (data generated 2015-01-12)
+    % RO-C-RPCLAP-5-1501-DERIV-V0.3/2015/JAN/D02/RPCLAP_20150102_012211_204_A1S.LBL:ROSETTA:LAP_SWEEP_STEPS  = "0x00f0"
+    % RO-C-RPCLAP-5-1501-DERIV-V0.3/2015/JAN/D02/RPCLAP_20150102_012211_204_A2S.LBL:ROSETTA:LAP_SWEEP_STEPS  = "0x00d0"
+    %
+    % Example (data generated 2015-01-12)
+    % RO-C-RPCLAP-5-1501-DERIV-V0.3/2015/JAN/D02/RPCLAP_20150102_012211_204_A1S.LBL:ROSETTA:LAP_SWEEP_START_BIAS  = "0x00f8"
+    % RO-C-RPCLAP-5-1501-DERIV-V0.3/2015/JAN/D02/RPCLAP_20150102_012211_204_A2S.LBL:ROSETTA:LAP_SWEEP_START_BIAS  = "0x00e8"
+    %
     % TODO: Find out correct value or procedure for this situation.
     %--------------------------------------------------------------------------------------------
-    kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_INITIAL_SWEEP_SMPLS', ...
-        '<Does not yet know how to set this value as there are separate values for P1 and P2.>');
-    kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_SWEEP_PLATEAU_DURATION', ...
-        '<Does not yet know how to set this value as there are separate values for P1 and P2.>');
+    temp_bugfix_key_value = '<Does not yet know how to set this value since the variable has different values for probe 1 and probe 2.>';
+    kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_INITIAL_SWEEP_SMPLS',    temp_bugfix_key_value);
+    kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_SWEEP_PLATEAU_DURATION', temp_bugfix_key_value);
+    kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_SWEEP_STEPS',            temp_bugfix_key_value);
+    kv_set = createLBL_add_new_kv_pair(kv_set, 'ROSETTA:LAP_SWEEP_START_BIAS',       temp_bugfix_key_value);
+    
 
     % Set start time.
     [junk, i_sort] = sort(START_TIME_list);

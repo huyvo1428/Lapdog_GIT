@@ -374,16 +374,16 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         i_P2_dn = find((data.probe_nbr == 2) & (data.direction == 0));
 
         % Find index to first/second sweep in pair for P2.
-        % p1/p2 = first/second sweep (of sweep pair on the same probe).
-        % BUG: Can NOT handle only one sweep.    (false??? /2015-01-09)
+        % 1st/2nd = first/second sweep (of sweep pair on the same probe).
+        % BUG: Can NOT handle only one sweep.    (false??? /EJ 2015-01-09)
         m = sort(find(data.probe_nbr == 2));     % ASSUMES: data/sweeps sorted in ascending time-order, so that index increases with time.
-        i_P2_p1 = [];
-        i_P2_p2 = [];
+        i_P2_1st = [];
+        i_P2_2nd = [];
         if length(m) >= 1
-            i_P2_p1 = m(1);
+            i_P2_1st = m(1);
         end
         if length(m) == 2
-            i_P2_p2 = m(2);
+            i_P2_2nd = m(2);
         end
         
         
@@ -406,10 +406,10 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         % ----------------------------
         % NOTE: Can probably be shortened if the idea is to select sweep with
         % preceeding voltage (low freq. bias or sweep) positive.
-        % NOTE: Uses "&&" so not to require i_P2_p1.
-        has_P2_updn_pair = ~isempty(i_P2_p1) && (data.direction(i_P2_p1) == 1) && ~isempty(i_P2_p2) && (data.direction(i_P2_p2) == 0);   % NOTE: Uses && so not to require i_P2_p1.
-        if has_P2_updn_pair && (data.V_LF_HF_before_sweep(i_P2_p1) > 0)
-            i_P2 = i_P2_p2;
+        % NOTE: Uses "&&" so not to require i_P2_1st.
+        has_P2_updn_pair = ~isempty(i_P2_1st) && (data.direction(i_P2_1st) == 1) && ~isempty(i_P2_2nd) && (data.direction(i_P2_2nd) == 0);   % NOTE: Uses && so not to require i_P2_1st.
+        if has_P2_updn_pair && (data.V_LF_HF_before_sweep(i_P2_1st) > 0)
+            i_P2 = i_P2_2nd;
         elseif ~isempty(i_P2_up)
             i_P2 = i_P2_up;
         else
@@ -428,7 +428,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 
 
         % Choose probe to use for n_plasma, then select data.
-        %
+        % --------------------------------------------------- 
         % NOTE: Zero is a common non-sensical value for asm_ni_v_indep.
         % BUG(?): For non-sensical values, switches to using value from other probe,
         % rather than the other sweep (in sweep pair) on the same probe.
@@ -462,7 +462,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         data.Vsc_est(i) = data.asm_Vsg   (i);
         
         data_est = select_structs_arrays_INTERNAL(data, i_selected);
-    end   
+    end
 
     % ---------------------------------------------------------------------    
     
