@@ -33,7 +33,7 @@ k=0; %needed for error output
 
 try
     
-    for i=2:length(an_ind)     % iterate over sweep files...
+    for i=1:length(an_ind)     % iterate over sweep files...
                 
         % get file, read variables etcc
         rfile =tabindex{an_ind(i),1};                  % Sweep file
