@@ -178,6 +178,9 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
                 % In case there are not enough sweeps for a single group of sweeps, do not even try to
                 % create an EST file. The below code would break anyway as "est_sweep_data" will
                 % contain no fields.
+                % BUG/TODO?: This could also be seen as a bug. Modify
+                % group_simultaneous_sweeps_INTERNAL to produce one last
+                % "incomplete" group of sweeps?
                 % NOTE: If no EST file is produced there should also be no LBL file.
                 % ---------------------------------------------------------------------------------
                 % I think the data archiving policy is that when there is no data,

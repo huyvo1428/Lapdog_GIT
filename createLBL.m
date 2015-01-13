@@ -1005,6 +1005,10 @@ if(~isempty(an_tabindex));
             cl2{end+1} = struct('NAME', 'sigma_Te_exp',   'UNIT', 'eV', 'DESCRIPTION', 'Fractional error estimate of electron temperature from exponential fit to electron current');
             cl2{end+1} = struct('NAME', 'ne_exp',   'UNIT', 'cm^-3?', 'DESCRIPTION', []);   % New from commit 3dce0a0, 2014-12-16 or earlier.
             cl2{end+1} = struct('NAME', 'sigma_ne_exp',   'UNIT', 'cm^-3?', 'DESCRIPTION', []);  % New from commit 3dce0a0, 2014-12-16 or earlier.          
+            
+            cl2{end+1} = struct('NAME', 'Rsquared_linear',   'UNIT', '?',      'DESCRIPTION', []);   % New from commit f89c62b, 2015-01-09 or earlier.
+            cl2{end+1} = struct('NAME', 'Rsquared_exp',      'UNIT', '?',      'DESCRIPTION', []);   % New from commit f89c62b, 2015-01-09 or earlier.
+            
             cl2{end+1} = struct('NAME', 'asm_Vsg',   'UNIT', 'V', 'DESCRIPTION', 'Spacecraft potential from gaussian fit to second derivative. Fixed photoelectron current assumption');
             cl2{end+1} = struct('NAME', 'asm_sigma_Vsg',   'UNIT', 'V', 'DESCRIPTION', 'Standard deviation of spacecraft potential from gaussian fit to second derivative. Fixed photoelectron current assumption');
             cl2{end+1} = struct('NAME', 'asm_Iph0',   'UNIT', 'A',   'DESCRIPTION', 'Photosaturation current. Fixed photoelectron current assumption');
@@ -1043,6 +1047,9 @@ if(~isempty(an_tabindex));
             
             cl2{end+1} = struct('NAME', 'asm_ne_exp',   'UNIT', 'cm^-3?',       'DESCRIPTION', []);    % New from commit 3dce0a0, 2014-12-16 or earlier.
             cl2{end+1} = struct('NAME', 'asm_sigma_ne_exp',   'UNIT', 'cm^-3?',      'DESCRIPTION', []);    % New  from commit 3dce0a0, 2014-12-16 or earlier.
+          
+            cl2{end+1} = struct('NAME', 'asm_Rsquared_linear',   'UNIT', '?',      'DESCRIPTION', []);   % New from commit f89c62b, 2015-01-09 or earlier.
+            cl2{end+1} = struct('NAME', 'asm_Rsquared_exp',      'UNIT', '?',      'DESCRIPTION', []);   % New from commit f89c62b, 2015-01-09 or earlier.
             
             % Removed from commit 3dce0a0, 2014-12-16, or earlier.
             %cl2{end+1} = struct('NAME', 'asm_e_Vb_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of linear electron current fit as a function of bias potential . Fixed photoelectron current assumption');

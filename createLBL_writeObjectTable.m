@@ -28,6 +28,7 @@ function createLBL_writeObjectTable(fid, data)
 % PROPOSAL: Use derived ROW_BYTES value to check corresponding value in "data".
 % PROPOSAL: Handle FORMAT. What does PDS say?
 % PROPOSAL: Handle ITEMS.
+% PROPOSAL: Check for multiple occurances of the same NAME value.
 % 
 % QUESTION: Use ODL field names as structure field names?
 %    CON: ODL names can be unclear.
@@ -72,7 +73,10 @@ function createLBL_writeObjectTable(fid, data)
     current_row_byte = 1;    % Starts with one, not zero.
     for i = 1:length(data.column_list)
         cd = data.column_list{i};       % cd = column data
-                
+           
+        if isempty(cd.NAME)
+            error('ERROR: Trying to use empty value for NAME.')
+        end
         if isempty(cd.UNIT)
             cd.UNIT = '"N/A"';
         end

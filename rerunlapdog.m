@@ -115,12 +115,12 @@ end
 % Resample data
 tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);
 fp = fopen(tabindexfile,'r');
-if(redo_resampling>0)
-    fprintf(1,'lapdog: redoing resampled archive...\n');
-
-    fclose(fp);
-    fp=-1;
-end
+%if(redo_resampling>0)
+%    fprintf(1,'lapdog: redoing resampled archive...\n');
+%
+%    fclose(fp);
+%    fp=-1;
+%end
 
 if(fp > 0)
     fclose(fp);

@@ -6,6 +6,7 @@ mice/*
 *.mat
 
 metakernel_rosetta.txt
+main.m
 control.m
 
 
