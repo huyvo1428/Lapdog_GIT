@@ -50,7 +50,21 @@ if(~isempty(ind_I2S))
 end
 
 
+
 fprintf(1,'Downsample Low frequency measurements \n')
+
+
+if(~isempty(ind_I1L))
+    %an_downsample(ind_I1L,tabindex,8)
+    an_downsample(ind_I1L,tabindex,32)
+end
+ 
+if(~isempty(ind_I2L))
+
+   % an_downsample(ind_I2L,tabindex,8)
+    an_downsample(ind_I2L,tabindex,32)
+end
+ 
 
 if(~isempty(ind_V1L))
 
