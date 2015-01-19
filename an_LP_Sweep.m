@@ -12,7 +12,7 @@
 %
 %   2. find the spacecraft potential (Vsc) and Vph_knee by calling an_Vsc and
 %   an_Vplasma. if sunlit: Vph_knee = Vplasma is the plasma at the probe 
-% potential from finding the knee of the photoelectron current
+%   potential from finding the knee of the photoelectron current
 %
 %   3. evaluate if the sweep is truly sunlit or not, in the case of
 %   ambiguous illumination input. 
@@ -410,13 +410,13 @@ end
     %---------------------------------------------------------- 
     % Rsquare value calculation of fit
     
-    Itot_linear=Iph+elec.I+ion.I;
-    Itot_exp=Itot_linear-elec.I+expfit.I;
-    Izero_linear = Is-Itot_linear;
-    Izero_exp = Is - Itot_exp;
+    Itot_linear = Iph + elec.I + ion.I;
+    Itot_exp    = Itot_linear - elec.I + expfit.I;
+    Izero_linear = Is - Itot_linear;
+    Izero_exp    = Is - Itot_exp;
     
-    Rsq_linear = 1 - sum((Izero_linear.^2))/sum(((Is-mean(Is)).^2));
-    Rsq_exp = 1 -  sum(Izero_exp.^2)/sum((Is-mean(Is)).^2);
+    Rsq_linear = 1 - sum(Izero_linear.^2) / sum((Is-mean(Is)).^2);
+    Rsq_exp    = 1 - sum(Izero_exp.^2)    / sum((Is-mean(Is)).^2);
     
 
     

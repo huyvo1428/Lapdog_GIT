@@ -287,7 +287,7 @@ try
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                         b3= fprintf(awID,'\n');
                     else
-                        b1=fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
+                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                         b3= fprintf(awID,'\n');
                         
@@ -297,8 +297,8 @@ try
                     
                     if fileflag(2) =='3'
                         
-                        b1=fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
-                        b2=fprintf(awID,', %14.7e',fout{k,end-1}.');
+                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
+                        b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                         b3= fprintf(awID,'\n');
                         
                         
@@ -306,8 +306,7 @@ try
                     else
                         b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
-                        b3=fprintf(awID,'\n');
-                        
+                        b3= fprintf(awID,'\n');
                         
                         %dlmwrite(sname,fout{k,end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
                         
@@ -380,7 +379,7 @@ try
         an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
         %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
         an_tabindex{end,4} = len; %number of rows
-        an_tabindex{end,5} = 6+length(freq); %number of columns
+        an_tabindex{end,5} = 7 + length(freq); %number of columns
         
         
         

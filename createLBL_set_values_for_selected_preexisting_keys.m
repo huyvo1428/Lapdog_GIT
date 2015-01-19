@@ -1,17 +1,22 @@
 %
-% Set key-value pairs (kv_set) for the corresponding, already existing, keys in other key-value list (kv).
+% Set key-value pairs (kvl_set) for the corresponding, already existing, keys in other key-value list (kvl).
 % Error otherwise.
 %
-function kv = createLBL_set_values_for_selected_preexisting_keys(kv, kv_set)
-    for i_kvs = 1:length(kv_set.keys)
-        key   = kv_set.keys{i_kvs};
-        value = kv_set.values{i_kvs};
-        i_kv = find(strcmp(key, kv.keys));
+function kvl = createLBL_set_values_for_selected_preexisting_keys(kvl, kvl_set)
 
-        if ~isempty(i_kv)
-            kv.values{i_kv} = value;
-        else
+    for i_kv_set = 1:length(kvl_set.keys)
+        key   = kvl_set.keys{i_kv_set};
+        value = kvl_set.values{i_kv_set};
+        
+        i_kvl = find(strcmp(key, kvl.keys));
+
+        if isempty(i_kvl)
             error(sprintf('ERROR: Tries to set LBL/ODL key that does not yet exist in source: (key, value) = (%s, %s)', key, value));
+        elseif length(i_kvl) > 1
+            error(sprintf('ERROR: Found multiple keys with the same value in kvl: key = %s', key));
+        else
+            kvl.values{i_kvl} = value;
         end
     end
+    
 end
