@@ -342,7 +342,7 @@ try
                   
             if(step2 ~= step1 &&( step2-nStep ~= step1))
                 
-                fprintf(1,'old method-> %d --%d <- new method ',step2,step1);
+                fprintf(1,'old calculation method-> %d --%d <- new indexed method ',step2,step1);
                 fprintf(1,'Error in file %s\n', index(tabind(i)).tabfile);
 
             end
@@ -352,9 +352,15 @@ try
             if any(ismember(macroNo,LDLMACROS)) %if macro is any of the LDL macros
                 qualityF = qualityF+40; %LDL macro measurement
                 
+                %filter LDL sweep for noisy points. the last two number
+                %dictate how heavy filtering is needed. 3 & 1 are good from
+                %experience.
                 curCorr= sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,1);
-                curArray = nanmean(curCorr); %final downsampled product
-                qualityF = qualityF +2; %lower samplesize
+                
+                if nStep> 1  %if nStep == 1, then nanmean will not work as intended and just output a single value
+                    curArray = nanmean(curCorr); %final downsampled product
+                    qualityF = qualityF +2; %lower samplesize quality marker
+                end
                 
                 
                 if diag
@@ -407,13 +413,7 @@ try
                 
             end%if LDL macro check & downsampling
             
-            %
-            %         %%LET'S PRINT!
-            %         figure(1)
-            %         plot(1:length(curArray),curArray,'b',1:length(curArray),curArray+CURRENTOFFSET,'r',1:length(curArray),0,'og')
-            %         grid on;
-            %         axis([0 200 -9E-9 10E-9]);
-            %
+
             
             curArray=curArray+ CURRENTOFFSET;
             

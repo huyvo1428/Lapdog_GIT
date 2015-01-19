@@ -43,9 +43,20 @@ if fc > 0
     
     line = fgetl(fc);
     jj = 0;
-    while((jj<100) && isempty(strfind(line,shortphase)))
+    
+    
+    while(jj<100 && isempty(line))
         line = fgetl(fc);
-        jj = jj + 1;
+        jj= jj + 1;
+        
+    end
+
+    
+    
+    while((jj<100) && isempty(strfind(line,shortphase)) || (strcmp(line(1),'#')))
+            line = fgetl(fc);
+            jj = jj + 1;
+        
     end
     
 else

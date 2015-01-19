@@ -1,4 +1,3 @@
-function [curOut] = sweepcorrection(curArray,potBias,nSteps,largeK,smallK)
 %sweepcorrection takes an array of currents with nSteps measurements at every
 %potential step potBias, and removes noisy values compared at each step,
 %disregarding and removing extremely noisy values for standard deviation comparisons
@@ -6,6 +5,9 @@ function [curOut] = sweepcorrection(curArray,potBias,nSteps,largeK,smallK)
 %suggested values for largeK = 3, and smallK = 1.
 %curArray must have nSteps current measurements at each potential step
 %except the last entries.
+%note: potBias is no longer in use, remove?
+function [curOut] = sweepcorrection(curArray,potBias,nSteps,largeK,smallK)
+
 
 A = vec2mat(curArray,nSteps,NaN); %reformat curArray to matrix, fill with NaN values if needed on last steps
 
@@ -16,6 +18,8 @@ extOutlier = abs(curOut - mean(curArray)) > largeK*std(curArray); %extreme outli
 
 curOut(extOutlier)= NaN; %need to exclude from mean & std calculations
 
+
+if nSteps>1 %it's not meaningful to this if nSteps == 1.
 mu = nanmean(curOut); %function that ignores NaN values
 sigma = nanstd(curOut); %function that ignores NaN values
 [n,junk] = size(curOut);
@@ -31,6 +35,8 @@ outliers = abs(curOut - MeanMat) > smallK*SigmaMat; % 66% chance on normal sigma
 
 
 curOut(outliers) = NaN;
+end
+
 %curOut = nanmean(curOut); %destructive downsampling, let's do this outside function
 
 
