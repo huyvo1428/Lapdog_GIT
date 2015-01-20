@@ -88,6 +88,6 @@ if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
 %  
 
 
-fprintf(1, 'Derive/select best estimates\n')
+fprintf(1, 'Best estimates\n')
 %save(['~/temp.', shortphase, '.allvarsBeforeBestEstmimates.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
 an_tabindex = best_estimates(an_tabindex, tabindex, index, obe);

@@ -47,6 +47,9 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 %     PROPOSAL: Separate cell arrays for strings and numeric values.
 %         PRO: Can easily search/select sweeps depending on parameters (time, direction, probe). 
 %
+% PROPOSAL: Remove Vsc values equal or lower/higher than lowest/highest sweep bias.
+%   NOTE: Sweep bias values can be read from B?S.TAB files.
+%
 % TODO: Check whether to expect low-freq bias potential using macro, instead of checking file existence?
 %
 % TODO: Remove references to "et" times. Use OBT.
@@ -185,7 +188,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
                 % ---------------------------------------------------------------------------------
                 % I think the data archiving policy is that when there is no data,
                 % there should also be no file. (Source?) /Erik P G Johansson 2015-01-08.
-                fprintf(1, 'Too few sweeps in ops block for best estimates - skipping.\n')
+                fprintf(1, 'best_estimates: Too few sweeps in ops block for best estimates.\n')
+                fprintf(1, '==> Skipping: %s\n', O_list{i_ob}.EST_file_path)
                 continue
             end
             

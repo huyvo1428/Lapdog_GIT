@@ -149,7 +149,7 @@ function createLBL_writeObjectTable(fid, data)
             cd.UNIT = '"N/A"';
         end
         if isempty(cd.DESCRIPTION)
-            cd.DESCRIPTION = 'N/A';
+            cd.DESCRIPTION = '"N/A"';
         end
         
         indented_print(+1, 'OBJECT = COLUMN\n');

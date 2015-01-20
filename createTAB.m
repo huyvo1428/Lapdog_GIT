@@ -355,7 +355,7 @@ try
                 %filter LDL sweep for noisy points. the last two number
                 %dictate how heavy filtering is needed. 3 & 1 are good from
                 %experience.
-                curCorr= sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,1);
+                curArray= sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,1);
                 
                 if nStep> 1  %if nStep == 1, then nanmean will not work as intended and just output a single value
                     curArray = nanmean(curCorr); %final downsampled product
