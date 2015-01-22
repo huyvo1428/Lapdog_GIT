@@ -1,4 +1,3 @@
-
 # EXTRACTED MISSION TIMELINE
 #
 # Prepared by Reine Gill
@@ -12,7 +11,7 @@
 #
 #MISSION_PHASE_NAME        :ABBR:CCYYMMDD  :DUR :TARGET_NAME_IN_DATA_SET_ID:TARGET_ID :TARGET_TYPE   :TARGET_NAME_IN_DATA_SET_NAME
 "GROUND"                   :GRND:2000-01-01:1520:"CHECKOUT"                :X         :"N/A"         :CHECK
-"LAUNCH"                   :LEOP:2004-03-02:0003:"CHECKOUT"                :X         :"N/A"         :CHECK 
+"LAUNCH"                   :LEOP:2004-03-02:0003:"CHECKOUT"                :X         :"N/A"         :CHECK
 "COMMISSIONING"            :CVP :2004-03-05:0226:"CHECKOUT"                :X         :"N/A"         :CHECK
 "EARTH SWING-BY 1"         :EAR1:2004-10-17:0170:"EARTH"                   :E         :"PLANET"      :EARTH
 "CRUISE 2"                 :CR2 :2005-04-05:0480:"SOLAR WIND"              :SS        :"SOLAR SYSTEM":SW
@@ -33,6 +32,7 @@
 "JUN 2014"                 :1406:2014-06-01:0030:"67P/CHURYUMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
 "JUL 2014"                 :1407:2014-07-01:0031:"67P/CHURYUMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
 "AUG 2014"                 :1408:2014-08-01:0031:"67P/CHURYUMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
+"MTP 06b"                  :M06b:2014-08-31:0003:"67P/CHURYUMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
 "MTP 06c"                  :M06c:2014-08-31:0001:"67P/CHURYUMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
 "SEP 2014"                 :1409:2014-09-01:0030:"67P/CHURYUMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P
 "OCT 2014"                 :1410:2014-10-01:0031:"67P/CHURYUMOV-GERASIMENKO(1969 R1)":C:"COMET"       :67P

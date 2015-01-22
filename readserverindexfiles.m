@@ -73,13 +73,29 @@ end
 
 
 s_indexfile = sprintf('server/index/index_%s.mat',archiveid);
+s_indexfilev2 = sprintf('server/index/index_%s_v2.mat',archiveid);
+
+%index_1406_3_v2.mat
+v=1 ;
+
+if (exist(s_indexfilev2)==2)
+    s_indexfile = s_indexfilev2;
+    v =2;
+    
+end
+
+    
+
 fp = fopen(s_indexfile,'r');
+
+
 
 if(fp > 0)
     fclose(fp);
     load(s_indexfile);
     'lapdog: succesfully loaded server index'
-
+end
+   
 if skipindex ==0
     
 %substring = strrep(index(1,1),tabindex(1,2),'');
@@ -91,14 +107,20 @@ index2 = index;
 'replacing substrings...'
 index = struct_string_replace(index2,substring,newstring); %separate code
 indexfile = sprintf('index/index_%s.mat',archiveid);
+if v ==2
+    
+    indexfile = sprintf('index/index_%s_v2.mat',archiveid);
 
-save(indexfile,'index');
+else    
+    indexfile = sprintf('index/index_%s.mat',archiveid);
 end
 
-else
+save(indexfile,'index');
+    else
     'error, file missing'
 end
 
+'done! saved new indices in local indexfolders'
 
 % %andate = tabindex{:,1}(end-47:end-35);
 % antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);

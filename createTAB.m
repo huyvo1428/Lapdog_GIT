@@ -355,24 +355,52 @@ try
                 %filter LDL sweep for noisy points. the last two number
                 %dictate how heavy filtering is needed. 3 & 1 are good from
                 %experience.
-                curArray= sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,1);
+               
+                curArray= sweepcorrection(scantemp{1,3}(:),nStep,0.1,1);
                 
                 if nStep> 1  %if nStep == 1, then nanmean will not work as intended and just output a single value
-                    curArray = nanmean(curCorr); %final downsampled product
+             %     curArray= sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,1);
+                    curArray = nanmean(curArray,1); %final downsampled product
                     qualityF = qualityF +2; %lower samplesize quality marker
+                %else
+                %  curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
                 end
+
                 
                 
                 if diag
                     
-                    figure(163);
                     
-                    subplot(2,2,1)
-                    plot(potbias,curArray);
+                    
+                    A = vec2mat(curArray,nStep,NaN); %reformat curArray to matrix, fill with NaN values if needed on last steps
+                    
+                    %[A,pad] = vec2mat(curArray,nSteps,NaN); %reformat curArray to matrix, fill with NaN values if needed on last steps
+                    
+                    curOut=A.';
+                    
+                    test1 = smooth(nanmean(curOut,1),0.08,'rloess').';
+                    test_std= nanstd(test1,0);
+                    largeK = 0.1;
+                    
+                    
+                    figure(164)
+                    
+                    plot(scantemp{1,4}(:),scantemp{1,3}(:),'g',potbias,curArray,'b',potbias,test1+test_std*largeK,'r--',potbias,test1-test_std*largeK,'r--');
                     xlabel('Vp [V]');
                     ylabel('I');
-                    title('edited sweep, factor 3 & 1, 99% confidence, 60% confidence');
+                    title('LDL Sweep filtering, factor 3 & 1, std*0.2, 0.2 span');
                     grid on;
+                    legend('input','output','cutoff from rloess smoothing','Location','North')
+                    
+                    figure(163);              
+                    
+                    subplot(2,2,1)
+                    plot(scantemp{1,4}(:),scantemp{1,3}(:),'g',potbias,curArray,'b',potbias,test1+test_std*1,'r--',potbias,test1-test_std*1,'r--');
+                    xlabel('Vp [V]');
+                    ylabel('I');
+                    title('LDL Sweep filtering, factor 3 & 1, 68% confidence, 68% confidence');
+                    grid on;
+                    legend('input','output','cutoff from rloess smoothing','Location','North')
                     
                     % curTmp = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
                     
@@ -384,23 +412,23 @@ try
                     %      plot(potbias,(mean(scantemp{1,3}(:)) + 3*std(scantemp{1,3}(:))));
                     xlabel('Vp [V]');
                     ylabel('I');
-                    title('unedited sweep');
+                    title('unedited sweep, old filter');
                     grid on;
                     
                     
                     subplot(2,2,3)
-                    plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,3)))
+                    plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),nStep,3,3),1))
                     xlabel('Vp [V]');
                     ylabel('I');
                     title('unedited sweep, factor 3&3 99% confidence, 99%confidene ');
                     grid on;
                     
                     subplot(2,2,4)
-                    plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,2,0.8)),'b',potbias,curArray,'r')
+                    plot(potbias,sweepcorrection(scantemp{1,3}(:),nStep,2,0.8),'bo',potbias,curArray,'r')
                     %        plot(potbias,curArray);
                     xlabel('Vp [V]');
                     ylabel('I');
-                    title('unedited sweep, factor 2&0.8');
+                    title('unedited sweep, factor 1&0.8');
                     grid on;
                     
                     
@@ -471,4 +499,6 @@ end
 
 
 end
+
+
 

@@ -218,32 +218,41 @@ out.ne = [ne, s_ne];
 
 if an_debug >7 %debug condition
     
-    figure(35)
     
-    subplot(1,3,1)
-    plot(V,I,'bo',V_unfilt,I_unfilt,'b+',V(ind(end)),I,'black',V_unfilt,Ie,'ro');
-    axis([V(1) V(end) I_unfilt(1) max(I_unfilt)])
-
-    subplot(1,3,2)
-    plot(Vr,log(Ir),'b',Vr,Vr*P(1)+P(2),'--');
-    
-    axis([Vr(1) Vr(end) log(Ir(1)) log(Ir(end))])
-    title([sprintf('Te:%3.1f fracstd:%1.3f\%',out.Te)]);
-
-    subplot(1,3,3)
-
-
-    plot(Vr,Ir,'b');
-    axis([Vr(1) Vr(end) Ir(1) Ir(end)])
-    title([sprintf('Ie0:%4.2e fracstd:%1.3f\%',out.Ie0)]);
+    try
+        
+        figure(35)
+        
+        subplot(1,3,1)
+        plot(V,I,'bo',V_unfilt,I_unfilt,'b+',V(ind(end)),I,'black',V_unfilt,Ie,'ro');
+        axis([V(1) V(end) I_unfilt(1) max(I_unfilt)])
+        
+        subplot(1,3,2)
+        plot(Vr,log(Ir),'b',Vr,Vr*P(1)+P(2),'--');
+        
+        axis([Vr(1) Vr(end) log(Ir(1)) log(Ir(end))])
+        title([sprintf('Te:%3.1f fracstd:%1.3f\%',out.Te)]);
+        
+        subplot(1,3,3)
+        
+        
+        plot(Vr,Ir,'b');
+        axis([Vr(1) Vr(end) Ir(1) Ir(end)])
+        title([sprintf('Ie0:%4.2e fracstd:%1.3f\%',out.Ie0)]);
+        
+    catch err
+        fprintf(1,'could not plot LP_expfit_Te');
+        
+        return
+    end
     
     %plot(Vr,Ir,'b',Vr(ind(end)),Ir,'r');
 
 end
 
-
-
+    
 end
+
 
 
 

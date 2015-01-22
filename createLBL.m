@@ -502,7 +502,7 @@ if(~isempty(an_tabindex));
             OBJTABLE_data.ROWS      = an_tabindex{i,4};
             OBJTABLE_data.COLUMNS   = an_tabindex{i,5};
             OBJTABLE_data.ROW_BYTES = an_tabindex{i,9};
-            OBJTABLE_data.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE',tabindex{an_tabindex{i,6},2});
+            OBJTABLE_data.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE', tabindex{an_tabindex{i,6},2});
 
             ocl1 = {};
             ocl1{end+1} = struct('NAME', 'START_TIME(UTC)', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
@@ -511,7 +511,7 @@ if(~isempty(an_tabindex));
             ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Stop time of sweep. SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');            
             ocl1{end+1} = struct('NAME', 'Qualityfactor',   'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Quality factor from 0-100');
             ocl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'degrees',   'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle from x-axis of spacecraft');
-            ocl1{end+1} = struct('NAME', 'Illumination',    'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
+            ocl1{end+1} = struct('NAME', 'Illumination',    'UNIT', NO_ODL_UNIT, 'BYTES',  4, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
             ocl1{end+1} = struct('NAME', 'direction',       'UNIT', NO_ODL_UNIT, 'BYTES',  1, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
             % -- (Changing from ocl1 to ocl2.) --
             ocl2 = {};
@@ -567,10 +567,8 @@ if(~isempty(an_tabindex));
             
             ocl2{end+1} = struct('NAME', 'asm_Vsg',                    'UNIT', 'V',  'DESCRIPTION', 'Spacecraft potential from gaussian fit to second derivative. Fixed photoelectron current assumption.');
             ocl2{end+1} = struct('NAME', 'asm_sigma_Vsg',              'UNIT', 'V',  'DESCRIPTION', 'Standard deviation of spacecraft potential from gaussian fit to second derivative. Fixed photoelectron current assumption.');
-            %ocl2{end+1} = struct('NAME', 'asm_Iph0',                   'UNIT', 'A',  'DESCRIPTION', 'Photosaturation current. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_Iph0',                   'UNIT', 'A',  'DESCRIPTION', 'Assumed photosaturation current used (referred to) in the Fixed photoelectron current assumption.');
-            %ocl2{end+1} = struct('NAME', 'asm_Tph',                    'UNIT', 'eV', 'DESCRIPTION', 'Photoelectron temperature. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_Tph',                    'UNIT', 'eV', 'DESCRIPTION', 'Assumed photoelectron temperature used (referred to) in the Fixed photoelectron current assumption.');
+            ocl2{end+1} = struct('NAME', 'ASM_Iph0',                   'UNIT', 'A',  'DESCRIPTION', 'Assumed photosaturation current used (referred to) in the Fixed photoelectron current assumption.');
+            ocl2{end+1} = struct('NAME', 'ASM_Tph',                    'UNIT', 'eV', 'DESCRIPTION', 'Assumed photoelectron temperature used (referred to) in the Fixed photoelectron current assumption.');
             ocl2{end+1} = struct('NAME', 'asm_Vsi',                    'UNIT', 'V',  'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current. Fixed photoelectron current assumption.');
             ocl2{end+1} = struct('NAME', 'asm_Vph_knee',               'UNIT', 'V',  'DESCRIPTION', 'Potential at probe position from photoelectron current knee (gaussian fit to second derivative). Fixed photoelectron current assumption.');
             ocl2{end+1} = struct('NAME', 'asm_sigma_Vph_knee',         'UNIT', 'eV', 'DESCRIPTION', []);    % New  from commit 3dce0a0, 2014-12-16 or earlier.
@@ -609,6 +607,11 @@ if(~isempty(an_tabindex));
             ocl2{end+1} = struct('NAME', 'asm_Rsquared_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the linear part of the ideal electron current. Fixed photoelectron current assumption.');   % New from commit f89c62b, 2015-01-09 or earlier.
             ocl2{end+1} = struct('NAME', 'asm_Rsquared_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the exponential part of the ideal electron current. Fixed photoelectron current assumption.');   % New from commit f89c62b, 2015-01-09 or earlier.
             
+            ocl2{end+1} = struct('NAME', 'ASM_m_ion',      'BYTES', 3, 'UNIT', 'amu',  'DESCRIPTION', 'Assumed ion mass.');   % New from commit a56c578, 2015-01-22 or earlier.
+            ocl2{end+1} = struct('NAME', 'ASM_Z_ion',      'BYTES', 2, 'UNIT', 'Elementary charge', 'DESCRIPTION', 'Assumed ion charge.');   % New from commit a56c578, 2015-01-22 or earlier.
+            ocl2{end+1} = struct('NAME', 'ASM_m_vram',         'UNIT', 'm/s',  'DESCRIPTION', []);   % New from commit a56c578, 2015-01-22 or earlier.
+            ocl2{end+1} = struct('NAME', 'Vsc_ni_ne',          'UNIT', 'V',    'DESCRIPTION', []);   % New from commit a56c578, 2015-01-22 or earlier.
+            ocl2{end+1} = struct('NAME', 'asm_Vsc_ni_ne',      'UNIT', 'V',    'DESCRIPTION', []);   % New from commit a56c578, 2015-01-22 or earlier.
             %---------------------------------------------------------------------------------------------------
             % Removed from commit 3dce0a0, 2014-12-16, or earlier.
             %ocl2{end+1} = struct('NAME', 'asm_e_Vb_slope',   'UNIT', 'A/V', 'DESCRIPTION', 'Slope of linear electron current fit as a function of bias potential . Fixed photoelectron current assumption.');
@@ -622,7 +625,9 @@ if(~isempty(an_tabindex));
             %---------------------------------------------------------------------------------------------------
 
             for i_oc = 1:length(ocl2)
-                ocl2{i_oc}.BYTES     = 14;
+                if ~isfield(ocl2{i_oc}, 'BYTES')
+                    ocl2{i_oc}.BYTES = 14;
+                end
                 ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
             end
             OBJTABLE_data.OBJCOL_list = [ocl1, ocl2];

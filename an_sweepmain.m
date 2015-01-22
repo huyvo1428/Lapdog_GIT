@@ -14,21 +14,6 @@ paths();
 cspice_furnsh(kernelFile);
 
 
-
-assmpt =[];
-
-assmpt.Vknee = 0; %dummy
-assmpt.Tph = 2; %eV
-
-assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
-%    assmpt.Iph0 = -8.55e-09; %from mean of M08, probably too high.
-assmpt.vram = 550; %m/s
-assmpt.ionZ = +1; % ion charge
-assmpt.ionM = 19; % atomic mass units
-%assmpt.v_SW = 5E5; %500 km/s
-
-
-
 k=0; %needed for error output
 
 try
@@ -139,7 +124,7 @@ try
         
         %'preloaded' is a dummy entry, just so orbit realises spice kernels
         %are already loaded
-        [junk,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
+        [altitude,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
         clear junk
         
         if strcmp(mode(2),'1'); %probe 1???
@@ -174,6 +159,35 @@ try
         
         %% initialise output struct
         
+        
+
+
+        
+        assmpt =[];
+        
+        assmpt.Vknee = 0; %dummy
+        assmpt.Tph = 2; %eV
+        
+        assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
+        %    assmpt.Iph0 = -8.55e-09; %from mean of M08, probably too high.
+
+        assmpt.vram = 4E5; % Solar wind assumption
+        assmpt.ionZ = 1;   % SW assumption
+        assmpt.ionM = 1;   % SW assumption
+
+        
+        %check if we are close to comet
+        %(3000 km ? 1000*radius of comet)
+        if (le(altitude(end),3000) && strcmp(target,'CHURYUMOV-GERASIMENKO'))
+            
+            assmpt.vram = 550; %m/s
+            assmpt.ionZ = +1; % ion charge
+            assmpt.ionM = 19; % atomic mass units
+            %assmpt.v_SW = 5E5; %500 km/s            
+        end
+        
+        
+        
         %Anders analysed parameters
         AP(len).ts       = [];
         AP(len).vx       = [];
@@ -205,13 +219,14 @@ try
         EP(len).ni_2comp = [];
         EP(len).v_ion    = [];
         EP(len).ne_5eV   = [];     
+        EP(len).Vsc_ni_ne= [];
 
+                
         EP(len).asm_ni_1comp = [];
         EP(len).asm_ni_2comp = [];
         EP(len).asm_v_ion    = [];
         EP(len).asm_ne_5eV   = [];
-        
-        
+        EP(len).asm_Vsc_ni_ne= [];
         
 
         %dervied parameters from sweep    
@@ -272,7 +287,7 @@ try
         dind=~logical((mean(reshape(illuminati,2,len),1))); %logical index of all fully shadowed sweeps
         
         
-        if unique(lind(1:lmax)) % if we have sunlit sweeps, do this
+        if sum(unique(lind(1:lmax))) % if we have sunlit sweeps, do this
             I_50 = mean(Iarr(:,lind),2);   %average each potential step current
             [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vph_knee estimate from that.
             
@@ -281,7 +296,7 @@ try
      %       init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,1);  %get initial estimate of all variables in that sweep.
         end
         
-        if (unique(~(lind(1:lmax)))) % if we also) have non-sunlit sweeps?
+        if sum((unique(~(lind(1:lmax))))) % if we also) have non-sunlit sweeps?
             
             I_50 = mean(Iarr(:,~lind),2);
             [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vsg estimate from that.
@@ -332,7 +347,7 @@ try
             AP(k)=  an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(k).lum);
                         
             if k>1
-                Vguess=DP(k-1).Vph_knee;
+                Vguess=DP(k-1).Vph_knee(1);
             else
                 Vguess=AP(k).vs;
             end
@@ -342,13 +357,14 @@ try
  
                             % Calculate ion densities velocities
             
-            EP(k).ni_1comp     = (1e-6 * DP(k).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-            EP(k).asm_ni_1comp = (1e-6 * DP_assmpt(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-
+            EP(k).ni_1comp     = max((1e-6 * DP(k).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
+            EP(k).asm_ni_1comp = max((1e-6 * DP_assmpt(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);                 
+            
+         
             
             EP(k).ni_2comp     = (1e-6/(IN.probe_cA*CO.e))*sqrt(max((-assmpt.ionM*CO.mp*(DP(k).ion_intersect(1))       *DP(k).ion_slope(1)       /(2*CO.e)),0));%max out of expression and 0 -> if >0, ni=0;
             EP(k).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(max((-assmpt.ionM*CO.mp*(DP_assmpt(k).ion_intersect(1))*DP_assmpt(k).ion_slope(1)/(2*CO.e)),0)); %max out of expression and 0 -> if >0, ni=0;
-
+            
      	    EP(k).v_ion     =  EP(k).ni_2comp    *assmpt.vram/EP(k).ni_1comp;                                                     
      	    EP(k).asm_v_ion =  EP(k).asm_ni_2comp*assmpt.vram/EP(k).asm_ni_1comp;
                    
@@ -361,7 +377,14 @@ try
             EP(k).ne_5eV     = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0); %max out of expression and 0 -> if >0, ne=0;
             EP(k).asm_ne_5eV = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_assmpt(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0);%max out of expression and 0 -> if >0, ne=0;
             
+          
+            EP(k).asm_Vsc_ni_ne =nansum((DP_assmpt(k).ion_Vb_intersect(1)-(sqrt(DP_assmpt(k).ion_intersect(1))*DP_assmpt(k).ne(1)/EP(k).asm_ni_2comp(1)).^2)/DP_assmpt(k).ion_slope(1));
+            EP(k).Vsc_ni_ne =nansum((DP(k).ion_Vb_intersect(1)-(sqrt(DP(k).ion_intersect(1))*DP(k).ne(1)/EP(k).ni_2comp(1)).^2)/DP(k).ion_slope(1));
+            
+            out = EP(k)
+            clear out
 
+            
         end % for
         
         
@@ -399,8 +422,8 @@ try
                 
 
                   % Calculate ion densities     
-                EP(m).ni_1comp     = (1e-6 * DP(m).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
-                EP(m).asm_ni_1comp = (1e-6 * DP_assmpt(m).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2));
+                EP(m).ni_1comp     = max((1e-6 * DP(m).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
+                EP(m).asm_ni_1comp = max((1e-6 * DP_assmpt(m).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
                 
 
                 
@@ -424,6 +447,14 @@ try
                 EP(m).asm_ne_5eV = max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_assmpt(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0);  %max out of expression and 0 -> if >0, ni=0;
             
 
+                
+                EP(m).asm_Vsc_ni_ne =nansum((DP_assmpt(k).ion_Vb_intersect(1)-(sqrt(DP_assmpt(k).ion_intersect(1))*DP_assmpt(k).ne(1)/EP(k).asm_ni_2comp(1)).^2)/DP_assmpt(k).ion_slope(1));
+                EP(m).Vsc_ni_ne =nansum((DP(k).ion_Vb_intersect(1)-(sqrt(DP(k).ion_intersect(1))*DP(k).ne(1)/EP(k).ni_2comp(1)).^2)/DP(k).ion_slope(1));
+                
+                
+                
+                
+                
                 
             end%for
         end%if split
@@ -451,7 +482,8 @@ try
 
 
             fprintf(awID,strcat('START_TIME(UTC), STOP_TIME(UTC), START_TIME_OBT, STOP_TIME_OBT, Qualityfactor, SAA, Illumination, direction',...
-            ', old.Vsi, old.Vx, Vsg, sigma_Vsg,  old.Tph, old.Iph0, Vb_lastnegcurrent, Vb_firstposcurrent',...
+            ', old.Vsi, old.Vx, Vsg, sigma_Vsg',...
+            ', old.Tph, old.Iph0, Vb_lastnegcurrent, Vb_firstposcurrent',...
             ', Vbinfl, dIinfl, d2Iinfl',...
             ', Iph0, Tph, Vsi, Vph_knee,sigma_Vph_knee, Te_linear, sigma_Te_linear, ne_linear, sigma_ne_linear',...
             ', ion_slope, sigma_ion_slope, ion_intersect, sigma_ion_intersect, e_slope, sigma_e_slope, e_intersect, sigma_e_intersect',...
@@ -459,11 +491,12 @@ try
             ', Tphc, nphc, phc_slope, sigma_phc_slope, phc_intersect, sigma_phc_intersect',...
             ', ne_5eV, ni_v_dep, ni_v_indep, v_ion, Te_exp, sigma_Te_exp, ne_exp, sigma_ne_exp, Rsquared_linear, Rsquared_exp',...
             ', asm_Vsg, asm_sigma_Vsg',...
-            ', asm_Iph0, asm_Tph, asm_Vsi, asm_Vph_knee, asm_sigma_Vph_knee, asm_Te_linear, asm_sigma_Te_linear, asm_ne_linear, sigma_asm_ne_linear',...
+            ', ASM_Iph0, ASM_Tph, asm_Vsi, asm_Vph_knee, asm_sigma_Vph_knee, asm_Te_linear, asm_sigma_Te_linear, asm_ne_linear, sigma_asm_ne_linear',...
             ', asm_ion_slope, asm_sigma_ion_slope, asm_ion_intersect, asm_sigma_ion_intersect, asm_e_slope, asm_sigma_e_slope, asm_e_intersect, asm_sigma_e_intersect',...
             ', asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
             ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
             ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...       
+            ', ASM_m_ion, ASM_Z_ion, ASM_m_vram, Vsc_ni_ne, asm_Vsc_ni_ne',...    
             '\n'));
 
 
@@ -488,11 +521,13 @@ try
             str12 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).ion_slope,DP_assmpt(k).ion_intersect,DP_assmpt(k).e_slope,DP_assmpt(k).e_intersect);            
             str13 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', DP_assmpt(k).ion_Vb_intersect, DP_assmpt(k).e_Vb_intersect);           
             str14 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).Tphc,DP_assmpt(k).nphc,DP_assmpt(k).phc_slope,DP_assmpt(k).phc_intersect);
-            str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,%14.7e, %14.7e',EP(k).asm_ne_5eV,EP(k).asm_ni_1comp,EP(k).asm_ni_2comp,EP(k).asm_v_ion,DP_assmpt(k).Te_exp,DP_assmpt(k).ne_exp,DP_assmpt(k).Rsq.linear,DP_assmpt(k).Rsq.exp);
-
+            str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).asm_ne_5eV,EP(k).asm_ni_1comp,EP(k).asm_ni_2comp,EP(k).asm_v_ion,DP_assmpt(k).Te_exp,DP_assmpt(k).ne_exp,DP_assmpt(k).Rsq.linear,DP_assmpt(k).Rsq.exp);
+            str16 = sprintf(' %03i, %02i, %14.7e, %14.7e, %14.7e',assmpt.ionM,assmpt.ionZ,assmpt.vram,EP(k).Vsc_ni_ne,EP(k).asm_Vsc_ni_ne);
             
-            strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15);
+            
+            strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16);
             strtot=strrep(strtot,'  0.0000000e+00','            NaN'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
+            strtot=strrep(strtot,'-Inf',' NaN');
             strtot=strrep(strtot,'Inf','NaN');
             %strtot=strrep(strtot,'NaN','   ');
             
@@ -540,7 +575,7 @@ catch err
         end
     end
     cspice_kclear;  %unload ALL kernels when exiting function
-        
+    %cspice_unload(kernelFile);  %unload kernels when exiting function
     
 end
 

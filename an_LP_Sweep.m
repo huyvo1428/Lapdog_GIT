@@ -106,17 +106,40 @@ try
     % Sort the data
     [V,I] = LP_Sort_Sweep(V',I');
     
-    %dv = S.step_height*IN.VpTM_DAC; % Step height in volt.
-    dv = V(2)-V(1);
     
-    
+    %FILTERING
+    %---------------------------------------------------
     % I've given up on analysing unfiltered data, it's just too nosiy.
     %Let's do a classic LP moving average, that doesn't move the knee
     
-   % Is = LP_MA(I); %Terrible for knees in end-4:end
+    % Is = LP_MA(I); %Terrible for knees in end-4:end
     
-    Is = smooth(I,'sgolay',1).'; %pretty heavy sgolay filter. NB transpose
+    %dv = S.step_height*IN.VpTM_DAC; % Step height in volt.
+    dv = V(2)-V(1);
+    
+    % we have three or four cases:
+    % dv = 0.25 --> e.g. 604, 807 (probably burst mode)
+    % dv = 0.5  --> e.g. 506
+    % dv = 0.75 --> e.g. 505
+    % dv = 1    --> e.g  212 (rare)
+    % dv << 0.25 --> fine sweeps, (not implemented yet)
+    if dv < 0.27 %i.e. if dv ~ 0.25
+        sSpan = 0.1;
+        sMethod = 'rloess';   % loose rloess filter
+    elseif dv > 0.72
+        
+        sSpan = 0.2;     %pretty heavy sgolay filter.
+        sMethod = 'sgolay';
+    else  %i.e. if dv ~ 0.5
+        sSpan = 0.1;        % loose rloess filter
+        sMethod = 'rloess';
+    end
+    
+    
+    Is = smooth(I,sSpan,sMethod,1).'; %filter sweep NB transpose
 
+     
+   % Is = smooth(I,0.2,'sgolay',1).'; %pretty heavy sgolay filter. NB transpose
     
     
     
@@ -181,7 +204,9 @@ try
 
                         
 if (an_debug>1)    
-	subplot(3,2,3),plot(V+Vsc,I,'b',V+Vsc,ion.I,'g');grid on;
+    
+    figure(33)
+	subplot(3,2,3),plot(V+Vsc,Is,'b',V+Vsc,ion.I,'g');grid on;
     title([sprintf('Ion current vs Vp, out.Q(1)=%d',ion.Q(1))])
     legend('I','I_i_o_n')
 
@@ -244,7 +269,7 @@ end
     
     %if the plasma electron current fail, try the spacecraft photoelectron
     %cloud current analyser
-    if isnan(elec.Te)
+    if isnan(elec.Te(1))
         
 
         cloudflag = 1;
@@ -265,39 +290,22 @@ end
     
 %    Itemp = Itemp - elec.I; %the resultant current should only be photoelectron current (or ion.b(1));
       %[Te,ne,Ie,ea,eb,rms]=LP_Electron_curr(V,LP_MA(Itemp),Vsc);
-    %Itemp2 = Itemp -expfit.I;
-    Itemp = Itemp - elec.I; %the resultant current should only be photoelectron current (or zero)
     
     
 %     
     if (an_debug>1)
                         figure(33);
 
-       % title('I & I - ion current -ph');
-       
-       %      title([sprintf('I & I - ion&ph. illumination=%d',illuminated)])
-       
-
-        subplot(3,2,1),plot(V,Is,'b',V,Itemp,'g',V,Itemp2,'r');grid on;
+        subplot(3,2,1),plot(V,Is,'b',V,Itemp- elec.I,'g',V,Itemp-expfit.I,'r');grid on;
         
-        title([sprintf('I, I-Ii-Ie liner, I-Ii-Ie exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])      
+        title([sprintf('I, I-Ii-Ie linear, I-Ii-Ie exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])      
         legend('I','I-I linear','I-I exp','Location','NorthWest')
-        title('I & I - ions - e - ph');
     end
     
-    
-%     if (an_debug>1)
-%                 figure(33);
-% 
-%         subplot(3,2,1),plot(V,Is,'b',V,Itemp,'g');grid on;
-%         title('Vb vs I');
-%         
-%         title([sprintf('Vb vs I, macro:%s date:%s',diag_info{1},diag_info{1,2}(end-26:end-12))])
-%         
-%         legend('I','I-(ions+electrons)','Location','Northwest')
-% 
-%     end
-%     
+         %the resultant current should only be photoelectron current (or zero)
+
+    Itemp = Itemp - elec.I;
+
     
     % Redetermine s/c potential, without ions and plasma electron /photoelectron cloud currents
     %[vPlasma, Vsg_sigma, Vsc] = an_Vplasma(V,Itemp,vPlasma,Vsg_sigma);
@@ -342,11 +350,7 @@ end
         Vdagger = V + Vknee;
         
         %Vdagger = V + Vsc - Vplasma;
-        
-        
-        phind = find(Vdagger < 6 & Vdagger>0);
-
-        
+                
         
         phind = find(Vdagger < 6 & Vdagger>0);
         
@@ -359,19 +363,12 @@ end
         %get V intersection:
         
         %diph = abs(  ion current(tempV)  - photelectron log current(Vdagger) )
-        diph = abs(ion.a(1)*V + ion.b(1) -Iftmp*exp(-(Vdagger)/Tph));
+        diph = abs(ion.a(1)*V + ion.b(1)-Iftmp*exp(-(V+Vknee)/Tph));
         %find minimum
         idx1 = find(diph==min(diph),1);
         
         
-        
-        
-        %     V(idx)
-        %     V(idx+1)
-        %     V(idx-1)
-        %     y3(idx)
-        %     y3(idx+1)
-        %     y3(idx-1)
+       
         % add 1E5 accuracy on min, and try it again
         tempV = V(idx1)-1:1E-5:(V(idx1)+1);
         diph = abs(ion.a(1)*tempV + ion.b(1) -Iftmp*exp(-(tempV+Vknee)/Tph));
@@ -394,15 +391,20 @@ end
         DP.Tph     = Tph;
         
         
-        Iph(:) = 0;  %set everything to zero
+        Iph(:) = DP.Iph0;  %set everything to photosaturation current
         
+    %    Iph(1:idx1)=DP.Iph0; %add photosaturation current
+
         %idx is the at point where Iion and Iph converges
         %Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
-        Iph(idx1:end)=Iftmp*exp(-Vdagger(idx1:end)/Tph);
+        Iph(idx1+1:end)=Iftmp*exp(-Vdagger(idx1+1:end)/Tph);
 
         %Iph0 and ion.I is both an approximation of that part of the sweep, so we
         %remove that region of the Iph current (and maybe add it later)
-        
+%  
+%             
+%         Iph(1:idx1)=DP.Iph0; %add photosaturation current
+
     end
     
     
@@ -410,14 +412,20 @@ end
     %---------------------------------------------------------- 
     % Rsquare value calculation of fit
     
-    Itot_linear = Iph + elec.I + ion.I;
-    Itot_exp    = Itot_linear - elec.I + expfit.I;
-    Izero_linear = Is - Itot_linear;
-    Izero_exp    = Is - Itot_exp;
+    Itot_linear=Iph+elec.I+ion.I;
+    Itot_exp=Itot_linear-elec.I+expfit.I;
+%     Izero_linear = Is-Itot_linear;
+%     Izero_exp = Is - Itot_exp;
+%     
+%     Rsq_linear = 1 - sum((Izero_linear.^2))/sum(((Is-mean(Is)).^2));
+%     Rsq_exp = 1 -  sum(Izero_exp.^2)/sum((Is-mean(Is)).^2);
+%     
+
+    Izero_linear = I-Itot_linear;
+    Izero_exp = I - Itot_exp;
     
-    Rsq_linear = 1 - sum(Izero_linear.^2) / sum((Is-mean(Is)).^2);
-    Rsq_exp    = 1 - sum(Izero_exp.^2)    / sum((Is-mean(Is)).^2);
-    
+    Rsq_linear = 1 - nansum((Izero_linear.^2))/nansum(((I-nanmean(I)).^2));
+    Rsq_exp = 1 -  nansum(Izero_exp.^2)/nansum((I-nanmean(I)).^2);
 
     
     
@@ -449,13 +457,7 @@ end
     if (an_debug>1)
         figure(33);
 
-        if(illuminated)
 
-            
-            Iph(1:idx1)=ion.b(1)+DP.Iph0; %add photosaturation current
-            %            Itot(idx:end)=Iph(idx:end)
-            
-        end
     
 
         
@@ -480,26 +482,14 @@ end
         
             
         subplot(3,2,5)
-        plot(V+Vsc,I,'b',V+Vsc,(ion.I+elec.I)+ion.mean(1),'g',V+Vsc,ion.I+expfit.I+ion.mean(1),'r',V+Vsc,Iph,'black')
+        plot(V+Vsc,I-Iph,'b',V+Vsc,(ion.I+elec.I)+ion.mean(1),'g',V+Vsc,ion.I+expfit.I+ion.mean(1),'r',V+Vsc,Iph,'black')
         axis([min(V)+Vsc max(V)+Vsc min(I) max(I)])
-        title([sprintf('Vp vs I-Itot, fully auto,lum=%d, %s',illuminated,diag_info{1})])
-        legend('I','ions+electrons(linear)','Ions+electrons(exp)','photoelectrons','Location','Northwest')
+        title([sprintf('Vp vs I, fully auto,lum=%d, %s',illuminated,diag_info{1})])
+        legend('I','ion+e(linear)','Ions+e(exp)','pe','Location','Northwest')
         
         
         grid on;
 
-        %
-        %
-        %     x = V(1):0.2:V(end);
-        %     y = gaussmf(x,[sigma Vsc]);
-        % 	subplot(3,2,1),plot(V,Ie,'g',x,y*abs(max(I))/4,'b');grid on;
-        % 	title('V & I and Vsc Guess');
-        %
-        %     Vsc2 = LP_Find_SCpot(V,Ie,dv);
-        %     x = V(1):0.2:V(end);
-        %     y = gaussmf(x,[1, Vsc2]);
-        % 	subplot(3,2,2),plot(V,Ie,'g',x,y*max(I),'b');grid on;
-        % 	title('V & I and Vsc Guess number 2');
     end
     
     % Having removed the ion current, we use the electron current to determine
