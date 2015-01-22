@@ -10,7 +10,7 @@ global an_debug ;
 
 len= length(Vb);
 
-[di,d2i]= leapfd(Ib,Vb,0.2);
+[di,d2i]= leapfd(Ib,Vb,0.28);
 
 [Vb,ind]=sort(Vb);
 d2i=d2i(ind);
@@ -23,7 +23,7 @@ posd2i =(abs(d2i)+d2i)/2;
 posdi =(abs(di)+di)/2;
 %sort absolute values of derivative
 
-if max(di)==di(end) %if current is ever increasing in di (i.e. electron current dominated & Vsc > max(-Vb))
+if max(di)==di(end) %if current slope is ever increasing in di (i.e. electron current dominated & Vsc > max(-Vb))
     Vsc=-Vb(end);
     sigma = NaN;
     return

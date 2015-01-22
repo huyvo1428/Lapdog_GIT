@@ -62,16 +62,16 @@ Ii = I;
 Ii(1:end)=0;
 out = [];
 
-a=[NaN NaN];
-b = a;
+a=nan(1,2);
+b = nan(1,2);
 
 out.I = Ii;
-out.a = a;
-out.b = a;
-out.Vpa = a;
-out.Vpb = a;
+out.a = nan(1,2);
+out.b = nan(1,2);
+out.Vpa = nan(1,2);
+out.Vpb = nan(1,2);
 out.Q = 0;
-
+out.mean = nan(1,2);
 
 %global ALG;
 SM_Below_Vs =0.6;
