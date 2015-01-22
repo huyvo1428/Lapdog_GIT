@@ -25,7 +25,7 @@
 % 9. createLBL produces .LBL files for each generated file  (PDS archive
 % specific file type)
 %
-% Values for redo_resampling:
+% (Incomplete) list of possible values for "redo_resampling":
 %   0: Read tabindex from file if available, otherwise execute process.m. Execute analysis.m, createLBL.m
 %   1: Read index from file if available, otherwise execute indexgen.m, indexcorr.m.
 %      Read tabindex from file if available, otherwise execute process.m.
