@@ -531,8 +531,9 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     function data_est = select_best_estimates_BETA_INTERNAL(sim_sweep_data, V_bias_limits)
 
         %error('FUNCTION IMPLEMENTATION NOT READY YET!!!')
-        warning('FUNCTION IMPLEMENTATION MIGHT NOT BE READY YET!!!')
-
+        %warning('FUNCTION IMPLEMENTATION MIGHT NOT BE READY YET!!!')
+        Vsc_BIAS_EXCLUSION_MARGIN_FRACTION = 0.01;
+        
         data = sim_sweep_data;
         data.direction      = str2double(data.direction);        
         data.Illumination   = str2double(data.Illumination);
@@ -613,11 +614,11 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             if ~isempty(Vsc)
                 V_min = V_bias_limits{data.probe_nbr(i)}.V_bias_min;
                 V_max = V_bias_limits{data.probe_nbr(i)}.V_bias_max;
-                V_margin = (V_max-V_min) * 0.01;
+                V_margin = (V_max-V_min) * Vsc_BIAS_EXCLUSION_MARGIN_FRACTION;
                 V_min = V_min + V_margin;
                 V_max = V_max - V_margin;
 
-                if   ~isnan(Vsc)  % &&   (V_min <= Vsc)   &&   (Vsc <= V_max)
+                if   ~isnan(Vsc)   &&   (V_min <= Vsc)   &&   (Vsc <= V_max)
                     data.Vsc_est(i) = Vsc;
                 end
                 break
@@ -627,7 +628,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         end
 
         %i_selected = ???           % TODO?
-        %data_est = select_structs_arrays_INTERNAL(data, i_selected);
+        %data_est = select_structs_arrays_INTERNAL(data_est, i_selected);
         data_est = data;
     end
 
@@ -664,10 +665,12 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             line = [line, sprintf('%16.6f, %16.6f, %s, ',     data.START_TIME_OBT(i), data.STOP_TIME_OBT(i),   data.Qualityfactor{i})];
             line = [line, sprintf('%14.7e, %14.7e, %14.7e, ', O_data.npl_est(i), O_data.Te_est(i), O_data.Vsc_est(i))];
             
-            line = [line, sprintf('%1i, ', data.probe_nbr(i))];             % DEBUG?
-            line = [line, sprintf('%5i',   data.sweep_group_nbr(i))];       % DEBUG?
+            line = [line, sprintf('%1i, ',    data.probe_nbr(i))];             % DEBUG?
+            line = [line, sprintf('%1i, ',    data.direction(i))];             % DEBUG?
+            line = [line, sprintf('%04.2f, ', data.Illumination(i))];          % DEBUG?
+            line = [line, sprintf('%5i',      data.sweep_group_nbr(i))];       % DEBUG? NOTE: The only string without ending comma!
             line = strrep(line, 'NaN', '   ');
-            N_columns = 2+3+3 + 1+1;
+            N_columns = 2+3+3 + 1+1+1+1;
             row_bytes = fprintf(fid, [line, '\n']);
             
             %disp(line)                     % DEBUG. Preferably no extra linebreak in string.
@@ -704,7 +707,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     % PROPOSAL: Rename _et to _arbitrary since probably no particular offset/origin and misleading.
     
         line_list = importdata(file_path, '\n');               % Read file into cell array, one line per cell.
-        line_value_list = regexp(line_list, ',', 'Split');     % Split strings using delimiter.
+        line_value_list = regexp(line_list, ',', 'Split');     % Split strings using delimiter.        
         value_list = vertcat(line_value_list{:});              % Concatenate (cell) array of (cell) arrays to create one long vector (Nx1).
     
         N_rows = length(line_value_list);

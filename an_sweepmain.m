@@ -381,7 +381,7 @@ try
             EP(k).asm_Vsc_ni_ne =nansum((DP_assmpt(k).ion_Vb_intersect(1)-(sqrt(DP_assmpt(k).ion_intersect(1))*DP_assmpt(k).ne(1)/EP(k).asm_ni_2comp(1)).^2)/DP_assmpt(k).ion_slope(1));
             EP(k).Vsc_ni_ne =nansum((DP(k).ion_Vb_intersect(1)-(sqrt(DP(k).ion_intersect(1))*DP(k).ne(1)/EP(k).ni_2comp(1)).^2)/DP(k).ion_slope(1));
             
-            out = EP(k)
+            out = EP(k);
             clear out
 
             
@@ -495,7 +495,7 @@ try
             ', asm_ion_slope, asm_sigma_ion_slope, asm_ion_intersect, asm_sigma_ion_intersect, asm_e_slope, asm_sigma_e_slope, asm_e_intersect, asm_sigma_e_intersect',...
             ', asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
             ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
-            ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...       
+            ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...
             ', ASM_m_ion, ASM_Z_ion, ASM_m_vram, Vsc_ni_ne, asm_Vsc_ni_ne',...    
             '\n'));
 
@@ -507,9 +507,9 @@ try
             % print variables to file. separated into substrings.
             
                 
-            str1  = sprintf('%s, %s, %16s, %16s, %03i, %07.3f, %03.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
-            str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',AP(k).vs,AP(k).vx,DP(k).Vsg);
-            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph,AP(k).Iph0,AP(k).lastneg,AP(k).firstpos);
+            str1  = sprintf('%s, %s, %16s, %16s, %03i, %07.3f, %04.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
+            str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs,AP(k).vx, DP(k).Vsg);
+            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0,AP(k).lastneg, AP(k).firstpos);
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);                 
             str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Iph0,DP(k).Tph,DP(k).Vsi,DP(k).Vph_knee,DP(k).Te,DP(k).ne);           
             str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
@@ -537,8 +537,6 @@ try
             
             row_bytes =fprintf(awID,'%s\n',strtot);
             
-
-            
             
         end
         fclose(awID);
@@ -548,7 +546,7 @@ try
         an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
         %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
         an_tabindex{end,4} = klen; %number of rows
-        an_tabindex{end,5} = 95; %number of columns
+        an_tabindex{end,5} = 100; %number of columns
         an_tabindex{end,6} = an_ind(i);
         an_tabindex{end,7} = 'sweep'; %type
         an_tabindex{end,8} = timing;
