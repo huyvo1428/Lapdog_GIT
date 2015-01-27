@@ -2,7 +2,7 @@
 *.DS_Store
 irfu-matlab/*
 server/*
-mice/*
+mice/
 *.mat
 
 metakernel_rosetta.txt
