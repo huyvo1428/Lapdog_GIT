@@ -100,8 +100,9 @@ DP.ne_exp           = nan(1,2);
 DP.Quality          = sum(Q);
 
 DP.Rsq              = [];
-DP.Rsq.linear       = [];
-DP.Rsq.exp          = [];
+DP.Rsq.linear       = NaN;
+DP.Rsq.exp          = NaN;
+
 
 Iph= 0;
 
@@ -123,29 +124,30 @@ try
     %dv = S.step_height*IN.VpTM_DAC; % Step height in volt.
     dv = V(2)-V(1);
     
+    Is = sweepFilterChooser(I,dv);
     
-
+% 
+%     
+%     % we have three or four cases:
+%     % dv = 0.25 --> e.g. 604, 807 (probably burst mode)
+%     % dv = 0.5  --> e.g. 506
+%     % dv = 0.75 --> e.g. 505
+%     % dv = 1    --> e.g  212 (rare)
+%     % dv << 0.25 --> fine sweeps, (not implemented yet)
+%     if dv < 0.27 %i.e. if dv ~ 0.25
+%         sSpan = 0.1;
+%         sMethod = 'rloess';   % loose rloess filter
+%     elseif dv > 0.72
+%         
+%         sSpan = 0.2;     %pretty heavy sgolay filter.
+%         sMethod = 'sgolay';
+%     else  %i.e. if dv ~ 0.5
+%         sSpan = 0.1;       %pretty heavy sgolay filter.
+%         sMethod = 'sgolay';
+%     end
+%     
     
-    % we have three or four cases:
-    % dv = 0.25 --> e.g. 604, 807 (probably burst mode)
-    % dv = 0.5  --> e.g. 506
-    % dv = 0.75 --> e.g. 505
-    % dv = 1    --> e.g  212 (rare)
-    % dv << 0.25 --> fine sweeps, (not implemented yet)
-    if dv < 0.27 %i.e. if dv ~ 0.25
-        sSpan = 0.1;
-        sMethod = 'rloess';   % loose rloess filter
-    elseif dv > 0.72
-        
-        sSpan = 0.2;     %pretty heavy sgolay filter.
-        sMethod = 'sgolay';
-    else  %i.e. if dv ~ 0.5
-        sSpan = 0.1;       %pretty heavy sgolay filter.
-        sMethod = 'sgolay';
-    end
-    
-    
-    Is = smooth(I,sSpan,sMethod,1).'; %filter sweep NB transpose
+ %   Is = smooth(I,sSpan,sMethod,1).'; %filter sweep NB transpose
 
      
    % Is = smooth(I,0.2,'sgolay',1).'; %pretty heavy sgolay filter. NB transpose

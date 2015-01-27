@@ -163,14 +163,11 @@ try
 
 
         
-        assmpt =[];
-        
+        assmpt =[];        
         assmpt.Vknee = 0; %dummy
-        assmpt.Tph = 2; %eV
-        
+        assmpt.Tph = 2; %eV        
         assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
         %    assmpt.Iph0 = -8.55e-09; %from mean of M08, probably too high.
-
         assmpt.vram = 4E5; % Solar wind assumption
         assmpt.ionZ = 1;   % SW assumption
         assmpt.ionM = 1;   % SW assumption
@@ -261,7 +258,6 @@ try
         
         DP(len).Quality             = [];
         DP(len).Rsq                 = [];
-
 
         
         DP_assmpt= DP;
@@ -381,8 +377,8 @@ try
             EP(k).asm_Vsc_ni_ne =nansum((DP_assmpt(k).ion_Vb_intersect(1)-(sqrt(DP_assmpt(k).ion_intersect(1))*DP_assmpt(k).ne(1)/EP(k).asm_ni_2comp(1)).^2)/DP_assmpt(k).ion_slope(1));
             EP(k).Vsc_ni_ne =nansum((DP(k).ion_Vb_intersect(1)-(sqrt(DP(k).ion_intersect(1))*DP(k).ne(1)/EP(k).ni_2comp(1)).^2)/DP(k).ion_slope(1));
             
-            out = EP(k);
-            clear out
+%            out = EP(k)
+%            clear out
 
             
         end % for
