@@ -82,6 +82,10 @@ DP.ion_Vb_slope     = nan(1,2);
 DP.ion_Vb_intersect = nan(1,2);
 DP.ion_slope        = nan(1,2);
 DP.ion_intersect    = nan(1,2);
+DP.ion_Up_slope     = nan(1,2);
+DP.ion_Up_intersect = nan(1,2);
+
+
 
 DP.e_Vb_slope       = nan(1,2);
 DP.e_Vb_intersect   = nan(1,2);
@@ -387,10 +391,12 @@ try
     DP.Vsg     = [Vsc Vsc_sigma];
     DP.Vph_knee = [Vplasma Vknee_sigma];
 
-    DP.ion_Vb_slope      = ion.a;
-    DP.ion_Vb_intersect  = ion.b;
-    DP.ion_slope      = ion.Vpa;
-    DP.ion_intersect  = ion.Vpb;
+    DP.ion_Vb_slope     = ion.a;
+    DP.ion_Vb_intersect = ion.b;
+    DP.ion_slope        = ion.Vpa;
+    DP.ion_intersect    = ion.Vpb;
+    DP.ion_Up_slope     = ion.Upa;
+    DP.ion_Up_intersect = ion.Upb;
 
     DP.e_Vb_slope        = elec.a;
     DP.e_Vb_intersect    = elec.b;

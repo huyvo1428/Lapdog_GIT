@@ -38,7 +38,7 @@ persistent I_filtered_cache
 %'persistent' variable declaration)
 if isequalwithequalnans(I_cache,I)
     I_filtered = I_filtered_cache;
-%    i2 = i2 + 1;    
+  % i2 = i2 + 1;    
     return
 end
 % tic
@@ -52,14 +52,22 @@ end
 % complains
 % toc
 if dv < 0.27 %i.e. if dv ~ 0.25
-    sSpan = 0.1;
+    
+    sSpan = ceil(0.1*length(I));  % loose rloess filter
+    sSpan = max(sSpan,6);  %HORRIBLE BUG IF SPAN == 5!!! (or 4)
+  %  sSpan = 0.1001;
     sMethod = 'rloess';   % loose rloess filter
 elseif dv > 0.72
     
-    sSpan = 0.2;     %pretty heavy sgolay filter.
+    sSpan = ceil(0.2*length(I));
+    %sSpan = 0.2;     %pretty heavy sgolay filter.
     sMethod = 'sgolay';
 else  %i.e. if dv ~ 0.5
-    sSpan = 0.1;        % loose rloess filter
+    
+    sSpan = ceil(0.1*length(I));  % loose rloess filter
+    sSpan =max(sSpan,6);  %HORRIBLE BUG IF SPAN == 5!!! (or 4)
+    
+  %  sSpan = 0.1001;        % loose rloess filter
     sMethod = 'rloess';
 end
         
