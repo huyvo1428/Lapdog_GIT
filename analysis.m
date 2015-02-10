@@ -4,6 +4,8 @@
 % hf spectra -> power spectral density
 % downsamples files
 
+t_start_analysis = clock;    % NOTE: Not number of seconds, but [year month day hour minute seconds].
+
 global an_tabindex an_debug;
 an_tabindex = [];
 an_debug = 0; %debugging on or off!
@@ -72,8 +74,8 @@ if(~isempty(ind_V2L))
   %  an_downsample(ind_V2L,tabindex,8)
     an_downsample(ind_V2L,tabindex,32)
 end 
-  
- 
+
+
 fprintf(1,'Generating Spectra\n')
  
 if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
@@ -88,5 +90,8 @@ if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
 
 
 fprintf(1, 'Best estimates\n')
-%save(['~/temp.', shortphase, '.allVarsBeforeBestEstmimates.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
+%save(['~/temp_MATLAB/temp.', shortphase, '.allVarsBeforeBestEstmimates.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
 an_tabindex = best_estimates(an_tabindex, tabindex, index, obe);
+
+
+fprintf(1, '%s (incl. best_estimates): %.0f s (elapsed wall time)\n', mfilename, etime(clock, t_start_analysis));

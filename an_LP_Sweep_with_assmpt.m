@@ -100,8 +100,8 @@ DP.ne_exp           = nan(1,2);
 DP.Quality          = sum(Q);
 
 DP.Rsq              = [];
-DP.Rsq.linear       = [];
-DP.Rsq.exp          = [];
+DP.Rsq.linear       = NaN;
+DP.Rsq.exp          = NaN;
 
 Iph= 0;
 

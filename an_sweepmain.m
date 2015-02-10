@@ -229,7 +229,7 @@ try
         EP(len).asm_Vsc_ni_ne= [];
         
 
-        %dervied parameters from sweep    
+        % Derived parameters from sweep    
         DP(len).Iph0                = [];
         DP(len).Tph                 = [];
         DP(len).Vsi                 = [];
@@ -453,9 +453,6 @@ try
                 
                 
                 
-                
-                
-                
             end%for
         end%if split
         
@@ -485,7 +482,7 @@ try
             ', old.Vsi, old.Vx, Vsg, sigma_Vsg',...
             ', old.Tph, old.Iph0, Vb_lastnegcurrent, Vb_firstposcurrent',...
             ', Vbinfl, dIinfl, d2Iinfl',...
-            ', Iph0, Tph, Vsi, Vph_knee,sigma_Vph_knee, Te_linear, sigma_Te_linear, ne_linear, sigma_ne_linear',...
+            ', Iph0, Tph, Vsi, Vph_knee, sigma_Vph_knee, Te_linear, sigma_Te_linear, ne_linear, sigma_ne_linear',...
             ', ion_slope, sigma_ion_slope, ion_intersect, sigma_ion_intersect, e_slope, sigma_e_slope, e_intersect, sigma_e_intersect',...
             ', ion_Vb_intersect, sigma_ion_Vb_intersect, e_Vb_intersect, sigma_e_Vb_intersect',...
             ', Tphc, nphc, phc_slope, sigma_phc_slope, phc_intersect, sigma_phc_intersect',...
@@ -496,7 +493,7 @@ try
             ', asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
             ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
             ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...
-            ', ASM_m_ion, ASM_Z_ion, ASM_m_vram, Vsc_ni_ne, asm_Vsc_ni_ne',...    
+            ', ASM_m_ion, ASM_Z_ion, ASM_vram_ion, Vsc_ni_ne, asm_Vsc_ni_ne',...    
             '\n'));
 
 
@@ -506,23 +503,22 @@ try
         for k=1:klen
             % print variables to file. separated into substrings.
             
-                
             str1  = sprintf('%s, %s, %16s, %16s, %03i, %07.3f, %04.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
-            str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs,AP(k).vx, DP(k).Vsg);
+            str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs, AP(k).vx, DP(k).Vsg);
             str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0,AP(k).lastneg, AP(k).firstpos);
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);                 
-            str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Iph0,DP(k).Tph,DP(k).Vsi,DP(k).Vph_knee,DP(k).Te,DP(k).ne);           
+            str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Iph0, DP(k).Tph, DP(k).Vsi, DP(k).Vph_knee, DP(k).Te, DP(k).ne);           
             str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
             str7  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_Vb_intersect,DP(k).e_Vb_intersect);  
             str8  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Tphc,DP(k).nphc,DP(k).phc_slope,DP(k).phc_intersect);                                                                                                      %NB DP(k).Te_exp is vector size 2, so two ouputs.           
-            str9  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).ne_5eV,EP(k).ni_1comp,EP(k).ni_2comp,EP(k).v_ion,DP(k).Te_exp,DP(k).ne_exp,DP(k).Rsq.linear,DP(k).Rsq.exp);
-            str10 = sprintf(' %14.7e, %14.7e,',DP_assmpt(k).Vsg);            
-            str11 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).Iph0,DP_assmpt(k).Tph,DP_assmpt(k).Vsi,DP_assmpt(k).Vph_knee,DP_assmpt(k).Te,DP_assmpt(k).ne);        
-            str12 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).ion_slope,DP_assmpt(k).ion_intersect,DP_assmpt(k).e_slope,DP_assmpt(k).e_intersect);            
+            str9  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', EP(k).ne_5eV, EP(k).ni_1comp, EP(k).ni_2comp, EP(k).v_ion, DP(k).Te_exp, DP(k).ne_exp, DP(k).Rsq.linear, DP(k).Rsq.exp);
+            str10 = sprintf(' %14.7e, %14.7e,',DP_assmpt(k).Vsg);
+            str11 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).Iph0,DP_assmpt(k).Tph,DP_assmpt(k).Vsi,DP_assmpt(k).Vph_knee,DP_assmpt(k).Te,DP_assmpt(k).ne);
+            str12 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).ion_slope,DP_assmpt(k).ion_intersect,DP_assmpt(k).e_slope,DP_assmpt(k).e_intersect);
             str13 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', DP_assmpt(k).ion_Vb_intersect, DP_assmpt(k).e_Vb_intersect);           
             str14 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).Tphc,DP_assmpt(k).nphc,DP_assmpt(k).phc_slope,DP_assmpt(k).phc_intersect);
-            str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).asm_ne_5eV,EP(k).asm_ni_1comp,EP(k).asm_ni_2comp,EP(k).asm_v_ion,DP_assmpt(k).Te_exp,DP_assmpt(k).ne_exp,DP_assmpt(k).Rsq.linear,DP_assmpt(k).Rsq.exp);
-            str16 = sprintf(' %03i, %02i, %14.7e, %14.7e, %14.7e',assmpt.ionM,assmpt.ionZ,assmpt.vram,EP(k).Vsc_ni_ne,EP(k).asm_Vsc_ni_ne);
+            str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', EP(k).asm_ne_5eV, EP(k).asm_ni_1comp,EP(k).asm_ni_2comp,EP(k).asm_v_ion,DP_assmpt(k).Te_exp,DP_assmpt(k).ne_exp,DP_assmpt(k).Rsq.linear,DP_assmpt(k).Rsq.exp);
+            str16 = sprintf(' %03i, %02i, %14.7e, %14.7e, %14.7e', assmpt.ionM, assmpt.ionZ, assmpt.vram, EP(k).Vsc_ni_ne, EP(k).asm_Vsc_ni_ne);
             
             
             strtot= strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16);
