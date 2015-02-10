@@ -616,9 +616,16 @@ if(~isempty(an_tabindex));
             
             ocl2{end+1} = struct('NAME', 'ASM_m_ion',      'BYTES', 3, 'UNIT', 'amu',               'DESCRIPTION', 'Assumed ion mass for all ions.');     % New from commit a56c578, 2015-01-22 or earlier.
             ocl2{end+1} = struct('NAME', 'ASM_Z_ion',      'BYTES', 2, 'UNIT', 'Elementary charge', 'DESCRIPTION', 'Assumed ion charge for all ions.');   % New from commit a56c578, 2015-01-22 or earlier.
-            ocl2{end+1} = struct('NAME', 'ASM_vram_ion',               'UNIT', 'm/s',               'DESCRIPTION', 'Assumed ion ram speed in used in *_v_dep variables.');   % New from commit a56c578, 2015-01-22 or earlier. Earlier name: ASM_m_vram.
+            ocl2{end+1} = struct('NAME', 'ASM_v_ion',               'UNIT', 'm/s',                  'DESCRIPTION', 'Assumed ion ram speed in used in *_v_dep variables.');   % New from commit a56c578, 2015-01-22 or earlier. Earlier name: ASM_m_vram, ASM_vram_ion.
             ocl2{end+1} = struct('NAME', '    Vsc_ni_ne',              'UNIT', 'V',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (ni_v_indep) and electron (ne_linear) densities.');   % New from commit a56c578, 2015-01-22 or earlier.
             ocl2{end+1} = struct('NAME', 'asm_Vsc_ni_ne',              'UNIT', 'V',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (asm_ni_v_indep) and electron (asm_ne_linear) densities. Fixed photoelectron current assumption.');   % New from commit a56c578, 2015-01-22 or earlier.
+            
+            ocl2{end+1} = struct('NAME', 'Vsc_aion',                  'UNIT', 'V',      'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+            ocl2{end+1} = struct('NAME', 'ni_aion',                   'UNIT', 'cm^-3',  'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+            ocl2{end+1} = struct('NAME', 'v_aion',                    'UNIT', 'm/s',    'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+            ocl2{end+1} = struct('NAME', 'asm_Vsc_aion',              'UNIT', 'V',      'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+            ocl2{end+1} = struct('NAME', 'asm_ni_aion',               'UNIT', 'cm^-3',  'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+            ocl2{end+1} = struct('NAME', 'asm_v_aion',                'UNIT', 'm/s',    'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
             %---------------------------------------------------------------------------------------------------
             % Removed from commit 3dce0a0, 2014-12-16, or earlier.
             %ocl2{end+1} = struct('NAME', 'asm_e_Vb_slope',         'UNIT', 'A/V',       'DESCRIPTION', 'Slope of linear electron current fit as a function of bias potential. Fixed photoelectron current assumption.');
