@@ -70,6 +70,8 @@ out.a = nan(1,2);
 out.b = nan(1,2);
 out.Vpa = nan(1,2);
 out.Vpb = nan(1,2);
+out.Upa = nan(1,2);
+out.Upb = nan(1,2);
 out.Q = 0;
 out.mean = nan(1,2);
 
@@ -162,6 +164,10 @@ b(2) = abs(S.sigma(2)/P_Vb(2)); %Fractional error
 P_Vp = P_Vb;                  %same slope, but we need to change intersect
 P_Vp(2) = P_Vb(2)-P_Vb(1)*Vsc; %fit as function of Vsc.
 
+P_Up= P_Vb;
+P_Up(2) = P_Vb(2)-P_Vb(1)*Vknee; %same slope, but intersect if ions are function of Up, where Up = V-Vknee)
+
+
 
 
 if a(2) > 1 % if error is large (!)
@@ -171,7 +177,12 @@ if a(2) > 1 % if error is large (!)
     out.Q(1) = 1;
     
     P_Vp(1) = a(1); % no slope
-    P_Vp(2) = b(1);   
+    P_Vp(2) = b(1);
+    
+    P_Up(1) = a(1);
+    P_Up(2) = b(1);
+    
+    
 end
 
 
@@ -212,7 +223,8 @@ out.b = b;
 out.Vpa = [P_Vp(1) a(2)];
 out.Vpb = [P_Vp(2) b(2)];
 out.mean = [mean(Ir) std(Ir)]; % offset  
-
+out.Upa = [P_Up(1) a(2)];
+out.Upb = [P_Up(2) b(2)];
 
 
 end

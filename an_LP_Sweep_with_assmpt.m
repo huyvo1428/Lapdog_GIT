@@ -82,6 +82,10 @@ DP.ion_Vb_slope     = nan(1,2);
 DP.ion_Vb_intersect = nan(1,2);
 DP.ion_slope        = nan(1,2);
 DP.ion_intersect    = nan(1,2);
+DP.ion_Up_slope     = nan(1,2);
+DP.ion_Up_intersect = nan(1,2);
+
+
 
 DP.e_Vb_slope       = nan(1,2);
 DP.e_Vb_intersect   = nan(1,2);
@@ -123,29 +127,30 @@ try
     %dv = S.step_height*IN.VpTM_DAC; % Step height in volt.
     dv = V(2)-V(1);
     
+    Is = sweepFilterChooser(I,dv);
     
-
+% 
+%     
+%     % we have three or four cases:
+%     % dv = 0.25 --> e.g. 604, 807 (probably burst mode)
+%     % dv = 0.5  --> e.g. 506
+%     % dv = 0.75 --> e.g. 505
+%     % dv = 1    --> e.g  212 (rare)
+%     % dv << 0.25 --> fine sweeps, (not implemented yet)
+%     if dv < 0.27 %i.e. if dv ~ 0.25
+%         sSpan = 0.1;
+%         sMethod = 'rloess';   % loose rloess filter
+%     elseif dv > 0.72
+%         
+%         sSpan = 0.2;     %pretty heavy sgolay filter.
+%         sMethod = 'sgolay';
+%     else  %i.e. if dv ~ 0.5
+%         sSpan = 0.1;       %pretty heavy sgolay filter.
+%         sMethod = 'sgolay';
+%     end
+%     
     
-    % we have three or four cases:
-    % dv = 0.25 --> e.g. 604, 807 (probably burst mode)
-    % dv = 0.5  --> e.g. 506
-    % dv = 0.75 --> e.g. 505
-    % dv = 1    --> e.g  212 (rare)
-    % dv << 0.25 --> fine sweeps, (not implemented yet)
-    if dv < 0.27 %i.e. if dv ~ 0.25
-        sSpan = 0.1;
-        sMethod = 'rloess';   % loose rloess filter
-    elseif dv > 0.72
-        
-        sSpan = 0.2;     %pretty heavy sgolay filter.
-        sMethod = 'sgolay';
-    else  %i.e. if dv ~ 0.5
-        sSpan = 0.1;       %pretty heavy sgolay filter.
-        sMethod = 'sgolay';
-    end
-    
-    
-    Is = smooth(I,sSpan,sMethod,1).'; %filter sweep NB transpose
+ %   Is = smooth(I,sSpan,sMethod,1).'; %filter sweep NB transpose
 
      
    % Is = smooth(I,0.2,'sgolay',1).'; %pretty heavy sgolay filter. NB transpose
@@ -385,10 +390,12 @@ try
     DP.Vsg     = [Vsc Vsc_sigma];
     DP.Vph_knee = [Vplasma Vknee_sigma];
 
-    DP.ion_Vb_slope      = ion.a;
-    DP.ion_Vb_intersect  = ion.b;
-    DP.ion_slope      = ion.Vpa;
-    DP.ion_intersect  = ion.Vpb;
+    DP.ion_Vb_slope     = ion.a;
+    DP.ion_Vb_intersect = ion.b;
+    DP.ion_slope        = ion.Vpa;
+    DP.ion_intersect    = ion.Vpb;
+    DP.ion_Up_slope     = ion.Upa;
+    DP.ion_Up_intersect = ion.Upb;
 
     DP.e_Vb_slope        = elec.a;
     DP.e_Vb_intersect    = elec.b;

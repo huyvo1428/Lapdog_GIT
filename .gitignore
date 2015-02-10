@@ -1,13 +1,10 @@
 *.m~
 *.DS_Store
-irfu-matlab/*
-server/*
-mice/*
+irfu-matlab/
+server/
+mice/
 *.mat
-
 metakernel_rosetta.txt
 main.m
 control.m
-
-
 *.TAB

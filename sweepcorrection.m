@@ -13,7 +13,10 @@ curOut = vec2mat(curArray,nSteps,NaN).'; %reformat curArray to matrix, fill with
 %curOut=A.';
 len = length(curOut);
 
-test1 = smooth(nanmean(curOut,1),0.08,'rloess').'; %very hard smoothening, ignore 'rogue values'
+sSpan = ceil(0.08*len);  % hard rloess filter span
+sSpan = max(sSpan,6);  %HORRIBLE BUG IF SPAN == 5!!! (or 4)
+
+test1 = smooth(nanmean(curOut,1),sSpan,'rloess').'; %very hard smoothening, ignore 'rogue values'
 
 %mu_test1 = nanmean(test1,1); %function that ignores NaN values, row vector
 sigma_test1(1:len) = nanstd(test1); %ignores NaN values, unbiased std, SAME SINGLE VALUE TO ALL COLUMNS

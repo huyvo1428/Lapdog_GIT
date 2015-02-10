@@ -51,7 +51,6 @@ if(~isempty(ind_I2S))
 end
 
 
-
 fprintf(1,'Downsample Low frequency measurements \n')
 
 if(~isempty(ind_I1L))
@@ -86,7 +85,6 @@ if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
  
 if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
 if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
-%  
 
 
 fprintf(1, 'Best estimates\n')
