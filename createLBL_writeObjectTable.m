@@ -38,11 +38,12 @@ function createLBL_writeObjectTable(fid, data)
 % QUESTION: If COLUMNS or ROW_BYTES disagree, which one should be used?
 
 
+
     % Constants:
     BYTES_BETWEEN_COLUMNS = 2;
     BYTES_PER_LINEBREAK = 1;      % Derive using sprint?!!
     INDENTATION = '   ';
-    PERMITTED_OBJCOL_FIELD_NAMES = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'FORMAT', 'ITEMS', 'DESCRIPTION', 'COLUMNS'};
+    PERMITTED_OBJCOL_FIELD_NAMES = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'FORMAT', 'ITEMS', 'MISSING_CONSTANT', 'DESCRIPTION'};
     
     indentation_level = 0;
     data.DESCRIPTION = strrep(data.DESCRIPTION, '"', '');   % Remove quotes, if there are any. Quotes are added later.
@@ -50,17 +51,21 @@ function createLBL_writeObjectTable(fid, data)
     
     
     
+    %----------------------------------------------------------------------
     % When a caller takes values from tabindex etc, and they are sometimes
     % mistakenly set to []. Therefore this check is useful. Mistake might
     % otherwise be discovered by by examining LBL files.
+    %----------------------------------------------------------------------
     if isempty(data.COLUMNS) || isempty(data.ROW_BYTES) || isempty(data.ROWS)
         error('ERROR: Trying to use empty value.')
     end
     
+    %--------------------------------------------------------------------------------------------------
     % Iterate over ODL OBJECT COLUMN; Consistency checks.
     % Calculate number of TAB file columns (taking ITEMS into account) rather than take from argument.
     % Calculate "ROW_BYTES" rather than take from argument (which takes from tabindex/an_tabindex).
     % NOTE: ROW_BYTES is only correct if fprintf prints correctly when creating the TAB file.
+    %--------------------------------------------------------------------------------------------------
     N_row_bytes_calc = 0;
     N_TAB_cols_calc = 0;
     OBJCOL_names_list = {};
@@ -89,6 +94,8 @@ function createLBL_writeObjectTable(fid, data)
     end
     N_row_bytes_calc = N_row_bytes_calc - BYTES_BETWEEN_COLUMNS; % + BYTES_PER_LINEBREAK;
     
+    
+    
     % ---------------------------------------------
     % Check for doubles among the ODL column names.
     % Useful for A?S.LBL files.
@@ -97,12 +104,15 @@ function createLBL_writeObjectTable(fid, data)
         error('Found doubles among the ODL column names.')
     end
     
+    
+    
     % ------------------------------------------------------------
     % Check stated ROW_BYTES corresponds to the derived ROW_BYTES.
     % ------------------------------------------------------------
     % Since it unclear whether ROW_BYTES includes line breaks or not,
     % allow a small difference, for now.
     % /Erik P G Johansson 2015-01-15
+    % ------------------------------------------------------------
     if ~ismember(N_row_bytes_calc - data.ROW_BYTES, [0, -1])
         fprintf(1, 'fopen(fid) = %s\n', fopen(fid));
         fprintf(1, 'N_row_bytes_calc = %i\n', N_row_bytes_calc);
@@ -128,14 +138,14 @@ function createLBL_writeObjectTable(fid, data)
     %---------------
     % Write to file
     %---------------
-    indented_print(+1, 'OBJECT = TABLE\n');
-    indented_print( 0,     'INTERCHANGE_FORMAT = ASCII\n');
-    indented_print( 0,     'ROWS               = %d\n',   data.ROWS );
-    indented_print( 0,     'COLUMNS            = %d\n',   data.COLUMNS);
-    indented_print( 0,     'ROW_BYTES          = %d\n',   data.ROW_BYTES);
-    indented_print( 0,     'DESCRIPTION        = "%s"\n', data.DESCRIPTION);
+    indented_print(+1, 'OBJECT = TABLE');
+    indented_print( 0,     'INTERCHANGE_FORMAT = ASCII');
+    indented_print( 0,     'ROWS               = %d',   data.ROWS );
+    indented_print( 0,     'COLUMNS            = %d',   data.COLUMNS);
+    indented_print( 0,     'ROW_BYTES          = %d',   data.ROW_BYTES);
+    indented_print( 0,     'DESCRIPTION        = "%s"', data.DESCRIPTION);
     if isfield(data, 'DELIMITER')
-        indented_print( 0, 'DELIMITER          = "%s"\n', data.DELIMITER);
+        indented_print( 0, 'DELIMITER          = "%s"', data.DELIMITER);
     end
 
     current_row_byte = 1;    % Starts with one, not zero.
@@ -152,40 +162,47 @@ function createLBL_writeObjectTable(fid, data)
             cd.DESCRIPTION = 'N/A';   % NOTE: Quotes are added later.
         end
         
-        indented_print(+1, 'OBJECT = COLUMN\n');
-        indented_print( 0,     'NAME        = %s\n', cd.NAME);
-        indented_print( 0,     'START_BYTE  = %i\n', current_row_byte);
-        indented_print( 0,     'BYTES       = %i\n', cd.BYTES);
-        indented_print( 0,     'DATA_TYPE   = %s\n', cd.DATA_TYPE);
-        indented_print( 0,     'UNIT        = %s\n', cd.UNIT);
+        indented_print(+1, 'OBJECT = COLUMN');
+        indented_print( 0,     'NAME             = %s', cd.NAME);
+        indented_print( 0,     'START_BYTE       = %i', current_row_byte);
+        indented_print( 0,     'BYTES            = %i', cd.BYTES);
+        indented_print( 0,     'DATA_TYPE        = %s', cd.DATA_TYPE);
+        indented_print( 0,     'UNIT             = %s', cd.UNIT);
         if isfield(cd, 'FORMAT')
-            indented_print( 0, 'FORMAT      = %s\n', cd.FORMAT);
+            indented_print( 0, 'FORMAT           = %s', cd.FORMAT);
+        end
+        if isfield(cd, 'MISSING_CONSTANT')
+            indented_print( 0, 'MISSING_CONSTANT = %f', cd.MISSING_CONSTANT);
         end
         if isfield(cd, 'ITEMS')
-            indented_print( 0, 'ITEMS       = %i\n', cd.ITEMS);
+            indented_print( 0, 'ITEMS            = %i', cd.ITEMS);
             N_subcolumns = cd.ITEMS;
         else
             N_subcolumns = 1;
         end
-        indented_print( 0,     'DESCRIPTION = "%s"\n', cd.DESCRIPTION);      % NOTE: Added quotes.
-        indented_print(-1, 'END_OBJECT = COLUMN\n');
+        indented_print( 0,     'DESCRIPTION = "%s"', cd.DESCRIPTION);      % NOTE: Added quotes.
+        indented_print(-1, 'END_OBJECT = COLUMN');
         
         current_row_byte = current_row_byte + N_subcolumns*cd.BYTES + BYTES_BETWEEN_COLUMNS;
     end
      
-    indented_print(-1, 'END_OBJECT = TABLE\n');
+    indented_print(-1, 'END_OBJECT = TABLE');
     
-    % ------------------------------------------------------------------------------------------
+    %============================================================================================
     
+    %------------------------------------------------------------------------------------------
     % Print with indentation.
     % -----------------------
     % Arguments: indentation increment, printf arguments (multiple; no fid)
     % NOTE: Uses function-"global" variables (fid, INDENTATION, indentation_level)
     % defined in outer function for simplicity & speed(?).
     % NOTE: Indentation increment takes before/after printf depending on decrement/increment.
+    %
+    % NOTE: Adds correct carriage return and line feed at the end.
+    %------------------------------------------------------------------------------------------
     function indented_print(varargin)
         indentation_increment = varargin{1};        
-        printf_str = varargin{2};
+        printf_str = [varargin{2}, '\r\n'];
         printf_arg = varargin(3:end);
 
         if indentation_increment < 0 
