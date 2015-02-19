@@ -6,18 +6,18 @@
 % fid = file identifier of file opened & closed outside of this function.
 %
 % data = struct with the following fields.
-%    data.ROWS              % lapdog: an_tabindex{i,4}
+%    data.ROWS                % lapdog: an_tabindex{i,4}
 %    data.ROW_BYTES           % lapdog: an_tabindex{i,9}
 %    data.DESCRIPTION         % Description for entire table
-%    data.DELIMITER           % Optional
-%    data.OBJCOL_list{i}.NAME            % Automatically quoted.
+%    data.OBJCOL_list{i}.NAME               
 %    data.OBJCOL_list{i}.BYTES
 %    data.OBJCOL_list{i}.DATA_TYPE
-%    data.OBJCOL_list{i}.UNIT            % Replaced by standardized default value if empty.<
-%    data.OBJCOL_list{i}.FORMAT          % Optional
-%    data.OBJCOL_list{i}.ITEMS           % Optional
-%    data.OBJCOL_list{i}.DESCRIPTION     % Replaced by standardized default value if empty.
-%
+%    data.OBJCOL_list{i}.UNIT               % Replaced by standardized default value if empty.
+%    data.OBJCOL_list{i}.FORMAT             % Optional
+%    data.OBJCOL_list{i}.ITEMS              % Optional
+%    data.OBJCOL_list{i}.DESCRIPTION        % Replaced by standardized default value if empty. Automatically quoted.
+%    data.OBJCOL_list{i}.MISSING_CONSTANT   % Optional
+%  
 % The caller is NOT supposed to surround strings with quotes, or units with </>. The code adds that when it thinks it is
 % appropriate.
 %
@@ -41,12 +41,16 @@ function createLBL_writeObjectTable(fid, data)
 
     % Constants:
     BYTES_BETWEEN_COLUMNS = 2;
-    BYTES_PER_LINEBREAK = 1;      % Derive using sprint?!!
-    INDENTATION = '   ';
+    BYTES_PER_LINEBREAK = 2;      % Derive using sprint from linebreak_symbols constant?!!
+    INDENTATION = '    ';
     PERMITTED_OBJCOL_FIELD_NAMES = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'FORMAT', 'ITEMS', 'MISSING_CONSTANT', 'DESCRIPTION'};
     
     indentation_level = 0;
-    data.DESCRIPTION = strrep(data.DESCRIPTION, '"', '');   % Remove quotes, if there are any. Quotes are added later.
+    
+    % Remove quotes, if there are any. Quotes are added later.
+    % NOTE: One does not want to give error on finding quotes since the value may have been read from CALIB LBL file.
+    data.DESCRIPTION = strrep(data.DESCRIPTION, '"', '');
+    
     %disp(['Create LBL table: ', fopen(fid)]);     % DEBUG / log message.
     
     
@@ -144,9 +148,9 @@ function createLBL_writeObjectTable(fid, data)
     indented_print( 0,     'COLUMNS            = %d',   data.COLUMNS);
     indented_print( 0,     'ROW_BYTES          = %d',   data.ROW_BYTES);
     indented_print( 0,     'DESCRIPTION        = "%s"', data.DESCRIPTION);
-    if isfield(data, 'DELIMITER')
-        indented_print( 0, 'DELIMITER          = "%s"', data.DELIMITER);
-    end
+    %if isfield(data, 'DELIMITER')
+    %    indented_print( 0, 'DELIMITER          = "%s"', data.DELIMITER);
+    %end
 
     current_row_byte = 1;    % Starts with one, not zero.
     for i = 1:length(data.OBJCOL_list)
@@ -160,6 +164,10 @@ function createLBL_writeObjectTable(fid, data)
         end
         if isempty(cd.DESCRIPTION)
             cd.DESCRIPTION = 'N/A';   % NOTE: Quotes are added later.
+        else
+            if ~isempty(strfind(cd.DESCRIPTION, '"'))
+                error('Column description contains quotes.')
+            end
         end
         
         indented_print(+1, 'OBJECT = COLUMN');
@@ -188,7 +196,7 @@ function createLBL_writeObjectTable(fid, data)
      
     indented_print(-1, 'END_OBJECT = TABLE');
     
-    %============================================================================================
+    %##########################################################################################################
     
     %------------------------------------------------------------------------------------------
     % Print with indentation.

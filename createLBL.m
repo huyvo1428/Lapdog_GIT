@@ -14,18 +14,39 @@ ODL_VALUE_UNKNOWN = [];   %'<Unknown>';  % Unit is unknown.
 %====================================================================================================
 % Construct list of key-value pairs to use for all LBL files.
 % -----------------------------------------------------------
-% NOTE: Only keys that already exist in the CALIB files that are read (otherwise intentional error).
-% NOTE: Not complete. There is more information/code that can be transferred here.
+% Keys must not collide with keys set for specific file types.
+% For file types that read CALIB LBL files, must overwrite old keys(!).
+% 
+% NOTE: Only keys that already exist in the CALIB files that are read (otherwise intentional error)
+%       and which are thus overwritten.
+% NOTE: Might not be complete. PDS_VERSION_ID, RECORD_TYPE
 %====================================================================================================
 kvl_LBL_all = [];
 kvl_LBL_all.keys = {};
 kvl_LBL_all.values = {};
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_ID',           ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_NAME',         ['"', strrep(datasetname, sprintf('3 %s CALIB',  shortphase), sprintf('5 %s DERIV',  shortphase)), '"']);
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'LABEL_REVISION_NOTE',   sprintf('"%s, %s, %s"',lbltime,lbleditor,lblrev));
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCT_CREATION_TIME', datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
-%kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 
-%kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf('3 %s CALIB',  shortphase), sprintf('5 %s DERIV',  shortphase)), '"']);
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"',lbltime,lbleditor,lblrev));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCT_CREATION_TIME',     datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_QUALITY_ID',           '"1"');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_ID',                'ROSETTA');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_ID',               producershortname);
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCT_TYPE',              '"DDR"');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PROCESSING_LEVEL_ID',       '"5"');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_ID',        'RO');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_ID',             'RPCLAP');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'TARGET_TYPE',               sprintf('"%s"', targettype));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PDS_VERSION_ID',            'PDS3');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'RECORD_TYPE',               'FIXED_LENGTH');
+%kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, '', );
 
 
 
@@ -76,18 +97,15 @@ if(~isempty(tabindex));
             kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'FILE_RECORDS',                 num2str(tabindex{i,6}));
             kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'FILE_NAME',                    lname);
             kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, '^TABLE',                       tname);
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'PRODUCER_ID',                  producershortname);
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'PRODUCER_FULL_NAME',           sprintf('"%s"', producerfullname));
             kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'PRODUCT_ID',                   tname(1:end-4));
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'PRODUCT_TYPE',                 '"DDR"');
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'PROCESSING_LEVEL_ID',          '"5"');
             kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'START_TIME',                   index(tabindex{i,3}).t0str(1:23)); % UTC start time
             kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'STOP_TIME',                    tabindex{i,4}(1:23));              % UTC stop time
             kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'SPACECRAFT_CLOCK_START_COUNT', index(tabindex{i,3}).sct0str);
             kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
             
-            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL_set);
-            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL,       kvl_LBL_all);
+            kvl_LBL = createLBL_KVPL_merge(kvl_LBL_set, kvl_LBL_all);
+            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL);
+            %kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL,       kvl_LBL_all);
             createLBL_write_LBL_header(fid, kvl_LBL)
             clear kvl_LBL
             clear kvl_LBL_CALIB
@@ -165,9 +183,9 @@ if(~isempty(tabindex));
                 end                
                 %OBJTABLE_data.ROW_BYTES   = tabindex{i, 8};    % Can be empty. ==> Does not work.
                 
-                % ------------------------------------------------------------------------
-                % Recycle OBJCOL info/columns from CALIB LBL file and then add one column.
-                % ------------------------------------------------------------------------
+                % -----------------------------------------------------------------------------
+                % Recycle OBJCOL info/columns from CALIB LBL file (!) and then add one column.
+                % -----------------------------------------------------------------------------
                 ocl = CALIB_LBL_struct.OBJECT___TABLE{1}.OBJECT___COLUMN;
                 for i_oc = 1:length(ocl)
                     oc = ocl{i_oc};
@@ -221,6 +239,7 @@ if(~isempty(blockTAB));
         %
         % LBL file: Create header/key-value pairs
         %
+        % NOTE: Does not rely on reading old LBL file.
         %=========================================
         
         tname = blockTAB{i,2};
@@ -232,32 +251,12 @@ if(~isempty(blockTAB));
         kvl_set = [];   % NOTE: Can not initialize with "struct(...)". That gives an unintended result due to a special interpretation for arrays.
         kvl_set.keys = {};
         kvl_set.values = {};
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PDS_VERSION_ID', 'PDS3');
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_TYPE',    'FIXED_LENGTH');
         kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES',   sprintf('%i', fileinfo.bytes));
         kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS',   sprintf('%i', blockTAB{i,3}));
         kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',      sprintf('"%s"', lname));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',         sprintf('"%s"', tname));
-        
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'DATA_QUALITY_ID',           '1');
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'MISSION_ID',                'ROSETTA');
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCER_ID',               producershortname);
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
+        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',         sprintf('"%s"', tname));        
+        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',     sprintf('"%s"', tname(1:(end-4))));
 
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',                sprintf('"%s"', tname(1:(end-4))));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_TYPE',              '"DDR"');
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'INSTRUMENT_HOST_ID',        'RO');
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'INSTRUMENT_ID',             'RPCLAP' );
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"' );
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'TARGET_TYPE',               sprintf('"%s"', targettype));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PROCESSING_LEVEL_ID',       '5');
-        
         kvl_LBL = createLBL_KVPL_merge(kvl_set, kvl_LBL_all);            
         createLBL_write_LBL_header(fid, kvl_LBL)
         clear kvl_set
@@ -327,9 +326,7 @@ if (~isempty(an_tabindex));
             kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',             strrep(an_tabindex{i, 2}, '.TAB', '.LBL'));
             kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',                an_tabindex{i, 2});
             kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS',          num2str(an_tabindex{i, 4}));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_TYPE',          'DDR');
             kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',            sprintf('"%s"', strrep(an_tabindex{i, 2}, '.TAB', '')));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PROCESSING_LEVEL_ID',   '5');
             kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'DESCRIPTION',           '"Best estimates of physical quantities based on sweeps."');
             kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES',          num2str(TAB_file_info.bytes));
 
@@ -340,7 +337,8 @@ if (~isempty(an_tabindex));
                 %    START_TIME / STOP_TIME,
                 %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
                 %===============================================================
-                kvl_LBL = createLBL_create_EST_LBL_header(an_tabindex(i, :), index, kvl_set);
+                
+                kvl_LBL = createLBL_create_EST_LBL_header(an_tabindex(i, :), index, kvl_set);    % NOTE: Reads LBL file(s).
                 kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL, kvl_LBL_all);
             catch exc
                 fprintf(1, ['ERROR: ', exc.message])
@@ -368,11 +366,9 @@ if (~isempty(an_tabindex));
             kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS',          num2str(an_tabindex{i,4}));
             kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',             lname);
             kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',                tname);
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_TYPE',          '"DDR"');
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PROCESSING_LEVEL_ID',   '"5"' );
             
-            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_set);
-            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL,       kvl_LBL_all);
+            kvl_LBL = createLBL_KVPL_merge(kvl_set, kvl_LBL_all);
+            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL);
 
 
         end   % if-else

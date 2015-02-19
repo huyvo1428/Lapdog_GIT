@@ -5,8 +5,14 @@
 % At some point, when all CALIB archives with obsoleted keywords are gone, then this
 % code can be modified or removed.
 %
+% NOTE: Can not handle "probe 3".
+%
 % function kvl = createLBL_compatibility_substitute_LBL_keys(kvl, probe_nbr)
 function   kvl = createLBL_compatibility_substitute_LBL_keys(kvl, probe_nbr)
+
+    if ~ismember(probe_nbr, [1 2])
+        error(sprintf('Illegal probe number. probe_nbr=%d', probe_nbr))
+    end
 
     old_keys = { ...
         'ROSETTA:LAP_INITIAL_SWEEP_SMPLS', ...
