@@ -145,17 +145,17 @@ function createLBL_writeObjectTable(fid, data)
         if isempty(cd.NAME)
             error('ERROR: Trying to use empty value for NAME.')
         end
-        if isempty(cd.UNIT)
-            cd.UNIT = '"N/A"';
+        if isempty(cd.UNIT) || strcmp(cd.UNIT, '"N/A"')
+            cd.UNIT = '"N/A"';     % NOTE: Adds quotes. UNIT is otherwise not printed with quotes (for now). Correct policy?!
         end
         if isempty(cd.DESCRIPTION)
-            cd.DESCRIPTION = '"N/A"';
+            cd.DESCRIPTION = 'N/A';   % NOTE: Quotes are added later.
         end
         
         indented_print(+1, 'OBJECT = COLUMN\n');
         indented_print( 0,     'NAME        = %s\n', cd.NAME);
         indented_print( 0,     'START_BYTE  = %i\n', current_row_byte);
-        indented_print( 0,     'BYTES       = %i\n', cd.BYTES); %
+        indented_print( 0,     'BYTES       = %i\n', cd.BYTES);
         indented_print( 0,     'DATA_TYPE   = %s\n', cd.DATA_TYPE);
         indented_print( 0,     'UNIT        = %s\n', cd.UNIT);
         if isfield(cd, 'FORMAT')
@@ -180,7 +180,7 @@ function createLBL_writeObjectTable(fid, data)
     % Print with indentation.
     % -----------------------
     % Arguments: indentation increment, printf arguments (multiple; no fid)
-    % NOTE: Uses "global" variables (fid, INDENTATION, indentation_level)
+    % NOTE: Uses function-"global" variables (fid, INDENTATION, indentation_level)
     % defined in outer function for simplicity & speed(?).
     % NOTE: Indentation increment takes before/after printf depending on decrement/increment.
     function indented_print(varargin)

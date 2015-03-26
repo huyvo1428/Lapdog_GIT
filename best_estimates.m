@@ -55,8 +55,9 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % TODO: Remove references to "et" times. Use OBT.
 %===========================================================================================
 
+    t_start = clock;    % NOTE: Not number of seconds, but [year month day hour minute seconds].
     an_tabindex = main_INTERNAL(an_tabindex, tabindex, index, obe);
-
+    fprintf(1, '%s: %0.f s (elapsed wall time)\n', mfilename, etime(clock, t_start));
     
     
     % #############################################################################################
@@ -184,7 +185,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             %    sweep_data = merge_structs_arrays_INTERNAL({sweep_data, PO2.data});
             %    V_bias_limits{2} = struct('V_bias_min', PO2.V_bias_min, 'V_bias_max', PO2.V_bias_max);
             %end
-            %--
+            %----------------------------------------
             sweep_data = [];
             V_bias_limits = {[], []};
             for i_P = 1:2     % For every probe ...
@@ -223,9 +224,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             end
             
             est_sweep_data_grps_list = cell(N_grps, 1);
-            for i_grp = 1:N_grps
-                %est_sweep_data_grps_list{i_grp} = select_best_estimates_OLD_INTERNAL(sim_sweep_data_grps_list{i_grp});
-                est_sweep_data_grps_list{i_grp} = select_best_estimates_BETA_INTERNAL(sim_sweep_data_grps_list{i_grp}, V_bias_limits);
+            for i_grp = 1:N_grps       % NOTE: i_grp != est_sweep_data_grps_list{i_grp}.sweep_group_nbr
+                est_sweep_data_grps_list{i_grp} = select_best_estimates_INTERNAL(sim_sweep_data_grps_list{i_grp}, V_bias_limits);
             end
             est_sweep_data = merge_structs_arrays_INTERNAL(est_sweep_data_grps_list);
 
@@ -394,128 +394,115 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     
     
     %-------------------------------------------------------------------------------------------------------------------------
-    % NOTE: OLD IMPLEMENTATION NOT IN USE!
-    % ------------------------------------
-    % TASK TO BE SOLVED BY THIS FUNCTION:
-    % Given a set of sweeps sim_sweep_data which are to be regarded as "approximately simultaneous",
-    % return a set of best estimates based upon them.
-    % Exact assumptions for the set of sweeps in the argument depends on "group_simultaneous_sweeps_INTERNAL".
-    %
-    % NOTE: In principle, this function does a lot of work that is redone for every sweep group that
-    % could probably be done for every operations block.
-    % However, the "architecture" is chosen (1) to produce clear and unambiguous (and safe) code
-    % for lots of cases (number of available probes, number of available and order of up/down sweeps), and
-    % (2) to be easily modified (safely).
-    %
-    % CURRENT IMPLEMENTATION: Assumes 0-2 sweeps from each probe.
-    % If there are two sweeps on same probe, then they are assumed to be a "pair" (immediately adjacent in time).
+    % IMPLEMENTATION OF FUNCTION: Version 1.0
+    % NOTE: OLD IMPLEMENTATION NOT IN USE! SEE "select_best_estimates_INTERNAL" (or similar).
+    % NOTE: To be removed once the new function/implementation has been tested well enough.
+    % ---------------------------------------------------------------------------------------
     % NOTE: Several index variables (values are indices into other variables) also function
     % as boolean flags ([] = false; 1 or greater = true), but one has to use ~isempty() to be sure they work as intended.
-    % NOTE: It is possible to assign a variable at index [] without error. Nothing happens but MATLAB permits it.
-    %
     %-------------------------------------------------------------------------------------------------------------------------
-    function data_est = select_best_estimates_OLD_INTERNAL(sim_sweep_data)
-
-        data = sim_sweep_data;
-        data.direction = str2double(data.direction);        
-    
-        % up/dn = up/down sweep.
-        i_P1_up = find((data.probe_nbr == 1) & (data.direction == 1));
-        i_P1_dn = find((data.probe_nbr == 1) & (data.direction == 0));
-        
-        i_P2_up = find((data.probe_nbr == 2) & (data.direction == 1));
-        i_P2_dn = find((data.probe_nbr == 2) & (data.direction == 0));
-
-        % Find index to first/second sweep in pair for P2.
-        % 1st/2nd = first/second sweep (of sweep pair on the same probe).
-        % BUG: Can NOT handle only one sweep.    (false??? /EJ 2015-01-09)
-        m = sort(find(data.probe_nbr == 2));     % ASSUMES: data/sweeps sorted in ascending time-order, so that index increases with time.
-        i_P2_1st = [];
-        i_P2_2nd = [];
-        if length(m) >= 1
-            i_P2_1st = m(1);
-        end
-        if length(m) == 2
-            i_P2_2nd = m(2);
-        end
-        
-        
-        
-        % ----------------------------
-        % Select P1 sweep to use: i_P1
-        % ----------------------------
-        if     ~isempty(i_P1_up)
-            i_P1 = i_P1_up;
-        elseif ~isempty(i_P1_dn)
-            i_P1 = i_P1_dn;
-        else
-            i_P1 = [];
-        end
-        
-        
-
-        % ----------------------------
-        % Select P2 sweep to use: i_P2
-        % ----------------------------
-        % NOTE: Can probably be shortened if the idea is to select sweep with
-        % preceeding voltage (low freq. bias or sweep) positive.
-        % NOTE: Uses "&&" so not to require i_P2_1st.
-        has_P2_updn_pair = ~isempty(i_P2_1st) && (data.direction(i_P2_1st) == 1) && ~isempty(i_P2_2nd) && (data.direction(i_P2_2nd) == 0);   % NOTE: Uses && so not to require i_P2_1st.
-        if has_P2_updn_pair && (data.V_LF_HF_before_sweep(i_P2_1st) > 0)
-            i_P2 = i_P2_2nd;
-        elseif ~isempty(i_P2_up)
-            i_P2 = i_P2_up;
-        else
-            i_P2 = i_P2_dn;
-        end
-        
-        
-        
-        i_selected = [i_P1; i_P2];    % Sweeps selected to be used for best estimatas.
-       
-        % Clear fields that are to be used, both to be sure they exist and that they are "empty".
-        data.npl_est = zeros(size(data.START_TIME_UTC)) + NaN;
-        data.Te_est  = zeros(size(data.START_TIME_UTC)) + NaN;
-        data.Vsc_est = zeros(size(data.START_TIME_UTC)) + NaN;
-
-
-
-        % Choose probe to use for n_plasma, then select data.
-        % --------------------------------------------------- 
-        % NOTE: Zero is a common non-sensical value for asm_ni_v_indep.
-        % BUG(?): For non-sensical values, switches to using value from other probe,
-        % rather than the other sweep (in sweep pair) on the same probe.
-        % --------------------------------------------------------------------
-        data.asm_ni_v_indep = str2double(data.asm_ni_v_indep);
-        if ~isempty(i_P2)   &&   ~isnan(data.asm_ni_v_indep(i_P2))    &&    (data.asm_ni_v_indep(i_P2) ~= 0)
-            i = i_P2;
-        else
-            i = i_P1;
-        end
-        npl = data.asm_ni_v_indep(i);                            % NOTE: May assign/return empty matrix if i = [].
-        if ~isempty(npl)   &&   ~isnan(npl)   &&   (npl ~= 0)    % Use value if not obviously nonsensical...
-            data.npl_est(i) = npl;
-        end
-
-        
-
-        % Choose probe to use for T_e & V_sc, then select data.
-        % -----------------------------------------------------
-        % NOTE: j_P = Probe number
-        data.asm_Te_exp = str2double(data.asm_Te_exp);
-        data.asm_Vsg    = str2double(data.asm_Vsg);
-        if ~isempty(i_P2) && ~str2num(data.Illumination{i_P2})
-            i = i_P2;
-        elseif ~isempty(i_P1)
-            i = i_P1;
-        else
-            i = i_P2;
-        end
-        data.Te_est(i)  = data.asm_Te_exp(i);
-        data.Vsc_est(i) = data.asm_Vsg   (i);
-        
-        data_est = select_structs_arrays_INTERNAL(data, i_selected);
-    end
+%     function data_est = select_best_estimates_OLD_INTERNAL(sim_sweep_data)
+% 
+%         data = sim_sweep_data;
+%         data.direction = str2double(data.direction);        
+%     
+%         % up/dn = up/down sweep.
+%         i_P1_up = find((data.probe_nbr == 1) & (data.direction == 1));
+%         i_P1_dn = find((data.probe_nbr == 1) & (data.direction == 0));
+%         
+%         i_P2_up = find((data.probe_nbr == 2) & (data.direction == 1));
+%         i_P2_dn = find((data.probe_nbr == 2) & (data.direction == 0));
+% 
+%         % Find index to first/second sweep in pair for P2.
+%         % 1st/2nd = first/second sweep (of sweep pair on the same probe).
+%         % BUG: Can NOT handle only one sweep.    (false??? /EJ 2015-01-09)
+%         m = sort(find(data.probe_nbr == 2));     % ASSUMES: data/sweeps sorted in ascending time-order, so that index increases with time.
+%         i_P2_1st = [];
+%         i_P2_2nd = [];
+%         if length(m) >= 1
+%             i_P2_1st = m(1);
+%         end
+%         if length(m) == 2
+%             i_P2_2nd = m(2);
+%         end
+%         
+%         
+%         
+%         % ----------------------------
+%         % Select P1 sweep to use: i_P1
+%         % ----------------------------
+%         if     ~isempty(i_P1_up)
+%             i_P1 = i_P1_up;
+%         elseif ~isempty(i_P1_dn)
+%             i_P1 = i_P1_dn;
+%         else
+%             i_P1 = [];
+%         end
+%         
+%         
+% 
+%         % ----------------------------
+%         % Select P2 sweep to use: i_P2
+%         % ----------------------------
+%         % NOTE: Can probably be shortened if the idea is to select sweep with
+%         % preceeding voltage (low freq. bias or sweep) positive.
+%         % NOTE: Uses "&&" so not to require i_P2_1st.
+%         has_P2_updn_pair = ~isempty(i_P2_1st) && (data.direction(i_P2_1st) == 1) && ~isempty(i_P2_2nd) && (data.direction(i_P2_2nd) == 0);   % NOTE: Uses && so not to require i_P2_1st.
+%         if has_P2_updn_pair && (data.V_LF_HF_before_sweep(i_P2_1st) > 0)
+%             i_P2 = i_P2_2nd;
+%         elseif ~isempty(i_P2_up)
+%             i_P2 = i_P2_up;
+%         else
+%             i_P2 = i_P2_dn;
+%         end
+%         
+%         
+%         
+%         i_selected = [i_P1; i_P2];    % Sweeps selected to be used for best estimatas.
+%        
+%         % Clear fields that are to be used, both to be sure they exist and that they are "empty".
+%         data.npl_est = zeros(size(data.START_TIME_UTC)) + NaN;
+%         data.Te_est  = zeros(size(data.START_TIME_UTC)) + NaN;
+%         data.Vsc_est = zeros(size(data.START_TIME_UTC)) + NaN;
+% 
+% 
+% 
+%         % Choose probe to use for n_plasma, then select data.
+%         % --------------------------------------------------- 
+%         % NOTE: Zero is a common non-sensical value for asm_ni_v_indep.
+%         % BUG(?): For non-sensical values, switches to using value from other probe,
+%         % rather than the other sweep (in sweep pair) on the same probe.
+%         % --------------------------------------------------------------------
+%         data.asm_ni_v_indep = str2double(data.asm_ni_v_indep);
+%         if ~isempty(i_P2)   &&   ~isnan(data.asm_ni_v_indep(i_P2))    &&    (data.asm_ni_v_indep(i_P2) ~= 0)
+%             i = i_P2;
+%         else
+%             i = i_P1;
+%         end
+%         npl = data.asm_ni_v_indep(i);                            % NOTE: May assign/return empty matrix if i = [].
+%         if ~isempty(npl)   &&   ~isnan(npl)   &&   (npl ~= 0)    % Use value if not obviously nonsensical...
+%             data.npl_est(i) = npl;
+%         end
+% 
+%         
+% 
+%         % Choose probe to use for T_e & V_sc, then select data.
+%         % -----------------------------------------------------
+%         % NOTE: j_P = Probe number
+%         data.asm_Te_exp = str2double(data.asm_Te_exp);
+%         data.asm_Vsg    = str2double(data.asm_Vsg);
+%         if ~isempty(i_P2) && ~str2num(data.Illumination{i_P2})
+%             i = i_P2;
+%         elseif ~isempty(i_P1)
+%             i = i_P1;
+%         else
+%             i = i_P2;
+%         end
+%         data.Te_est(i)  = data.asm_Te_exp(i);
+%         data.Vsc_est(i) = data.asm_Vsg   (i);
+%         
+%         data_est = select_structs_arrays_INTERNAL(data, i_selected);
+%     end
 
 
 
@@ -524,14 +511,28 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     
     
     %==================================================================================
-    % BETA FUNCTION!
+    % IMPLEMENTATION OF FUNCTION: Version 2.0
+    % 
+    % TASK TO BE SOLVED BY THIS FUNCTION:
+    % Given a set of sweeps sim_sweep_data which are to be regarded as "approximately simultaneous",
+    % return a set of best estimates based upon them.
+    % Exact assumptions for the set of sweeps in the argument depends on "group_simultaneous_sweeps_INTERNAL".
+    %
+    % NOTE: In principle, this function does a lot of work that is redone for every sweep group that
+    % could probably be done for every operations block.
+    % However, the "architecture" is chosen (1) to produce clear and unambiguous (and safe) code
+    % for lots of cases (number of available probes, number of available sweeps, and order of
+    % up/down sweeps), and (2) to be easily modified (safely).
+    %
+    % CURRENT IMPLEMENTATION: Assumes 0-2 sweeps from each probe.
+    % NOTE: If there are two sweeps on same probe, then they are assumed to be a "pair" (immediately adjacent in time).
+    % NOTE: It is possible to assign a variable at index [] without error. Nothing happens but MATLAB permits it.
+    %
     % QUESTION: How gain access to V_bias_min/max?
     %   NOTE: One pair of values per probe (and entire ops block, not sweep).
     %==================================================================================
-    function data_est = select_best_estimates_BETA_INTERNAL(sim_sweep_data, V_bias_limits)
+    function data_est = select_best_estimates_INTERNAL(sim_sweep_data, V_bias_limits)
 
-        %error('FUNCTION IMPLEMENTATION NOT READY YET!!!')
-        %warning('FUNCTION IMPLEMENTATION MIGHT NOT BE READY YET!!!')
         Vsc_BIAS_EXCLUSION_MARGIN_FRACTION = 0.01;
         
         data = sim_sweep_data;
@@ -539,7 +540,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         data.Illumination   = str2double(data.Illumination);
         data.asm_ni_v_indep = str2double(data.asm_ni_v_indep);
         data.asm_Te_exp     = str2double(data.asm_Te_exp);
-        data.asm_Vsg        = str2double(data.asm_Vsg);
+        %data.asm_Vsg        = str2double(data.asm_Vsg);
+        data.Vph_knee       = str2double(data.Vph_knee);
 
         % Find index to first/second sweep in pair for P2.
         % 1st/2nd = first/second sweep (of sweep pair on the same probe).
@@ -559,23 +561,42 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         
         % up/dn = Up/down sweep.
         % pb = "Positive bias", i.e. V_LF_HF_before_sweep > 0.
+        % nb = "Negative bias", i.e. V_LF_HF_before_sweep <= 0.
         % updn = There is an up-down pair of sweeps (on this probe; in this sweep group).
         % sh = Shade. NOTE: Illumination can take on values 0, 0.4 (illumination unknown), and 1.
+        % il = Illuminated.
         i_P1_up            = find((data.probe_nbr == 1) & (data.direction == 1));
+        i_P1_dn            = find((data.probe_nbr == 1) & (data.direction == 0));
+        
+        i_P1_up_il         = find((data.probe_nbr == 1) & (data.direction == 1) & (data.Illumination == 1));
+        i_P1_dn_il         = find((data.probe_nbr == 1) & (data.direction == 0) & (data.Illumination == 1));
+        i_P2_up_il         = find((data.probe_nbr == 2) & (data.direction == 1) & (data.Illumination == 1));
+        i_P2_dn_il         = find((data.probe_nbr == 2) & (data.direction == 0) & (data.Illumination == 1));
+        i_P2_up_il_nb      = find((data.probe_nbr == 2) & (data.direction == 1) & (data.Illumination == 1) & (data.V_LF_HF_before_sweep <= 0));
+        i_P2_dn_il_pb      = find((data.probe_nbr == 2) & (data.direction == 0) & (data.Illumination == 1) & (data.V_LF_HF_before_sweep >  0));
+        
         i_P2_up_sh         = find((data.probe_nbr == 2) & (data.direction == 1) & (data.Illumination == 0));
-        i_P2_dn_pb_updn    = find((data.probe_nbr == 2) & (data.direction == 0) & (data.V_LF_HF_before_sweep > 0) & has_P2_updn_pair);
-        i_P2_dn_pb_updn_sh = find((data.probe_nbr == 2) & (data.direction == 0) & (data.V_LF_HF_before_sweep > 0) & has_P2_updn_pair ...
-                                          & (data.Illumination == 0));
+        i_P2_dn_pb_updn    = find((data.probe_nbr == 2) & (data.direction == 0) &                            (data.V_LF_HF_before_sweep >  0) & has_P2_updn_pair);
+        i_P2_dn_pb_updn_sh = find((data.probe_nbr == 2) & (data.direction == 0) & (data.Illumination == 0) & (data.V_LF_HF_before_sweep >  0) & has_P2_updn_pair);
 
         % Clear fields that are to be used, both to be sure they exist and that they are "empty".
         data.npl_est = zeros(size(data.START_TIME_UTC)) + NaN;
         data.Te_est  = zeros(size(data.START_TIME_UTC)) + NaN;
         data.Vsc_est = zeros(size(data.START_TIME_UTC)) + NaN;
         
-        i_npl_priority_list    = [i_P2_dn_pb_updn,      i_P2_up_sh,   i_P1_up];
-        i_Te_Vsc_priority_list = [i_P2_dn_pb_updn_sh,   i_P2_up_sh,   i_P1_up];
+        %=====================================================================================
+        % Create priority lists of sweeps to use for different values.
+        % ------------------------------------------------------------
+        % IMPLEMENTATION NOTE: Must concatenate vertically to avoid warning messages.
+        % Variables such as i_P1_up etc are either empty 0x1 matrices, or 1x1 matrices.
+        % These can/should not be concatenated horisontally since they have different height,
+        % but vertically since they have the same width.
+        %=====================================================================================
+        i_npl_priority_list = [i_P2_dn_pb_updn;      i_P2_up_sh;   i_P1_up;   i_P1_dn];
+        i_Te_priority_list  = [i_P2_dn_pb_updn_sh;   i_P2_up_sh;   i_P1_up;   i_P1_dn];
+        i_Vsc_priority_list = [i_P1_up_il; i_P1_dn_il;   i_P2_up_il_nb; i_P2_dn_il_pb;   i_P2_up_il; i_P2_dn_il];    %  NEW
 
-        
+
         %===============================================================================
         % Select estimates to use, if any.
         % --------------------------------
@@ -583,7 +604,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         % i.e. illumination, V_bias_before_sweep, 
         % but NOT NaN or out-of-(realistic)-range.
         %===============================================================================
-        for i = i_npl_priority_list 
+        for i = i_npl_priority_list'   % Must be row vector.
             npl = data.asm_ni_v_indep(i);
             
             if ~isempty(npl)
@@ -595,7 +616,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             clear npl     % Erase variable to prevent accidentally reusing it when e.g. copy-pasting.
         end
 
-        for i = i_Te_Vsc_priority_list
+        for i = i_Te_priority_list'   % Must be row vector.
             Te = data.asm_Te_exp(i);
             
             if ~isempty(Te)
@@ -608,10 +629,11 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             clear Te     % Erase variable to prevent accidentally reusing it when e.g. copy-pasting.
         end
 
-        for i = i_Te_Vsc_priority_list
-            Vsc = data.asm_Vsg(i);
+        for i = i_Vsc_priority_list'   % Must be row vector.
+            Vsc = data.Vph_knee(i);
             
             if ~isempty(Vsc)
+                % NOTE: Calculation of V_min, V_max should/could be outside of loop? Outside of function?!
                 V_min = V_bias_limits{data.probe_nbr(i)}.V_bias_min;
                 V_max = V_bias_limits{data.probe_nbr(i)}.V_bias_max;
                 V_margin = (V_max-V_min) * Vsc_BIAS_EXCLUSION_MARGIN_FRACTION;
@@ -619,6 +641,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
                 V_max = V_max - V_margin;
 
                 if   ~isnan(Vsc)   &&   (V_min <= Vsc)   &&   (Vsc <= V_max)
+                %if   ~isnan(Vsc)
                     data.Vsc_est(i) = Vsc;
                 end
                 break
@@ -645,7 +668,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     %       length(sprintf('%14s',   [] )) = 14
     function [row_bytes, N_columns, N_rows] = write_EST_file_INTERNAL(EST_file_path, data)
     
-        fprintf(1, 'Writing file: %s\n', EST_file_path);        % Log message / DEBUG
+        %fprintf(1, 'Writing file: %s\n', EST_file_path);        % Log message / DEBUG
         
         %--------------------
         % Sort data by time.
@@ -668,6 +691,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             line = [line, sprintf('%1i, ',    data.probe_nbr(i))];             % DEBUG?
             line = [line, sprintf('%1i, ',    data.direction(i))];             % DEBUG?
             line = [line, sprintf('%04.2f, ', data.Illumination(i))];          % DEBUG?
+            %line = [line, sprintf('%16.6e, ', data.V_LF_HF_before_sweep(i))];  % DEBUG
             line = [line, sprintf('%5i',      data.sweep_group_nbr(i))];       % DEBUG? NOTE: The only string without ending comma!
             line = strrep(line, 'NaN', '   ');
             N_columns = 2+3+3 + 1+1+1+1;
@@ -782,7 +806,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         if fid < 0
             warning(sprintf('Can not read file: %s', file_path))
         end
-        fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
+        %fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
         file_contents = textscan(fid, '%s%f%s%f%s', 'delimiter', ',');        
         N_rows = length(file_contents{1});
         fclose(fid);
@@ -805,8 +829,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     
     % #############################################################################################
     
-    % Read file
-    % ---------
+    % Read BxS file
+    % -------------
     % WARNING: Relies on hardcoded column numbers.
     function [V_bias_min, V_bias_max] = read_BxS_min_max_bias_voltage_INTERNAL(file_path, probe_nbr)
         
@@ -814,7 +838,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         if fid < 0
             warning(sprintf('Can not read file: %s', file_path))
         end
-        fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
+        %fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
         file_contents = textscan(fid, '%f%f', 'delimiter', ',');        
         V_bias = file_contents{2};
         fclose(fid);

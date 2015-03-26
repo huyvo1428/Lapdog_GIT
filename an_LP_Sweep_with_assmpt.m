@@ -108,7 +108,6 @@ DP.Rsq              = [];
 DP.Rsq.linear       = NaN;
 DP.Rsq.exp          = NaN;
 
-
 Iph= 0;
 
 

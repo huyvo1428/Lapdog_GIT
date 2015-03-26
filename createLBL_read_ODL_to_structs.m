@@ -36,10 +36,11 @@
 % NOTE: Does not check if there are too many END_OBJECT (only checks the
 % reverse).
 %
-% Initially created by Erik P G Johansson, IRF Uppsala, 2014-11-18.
+%
 %
 % NOTE: Adapted from pre-existing general-purpose tool "read_ODL_to_structs" for reading ODL
-% files by Erik P G Johansson. Therefore maybe somewhat overkill for the purposes of lapdog.
+% files by Erik P G Johansson, IRF Uppsala. Therefore maybe somewhat overkill for the purposes of lapdog.
+% Initially created 2014-11-18.
 %
 function [s_str_lists, s_simple] = createLBL_read_ODL_to_structs(file_path)
 %

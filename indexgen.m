@@ -17,7 +17,7 @@ ilp = fopen(str);
 
 
 if ilp < 0
-    fprintf(1,'Error, cannot open file %s', str);
+    fprintf(1,'Error, cannot open file %s\n', str);
     break
 end % if I/O error
 
