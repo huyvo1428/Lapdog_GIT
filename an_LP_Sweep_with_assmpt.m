@@ -77,6 +77,7 @@ DP.ne               = nan(1,2);
 
 DP.Vsg              = nan(1,2);
 DP.Vph_knee         = nan(1,2);
+DP.Vbar             = nan(1,2);
 
 DP.ion_Vb_slope     = nan(1,2);
 DP.ion_Vb_intersect = nan(1,2);
@@ -164,10 +165,18 @@ try
     
     % First determine the spacecraft potential
     %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [Vknee, Vknee_sigma]    = an_Vplasma(V,Is);
-    [Vsc, Vsc_sigma]        = an_Vsc(V,Is);
+%    [Vknee, Vknee_sigma]    = an_Vplasma(V,Is);
+%    [Vsc, Vsc_sigma]        = an_Vsc(V,Is);
 
+    twinpeaks = an_Vplasma_v2(V,Is);
     
+%    [Vknee Vknee_sigma] =[twinpeaks.Vph_knee];
+    Vknee = twinpeaks.Vph_knee(1);
+    Vknee_sigma =twinpeaks.Vph_knee(2);
+ %   [Vsc, Vsc_sigma] =twinpeaks.Vsc;
+    Vsc = twinpeaks.Vsc(1);
+    Vsc_sigma =twinpeaks.Vsc(2);
+
     if isnan(Vknee)
         Vknee = assmpt.Vknee;  %from first 50 sweeps       
     end
@@ -390,6 +399,7 @@ try
     DP.ne      = elec.ne;
     DP.Vsg     = [Vsc Vsc_sigma];
     DP.Vph_knee = [Vplasma Vknee_sigma];
+    DP.Vbar     = twinpeaks.Vbar; 
 
     DP.ion_Vb_slope     = ion.a;
     DP.ion_Vb_intersect = ion.b;

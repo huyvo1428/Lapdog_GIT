@@ -72,6 +72,8 @@ DP.ne               = nan(1,2);
 
 DP.Vsg              = nan(1,2);
 DP.Vph_knee         = nan(1,2);
+DP.Vbar             = nan(1,2);
+
 
 DP.ion_Vb_slope     = nan(1,2);
 DP.ion_Vb_intersect = nan(1,2);
@@ -135,10 +137,25 @@ try
     %---------------------------------------------------
     
     % First determine the spacecraft potential
-    %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted Vsc
-    [Vknee, Vknee_sigma] = an_Vplasma(V,Is);
-    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
+    %Vsc = LP_Find_SCpot(V,I,dv);  % The spacecraft potential is denoted
+    %Vsc
+%    [Vknee, Vknee_sigma] = an_Vplasma(V,Is);
+%    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
+
+    twinpeaks = an_Vplasma_v2(V,Is);
     
+%    [Vknee Vknee_sigma] =[twinpeaks.Vph_knee];
+    Vknee = twinpeaks.Vph_knee(1);
+    Vknee_sigma =twinpeaks.Vph_knee(2);
+ %   [Vsc, Vsc_sigma] =twinpeaks.Vsc;
+    Vsc = twinpeaks.Vsc(1);
+    Vsc_sigma =twinpeaks.Vsc(2);
+
+%    Vknee
+%    Vsc    
+    
+ %   Vknee = twinpeaks.Vph_knee(1);
+%    Vsc = twinpeaks.Vsc(1);
 
     
     if isnan(Vknee)
@@ -237,14 +254,14 @@ end
     Itemp = Is - ion.I; %
     
     %%%
-   
+    
     if (an_debug>1)
-                figure(33);
-
+        figure(33);
+        
         subplot(3,2,6),plot(V,Is,'b',V,Itemp,'g');grid on;
-
-       title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
-
+        
+        title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
+        
         legend('I','I-Iion','Location','Northwest')
     end
             
@@ -339,7 +356,6 @@ end
         
         %Vdagger = V + Vsc - Vplasma;
                 
-        
         phind = find(Vdagger < 6 & Vdagger>0);
         
         [phpol,S]=polyfit(Vdagger(phind),log(abs(Iph(phind))),1);
@@ -428,6 +444,7 @@ end
     DP.ne      = elec.ne;
     DP.Vsg     = [Vsc Vsc_sigma];
     DP.Vph_knee = [Vplasma Vknee_sigma];
+    DP.Vbar     = twinpeaks.Vbar; 
 
     
     DP.ion_Vb_slope      = ion.a;
@@ -476,7 +493,15 @@ end
         
             
         subplot(3,2,5)
-        plot(V+Vsc,I-Iph,'b',V+Vsc,(ion.I+elec.I)+ion.mean(1),'g',V+Vsc,ion.I+expfit.I+ion.mean(1),'r',V+Vsc,Iph,'black')
+        if(illuminated)
+                    plot(V+Vsc,I-Iph,'b',V+Vsc,(ion.I+elec.I)+ion.mean(1),'g',V+Vsc,ion.I+expfit.I+ion.mean(1),'r',V+Vsc,Iph,'black')
+
+        else
+                    plot(V+Vsc,I-Iph,'b',V+Vsc,(ion.I+elec.I)+ion.mean(1),'g',V+Vsc,ion.I+expfit.I+ion.mean(1),'r',V+Vsc,Iph,'black')
+
+        end
+        
+        %plot(V+Vsc,I-Iph,'b',V+Vsc,(ion.I+elec.I)+ion.mean(1),'g',V+Vsc,ion.I+expfit.I+ion.mean(1),'r',V+Vsc+Vplasma,Iph,'black')
         axis([min(V)+Vsc max(V)+Vsc min(I) max(I)])
         title([sprintf('Vp vs I, fully auto,lum=%d, %s',illuminated,diag_info{1})])
         legend('I','ion+e(linear)','Ions+e(exp)','pe','Location','Northwest')

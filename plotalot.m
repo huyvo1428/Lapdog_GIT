@@ -53,7 +53,7 @@ end
 
 'probe  1 done'
 
-fld={'t1' 'Iph0' 'Tph' 'asm_ni_v_indep' 'asm_ni_v_dep' 'asm_ne_exp' 'ne_exp' 'asm_ne_linear' 'asm_ne_5eV' 'asm_Vsg', 'ni_v_dep' 'ni_v_indep' 'ne_linear' 'ne_5eV' 'Vsg' 'Te_linear' 'Te_exp'  'asm_Te_linear' 'asm_Te_exp' 'asm_v_ion' 'v_ion' 'v_aion' 'asm_Vsc_aion'  'Vsc_aion' 'asm_ni_aion' 'asm_v_aion' 'asm_Vph_knee'};
+fld={'t1' 'Iph0' 'Tph' 'asm_ni_v_indep' 'asm_ni_v_dep' 'asm_ne_exp' 'ne_exp' 'asm_ne_linear' 'asm_ne_5eV' 'asm_Vsg', 'ni_v_dep' 'ni_v_indep' 'ne_linear' 'ne_5eV' 'Vsg' 'Te_linear' 'Te_exp'  'asm_Te_linear' 'asm_Te_exp' 'asm_v_ion' 'v_ion' 'v_aion' 'asm_Vsc_aion'  'Vsc_aion' 'asm_ni_aion' 'asm_v_aion' 'asm_Vph_knee' 'ni_aion'};
 
 len = length(fld);
 
@@ -408,7 +408,37 @@ title([strcat(sprintf('%s',shortphase),'abs(Tph) both probes, histogram, 1000 bi
 %------------------------------------------------------histogram
 
 figure(1164)
-vs1 = data1.asm_Vsc_aion(~isnan(data1.asm_Vsc_aion));
+subplot(2,1,1)
+
+asm_vs1 = data1.asm_Vsc_aion(~isnan(data1.asm_Vsc_aion));
+asm_vp1 = data1.asm_Vph_knee(~isnan(data1.asm_Vph_knee));
+
+
+asm_vs1f=asm_vs1;
+asm_vs1f(100<asm_vs1)  = 110;
+asm_vs1f(-200>asm_vs1)=-210;
+
+%vs1f = vs1(100>vs1&vs1>-1000);
+%nvs=(max(vs1)-min(vs1))/1000;
+%nvp=(max(vp1)-min(vp1))/1000;
+hist(asm_vs1f,100);
+
+hold on;
+
+hist(asm_vp1,50);
+
+h = findobj(gca,'Type','patch');
+set(h(1),'FaceColor',[0 1 .5],'EdgeColor','black')
+set(h(2),'FaceColor',[0 .5 .5],'EdgeColor','black')
+
+title([strcat(sprintf('%s,median asmVscaion: %05.3f median asmVphknee: %05.3f',shortphase,median(asm_vs1),median(asm_vp1)),' asm\_Vsc\_aion probe1 , histogram, 1000 bins')])
+legend('asm\_Vsc\_aion','asm\_Vph\_knee','Location','NorthWest');
+grid on;
+hold off;
+
+subplot(2,1,2)
+
+vs1 = data1.Vsc_aion(~isnan(data1.Vsc_aion));
 vp1 = data1.asm_Vph_knee(~isnan(data1.asm_Vph_knee));
 
 
@@ -419,57 +449,102 @@ vs1f(-200>vs1)=-210;
 %vs1f = vs1(100>vs1&vs1>-1000);
 %nvs=(max(vs1)-min(vs1))/1000;
 %nvp=(max(vp1)-min(vp1))/1000;
-hist(vp1,50);
-hold on;
-
 hist(vs1f,100);
+
+hold on;
+hist(vp1,50);
+
 h = findobj(gca,'Type','patch');
-set(h(1),'FaceColor',[0 .5 .5],'EdgeColor','b')
-set(h(2),'FaceColor',[0 1 .5],'EdgeColor','g')
-title([strcat(sprintf('%s,median asmVscaion: %05.3f median asmVphknee: %05.3f',shortphase,median(vs1),median(vp1)),' asm\_Vsc\_aion probe1 , histogram, 1000 bins')])
-legend('asm\_Vph\_knee','asm\_Vsc\_aion','Location','NorthWest');
+set(h(1),'FaceColor',[0 1 .5],'EdgeColor','black')
+set(h(2),'FaceColor',[0 .5 .5],'EdgeColor','black')
+title([strcat(sprintf('%s,median Vscaion: %05.3f median Vphknee: %05.3f',shortphase,median(vs1),median(vp1)),' asm\_Vsc\_aion probe1 , histogram, 1000 bins')])
+legend('Vsc\_aion','Vph\_knee','Location','NorthWest');
 grid on;
 hold off;
 %------------------------------------------------------
 
+
+
+%------------------------------------------------------
+
 figure(1100)
 
+asm_valpha= [];
 valpha= [];
 
 for i=1:length(mediand1.t1)
 
     if  data1.asm_Vph_knee(i,1) > 0
         
-    valpha(i) = abs(mediand1.asm_Vph_knee(i,1)/mediand1.asm_Vsc_aion(i,1));
+    asm_valpha(i) = abs(mediand1.asm_Vph_knee(i,1)/mediand1.asm_Vsc_aion(i,1));
     else
-            valpha(i) = -abs(mediand1.asm_Vph_knee(i,1)/mediand1.asm_Vsc_aion(i,1));
+            asm_valpha(i) = -abs(mediand1.asm_Vph_knee(i,1)/mediand1.asm_Vsc_aion(i,1));
 
     end
     
+        if  data1.asm_Vph_knee(i,1) > 0
+        
+    valpha(i) = abs(mediand1.asm_Vph_knee(i,1)/mediand1.Vsc_aion(i,1));
+    else
+            valpha(i) = -abs(mediand1.asm_Vph_knee(i,1)/mediand1.Vsc_aion(i,1));
+
+    end
+    
+    
+    
 end
 
-valpha = valpha(~isnan(valpha));
+asm_valpha = asm_valpha(~isnan(asm_valpha));
+asm_valpha= asm_valpha(le(abs(asm_valpha),1));
+
+alpha = valpha(~isnan(valpha));
 valpha= valpha(le(abs(valpha),1));
 
+subplot(1,2,1)
 
-hist(valpha,5);
+
+hist(asm_valpha,10);
 grid on;
-title([strcat(sprintf('mission phase %s,median alpha: %05.3f std alpha: %05.3f',shortphase,median(valpha),std(valpha)),' alpha= asm\_Vph\_knee / asm\_Vsc\_aion probe1 , histogram, 100 bins')])
+title([strcat(sprintf('mission phase %s,median alpha: %05.3f std alpha: %05.3f',shortphase,median(asm_valpha),std(asm_valpha)),' alpha= asm\_Vph\_knee / asm\_Vsc\_aion probe1 , histogram, 100 bins')])
 
-legend('alpha= asm\_Vph\_knee / asm\_Vsc\_aion');
+legend('asm\_alpha= asm\_Vph\_knee / asm\_Vsc\_aion');
+
+subplot(1,2,2)
+hist(valpha,10);
+grid on;
+title([strcat(sprintf('mission phase %s,median alpha: %05.3f std alpha: %05.3f',shortphase,median(asm_valpha),std(asm_valpha)),' alpha= asm\_Vph\_knee / asm\_Vsc\_aion probe1 , histogram, 100 bins')])
+
+legend('alpha= Vph\_knee / Vsc\_aion');
+
 
 
 %--
 figure(164)
+
 ix1=mediand1.Iph0(~isnan(mediand1.Iph0));
 ix2=mediand2.Iph0(~isnan(mediand2.Iph0));
 
 
 ix3=[ix1;ix2];
 
-hist(log10(abs(ix3)),10)
+hist(log10(abs(ix3)),20)
 grid on;
 title([strcat(sprintf('%s',shortphase),'log10(abs(Iph0)) both probes, histogram, 1000 bins')])
+
+
+subplot(1,2,1)
+
+ix1=mediand1.Iph0(~isnan(mediand1.Iph0));
+ix2=mediand2.Iph0(~isnan(mediand2.Iph0));
+
+
+ix3=[ix1;ix2];
+
+hist(log10(abs(ix3)),20)
+grid on;
+title([strcat(sprintf('%s',shortphase),'log10(abs(Iph0)) both probes, histogram, 1000 bins')])
+
+
 
 %title('M07 log10(abs(Iph0)) both probes, histogram, 1000 bins')
 
