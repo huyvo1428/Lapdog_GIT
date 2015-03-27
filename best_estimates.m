@@ -682,7 +682,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         
         
         
-        i = find(isnan(O_data.npl_est));   O_data.npl_est(i) = MISSING_CONSTANT;
+        i = find(isnan(O_data.npl_est));   O_data.npl_est(i) = MISSING_CONSTANT;   % NOTE: MISSING_CONSTANT is "function global" constant.
         i = find(isnan(O_data.Te_est));    O_data.Te_est(i)  = MISSING_CONSTANT;
         i = find(isnan(O_data.Vsc_est));   O_data.Vsc_est(i) = MISSING_CONSTANT;
         
@@ -703,9 +703,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             line = [line, sprintf('%04.2f, ', data.Illumination(i))];          % DEBUG?
             %line = [line, sprintf('%16.6e, ', data.V_LF_HF_before_sweep(i))];  % DEBUG
             line = [line, sprintf('%5i',      data.sweep_group_nbr(i))];       % DEBUG? NOTE: The only string without ending comma!
-            line = strrep(line, 'NaN', '   ');
             N_columns = 2+3+3 + 1+1+1+1;
-            row_bytes = fprintf(fid, [line, '\n']);
+            row_bytes = fprintf(fid, [line, '\r\n']);
             
             %disp(line)                     % DEBUG. Preferably no extra linebreak in string.
         end

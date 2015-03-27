@@ -164,7 +164,7 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
                 error(sprintf('(key-) value is not a string:\n key = "%s", fopen(fid) = "%s"', key, fopen(fid)))
             end
             
-            fprintf(fid, ['%-', num2str(max_key_length), 's = %s\r\n'], key, value);      % NOTE: Adds correct \c\n at the end.
+            fprintf(fid, ['%-', num2str(max_key_length), 's = %s\r\n'], key, value);      % NOTE: Adds correct \r\n at the end.
         end
         
     end   % function

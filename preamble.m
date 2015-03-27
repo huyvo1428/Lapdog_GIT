@@ -74,8 +74,7 @@ target = strtrim(strrep(char(parts{6}),'"',''));
 % Special for solar wind, which is not defined as a target in SPICE:
 % aie 130313
 
-switch target
-    
+switch target    
     case 'SW'
         target = 'SUN';
     case '67P'

@@ -387,7 +387,7 @@ try
             %If you need to change NaN to something (e.g. N/A, as accepted by Rosetta Archiving Guidelines) change it here!
             
             
-            row_bytes =fprintf(awID,'%s\n',str6);
+            row_bytes = fprintf(awID,'%s\r\n',str6);
             %             if (row_bytes ~= r2 && r2~= 0)
             %                 s= strcat(str6,r3)
             %

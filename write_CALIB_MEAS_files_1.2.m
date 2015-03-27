@@ -594,15 +594,15 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         fprintf(fileID, 'FILE_RECORDS = 256\r\n');
         fprintf(fileID, strcat('FILE_NAME = "', fileName, '.LBL"\r\n'));
         fprintf(fileID, strcat('^TABLE = "', fileName, '.TAB"\r\n'));
-        fprintf(fileID, 'DATA_SET_ID = "%s"\r\n',earch);
+        fprintf(fileID, 'DATA_SET_ID = "%s"\r\n', earch);
         % DATA_SET_NAME is optional, RO-EST-TN-3372, "ROSETTA Archiving Conventions", Issue 7, Rev. 8
         %fprintf(fileID, 'DATA_SET_NAME = "ROSETTA-ORBITER EARTH RPCLAP 3 MARS CALIB V1.0"\r\n');    % Incorrect value.
         fprintf(fileID, 'MISSION_ID = ROSETTA\r\n');
         fprintf(fileID, 'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\r\n');
-        fprintf(fileID, 'MISSION_PHASE_NAME = %s\r\n',mp);
+        fprintf(fileID, 'MISSION_PHASE_NAME = %s\r\n', mp);
         fprintf(fileID, 'PRODUCER_INSTITUTION_NAME = "SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"\r\n');
         fprintf(fileID, 'PRODUCER_ID = RG\r\n');
-        fprintf(fileID, 'PRODUCER_FULL_NAME = "REINE GILL"\r\n');
+        fprintf(fileID, 'PRODUCER_FULL_NAME = "ERIK P G JOHANSSON"\r\n');
         fprintf(fileID, strcat('PRODUCT_ID = "', fileName, '"\r\n'));
         fprintf(fileID, horzcat('PRODUCT_CREATION_TIME = ', datestr(now, 'yyyy-mm-ddTHH:MM:SS'), '\r\n'));
         fprintf(fileID, 'INSTRUMENT_HOST_ID = RO\r\n');
@@ -619,12 +619,14 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.90735045E-11"\r\n');
         fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_16B_G0_05 = "6.10360876E-9"\r\n');
         fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.81470090E-10"\r\n');
+        
         fprintf(fileID, 'OBJECT = TABLE\r\n');
         fprintf(fileID, 'INTERCHANGE_FORMAT = ASCII\r\n');
         fprintf(fileID, 'ROWS = 256\r\n');
         fprintf(fileID, 'COLUMNS = 3\r\n');
         fprintf(fileID, 'ROW_BYTES = 31\r\n');
         fprintf(fileID, 'DESCRIPTION = "THIRD DEGREE POLYNOMIAL OFFSET CORRECTION FOR 16 BIT DENSITY DATA"\r\n');
+        
         fprintf(fileID, 'OBJECT = COLUMN\r\n');
         fprintf(fileID, 'NAME = P1P2_VOLTAGE\r\n');
         fprintf(fileID, 'DATA_TYPE = ASCII_INTEGER\r\n');
@@ -632,6 +634,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         fprintf(fileID, 'BYTES = 3\r\n');
         fprintf(fileID, 'DESCRIPTION = "APPLIED VOLTAGE BIAS P1 AND P2 [TM UNITS]"\r\n');
         fprintf(fileID, 'END_OBJECT = COLUMN\r\n');
+        
         fprintf(fileID, 'OBJECT = COLUMN\r\n');
         fprintf(fileID, 'NAME = P1_CURRENT\r\n');
         fprintf(fileID, 'DATA_TYPE = ASCII_REAL\r\n');
@@ -639,14 +642,17 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         fprintf(fileID, 'BYTES = 12\r\n');
         fprintf(fileID, 'DESCRIPTION = "INSTRUMENT OFFSET [TM UNITS]"\r\n');
         fprintf(fileID, 'END_OBJECT = COLUMN\r\n');
-        fprintf(fileID, 'OBJECT = COLUMN\r\n');
+        
+        fprintf(fileID, 'OBJECT = COLUMN\r\n');        
         fprintf(fileID, 'NAME = P2_CURRENT\r\n');
         fprintf(fileID, 'DATA_TYPE = ASCII_REAL\r\n');
         fprintf(fileID, 'START_BYTE = 18\r\n');
         fprintf(fileID, 'BYTES = 12\r\n');
         fprintf(fileID, 'DESCRIPTION = "INSTRUMENT OFFSET [TM UNITS]"\r\n');
         fprintf(fileID, 'END_OBJECT = COLUMN\r\n');
+        
         fprintf(fileID, 'END_OBJECT = TABLE\r\n');
+        
         fprintf(fileID, 'END\r\n');
         
         fclose(fileID);
@@ -665,7 +671,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         fileID = fopen(filePath2TAB, 'wt');
         fprintf(fileID,'#3rd order polynomial fit coefficients (current = aV^3+b*V^2+c*V+d), for Probe 1 and Probe 2 in TM units \r\n');
         fprintf(fileID,'aP1,bP1,cP1,dP1,aP2,bP2,cP2,dP2\r\n');
-        fprintf(fileID,'%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e\r\n',dataWrite.gradient3(dataWriteCounter,1),dataWrite.gradient2(dataWriteCounter,1),dataWrite.gradient1(dataWriteCounter,1),dataWrite.intercepts(dataWriteCounter,1),dataWrite.gradient3(dataWriteCounter,2),dataWrite.gradient2(dataWriteCounter,2),dataWrite.gradient1(dataWriteCounter,2),dataWrite.intercepts(dataWriteCounter,2));
+        fprintf(fileID,'%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e\r\n', dataWrite.gradient3(dataWriteCounter,1), dataWrite.gradient2(dataWriteCounter,1), dataWrite.gradient1(dataWriteCounter,1),dataWrite.intercepts(dataWriteCounter,1), dataWrite.gradient3(dataWriteCounter,2), dataWrite.gradient2(dataWriteCounter,2), dataWrite.gradient1(dataWriteCounter,2), dataWrite.intercepts(dataWriteCounter,2));
         fclose(fileID);
     end
     

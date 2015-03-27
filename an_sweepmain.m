@@ -571,7 +571,7 @@ try
             %If you need to change NaN to something (e.g. N/A, as accepted by Rosetta Archiving Guidelines) change it here!
             
             
-            row_bytes =fprintf(awID,'%s\n',strtot);
+            row_bytes = fprintf(awID,'%s\r\n',strtot);
             
             
         end

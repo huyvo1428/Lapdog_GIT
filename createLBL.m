@@ -19,21 +19,23 @@ ODL_VALUE_UNKNOWN = [];   %'<Unknown>';  % Unit is unknown.
 % 
 % NOTE: Only keys that already exist in the CALIB files that are read (otherwise intentional error)
 %       and which are thus overwritten.
-% NOTE: Might not be complete. PDS_VERSION_ID, RECORD_TYPE
+% NOTE: Might not be complete.
 %====================================================================================================
 kvl_LBL_all = [];
 kvl_LBL_all.keys = {};
 kvl_LBL_all.values = {};
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf('3 %s CALIB',  shortphase), sprintf('5 %s DERIV',  shortphase)), '"']);
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"',lbltime,lbleditor,lblrev));
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCT_CREATION_TIME',     datestr(now,'yyyy-mm-ddTHH:MM:SS.FFF'));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PDS_VERSION_ID',            'PDS3');
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'RECORD_TYPE',               'FIXED_LENGTH');  % NOTE: Influences whether must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_QUALITY_ID',           '"1"');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_ID',                'ROSETTA');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_ID',               producershortname);
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCT_TYPE',              '"DDR"');
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PROCESSING_LEVEL_ID',       '"5"');
+
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_ID',               producershortname);
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_ID',        'RO');
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
@@ -42,10 +44,9 @@ kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_TYPE',        
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_ID',             'RPCLAP');
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'TARGET_TYPE',               sprintf('"%s"', targettype));
+kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_ID',                'ROSETTA');
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PDS_VERSION_ID',            'PDS3');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'RECORD_TYPE',               'FIXED_LENGTH');
 %kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, '', );
 
 
@@ -75,7 +76,6 @@ if(~isempty(tabindex));
             lname=strrep(tname,'TAB','LBL');
             Pnum = tname(end-5);
 
-            fid = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');   % Open DERIV LBL file to create/write to.
             %         if fid < 0
             %             fprintf(1,'Error, cannot open file %s', strrep(tabindex{i,1},'TAB','LBL'));
             %             break
@@ -105,9 +105,6 @@ if(~isempty(tabindex));
             
             kvl_LBL = createLBL_KVPL_merge(kvl_LBL_set, kvl_LBL_all);
             kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL);
-            %kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL,       kvl_LBL_all);
-            createLBL_write_LBL_header(fid, kvl_LBL)
-            clear kvl_LBL
             clear kvl_LBL_CALIB
 
             
@@ -128,14 +125,12 @@ if(~isempty(tabindex));
                     OBJTABLE_data = [];
                     OBJTABLE_data.ROWS        = tabindex{i, 6};
                     OBJTABLE_data.COLUMNS     = tabindex{i, 7};
-                    OBJTABLE_data.ROW_BYTES   = 30;                       % NOTE: HARDCODED! TODO: Fix.
-                    %OBJTABLE_data.ROW_BYTES   = tabindex{i, 8};          % Does not work!
+                    OBJTABLE_data.ROW_BYTES   = 32;              % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
                     OBJTABLE_data.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION);
                     ocl = [];
                     ocl{end+1} = struct('NAME', 'SWEEP_TIME',                 'FORMAT', 'E14.7', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS', 'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
                     ocl{end+1} = struct('NAME', sprintf('P%s_VOLTAGE', Pnum), 'FORMAT', 'E14.7', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'VOLT',    'DESCRIPTION', 'CALIBRATED VOLTAGE BIAS');
                     OBJTABLE_data.OBJCOL_list = ocl;   
-                    createLBL_writeObjectTable(fid, OBJTABLE_data)
 
                 else %% if tname(28) =='I'
 
@@ -145,10 +140,7 @@ if(~isempty(tabindex));
                     OBJTABLE_data = [];
                     OBJTABLE_data.ROWS        = tabindex{i, 6};
                     OBJTABLE_data.COLUMNS     = tabindex{i, 7};
-                    %OBJTABLE_data.ROW_BYTES   = 880;                   % NOTE: HARDCODED! TODO: Fix.
                     OBJTABLE_data.ROW_BYTES   = tabindex{i, 8};
-                    %fprintf(1, 'fopen(fid) = %s\n',     fopen(fid))      % DEBUG
-                    %fprintf(1, 'tabindex{i, 8} = %i\n', tabindex{i, 8})  % DEBUG
                     OBJTABLE_data.DESCRIPTION = sprintf('%s', CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION);
                     OBJTABLE_data.DELIMITER = ', ';
                     ocl = [];
@@ -161,7 +153,6 @@ if(~isempty(tabindex));
                         'DESCRIPTION', sprintf('Averaged current measured of potential sweep, at different potential steps as described by %s', Bfile));
                     
                     OBJTABLE_data.OBJCOL_list = ocl;
-                    createLBL_writeObjectTable(fid, OBJTABLE_data)
                 end
 
 
@@ -175,9 +166,8 @@ if(~isempty(tabindex));
                 %OBJTABLE_data.COLUMNS     = tabindex{i, 7};   % Does not work. Value (tabindex{...}) can be empty.
                 OBJTABLE_data.COLUMNS     = 5;                % NOTE: Hardcoded. TODO: Fix!
                 OBJTABLE_data.DESCRIPTION = CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION;    % BUG: Possibly double quotation marks.
-                %OBJTABLE_data.DELIMITER = ', ';
                 if Pnum ~= '3'
-                    OBJTABLE_data.ROW_BYTES = 82;
+                    OBJTABLE_data.ROW_BYTES = 83;  % NOTE: Hardcoded.
                 else
                     OBJTABLE_data.ROW_BYTES = 98;
                 end                
@@ -200,13 +190,18 @@ if(~isempty(tabindex));
                     'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
                 
                 OBJTABLE_data.OBJCOL_list = ocl;
-                createLBL_writeObjectTable(fid, OBJTABLE_data)
                 %-----------------------------------------------------------------------------------
 
             end
-
+            
+            fid = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');   % Open DERIV LBL file to create/write to.
+            createLBL_write_LBL_header(fid, kvl_LBL)
+            createLBL_writeObjectTable(fid, OBJTABLE_data)
             fprintf(fid,'END');
             fclose(fid);
+            %createLBL_create_OBJTABLE_LBL_file(tabindex{i,1}, kvl_LBL, OBJTABLE_data)
+            
+            clear kvl_LBL
 
         catch err
             
@@ -244,23 +239,20 @@ if(~isempty(blockTAB));
         
         tname = blockTAB{i,2};
         lname=strrep(tname,'TAB','LBL');
-        fid = fopen(strrep(blockTAB{i,1},'TAB','LBL'),'w');
         
         fileinfo = dir(blockTAB{i,1});
 
         kvl_set = [];   % NOTE: Can not initialize with "struct(...)". That gives an unintended result due to a special interpretation for arrays.
         kvl_set.keys = {};
         kvl_set.values = {};
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES',   sprintf('%i', fileinfo.bytes));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS',   sprintf('%i', blockTAB{i,3}));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',      sprintf('"%s"', lname));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',         sprintf('"%s"', tname));        
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',     sprintf('"%s"', tname(1:(end-4))));
+        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES', sprintf('%i', fileinfo.bytes));
+        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS', sprintf('%i', blockTAB{i,3}));
+        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',    sprintf('"%s"', lname));
+        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',       sprintf('"%s"', tname));        
+        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',   sprintf('"%s"', tname(1:(end-4))));
 
         kvl_LBL = createLBL_KVPL_merge(kvl_set, kvl_LBL_all);            
-        createLBL_write_LBL_header(fid, kvl_LBL)
         clear kvl_set
-        clear kvl_LBL
 
         
         
@@ -271,7 +263,7 @@ if(~isempty(blockTAB));
         OBJTABLE_data = [];
         OBJTABLE_data.ROWS      = blockTAB{i,3};
         OBJTABLE_data.COLUMNS   = 3;
-        OBJTABLE_data.ROW_BYTES = 54;                   % NOTE: HARDCODED! TODO: Fix.
+        OBJTABLE_data.ROW_BYTES = 55;                   % NOTE: HARDCODED! TODO: Fix.
         OBJTABLE_data.DESCRIPTION = 'BLOCKLIST DATA. START & STOP TIME OF MACROBLOCK AND MACROID.';
         %OBJTABLE_data.DELIMITER = ', ';
         ocl = [];
@@ -279,10 +271,13 @@ if(~isempty(blockTAB));
         ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',       'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'LAST START TIME OF MACRO BLOCK FILE YYYY-MM-DD HH:MM:SS.sss');
         ocl{end+1} = struct('NAME', 'MACRO_ID',       'DATA_TYPE', 'ASCII_REAL', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'MACRO IDENTIFICATION NUMBER');
         OBJTABLE_data.OBJCOL_list = ocl;
-        createLBL_writeObjectTable(fid, OBJTABLE_data)
         
+        fid = fopen(strrep(blockTAB{i,1},'TAB','LBL'),'w');
+        createLBL_write_LBL_header(fid, kvl_LBL)
+        createLBL_writeObjectTable(fid, OBJTABLE_data)
         fprintf(fid,'END');
         fclose(fid);
+        clear kvl_LBL        
         
     end   % for
     
@@ -323,12 +318,12 @@ if (~isempty(an_tabindex));
             kvl_set = [];
             kvl_set.keys = {};
             kvl_set.values = {};
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',             strrep(an_tabindex{i, 2}, '.TAB', '.LBL'));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',                an_tabindex{i, 2});
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS',          num2str(an_tabindex{i, 4}));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',            sprintf('"%s"', strrep(an_tabindex{i, 2}, '.TAB', '')));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'DESCRIPTION',           '"Best estimates of physical quantities based on sweeps."');
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES',          num2str(TAB_file_info.bytes));
+            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',    strrep(an_tabindex{i, 2}, '.TAB', '.LBL'));
+            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',       an_tabindex{i, 2});
+            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS', num2str(an_tabindex{i, 4}));
+            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',   sprintf('"%s"', strrep(an_tabindex{i, 2}, '.TAB', '')));
+            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'DESCRIPTION',  '"Best estimates of physical quantities based on sweeps."');
+            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES', num2str(TAB_file_info.bytes));
 
             try
                 %===============================================================
@@ -372,11 +367,8 @@ if (~isempty(an_tabindex));
 
 
         end   % if-else
-        LBL_file_path = strrep(an_tabindex{i,1}, 'TAB', 'LBL');
-        fid = fopen(LBL_file_path,'w');
-        createLBL_write_LBL_header(fid, kvl_LBL)
         clear KVL_set
-        clear KVL_LBL
+        
         
         
         
@@ -405,8 +397,6 @@ if (~isempty(an_tabindex));
             ocl{end+1} = struct('NAME', sprintf('P%s_VOLT_STDDEV', Pnum),    'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', 'FORMAT', 'E14.7', 'DESCRIPTION', 'VOLTAGE STANDARD DEVIATION');
             ocl{end+1} = struct('NAME', 'QUALITY',                           'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL',                    'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
             OBJTABLE_data.OBJCOL_list = ocl;
-            createLBL_writeObjectTable(fid, OBJTABLE_data)
-            fprintf(fid,'END');
             
             
             
@@ -465,8 +455,6 @@ if (~isempty(an_tabindex));
             end
 
             OBJTABLE_data.OBJCOL_list = [ocl1, ocl2];
-            createLBL_writeObjectTable(fid, OBJTABLE_data)
-            fprintf(fid,'END');
             
             
             
@@ -485,8 +473,6 @@ if (~isempty(an_tabindex));
             ocl = {};
             ocl{end+1} = struct('NAME', 'FREQUENCY LIST', 'ITEMS', an_tabindex{i,5}, 'UNIT', 'kHz', 'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', 'FORMAT', 'E14.7', 'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdname));
             OBJTABLE_data.OBJCOL_list = ocl;            
-            createLBL_writeObjectTable(fid, OBJTABLE_data)            
-            fprintf(fid,'END');
             
             
             
@@ -603,7 +589,7 @@ if (~isempty(an_tabindex));
             
             ocl2{end+1} = struct('NAME', 'ASM_m_ion',      'BYTES', 3, 'UNIT', 'amu',               'DESCRIPTION', 'Assumed ion mass for all ions.');     % New from commit a56c578, 2015-01-22 or earlier.
             ocl2{end+1} = struct('NAME', 'ASM_Z_ion',      'BYTES', 2, 'UNIT', 'Elementary charge', 'DESCRIPTION', 'Assumed ion charge for all ions.');   % New from commit a56c578, 2015-01-22 or earlier.
-            ocl2{end+1} = struct('NAME', 'ASM_v_ion',               'UNIT', 'm/s',                  'DESCRIPTION', 'Assumed ion ram speed in used in *_v_dep variables.');   % New from commit a56c578, 2015-01-22 or earlier. Earlier name: ASM_m_vram, ASM_vram_ion.
+            ocl2{end+1} = struct('NAME', 'ASM_v_ion',                  'UNIT', 'm/s',               'DESCRIPTION', 'Assumed ion ram speed in used in *_v_dep variables.');   % New from commit a56c578, 2015-01-22 or earlier. Earlier name: ASM_m_vram, ASM_vram_ion.
             ocl2{end+1} = struct('NAME', '    Vsc_ni_ne',              'UNIT', 'V',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (ni_v_indep) and electron (ne_linear) densities.');   % New from commit a56c578, 2015-01-22 or earlier.
             ocl2{end+1} = struct('NAME', 'asm_Vsc_ni_ne',              'UNIT', 'V',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (asm_ni_v_indep) and electron (asm_ne_linear) densities. Fixed photoelectron current assumption.');   % New from commit a56c578, 2015-01-22 or earlier.
             
@@ -632,8 +618,6 @@ if (~isempty(an_tabindex));
                 ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
             end
             OBJTABLE_data.OBJCOL_list = [ocl1, ocl2];
-            createLBL_writeObjectTable(fid, OBJTABLE_data)            
-            fprintf(fid,'END');
             
             
             
@@ -662,8 +646,6 @@ if (~isempty(an_tabindex));
             ocl{end+1} = struct('NAME', 'Sweep_group_number', 'DATA_TYPE', 'ASCII_REAL', 'BYTES',  5, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', ...
                 'Number signifying which group of sweeps the data comes from. Groups of sweeps are formed for the purpose of deriving/selecting values to be used in best estimates. All sweeps with the same group number are almost simultaneous. Mostly intended for debugging.');
             OBJTABLE_data.OBJCOL_list = ocl;            
-            createLBL_writeObjectTable(fid, OBJTABLE_data)            
-            fprintf(fid,'END');            
             
             
             
@@ -672,7 +654,16 @@ if (~isempty(an_tabindex));
             fprintf(1,'error, bad identifier in an_tabindex{%i,7}',i);
             
         end
+        
+        
+        
+        LBL_file_path = strrep(an_tabindex{i,1}, 'TAB', 'LBL');
+        fid = fopen(LBL_file_path,'w');
+        createLBL_write_LBL_header(fid, kvl_LBL)
+        createLBL_writeObjectTable(fid, OBJTABLE_data)            
+        fprintf(fid,'END');
         fclose(fid);
+        clear KVL_LBL
                
         
         

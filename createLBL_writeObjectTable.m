@@ -26,9 +26,11 @@
 function createLBL_writeObjectTable(fid, data)
 %
 % TODO: Clarify for when values are quoted or not. Variable prefix? ODL standard says what?
-% 
-% PROPOSAL: Derive ROW_BYTES rather than take value from "data".
-% PROPOSAL: Default values for absent fields.
+%
+% TODO: Enforce exact ROW_BYTES=N_row_bytes_calc. Correct CR+LF when writing TAB files.
+%   QUESTION: What does this mean?
+%
+% PROPOSAL: Default values for absent fields (keywords).
 %    CON: Misspelled field names may mistakenly lead to default values. ==> Do not use. Absent fields should always give error.
 % PROPOSAL: Hardcode DELIMITER value?
 %
@@ -36,12 +38,16 @@ function createLBL_writeObjectTable(fid, data)
 % 
 % QUESTION: Use ODL field names as structure field names? ODL names can be unclear.
 % QUESTION: If COLUMNS or ROW_BYTES disagree, which one should be used?
+%
+% PROPOSAL: Calculate ROW_BYTES, but let caller submit a value (in an argument with another name) for what it should be
+% from the TAB files actually created ("empirically") for double-checking.
+
 
 
 
     % Constants:
     BYTES_BETWEEN_COLUMNS = 2;
-    BYTES_PER_LINEBREAK = 2;      % Derive using sprint from linebreak_symbols constant?!!
+    BYTES_PER_LINEBREAK = 2;      % carriage return+linefeed. Derive using sprint from linebreak_symbols constant?!!
     INDENTATION = '    ';
     PERMITTED_OBJCOL_FIELD_NAMES = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'FORMAT', 'ITEMS', 'MISSING_CONSTANT', 'DESCRIPTION'};
     
@@ -96,7 +102,7 @@ function createLBL_writeObjectTable(fid, data)
         N_row_bytes_calc = N_row_bytes_calc + N_subcolumns*(cd.BYTES + BYTES_BETWEEN_COLUMNS);
         OBJCOL_names_list{end+1} = cd.NAME;
     end
-    N_row_bytes_calc = N_row_bytes_calc - BYTES_BETWEEN_COLUMNS; % + BYTES_PER_LINEBREAK;
+    N_row_bytes_calc = N_row_bytes_calc - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;
     
     
     
@@ -122,7 +128,7 @@ function createLBL_writeObjectTable(fid, data)
         fprintf(1, 'N_row_bytes_calc = %i\n', N_row_bytes_calc);
         fprintf(1, 'data.ROW_BYTES   = %i\n', data.ROW_BYTES);
         msg = 'data.ROW_BYTES disagrees with the corresponding calculated value.';
-        fprintf(1, '%s\n', msg)     % Print since warning does not always work.
+        fprintf(1, '%s\n', msg)     % Print since warning is sometimes turned off automatically. Change?
         warning(msg)
         %error(msg)
     end
@@ -132,7 +138,7 @@ function createLBL_writeObjectTable(fid, data)
         fprintf(1, 'N_TAB_cols_calc = %i\n', N_TAB_cols_calc);
         fprintf(1, 'data.COLUMNS    = %i\n', data.COLUMNS);
         msg = 'data.COLUMNS disagrees with the corresponding calculated value.';
-        fprintf(1, '%s\n', msg)     % Print since warning does not always work.
+        fprintf(1, '%s\n', msg)     % Print since warning is sometimes turned off automatically. Change?
         warning(msg)
         %error(msg)
     end

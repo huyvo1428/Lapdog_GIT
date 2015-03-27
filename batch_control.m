@@ -6,8 +6,8 @@
 %'lapdog: calling control...'
 %control;
 
-producerfullname='Fredrik Johansson';
-producershortname='FJ';
+producerfullname='ERIK P G JOHANSSON';
+producershortname='EJ';
 
 
 % 2. Control section
@@ -20,8 +20,8 @@ fix_geom_bug = 1;  % To change signs of position and velocity coordinates
 % =============
 
 % Info for labels
-lbltime = '2013-02-03T12:00:00';  % label revision time
-lbleditor = 'FJ';
+lbltime = '2015-02-27T12:00:00';  % label revision time
+lbleditor = 'EJ';
 lblrev = '4th draft';
 
 % 4. Dataset selection and description
