@@ -246,7 +246,8 @@ try
         DP(len).ne                  = [];
         
         DP(len).Vsg                 = [];
-        DP(len).Vph_knee            = [];        
+        DP(len).Vph_knee            = [];   
+        DP(len).Vbar                = [];
 
         
         DP(len).ion_Vb_slope        = [];
@@ -532,7 +533,7 @@ try
             ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
             ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...
             ', ASM_m_ion, ASM_Z_ion, ASM_v_ion, Vsc_ni_ne, asm_Vsc_ni_ne',...
-            ', Vsc_aion, ni_aion, v_aion, asm_Vsc_aion, asm_ni_aion, asm_v_aion',...    
+            ', Vsc_aion, ni_aion, v_aion, asm_Vsc_aion, asm_ni_aion, asm_v_aion, Vbar, sigma_Vbar, asm_Vbar, asm_sigma_Vbar',...    
             '\n'));
 
 
@@ -558,10 +559,12 @@ try
             str14 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_assmpt(k).Tphc,DP_assmpt(k).nphc,DP_assmpt(k).phc_slope,DP_assmpt(k).phc_intersect);
             str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).asm_ne_5eV,EP(k).asm_ni_1comp,EP(k).asm_ni_2comp,EP(k).asm_v_ion,DP_assmpt(k).Te_exp,DP_assmpt(k).ne_exp,DP_assmpt(k).Rsq.linear,DP_assmpt(k).Rsq.exp);
             str16 = sprintf(' %03i, %02i, %14.7e, %14.7e, %14.7e,',assmpt.ionM,assmpt.ionZ,assmpt.vram,EP(k).Vsc_ni_ne,EP(k).asm_Vsc_ni_ne);
-            str17 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e', EP(k).Vsc_aion,EP(k).ni_aion,EP(k).v_aion,EP(k).asm_Vsc_aion,EP(k).asm_ni_aion,EP(k).asm_v_aion);
-            
-            
-            strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16,str17);
+            str17 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', EP(k).Vsc_aion,EP(k).ni_aion,EP(k).v_aion,EP(k).asm_Vsc_aion,EP(k).asm_ni_aion,EP(k).asm_v_aion);
+            str18 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e', DP(k).Vbar,DP_assmpt(k).Vbar);
+
+
+            strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16,str17,str18);
+
             strtot=strrep(strtot,'  0.0000000e+00','            NaN'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
             strtot=strrep(strtot,'-Inf',' NaN');
             strtot=strrep(strtot,'Inf','NaN');
@@ -576,13 +579,13 @@ try
             
         end
         fclose(awID);
-        
+
         an_tabindex{end+1,1} = wfile;                   % start new line of an_tabindex, and record file name
         an_tabindex{end,2} = strrep(wfile,rfolder,'');  % shortfilename
         an_tabindex{end,3} = tabindex{an_ind(i),3};     % first calib data file index
         %an_tabindex{end,3} = an_ind(1);                % First calib data file index of first derived file in this set
         an_tabindex{end,4} = klen; % Number of rows
-        an_tabindex{end,5} = 106;  % Number of columns
+        an_tabindex{end,5} = 110;  % Number of columns
         an_tabindex{end,6} = an_ind(i);
         an_tabindex{end,7} = 'sweep'; % Type
         an_tabindex{end,8} = timing;

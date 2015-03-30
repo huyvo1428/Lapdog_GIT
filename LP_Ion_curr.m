@@ -162,7 +162,7 @@ b(2) = abs(S.sigma(2)/P_Vb(2)); %Fractional error
 %[PVp,junk] = polyfit(Vpr,Ir,1); %this is slow, we need only a simple
 %calculation to fit as function of Vsc.
 P_Vp = P_Vb;                  %same slope, but we need to change intersect
-P_Vp(2) = P_Vb(2)-P_Vb(1)*Vsc; %fit as function of Vsc.
+P_Vp(2) = P_Vb(2)-P_Vb(1)*Vsc; %fit as function of Vp= V-Vsc.
 
 P_Up= P_Vb;
 P_Up(2) = P_Vb(2)-P_Vb(1)*Vknee; %same slope, but intersect if ions are function of Up, where Up = V-Vknee)
@@ -195,10 +195,11 @@ end
 % potential sweep, is a good approximation to the ion current, and that is
 % what is returned from this function
 
-Ii(1:len) = a(1)*V+b(1);%let's try removing it everywhere
-
-
-
+Ii(1:len) = a(1)*V+b(1);% overall ion current fit 
+% IiVp = V_Vp(1)*(V-Vsc) + b(1);
+% IiUp = V_Up(1)*(V-Vknee) + b(1);
+% 
+% 
 
 %Ii(1:len) = 0;
 
@@ -208,14 +209,15 @@ Ii(1:len) = a(1)*V+b(1);%let's try removing it everywhere
                       % sweep. The function polyval returns the value of the
                       % polynomial P evaluated at all the points of the vector V.
 
-Ii = (Ii-abs(Ii))./2; % The positive part is removed, leaving only a negative
+Ii = (Ii-abs(Ii))/2; % The positive part is removed, leaving only a negative
                       % current contribution. This is the return current
                       % The function abs returns the absolute value of the
                       % elements of the calling parameter.
-                      
-                      
-
-  
+%                       
+% IiVp = (IiVp-abs(IiVp))/2;                       
+% IiUp = (IiUp-abs(IiUp))/2;                       
+% 
+%   
 
 out.I = Ii;
 out.a = a;
@@ -225,7 +227,9 @@ out.Vpb = [P_Vp(2) b(2)];
 out.mean = [mean(Ir) std(Ir)]; % offset  
 out.Upa = [P_Up(1) a(2)];
 out.Upb = [P_Up(2) b(2)];
-
+% out.I_Vp = IiVp;
+% out.I_Up = IiUp;
+% 
 
 end
 

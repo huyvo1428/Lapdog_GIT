@@ -1,22 +1,47 @@
-Matrix204I1Ssort = Matrix204I1S.';
-Matrix204I2Ssort = Matrix204I2S.';
-
-Matrix204I2Ssort(:,1:23) = [];
-%Matrix204I1Ssort(:,10:end) = [];
 
 
+    
+%fileList = getAllFiles('/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/204/I_S/');
+
+bfileList = getAllFiles('/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/204/B_S/');
 
 
-I1sdown=Matrix204I2Ssort(1:104,:);
-I2sup=Matrix204I2Ssort(105:end-1,:);
+
+    for i=1:length(fileList)
+        
+        j=i*2 -1 ;
+        
+        
+        rfile=fileList{j,1}(1:end);
+        rfile2=fileList{j+1,1}(1:end);
+        
+        bfile=bfileList{j,1}(1:end);
+        bfile2=bfileList{j+1,1}(1:end);
 
 
-%Matrix204I1Ssort(:,end-5:end) = [];
+        if exist(rfile)==2 && strcmp(rfile(end-3:end),'.TAB');
+            temp=lap_import(rfile);
+            temp2=lap_import(rfile2);
+            
+            temp.sweeps = temp.sweeps.';
+            temp2.sweeps = temp2.sweeps.';
+            I1sdown = temp.sweeps(1:120,:);
+            I1sup   = temp.sweeps(122:end,:);
+            I2sup  =temp2.sweeps(105:end-1,:);
+            I2sdown =temp2.sweeps(1:104,:);
 
-I2sdown=Matrix204I2Ssort(1:104,:);
-I2sup=Matrix204I2Ssort(105:end-1,:);
-I1sup=Matrix204I1Ssort(122:end,:);
-I1sdown=Matrix204I1Ssort(1:120,:);
+            btemp = lap_import(bfile);
+            btemp2 = lap_import(bfile2);
+            
+            V_P1 = btemp.bias_potentials;
+            V_P2 = btemp2.bias_potentials;
+            
+            
+
+%I2sdown=Matrix204I2Ssort(1:104,:);
+%I2sup=Matrix204I2Ssort(105:end-1,:);
+%I1sup=temp.sweeps(122:end,:);
+%I1sdown=temp.sweeps(1:120,:);
 ind1 = 120:-1:1;
 I1sup=I1sup(ind1,:); %rotate
 
@@ -30,15 +55,16 @@ diffI1supdown = I1sdown - I1sup;
 diffI2supdown = I2sdown - I2sup;
 
 
+g8 = floor(length(temp.sweeps(:,1))/8);
 
-i1s_1 = Matrix204I1Ssort(:,1:10);
-i1s_2 = Matrix204I1Ssort(:,11:30);
-i1s_3 = Matrix204I1Ssort(:,21:40);
-i1s_4 = Matrix204I1Ssort(:,31:50);
-i1s_5 = Matrix204I1Ssort(:,41:60);
-i1s_6 = Matrix204I1Ssort(:,51:70);
-i1s_7 = Matrix204I1Ssort(:,61:70);
-i1s_8 = Matrix204I1Ssort(:,71:end);
+i1s_1 = temp.sweeps(:,1:g8);
+i1s_2 = temp.sweeps(:,g8+1:2*g8);
+i1s_3 = temp.sweeps(:,2*g8+1:3*g8);
+i1s_4 = temp.sweeps(:,3*g8+1:4*g8);
+i1s_5 = temp.sweeps(:,4*g8+1:5*g8);
+i1s_6 = temp.sweeps(:,5*g8+1:6*g8);
+i1s_7 = temp.sweeps(:,6*g8+1:7*g8);
+i1s_8 = temp.sweeps(:,7*g8+1:end);
 
 
 i1sdown_1=i1s_1(1:120,:);
@@ -85,35 +111,35 @@ diffI1supdown_8 = i1sdown_8 - i1sup_8;
 
 std1u_1 = 1E9*mean(diffI1supdown_1,2)+1E9*std(diffI1supdown_1,1,2);
 std1d_1 = 1E9*mean(diffI1supdown_1,2)-1E9*std(diffI1supdown_1,1,2);
-i1_1= 1E9*mean(diffI1supdown_1);
+i1_1= 1E9*mean(diffI1supdown_1,2);
 
 std1u_2 = 1E9*mean(diffI1supdown_2,2)+1E9*std(diffI1supdown_2,1,2);
 std1d_2 = 1E9*mean(diffI1supdown_2,2)-1E9*std(diffI1supdown_2,1,2);
-i1_2= 1E9*mean(diffI1supdown_2);
+i1_2= 1E9*mean(diffI1supdown_2,2);
 
 std1u_3 = 1E9*mean(diffI1supdown_3,2)+1E9*std(diffI1supdown_3,1,2);
 std1d_3 = 1E9*mean(diffI1supdown_3,2)-1E9*std(diffI1supdown_3,1,2);
-i1_3= 1E9*mean(diffI1supdown_3);
+i1_3= 1E9*mean(diffI1supdown_3,2);
 
 std1u_4 = 1E9*mean(diffI1supdown_4,2)+1E9*std(diffI1supdown_4,1,2);
 std1d_4 = 1E9*mean(diffI1supdown_4,2)-1E9*std(diffI1supdown_4,1,2);
-i1_4= 1E9*mean(diffI1supdown_4);
+i1_4= 1E9*mean(diffI1supdown_4,2);
 
 std1u_5 = 1E9*mean(diffI1supdown_5,2)+1E9*std(diffI1supdown_5,1,2);
 std1d_5 = 1E9*mean(diffI1supdown_5,2)-1E9*std(diffI1supdown_5,1,2);
-i1_5= 1E9*mean(diffI1supdown_5);
+i1_5= 1E9*mean(diffI1supdown_5,2);
 
 std1u_6 = 1E9*mean(diffI1supdown_6,2)+1E9*std(diffI1supdown_6,1,2);
 std1d_6 = 1E9*mean(diffI1supdown_6,2)-1E9*std(diffI1supdown_6,1,2);
-i1_6= 1E9*mean(diffI1supdown_6);
+i1_6= 1E9*mean(diffI1supdown_6,2);
 
 std1u_7 = 1E9*mean(diffI1supdown_7,2)+1E9*std(diffI1supdown_7,1,2);
 std1d_7 = 1E9*mean(diffI1supdown_7,2)-1E9*std(diffI1supdown_7,1,2);
-i1_7= 1E9*mean(diffI1supdown_7);
+i1_7= 1E9*mean(diffI1supdown_7,2);
 
 std1u_8 = 1E9*mean(diffI1supdown_8,2)+1E9*std(diffI1supdown_8,1,2);
 std1d_8 = 1E9*mean(diffI1supdown_8,2)-1E9*std(diffI1supdown_8,1,2);
-i1_8= 1E9*mean(diffI1supdown_8);
+i1_8= 1E9*mean(diffI1supdown_8,2);
 
 
 
@@ -123,19 +149,28 @@ V1 = V_P1(1:120) ;
 V2 = V_P2(1:104);
 
 figure(6);
-title(' 10 Sep 2014 Macro 204       Probe 2 10 Sep 2014 macro 204');
+
+
+time1=temp.START_TIME_UTC{1,1}(1:10);
+
+title([sprintf('%s Macro 204       Probe 2',time1)]);
+
+%title(' 10 Sep 2014 Macro 204       Probe 2 10 Sep 2014 macro 204');
 subplot(2,2,1);
-plot(1E9*Matrix204I2Ssort);
+plot(1E9*temp2.sweeps);
 grid on;
 axis([0 210 -12 40]);
 xlabel('step nr');
 ylabel('nA');
-title(' 10 Sep 2014 Macro 204       P2 Sweep current vs time');
+title([sprintf('%s Macro 204        P2 Sweep current vs time',time1)]);
+
 
 subplot(2,2,2);
-plot(V_P2,1E9*Matrix204I2Ssort(:,:));
+plot(V_P2,1E9*temp2.sweeps(:,:));
 grid on;
-title(' 10 Sep 2014 Macro 204        P2 sweep current vs Vbias');
+
+title([sprintf('%s Macro 204        P2 Sweep current vs Vbias',time1)]);
+
 ylabel('nA');
 
 
@@ -149,15 +184,16 @@ axis([-25 25 -10 10]);
 xlabel('V');
 ylabel('nA');
 
-title(' 10 Sep 2014 Macro 204        P2 diff up/down on each potential step');
+title([sprintf('%s Macro 204        P2 diff up/down on each potential step',time1)]);
 
 
 
 
 subplot(2,2,2);
-plot(1E9*Matrix204I1Ssort);
+plot(1E9*temp.sweeps);
 grid on;
-title(' 10 Sep 2014 Macro 204       P1 Sweep current vs time');
+title([sprintf('%s Macro 204        P1 Sweep current vs time',time1)]);
+
 axis([0 240 -12 40]);
 xlabel('step nr');
 ylabel('nA');
@@ -168,7 +204,8 @@ plot(V1,i1_1,V1,i1_2,V1,i1_3,V1,i1_4,V1,i1_4,V1,i1_6,V1,i1_7,V1,i1_8);
 %plot(V_P1(1:120),1E9*diffI1supdown);
 grid on;
 axis([-30 30 -10 10]);
-title(' 10 Sep 2014 Macro 204        P1 diff up/down on each potential step');
+title([sprintf('%s Macro 204        P1 diff up/down on each potential step',time1)]);
+
 xlabel('V');
 ylabel('nA');
 
@@ -179,10 +216,6 @@ std1d = 1E9*mean(diffI1supdown,2)-1E9*std(diffI1supdown,1,2);
 
 std2u = 1E9*mean(diffI2supdown,2)+1E9*std(diffI2supdown,1,2);
 std2d = 1E9*mean(diffI2supdown,2)-1E9*std(diffI2supdown,1,2);
-
-V1 = V_P1(1:120) ;
-
-V2 = V_P2(1:104);
 
 
 
@@ -209,8 +242,10 @@ plot(V1,1E9*mean(diffI1supdown,2),'or',V2,1E9*mean(diffI2supdown,2),'ob',V1,std1
 
 %plot(V_P1(1:120),1E9*mean(diffI1supdown,2),'or',V_P2(1:104),1E9*mean(diffI2supdown,2),'ob');
 grid on;
-axis([-30 30 -10 10]);
-title(' 10 Sep 2014 Macro 204        Mean P1 & P2 diff up/down on each potential step & standard devation');
+axis([-30 30 -20 10]);
+
+title([sprintf('%s Macro 204        Mean P1 & P2 diff up/down on each potential step & standard devation',time1)]);
+
 xlabel('V');
 ylabel('nA');
 %text(10,0,'\leftarrow sin(-\pi\div4)','HorizontalAlignment','left')
@@ -222,5 +257,40 @@ text(-10,-3.5,str2,'HorizontalAlignment','left')
 
 
 hleg1 = legend('Probe 1 mean diff','Probe 2 mean diff');
+            
+            
+        end
+    end
+    
+         
+%         
+%         if exist(rfile)==2 && strcmp(rfile(end-3:end),'.TAB');
+%             
+%             formatin = 'YYYY-mm-ddTHH:MM:SS';
+%             
+%             temp=lap_import(rfile);
+% 
+%             
+%         end
+%     
+%     
+%     
+%     Matrix204I1S=1;
+%     Matrix204I2S=1;
+% 
+% temp.sweeps = Matrix204I1S.';
+% Matrix204I2Ssort = Matrix204I2S.';
+% 
+% Matrix204I2Ssort(:,1:23) = [];
+% %temp.sweeps(:,10:end) = [];
+
+
+% 
+% 
+% I1sdown=Matrix204I2Ssort(1:104,:);
+% I2sup=Matrix204I2Ssort(105:end-1,:);
+% 
+% 
+%%%%temp.sweeps(:,end-5:end) = [];
 
 

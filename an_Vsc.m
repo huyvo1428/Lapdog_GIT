@@ -11,7 +11,6 @@ global an_debug ;
 len= length(Vb);
 
 [di,d2i]= leapfd(Ib,Vb,0.28);
-
 [Vb,ind]=sort(Vb);
 d2i=d2i(ind);
 di=di(ind);
@@ -26,6 +25,8 @@ posdi =(abs(di)+di)/2;
 if max(di)==di(end) %if current slope is ever increasing in di (i.e. electron current dominated & Vsc > max(-Vb))
     Vsc=-Vb(end);
     sigma = NaN;
+        %plot(Vb,posdi,'b',Vb,posd2i*6,'r',Vb,Ib/10,'g',Vb,ad2i*10,'black')
+
     return
 end
 
@@ -94,7 +95,7 @@ if an_debug > 8
     plot(Vb,di,'g',Vb,d2i,'r');
 
 
-    
+
     
 %     Ib3 = accumarray(ic,Ib,[],@mean);
 %     [junk,d2i2]= leapfd(Ib3,Vb,0.14);
