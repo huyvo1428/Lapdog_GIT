@@ -84,7 +84,12 @@ reduced_posd2i =(abs(reduced_posd2i)+reduced_posd2i)/2; %set negative values to 
 %secondpeak=min(pos(top10ind:end)); % prioritise earlier peaks, because electron side (end) can be noisy    
 secondpeak=pos(end); %maximum point 
 
-if secondpeak==length(reduced_posd2i); %if this position is on the max Vb value,then
+epsilon = 2; %the last (and first) two points on the second derivative have larger errors
+
+%-------- Time for logic ---------------------------------------------
+
+
+if ge(epsilon,length(reduced_posd2i)-secondpeak) %if this position is on the max Vb(?1step),then
     Vsc=-Vb(end);
     Sgsigma = NaN;
         %plot(Vb,posdi,'b',Vb,posd2i*6,'r',Vb,Ib/10,'g',Vb,ad2i*10,'black')
@@ -100,6 +105,11 @@ if secondpeak==length(reduced_posd2i); %if this position is on the max Vb value,
         
 else
     
+    
+    
+    
+%-------- Get Second Peak! ---------------------------------------------
+
     %get a region around our chosen guesstimate.
 lo= floor(secondpeak-len*0.10 +0.5); %let's try 20% of the whole sweep
 hi= floor(secondpeak+len*0.10 +0.5); %+0.5 pointless but good practise
@@ -121,6 +131,15 @@ end
 % %    [Kneesigma,vbKnee] =gaussfit(Vb,posd2i);
 % end
 
+%-------- Time for more logic ---------------------------------------------
+
+
+%if nan or vbKnee2 and vbKnee1 peaks overlap
+if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1+sigma2/2  
+    vbKnee2=vbKnee1;
+    sigma2= sigma1;
+end
+
 
 if sign(vbKnee1)~= sign(vbKnee2) %if peaks on different sides of Vb = 0, ignore second peak
 
@@ -130,17 +149,18 @@ if sign(vbKnee1)~= sign(vbKnee2) %if peaks on different sides of Vb = 0, ignore 
     Vph_knee_sigma = Sgsigma;
 
 else
+
     
     if abs(vbKnee1)>abs(vbKnee2) %abs(Vsc)is always larger than abs(Vph_knee)
         Vsc = -vbKnee1;
-        Sgsigma=sigma1;
+        Sgsigma=abs(sigma1/vbKnee1);
         Vph_knee = -vbKnee2;
         Vph_knee_sigma=abs(sigma2/vbKnee2);
         
         
     else
         Vsc = -vbKnee2;
-        Sgsigma=sigma2;
+        Sgsigma=abs(sigma2/vbKnee2);
         Vph_knee = -vbKnee1;
         Vph_knee_sigma=abs(sigma1/vbKnee1);
         
@@ -150,14 +170,19 @@ else
 end
 
 
+
 if max(di)==di(end) %if current slope is ever increasing in di (i.e. electron current dominated & Vsc > max(-Vb))
     
-    out.Vbar = [Vsc,Sgsigma]; %then we found some other potential here.
+    out.Vbar = [Vsc,abs(Sgsigma/Vsc)]; %then we found some other potential here.
 
     Vsc=-Vb(end);
     Sgsigma = NaN;
-        %plot(Vb,posdi,'b',Vb,posd2i*6,'r',Vb,Ib/10,'g',Vb,ad2i*10,'black')
 
+else
+    
+        out.Vbar = [Vsc,abs(Sgsigma/Vsc)]; %otherwise... let's output Vsc also in the Vbar variable.
+
+        
 end
 
 
@@ -183,7 +208,7 @@ if an_debug > 1
     title('anVplasma');
 
     subplot(1,2,2)  
-    plot(Vb,di*max(d2i/mean(abs(d2i))),'g',Vb,d2i/mean(abs(d2i)),'r',Vb,reduced_posd2i*max(d2i/mean(abs(d2i))),'g');
+    plot(Vb,di/mean(abs(di)),'b',Vb,d2i/mean(abs(d2i)),'r',Vb,reduced_posd2i*max(d2i/mean(abs(d2i))),'g');
 
 
     
@@ -206,7 +231,9 @@ if an_debug > 1
 %    xlabel('gaussmf, P=[2 5]')
     
 end
-    
+% length(reduced_posd2i)-secondpeak 
+  
+%tempdelet=1;
 %Kneesigma = abs(sigma1/vbKnee1);
 
 %Vph_knee = -vbKnee1;

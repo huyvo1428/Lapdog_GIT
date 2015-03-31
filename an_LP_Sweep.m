@@ -83,6 +83,18 @@ DP.ion_Up_slope     = nan(1,2);
 DP.ion_Up_intersect = nan(1,2);
 
 
+
+DP.ni_1comp         = NaN;
+DP.ni_2comp         = NaN;
+DP.v_ion            = NaN;
+
+
+DP.ni_aion          =NaN;
+DP.Vsc_aion         =NaN;
+DP.v_aion           =NaN;
+
+
+
 DP.e_Vb_slope       = nan(1,2);
 DP.e_Vb_intersect   = nan(1,2);
 DP.e_slope          = nan(1,2);
@@ -148,9 +160,16 @@ try
     Vknee = twinpeaks.Vph_knee(1);
     Vknee_sigma =twinpeaks.Vph_knee(2);
  %   [Vsc, Vsc_sigma] =twinpeaks.Vsc;
-    Vsc = twinpeaks.Vsc(1);
-    Vsc_sigma =twinpeaks.Vsc(2);
+%    Vsc = twinpeaks.Vsc(1);
+%    Vsc_sigma =twinpeaks.Vsc(2);
 
+    Vsc = twinpeaks.Vbar(1);
+    Vsc_sigma =twinpeaks.Vbar(2);
+
+    if isnan(Vsc)
+        Vsc = twinpeaks.Vsc(1);        
+    end    
+    
 %    Vknee
 %    Vsc    
     
@@ -159,8 +178,7 @@ try
 
     
     if isnan(Vknee)
-        Vknee = Vguess;
-        
+        Vknee = Vguess;        
     end
 
     
@@ -185,6 +203,10 @@ try
         Vplasma=(Vknee/VSC_TO_VKNEE)/VSC_TO_VPLASMA;        
      
     else
+        
+        Vsc=Vknee;
+        Vsc_sigma = Vknee_sigma;
+        twinpeaks.Vsc = twinpeaks.Vph_knee;
         %Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
         Vplasma=NaN;
     end
@@ -379,11 +401,14 @@ end
         eps = abs(Iftmp)/1000;  %good order estimate of minimum accuracy
         idx = find(diph==min(diph) & diph < eps,1);
         
+
         
         if(isempty(idx))
             DP.Vsi = NaN;
             Q(4) = 1;
             DP.Iph0 = NaN;
+            
+            Iph(:)=0;
         else
             DP.Vsi = tempV(idx);
             DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vknee)/Tph);
@@ -393,18 +418,19 @@ end
             ion.Upb(1) = ion.Upb(1)-DP.Iph0;
 
             
+            Iph(:) = DP.Iph0;  %set everything to photosaturation current
+            
+            %    Iph(1:idx1)=DP.Iph0; %add photosaturation current
+            
+            %idx is the at point where Iion and Iph converges
+            %Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
+            Iph(idx1+1:end)=Iftmp*exp(-Vdagger(idx1+1:end)/Tph);
+            
         end
         
         DP.Tph     = Tph;
         
-        
-        Iph(:) = DP.Iph0;  %set everything to photosaturation current
-        
-    %    Iph(1:idx1)=DP.Iph0; %add photosaturation current
-
-        %idx is the at point where Iion and Iph converges
-        %Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
-        Iph(idx1+1:end)=Iftmp*exp(-Vdagger(idx1+1:end)/Tph);
+   
 
         %Iph0 and ion.I is both an approximation of that part of the sweep, so we
         %remove that region of the Iph current (and maybe add it later)
@@ -442,7 +468,7 @@ end
     
     DP.Te      = elec.Te;
     DP.ne      = elec.ne;
-    DP.Vsg     = [Vsc Vsc_sigma];
+    DP.Vsg     = twinpeaks.Vsc;
     DP.Vph_knee = [Vplasma Vknee_sigma];
     DP.Vbar     = twinpeaks.Vbar; 
 
@@ -453,6 +479,15 @@ end
     DP.ion_intersect  = ion.Vpb;
     DP.ion_Up_slope     = ion.Upa;
     DP.ion_Up_intersect = ion.Upb;
+    
+    
+    DP.ni_1comp         = ion.ni_1comp;
+    DP.ni_2comp         = ion.ni_2comp;
+    DP.v_ion            = ion.v_ion;
+    
+    DP.ni_aion          =ion.ni_aion;
+    DP.Vsc_aion         =ion.Vsc_aion ;
+    DP.v_aion           =ion.v_aion ;
     
     
     DP.e_Vb_slope        = elec.a;  
