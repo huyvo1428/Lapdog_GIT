@@ -19,9 +19,9 @@ function I_filtered = sweepFilterChooser(I,dv)
 
 persistent I_cache
 persistent I_filtered_cache
-% persistent i
+persistent i
 % persistent i2
-% 
+
 % if isempty(i)
 %     i = 0;
 %     i2 = 0;
@@ -72,6 +72,37 @@ else  %i.e. if dv ~ 0.5
 end
         
     I_filtered = smooth(I,sSpan,sMethod,1).'; %filter sweep NB transpose
+    Rsq = 1 - nansum(((I-I_filtered).^2))/nansum(((I-nanmean(I)).^2));
+    
+ %   Rsq
+ 
+ if Rsq < 0.92 % inexplicable horrible performance for certain super smooth sweeps.
+     
+     if isempty(i)
+         i = 0;
+     end     
+     i=i+1;
+     if mod(i,100) == 1
+         fprintf(1,'%i bad smoothening performance\n',i);
+     end
+     
+     
+     I_filtered = smooth(I,'loess',sMethod,1).';
+     Rsq = 1 - nansum(((I-I_filtered).^2))/nansum(((I-nanmean(I)).^2));
+     
+     if Rsq < 0.92         
+         
+         i = i+10000;
+         
+         I_filtered = I;
+ 
+         
+     end
+ end
+ 
+ 
+
+    
     I_filtered_cache = I_filtered;
     I_cache = I;
     

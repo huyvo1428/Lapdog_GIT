@@ -88,6 +88,15 @@ DP.ion_Up_intersect = nan(1,2);
 
 
 
+DP.ni_1comp         = NaN;
+DP.ni_2comp         = NaN;
+DP.v_ion            = NaN;
+
+
+DP.ni_aion          =NaN;
+DP.Vsc_aion         =NaN;
+DP.v_aion           =NaN;
+
 DP.e_Vb_slope       = nan(1,2);
 DP.e_Vb_intersect   = nan(1,2);
 DP.e_slope          = nan(1,2);
@@ -173,9 +182,18 @@ try
     Vknee = twinpeaks.Vph_knee(1);
     Vknee_sigma =twinpeaks.Vph_knee(2);
  %   [Vsc, Vsc_sigma] =twinpeaks.Vsc;
-    Vsc = twinpeaks.Vsc(1);
-    Vsc_sigma =twinpeaks.Vsc(2);
+%     Vsc = twinpeaks.Vsc(1);
+%     Vsc_sigma =twinpeaks.Vsc(2);
 
+        Vsc = twinpeaks.Vbar(1);
+    Vsc_sigma =twinpeaks.Vbar(2);
+
+    if isnan(Vsc)
+        Vsc = twinpeaks.Vsc(1);        
+    end    
+    
+    
+    
     if isnan(Vknee)
         Vknee = assmpt.Vknee;  %from first 50 sweeps       
     end
@@ -191,7 +209,8 @@ try
         end
     end
     
-  
+    
+    
     if(illuminated)        
         if isnan(Vsc)
             Vsc= Vknee/VSC_TO_VKNEE;
@@ -200,6 +219,10 @@ try
         Vplasma=(Vknee/VSC_TO_VKNEE)/VSC_TO_VPLASMA;        
      
     else
+        
+        Vsc=Vknee;
+        Vsc_sigma = Vknee_sigma;
+        twinpeaks.Vsc = twinpeaks.Vph_knee;
         %Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
         Vplasma=NaN;
     end
@@ -396,7 +419,8 @@ try
     
     DP.Te      = elec.Te;
     DP.ne      = elec.ne;
-    DP.Vsg     = [Vsc Vsc_sigma];
+    DP.Vsg     = twinpeaks.Vsc;
+
     DP.Vph_knee = [Vplasma Vknee_sigma];
     DP.Vbar     = twinpeaks.Vbar; 
 
@@ -407,6 +431,17 @@ try
     DP.ion_Up_slope     = ion.Upa;
     DP.ion_Up_intersect = ion.Upb;
 
+        
+    DP.ni_1comp         = ion.ni_1comp;
+    DP.ni_2comp         = ion.ni_2comp;
+    DP.v_ion            = ion.v_ion;
+    
+    DP.ni_aion          =ion.ni_aion;
+    DP.Vsc_aion         =ion.Vsc_aion ;
+    DP.v_aion           =ion.v_aion ;
+    
+
+    
     DP.e_Vb_slope        = elec.a;
     DP.e_Vb_intersect    = elec.b;
     DP.e_slope        = elec.Vpa;

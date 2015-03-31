@@ -195,14 +195,14 @@ Ie0 =  b(1);
 Te = b(1)/a(1);
 
 s_Te=sqrt(a(2).^2+b(2).^2); %fractional error of Te, 
-
-residual = Ir - b(1)+a(1)*Vpr;
-
-% Compute the rms error and scale by the current Ie0 at Vr=Vp=0
-currvar = sqrt(sum((residual).^2)/len)/Ie0; % Compute the relative rms error
-if currvar > 0.02
-    out.Q = out.Q+2;
-end
+% 
+% residual = Ir - b(1)+a(1)*Vpr; %this equation is bad!! maybe (Ind
+% 
+% % Compute the rms error and scale by the current Ie0 at Vr=Vp=0
+% currvar = sqrt(sum((residual).^2)/len)/Ie0; % Compute the relative rms error
+% if currvar > 0.02
+%     out.Q = out.Q+2;
+% end
 
 
 

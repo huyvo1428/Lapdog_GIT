@@ -50,6 +50,7 @@ tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 save(tabindexfile,'tabindex');
 
 else 
+    s_tabindexfile
     'error, file missing'
 
 end
@@ -94,6 +95,10 @@ if(fp > 0)
     fclose(fp);
     load(s_indexfile);
     'lapdog: succesfully loaded server index'
+    
+    else
+        s_indexfile
+    'error, file missing'
 end
    
 if skipindex ==0
@@ -116,8 +121,11 @@ else
 end
 
 save(indexfile,'index');
-    else
+else
+        s_indexfile
     'error, file missing'
+
+
 end
 
 'done! saved new indices in local indexfolders'

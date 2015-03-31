@@ -55,8 +55,8 @@
 %                                                                                    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [out] = LP_Ion_curr(V,I,Vsc,Vknee)
-
-
+global CO IN     % Physical &instrumental constants
+global assmpt; %global assumptions
 
 Ii = I;
 Ii(1:end)=0;
@@ -74,6 +74,15 @@ out.Upa = nan(1,2);
 out.Upb = nan(1,2);
 out.Q = 0;
 out.mean = nan(1,2);
+
+
+out.ni_1comp         = NaN;
+out.ni_2comp         = NaN;
+out.v_ion            = NaN;
+
+out.ni_aion  =NaN;
+out.Vsc_aion =NaN;
+out.v_aion   =NaN;
 
 %global ALG;
 SM_Below_Vs =0.6;
@@ -227,9 +236,27 @@ out.Vpb = [P_Vp(2) b(2)];
 out.mean = [mean(Ir) std(Ir)]; % offset  
 out.Upa = [P_Up(1) a(2)];
 out.Upb = [P_Up(2) b(2)];
-% out.I_Vp = IiVp;
-% out.I_Up = IiUp;
-% 
+
+
+
+% Calculate ion densities velocities
+
+out.ni_1comp     = max((1e-6 * out.Vpa(1) *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
+
+if (out.Vpb(1) < 0) %unphysical if intersection is above zero!
+    out.ni_2comp    = (1e-6/(IN.probe_cA*CO.e))*sqrt((-assmpt.ionM*CO.mp*(out.Vpb(1)) *out.Vpa(1) /(2*CO.e)));
+    out.v_ion       =  out.ni_2comp     *assmpt.vram/out.ni_1comp;
+end
+
+%Accelerated ions calculations
+
+if (out.Upb(1) < 0) %unphysical if intersection is above zero!
+    out.ni_aion     = (1e-6/(IN.probe_cA))*sqrt((-assmpt.ionM*CO.mp*out.Upa(1)*out.Upb(1)/((2*CO.e.^3))));
+    out.v_aion      = sqrt(-2*CO.e*(out.Vsc_aion-Vknee)/(CO.mp*assmpt.ionM));
+end
+    out.Vsc_aion    = Vknee  +out.Upb(1)/out.Upa(1);
+
+    
 
 end
 
