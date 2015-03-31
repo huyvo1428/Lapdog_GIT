@@ -610,6 +610,10 @@ if (~isempty(an_tabindex));
             %ocl2{end+1} = struct('NAME', 'e_Vb_slope',             'UNIT', 'A/V',       'DESCRIPTION', 'Slope of linear electron current fit as a function of bias potential ');
             %ocl2{end+1} = struct('NAME', 'sigma_e_Vb_slope',       'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear electron current fit as a function of bias potential ');
             %---------------------------------------------------------------------------------------------------
+            ocl2{end+1} = struct('NAME', 'Vbar',                    'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
+            ocl2{end+1} = struct('NAME', 'sigma_Vbar',              'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
+            ocl2{end+1} = struct('NAME', 'asm_Vbar',                'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
+            ocl2{end+1} = struct('NAME', 'asm_sigma_Vbar',          'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
 
             for i_oc = 1:length(ocl2)
                 if ~isfield(ocl2{i_oc}, 'BYTES')

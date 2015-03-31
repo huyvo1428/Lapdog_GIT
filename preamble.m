@@ -39,41 +39,49 @@ end
 % (this path should really be dynamically read from user's pds.conf file)
 fc = fopen(missioncalendar,'r');
 
-if fc > 0
-    
-    line = fgetl(fc);
-    jj = 0;    
-    
-    while(jj<100 && isempty(line))
-        line = fgetl(fc);
-        jj= jj + 1;        
-    end    
-    
-    while((jj<100) && isempty(strfind(line,shortphase)) || (strcmp(line(1),'#')))
-            line = fgetl(fc);
-            jj = jj + 1;
-    end
-    
+if fc < 0
+    fprintf(1,'Error, cannot open %s.\n', missioncalendar);
 else
-    fprintf(1,'Error, cannot open %s', missioncalendar);
-    break
+    %line = fgetl(fc);
+    jj = 0;
+    
+%     while(jj<100 && isempty(line))
+%         line = fgetl(fc);
+%         jj= jj + 1;        
+%     end    
+%     while((jj<100) && isempty(strfind(line,shortphase)) || (strcmp(line(1),'#')))
+%             line = fgetl(fc);
+%             jj = jj + 1;
+%     end
+    
+    while (jj<1000)
+        line = fgetl(fc);
+        
+        if (line == -1)
+            error('Can not identify mission phase in mission calendar.');
+        elseif ~(strcmp(line(1),'#') || isempty(line))
+            parts = textscan(line,'%s %s %*s %*s %s %s %s %s','delimiter',':');      % * means the field will be skipped.
+            shortphase_line = strtrim(strrep(char(parts{2}), '"', ''));  % Need to remove double quotes and trailing blanks from strings (strrep, strtrim)
+            if strcmp(shortphase_line, shortphase)
+                break
+            end
+        end
+        jj = jj + 1;
+    end
+    fclose(fc)
 end
 
-    
-parts = textscan(line,'%s %s %*s %*s %s %s %s %s','delimiter',':');      % * means the field will be skipped.
 % Need to remove double quotes and trailing blanks from strings (strrep, strtrim)
 missionphase   = strtrim(strrep(char(parts{1}), '"', ''));   
 targetfullname = strtrim(strrep(char(parts{3}), '"', ''));   % Mission calendar: "TARGET_NAME_IN_DATA_SET_ID"
 targetid       = strtrim(strrep(char(parts{4}), '"', ''));   % Mission calendar: "TARGET_ID"
 targettype     = strtrim(strrep(char(parts{5}), '"', ''));   % Mission calendar: "TARGET_TYPE"
-
 global target;
+target         = strtrim(strrep(char(parts{6}), '"', ''));   % Mission calendar: "TARGET_NAME_IN_DATA_SET_NAME"
 
-target = strtrim(strrep(char(parts{6}),'"',''));
-
+% Modify "target"
 % Special for solar wind, which is not defined as a target in SPICE:
 % aie 130313
-
 switch target    
     case 'SW'
         target = 'SUN';
