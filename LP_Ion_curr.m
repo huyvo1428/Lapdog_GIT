@@ -252,9 +252,9 @@ end
 
 if (out.Upb(1) < 0) %unphysical if intersection is above zero!
     out.ni_aion     = (1e-6/(IN.probe_cA))*sqrt((-assmpt.ionM*CO.mp*out.Upa(1)*out.Upb(1)/((2*CO.e.^3))));
-    out.v_aion      = sqrt(-2*CO.e*(out.Vsc_aion-Vknee)/(CO.mp*assmpt.ionM));
 end
     out.Vsc_aion    = Vknee  +out.Upb(1)/out.Upa(1);
+    out.v_aion      = sqrt(-2*CO.e*(out.Vsc_aion-Vknee)/(CO.mp*assmpt.ionM));
 
     
 

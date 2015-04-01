@@ -186,17 +186,18 @@ try
         if strcmp(target,'CHURYUMOV-GERASIMENKO')
             
             %date = cspice_et2utc(cspice_str2et(Tarr{ 1,1}), 'ISOC', 0);
-            formatin = 'YYYY-mm-ddTHH:MM:SS';
-            date=  datenum(cspice_et2utc(cspice_str2et(Tarr{ 1,1}),'ISOC',0),formatin);
-            if date < datenum('2015-01-01T00:00:00',formatin);
-                
-                assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
-                
+            %formatin = 'YYYY-mm-ddTHH:MM:SS';
+            %this if should have worked, but MatLab sucks between versions and
+            %linux/mac differences.
+            %            if datenum(Tarr{1,1}(1:19),formatin) < datenum('2015-01-01T00:00:00',formatin)378691143.436616
+            
+            if (str2double(Tarr{3,1}) < 378691127.436616) %sc clock start at 1 jan 2015 00:00:00.00000.
+%            if (str2double(Tarr{3,1}) < 378699451.239258) %sc clock start at 1 jan 2015 02:18:43.80539.                
+                assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation               
             else
-                                
                 assmpt.Iph0 = -1.19e-08; %from probe 1 Jan 03 & 29 Jan in and out of shadow
             end
-            
+
             
             assmpt.vram = 550; %m/s
             assmpt.ionZ = +1; % ion charge
