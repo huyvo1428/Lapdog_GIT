@@ -55,8 +55,11 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % TODO: Remove references to "et" times. Use OBT.
 %===========================================================================================
 
-    t_start = clock;    % NOTE: Not number of seconds, but [year month day hour minute seconds].
+    t_start = clock;             % NOTE: Not number of seconds, but [year month day hour minute seconds].
+    MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in createLBL!!!
+    
     an_tabindex = main_INTERNAL(an_tabindex, tabindex, index, obe);
+    
     fprintf(1, '%s: %0.f s (elapsed wall time)\n', mfilename, etime(clock, t_start));
     
     
@@ -218,7 +221,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
                 % I think the data archiving policy is that when there is no data,
                 % there should also be no file. (Source?) /Erik P G Johansson 2015-01-08.
                 %---------------------------------------------------------------------------------------
-                fprintf(1, 'best_estimates: Too few sweeps in ops block for best estimates.\n')
+                fprintf(1, 'best_estimates: Too few sweeps in ops block for best estimates (not error).\n')
                 fprintf(1, '==> Skipping: %s\n', O_list{i_ob}.EST_file_path)
                 continue
             end
@@ -267,7 +270,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             an_tabindex_amendment{1, 3} = i_index;      % Index back to corresponding "index" file. ARRAY. Otherwise not meaningful?!!
             an_tabindex_amendment{1, 4} = N_rows;
             an_tabindex_amendment{1, 5} = N_columns;
-            an_tabindex_amendment{1, 6} = [];               % Index back to corresponding "tabindex" file. - CAN NOT SET MEANINGFULLY?!!
+            an_tabindex_amendment{1, 6} = [];               % Index back to corresponding "tabindex" file. - CAN NOT BE MEANINGFULLY SET?!!
             an_tabindex_amendment{1, 7} = 'best_estimates';
             an_tabindex_amendment{1, 8} = an_tabindex_timing;
             an_tabindex_amendment{1, 9} = row_bytes;
@@ -349,7 +352,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
                         
                         if has_Pi_pairs(i_P)                            
                             if   (i_Pi_prev(i_P) ~= 0)   &&   sw_data.pair_first( i_Pi_prev(i_P) )
-                             % If this sweep and preceeding sweep for the same probe are a pair...
+                             % CASE: If this sweep and preceeding sweep for the same probe are a pair...
+
                                 i_sw_group(end+1) = i_Pi_prev(i_P);
                                 i_sw_group(end+1) = i_sw;
                                 Pi_complete(i_P) = 1;
@@ -365,11 +369,11 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
                         end
                         
                     end
-                end
+                end   % for
                 
                 i_sw = i_sw + 1;                
                 
-            end
+            end   % while
 
 
 
@@ -381,9 +385,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             sim_sweep_data.sweep_group_nbr = ones(length(i_sw_group), 1) * i_grp;  % For debugging. Save which group every sweep belongs to.
             sim_sweep_data_grps_list{end+1} = sim_sweep_data;
             i_grp = i_grp + 1;
-        end
-        
-        %error('FUNCTION NOT IMPLEMENTED YET.')
+            
+        end   % while
         
     end
     
@@ -677,6 +680,13 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         O_data = select_structs_arrays_INTERNAL(data, i);        
         N_rows = length(data.START_TIME_UTC);
         
+        
+        
+        i = find(isnan(O_data.npl_est));   O_data.npl_est(i) = MISSING_CONSTANT;   % NOTE: MISSING_CONSTANT is "function global" constant.
+        i = find(isnan(O_data.Te_est));    O_data.Te_est(i)  = MISSING_CONSTANT;
+        i = find(isnan(O_data.Vsc_est));   O_data.Vsc_est(i) = MISSING_CONSTANT;
+        
+        
         %----------------
         % Write to file.
         %----------------
@@ -693,9 +703,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             line = [line, sprintf('%04.2f, ', data.Illumination(i))];          % DEBUG?
             %line = [line, sprintf('%16.6e, ', data.V_LF_HF_before_sweep(i))];  % DEBUG
             line = [line, sprintf('%5i',      data.sweep_group_nbr(i))];       % DEBUG? NOTE: The only string without ending comma!
-            line = strrep(line, 'NaN', '   ');
             N_columns = 2+3+3 + 1+1+1+1;
-            row_bytes = fprintf(fid, [line, '\n']);
+            row_bytes = fprintf(fid, [line, '\r\n']);
             
             %disp(line)                     % DEBUG. Preferably no extra linebreak in string.
         end

@@ -60,7 +60,7 @@ try
         trID = fopen(tabindex{an_ind(i),1},'r');
         
         if trID < 0
-            fprintf(1,'Error, cannot open file %s', tabindex{an_ind(i),1});
+            fprintf(1,'Error, cannot open file %s\n', tabindex{an_ind(i),1});
             break
         end % if I/O error
         
@@ -285,11 +285,11 @@ try
                     if  fileflag(2) =='3'
                         b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7},fout{k,8},fout{k,9});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
-                        b3= fprintf(awID,'\n');
+                        b3= fprintf(awID,'\r\n');
                     else
                         b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
-                        b3= fprintf(awID,'\n');
+                        b3= fprintf(awID,'\r\n');
                         
                     end
                     
@@ -299,14 +299,14 @@ try
                         
                         b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
-                        b3= fprintf(awID,'\n');
+                        b3= fprintf(awID,'\r\n');
                         
                         
                         %fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
                     else
                         b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
-                        b3= fprintf(awID,'\n');
+                        b3= fprintf(awID,'\r\n');
                         
                         %dlmwrite(sname,fout{k,end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
                         
@@ -324,8 +324,8 @@ try
         afID = fopen(fname,'w');
         
         
-        f1= fprintf(afID,'%14.7e, ',freq(1:end-1));
-        f2= fprintf(afID,'%14.7e',freq(end));
+        f1 = fprintf(afID,'%14.7e, ',   freq(1:end-1));
+        f2 = fprintf(afID,'%14.7e\r\n', freq(end));
         
         
         %   dlmwrite(fname,freq,'precision', '%14.7e');

@@ -245,16 +245,16 @@ try
                     
                     for (j=1:scanlength)       %print
                         
-                        %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %03i\n'...
+                        %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %03i\r\n'...
                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qualityF);
                     end
                 else
                     
                     for (j=1:scanlength)       %print
                         
-                        %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %03i\n'...
+                        %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %03i\r\n'...
                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),qualityF);
                     end%for
                 end%if fileflag
@@ -333,7 +333,7 @@ try
                 potout(1:2:2*length(reltime)) = reltime;
                 potout(2:2:2*length(reltime)) = potbias;
                 
-                b1= fprintf(twID,'%14.7e, %14.7e\n',potout);
+                b1= fprintf(twID, '%14.7e, %14.7e\r\n', potout);
                 
 %                     
             end %if first iteration +bugfix
@@ -445,9 +445,9 @@ try
             
             curArray=curArray+ CURRENTOFFSET;
             
-            b2= fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
-            b3= fprintf(twID2,', %14.7e',curArray.'); %some steps could be "NaN" values if LDL macro
-            fprintf(twID2,'\n');
+            b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
+            b3 = fprintf(twID2,', %14.7e',curArray.'); %some steps could be "NaN" values if LDL macro
+            b4 = fprintf(twID2, '\r\n');
             
             %%Finalise
             
@@ -458,7 +458,7 @@ try
                 
                 
                 tabindex(end+1,1:7)={filename2,strrep(filename2,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len,length(potbias)+5};
-                tabindex{end,8}=b2+b3;
+                tabindex{end,8} = b2+b3+b4;
                 %           tabindex(end+1,1:6)={filename3,strrep(filename3,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len};
                 %one index for currents and two timestamps
                 

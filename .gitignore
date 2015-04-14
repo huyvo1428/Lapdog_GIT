@@ -16,3 +16,5 @@ control.m
 *.BSP
 
 *.TSC
+
+batch_control.m
