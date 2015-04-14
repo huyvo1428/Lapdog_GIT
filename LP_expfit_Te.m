@@ -231,17 +231,17 @@ if an_debug >7 %debug condition
         plot(Vr,log(Ir),'b',Vr,Vr*P(1)+P(2),'--');
         
         axis([Vr(1) Vr(end) log(Ir(1)) log(Ir(end))])
-        title([sprintf('Te:%3.1f fracstd:%1.3f\%',out.Te)]);
+        title([sprintf('Te:%3.1f fracstd:%1.3f',out.Te)]);
         
         subplot(1,3,3)
         
         
         plot(Vr,Ir,'b');
         axis([Vr(1) Vr(end) Ir(1) Ir(end)])
-        title([sprintf('Ie0:%4.2e fracstd:%1.3f\%',out.Ie0)]);
+        title([sprintf('Ie0:%4.2e fracstd:%1.3f',out.Ie0)]);
         
     catch err
-        fprintf(1,'could not plot LP_expfit_Te');
+        fprintf(1,'could not plot LP_expfit_Te\n');
         
         return
     end

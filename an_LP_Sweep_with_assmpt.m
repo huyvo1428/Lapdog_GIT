@@ -63,7 +63,7 @@ VSC_TO_VKNEE = 1;
 global diag_info %contains information of current sweep 
 
 
-warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
+%warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
 Q    = [0 0 0 0];   % Quality vector
 
 % Initialize DP to ensure a return value:
@@ -226,6 +226,8 @@ try
         %Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
         Vplasma=NaN;
     end
+    
+    
     
     
     

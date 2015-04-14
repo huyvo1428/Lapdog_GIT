@@ -78,15 +78,11 @@ a=[NaN NaN];
 b=a;
 currvar=NaN;
 
-%start by smoothing current
-
 % The length of the data set is saved in the variable "len"
 len = length(V);
 
 
-%Vp = V+ Vsc,
-%V? = Vp -Vplasma.
-Vs = V+Vplasma; % Compute potential as a function relative to Vplasma
+%Vs = V+Vplasma; % Compute potential as a function relative to Vplasma
 Vs=V+Vplasma*(-1+1/VSC_TO_VPLASMA); %= V + Vsc - Vplasma
 
 
@@ -107,7 +103,6 @@ end
 
 % Find the data points above the spacecraft potential
 
-
 ind = find(Vs > 0); % Saving indices of all potential values above the spacecraft potential.
 if (isempty(ind) || length(ind) < 2)
     return
@@ -124,10 +119,6 @@ l_ind = length(ind); % Need the number of data points of the vector ind
 
 bot = floor(ind(1)+l_ind*SM_Below_Vsc +0.5);
 
-%top = floor(l_ind*ALG.SM_Below_Vs); % The point closest to, but below, ALG.SM_Below_Vs*100% of the
-% spacecraft potential. The function floor rounds
-% the calling parameter to the nearest integer
-% towards minus infinity.
 bot= bot -1 + find(I(bot:end)>0,1,'first');    %currents above 0
 %choose starting point some points away from Vsc and has a positive
 %current value.
@@ -148,13 +139,10 @@ Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note 
 % P = polyfit(Vr,Ilog,1); % Fitting linearly we have the temperature directly as
 % a = P(1);
 % b = P(2);
-
 % The inverse slope gives Te
 %Te = 1/a;
-
 % Compute the residual
 %residual = Ir - exp(b+a*Vr); % Retarded current subtracted from fitted current
-
 %Ie0 = exp(b);
 
 if (isempty(ind) || length(ind) < 2)
@@ -176,20 +164,22 @@ Is0 =  b(1);
 Ts = b(1)/a(1);
 
 
-residual = Ir - b(1)+a(1)*Vr;
+s_Ts=sqrt(a(2).^2+b(2).^2); %fractional error of Te, 
 
-% Compute the rms error and scale by the current Ie0 at Vr=Vp=0
-currvar = sqrt(sum((residual).^2)/len)/Is0; % Compute the relative rms error
-
+%residual = Ir - b(1)+a(1)*Vr;
 
 
 % If Te is positive we can get the density as follows
 if(Ts>=0 && ~isinf(Ts))
     
     
-    ns = Is0 / IN.probe_A*CO.e*sqrt(CO.e*Ts/2*pi*CO.me);
-    ns = ns *1e-6;
+  %  ns = Is0 / IN.probe_A*CO.e*sqrt(CO.e*Ts/2*pi*CO.me);
     
+    ns = sqrt(2*pi*CO.me*Ts)*a(1) / (IN.probe_A*CO.e.^1.5); %sensitivity to Vsc
+
+  % ns = ns *1e-6;
+    s_ns = sqrt((0.5*s_Ts/sqrt(Ts)).^2 +a(2).^2);
+
     
     %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
 %    ns = Is0 /(0.25E-3*q_e*sqrt(q_e*Ts/(2*pi*m_e)));
@@ -199,7 +189,6 @@ if(Ts>=0 && ~isinf(Ts))
     %think of it as if the LP is sampling a electron distribution with a
     %cut-off at certain temperatures.
     
-    %   ne = Ie0/(IN.probe_area*CO.qe*1e6*sqrt(CO.qe*Te/(2*pi*CO.me)));
     if(ns<0)
         ns=NaN;
     end
@@ -214,7 +203,7 @@ if(Ts>=0 && ~isinf(Ts))
     % current contribution. This is the return current
     % The function abs returns the absolute value of the
     % elements of the calling parameter.
-    
+ 
 else
     if(a>0) % check slope
         %this happens if the Vrelation is wrong, so the y-intersect is on the
@@ -237,45 +226,6 @@ else
 end
 
 
-
-%Ie = polyval(P,V);    % The current is calculated across the entire potential
-% sweep. The function polyval returns the value of the
-% polynomial P evaluated at all the points of the vector V.
-%                       Ie = Ie0exp(Vp/Te)
-
-
-
-
-
-
-
-
-%     q_index=1;
-%     second_digit=LP_Quality.SD0_Nominal;
-%     if(currvar>LP_Quality.SM_Currv0) q_index=q_index+1; end;
-%     if(currvar>LP_Quality.SM_Currv1) q_index=q_index+1; end;
-%     if(currvar>LP_Quality.SM_Currv2) q_index=q_index+1; end;
-%     if(q_index>1)
-%         second_digit=LP_Quality.SD3_LargeVariations;
-%     end
-% Qtmp =0;
-%         Qtmp=LP_Quality.FD(q_index)*10+second_digit;
-% end
-% end
-
-% % If Te is not NaNs
-% if(~isnan(Te))
-%     Q(1)=Qtmp;
-% end
-%
-% % If Ne is not NaNs
-% if(~isnan(ne))
-%     Q(2)=Qtmp;
-% end
-% % If Vs is not NaNs
-% if(~isnan(Vsc))
-%     Q(3)=Qtmp;
-% end
 end
 
 
