@@ -104,6 +104,9 @@ DP.phc_intersect    = nan(1,2);
 DP.Te_exp           = nan(1,2);
 DP.Ie0_exp          = nan(1,2);
 DP.ne_exp           = nan(1,2);
+DP.Te_exp_belowVknee   = nan(1,2);
+DP.Ie0_exp_belowVknee  = nan(1,2);
+DP.ne_exp_belowVknee   = nan(1,2);
 
 DP.Quality          = sum(Q);
 
@@ -219,7 +222,7 @@ try %try the dynamic solution first, then the static.
     if (an_debug>1)%debug plot
         
         figure(33)
-        subplot(3,2,3),plot(V+Vsc,Is,'b',V+Vsc,ion.I,'g');grid on;
+        subplot(3,2,3);plot(V+Vsc,Is,'b',V+Vsc,ion.I,'g');grid on;
         title([sprintf('Ion current vs Vp, out.Q(1)=%d',ion.Q(1))])
         legend('I','I_i_o_n')
         
@@ -247,10 +250,10 @@ try %try the dynamic solution first, then the static.
     DP.ne_exp           = expfit.ne;
     
     
-    expfit_below_phknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
-    %DP.Te_exp           = expfit_below_phknee.Te; %contains both value and sigma frac.
-    %DP.Ie0_exp          = expfit_below_phknee.Ie0;
-    %DP.ne_exp           = expfit_below_phknee.ne;
+    expfit_belowVknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
+    DP.Te_exp_belowVknee            = expfit_belowVknee.Te; %contains both value and sigma frac.
+    DP.Ie0_exp_belowVknee           = expfit_belowVknee.Ie0;
+    DP.ne_exp_belowVknee            = expfit_belowVknee.ne;
     
     
     
@@ -641,7 +644,7 @@ try %try the dynamic solution first, then the static.
     
     % find region 1 V below knee and 4V above knee
     %track positions to be filtered which is in this this region
-    filter_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));
+%    filter_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));
     
     %obtain exponential fit of plasma electron current.
     asm_expfit= LP_expfit_Te(V,asm_Itemp,Vsc, filter_ind);
@@ -650,6 +653,18 @@ try %try the dynamic solution first, then the static.
     DP_asm.Te_exp           = asm_expfit.Te; %contains both value and sigma frac.
     DP_asm.Ie0_exp          = asm_expfit.Ie0;
     DP_asm.ne_exp           = asm_expfit.ne;
+    
+    
+        
+    
+    expfit_belowVknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
+    DP_asm.Te_exp_belowVknee            = expfit_belowVknee.Te; %contains both value and sigma frac.
+    DP_asm.Ie0_exp_belowVknee           = expfit_belowVknee.Ie0;
+    DP_asm.ne_exp_belowVknee            = expfit_belowVknee.ne;
+    
+    
+    
+    
     
     %if the plasma electron current fail, try the spacecraft photoelectron
     %cloud current analyser

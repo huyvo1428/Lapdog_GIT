@@ -54,7 +54,7 @@
 %
 %                                                                                    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [out] = LP_Ion_curr(V,I,Vsc,Vknee)
+function [out] = LP_Ion_curr(V,I,Vsc,Vknee,SM_Below_Vs)
 global CO IN     % Physical &instrumental constants
 global assmpt; %global assumptions
 
@@ -85,8 +85,12 @@ out.Vsc_aion =NaN;
 out.v_aion   =NaN;
 
 %global ALG;
-SM_Below_Vs =0.6;
 
+if nargin<5     %if SM_Below_Vs is not specified, default to 0.3
+  SM_Below_Vs =0.4; 
+end
+
+    
 %global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE; 
 
 
@@ -102,6 +106,8 @@ if isempty(ind)
     out.Q = 2;
     return
 end
+%remove first point. it's not very trustworthy due to smoothing.
+ind =ind(2:end);
 
                  
 % Use the lowest ALG.SM_Below_Vs*100% of the bias voltage, below the spacecraft potential
@@ -191,6 +197,11 @@ if (a(2) > 1)||(a(1) < 0) % if error is large (!) or slope in wrong direction (u
     P_Up(1) = a(1);
     P_Up(2) = b(1);
     
+    
+    if nargin<5     %Try it again with a different SM_below_Vs value.
+        [out] = LP_Ion_curr(V,I,Vsc,Vknee,0.6);
+        return
+    end
     
 end
 
