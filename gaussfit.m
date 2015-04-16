@@ -89,7 +89,7 @@ end
 % iterations
 
 
-h=0.25;
+h=0.25; %added euler stepsize FJ 26/6 2014
 
 
 for i=1:Nmax
@@ -106,7 +106,8 @@ for i=1:Nmax
     f0 = 1/(sqrt(2*pi)*sigma).*exp( -(x-mu).^2 /(2*sigma^2));
     da = (F'*F)^(-1)*F'*(y-f0);
    
-    a = da*h + a0; %%edited FJ 26/6 2014 ,the stepsize was much too large 
+    a = da*h + a0; %%edited FJ 26/6 2014 ,the stepsize was much too large
+    % and will diverge if not careful.
     %ideally, use leapfrog, central difference or Runge-Kutta method
     %instead of this
     sigma = a(1);

@@ -1,6 +1,7 @@
 %Computes a central difference derivative and second derivative, with some
-%smoothing if asked to.
-function [dx,d2x] = leapfd(x,y,varargin)
+%smoothing if asked to(i.e. if a spread for the smooth is one of the inputs).
+%the first and last derivative points is calculated by a forward and backward differentiaion
+function [dx,d2x] = centralDD(x,y,varargin)
 
 
 dx= zeros(length(y),1);
@@ -24,7 +25,7 @@ if len ==length(y)
     
         for j = 2: length(x)-1
     
-            %leapfrog derivative method
+            %central difference derivative method
     
             dx(j)= (x(j-1)-x(j+1))/(y(j-1)-y(j+1)); %dx/dy
     
@@ -47,7 +48,7 @@ if len ==length(y)
     
     
     for j= 2:length(x)-1
-            %leapfrog derivative method
+            %central difference derivative method
             d2x(j)= (dx(j-1)-dx(j+1))/(y(j-1)-y(j+1)); %d2x/dy^2
     
         end%for
