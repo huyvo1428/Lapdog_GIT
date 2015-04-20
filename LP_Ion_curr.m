@@ -87,7 +87,7 @@ out.v_aion   =NaN;
 %global ALG;
 SM_Below_Vs =0.6;
 
-global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE; 
+%global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE; 
 
 
 % Find the number of data points in the sweep
@@ -179,7 +179,7 @@ P_Up(2) = P_Vb(2)-P_Vb(1)*Vknee; %same slope, but intersect if ions are function
 
 
 
-if a(2) > 1 % if error is large (!)
+if (a(2) > 1)||(a(1) < 0) % if error is large (!) or slope in wrong direction (unphysical)
     
     a = [0 0]; % no slope
     b = [mean(Ir) std(Ir)]; % offset    
@@ -203,58 +203,69 @@ end
 % contribution would not be sensible), extended to the full range of the
 % potential sweep, is a good approximation to the ion current, and that is
 % what is returned from this function
-
-Ii(1:len) = a(1)*V+b(1);% overall ion current fit 
-% IiVp = V_Vp(1)*(V-Vsc) + b(1);
-% IiUp = V_Up(1)*(V-Vknee) + b(1);
-% 
-% 
-
-%Ii(1:len) = 0;
-
-%Ii(1:length(Vi)) = a*Vi;
-
-%Ii2(1:length(Vi)) = polyval(P,Vi);    % The current is calculated across the entire potential
-                      % sweep. The function polyval returns the value of the
-                      % polynomial P evaluated at all the points of the vector V.
-
-Ii = (Ii-abs(Ii))/2; % The positive part is removed, leaving only a negative
-                      % current contribution. This is the return current
-                      % The function abs returns the absolute value of the
-                      % elements of the calling parameter.
-%                       
-% IiVp = (IiVp-abs(IiVp))/2;                       
-% IiUp = (IiUp-abs(IiUp))/2;                       
-% 
-%   
-
-out.I = Ii;
-out.a = a;
-out.b = b;
-out.Vpa = [P_Vp(1) a(2)];
-out.Vpb = [P_Vp(2) b(2)];
-out.mean = [mean(Ir) std(Ir)]; % offset  
-out.Upa = [P_Up(1) a(2)];
-out.Upb = [P_Up(2) b(2)];
-
-
-
-% Calculate ion densities velocities
-
-out.ni_1comp     = max((1e-6 * out.Vpa(1) *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
-
-if (out.Vpb(1) < 0) %unphysical if intersection is above zero!
-    out.ni_2comp    = (1e-6/(IN.probe_cA*CO.e))*sqrt((-assmpt.ionM*CO.mp*(out.Vpb(1)) *out.Vpa(1) /(2*CO.e)));
-    out.v_ion       =  out.ni_2comp     *assmpt.vram/out.ni_1comp;
-end
-
-%Accelerated ions calculations
-
-if (out.Upb(1) < 0) %unphysical if intersection is above zero!
-    out.ni_aion     = (1e-6/(IN.probe_cA))*sqrt((-assmpt.ionM*CO.mp*out.Upa(1)*out.Upb(1)/((2*CO.e.^3))));
-    out.v_aion      = sqrt(-2*CO.e*(out.Vsc_aion-Vknee)/(CO.mp*assmpt.ionM));
-end
+   
+    Ii(1:len) = a(1)*V+b(1);% overall ion current fit
+    % IiVp = V_Vp(1)*(V-Vsc) + b(1);
+    % IiUp = V_Up(1)*(V-Vknee) + b(1);
+    %
+    %
+    
+    %Ii(1:len) = 0;
+    
+    %Ii(1:length(Vi)) = a*Vi;
+    
+    %Ii2(1:length(Vi)) = polyval(P,Vi);    % The current is calculated across the entire potential
+    % sweep. The function polyval returns the value of the
+    % polynomial P evaluated at all the points of the vector V.
+    
+    Ii = (Ii-abs(Ii))/2; % The positive part is removed, leaving only a negative
+    % current contribution. This is the return current
+    % The function abs returns the absolute value of the
+    % elements of the calling parameter.
+    
+    %
+    
+    
+    % IiVp = (IiVp-abs(IiVp))/2;
+    % IiUp = (IiUp-abs(IiUp))/2;
+    %
+    %
+    
+    out.I = Ii;
+    out.a = a;
+    out.b = b;
+    out.Vpa = [P_Vp(1) a(2)];
+    out.Vpb = [P_Vp(2) b(2)];
+    out.mean = [mean(Ir) std(Ir)]; % offset
+    out.Upa = [P_Up(1) a(2)];
+    out.Upb = [P_Up(2) b(2)];
+    
+    
+    
+    % Calculate ion densities velocities
+    
+    out.ni_1comp     = max((1e-6 * out.Vpa(1) *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
+    
+    if (out.Vpb(1) < 0) %unphysical if intersection is above zero!
+        out.ni_2comp    = (1e-6/(IN.probe_cA*CO.e))*sqrt((-assmpt.ionM*CO.mp*(out.Vpb(1)) *out.Vpa(1) /(2*CO.e)));
+        out.v_ion       =  out.ni_2comp     *assmpt.vram/out.ni_1comp;
+    end
+    
+    %Accelerated ions calculations
+    
+    if (out.Upb(1) < 0) %unphysical if intersection is above zero!
+        out.ni_aion     = (1e-6/(IN.probe_cA))*sqrt((-assmpt.ionM*CO.mp*out.Upa(1)*out.Upb(1)/((2*CO.e.^3))));
+    end
+    
+    if out.Upa(1) ~= 0
     out.Vsc_aion    = Vknee  +out.Upb(1)/out.Upa(1);
+    out.v_aion      = sqrt(-2*CO.e*(out.Vsc_aion-Vknee)/(CO.mp*assmpt.ionM));
+    end
+
+  % Ii(1:len) = 0;
+ %   out.I = Ii; initialised to zero
+
+
 
     
 

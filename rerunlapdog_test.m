@@ -165,18 +165,20 @@ end
     
     
     
+if ge(remake_index,0)
 
+    % Generate daily geometry files:
+    if(do_geom)
+        fprintf(1,'lapdog: calling geometry...\n');
+        geometry;
+    end
+    
+    % Generate block list file:
+    
+    fprintf(1,'lapdog: calling opsblocks...\n');
+    opsblocks;
 
-% Generate daily geometry files:
-if(do_geom)
-    fprintf(1,'lapdog: calling geometry...\n');
-    geometry;
 end
-
-% Generate block list file:
-
-fprintf(1,'lapdog: calling opsblocks...\n');
-opsblocks;
 
 % Resample data
 tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);

@@ -166,7 +166,7 @@ for ii=1:n  % Loop the label files
               
               %update: sweep files have "initial sweep smpls" which is a
               %very useful variable.
-              
+         
               
               %update 2. erik changed keyword to be probe specific...
               % ind = find(strcmp('ROSETTA:LAP_INITIAL_SWEEP_SMPLS',var));
@@ -181,15 +181,16 @@ for ii=1:n  % Loop the label files
                   if(~isempty(str))
                       in_smpls = hex2dec(str(end-3:end)); %only need maximum last three, convert from hex to dec.
                   else
-                      str
+                      %str
                       in_smpls=0;
                   end
               else
-                  lname
+                  %lname
                   in_smpls=0;
               end
               
               index(i).pre_sweep_samples =in_smpls; % start collecting index
+              
               
           end
           

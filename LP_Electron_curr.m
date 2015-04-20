@@ -67,9 +67,6 @@ function [out] = LP_Electron_curr(V,I,Vsc,Vknee,illuminated)
 global an_debug VSC_TO_VPLASMA VSC_TO_VKNEE;
 global CO IN          % Physical &instrument constants
 
-m_e = 9.10938291E-31;
-q_e = 1.60217657E-19;
-
 %init outputs
 Te=NaN;
 ne=NaN;
@@ -77,7 +74,6 @@ Ie=I;
 Ie(1:end)=0;
 a=nan(1,2);
 b=nan(1,2);
-currvar=NaN;
 
 out = [];
 
@@ -164,13 +160,10 @@ Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note 
 % P = polyfit(Vr,Ilog,1); % Fitting linearly we have the temperature directly as
 % a = P(1);
 % b = P(2);
-
 % The inverse slope gives Te
 %Te = 1/a;
-
 % Compute the residual
 %residual = Ir - exp(b+a*Vr); % Retarded current subtracted from fitted current
-
 %Ie0 = exp(b);
 
 
@@ -198,19 +191,12 @@ s_Te=sqrt(a(2).^2+b(2).^2); %fractional error of Te,
 % 
 % residual = Ir - b(1)+a(1)*Vpr; %this equation is bad!! maybe (Ind
 % 
-% % Compute the rms error and scale by the current Ie0 at Vr=Vp=0
-% currvar = sqrt(sum((residual).^2)/len)/Ie0; % Compute the relative rms error
-% if currvar > 0.02
-%     out.Q = out.Q+2;
-% end
 
 
 
 % If Te is positive we can get the density as follows
 if(Te>=0 && ~isinf(Te))
-    %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
-    % current = charge*density * area *velocity
-    % ne = Ie0 / area*charge*velocity
+
 %    ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me))); %from
 %    intersect, but it is very sensitive to Vsc errors 
 
@@ -220,7 +206,6 @@ if(Te>=0 && ~isinf(Te))
     ne = ne /1E6;
     s_ne = sqrt((0.5*s_Te/sqrt(Te)).^2 +a(2).^2);
     
-    %ne2 = Ie0 /(0.25E-3*q_e*sqrt(q_e*Te/(2*pi*m_e)));
     
     %OBS. LP is not in perfect 0 V vaccuum, so expect the LP to be shielded from low energy electrons
     %i.e. giving a larger mean Te, and a lower ne. (see SPIS simulations)
@@ -254,11 +239,6 @@ end
 
 
 
-%Ie = polyval(P,V);    % The current is calculated across the entire potential
-% sweep. The function polyval returns the value of the
-% polynomial P evaluated at all the points of the vector V.
-%                       Ie = Ie0exp(Vp/Te)
-
 
 out.I = Ie;
 out.Vpa = a;
@@ -270,34 +250,6 @@ out.b = [PVb(2) b(2)];
 
 
 
-
-
-%     q_index=1;
-%     second_digit=LP_Quality.SD0_Nominal;
-%     if(currvar>LP_Quality.SM_Currv0) q_index=q_index+1; end;
-%     if(currvar>LP_Quality.SM_Currv1) q_index=q_index+1; end;
-%     if(currvar>LP_Quality.SM_Currv2) q_index=q_index+1; end;
-%     if(q_index>1)
-%         second_digit=LP_Quality.SD3_LargeVariations;
-%     end
-% Qtmp =0;
-%         Qtmp=LP_Quality.FD(q_index)*10+second_digit;
-% end
-% end
-
-% % If Te is not NaNs
-% if(~isnan(Te))
-%     Q(1)=Qtmp;
-% end
-%
-% % If Ne is not NaNs
-% if(~isnan(ne))
-%     Q(2)=Qtmp;
-% end
-% % If Vs is not NaNs
-% if(~isnan(Vsc))
-%     Q(3)=Qtmp;
-% end
 end
 
 

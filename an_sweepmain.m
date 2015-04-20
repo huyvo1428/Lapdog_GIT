@@ -186,22 +186,37 @@ try
         if strcmp(target,'CHURYUMOV-GERASIMENKO')
             
             %date = cspice_et2utc(cspice_str2et(Tarr{ 1,1}), 'ISOC', 0);
-            formatin = 'YYYY-mm-ddTHH:MM:SS';
-            date=  datenum(cspice_et2utc(cspice_str2et(Tarr{ 1,1}),'ISOC',0),formatin);
-            if date < datenum('2015-01-01T00:00:00',formatin);
+            %formatin = 'YYYY-mm-ddTHH:MM:SS';
+            %this if should have worked, but MatLab sucks between versions and
+            %linux/mac differences.
+            %            if datenum(Tarr{1,1}(1:19),formatin) < datenum('2015-01-01T00:00:00',formatin)378691143.436616
+            
+            
+            
+            if (str2double(Tarr{3,1}) < 378691127.436616) %sc clock start at 1 jan 2015 00:00:00.00000.
                 
-                assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
                 
+                if(str2double(Tarr{3,1}) < 370915207.526316) %1 oct 2014
+                    %  assmpt.Iph0 = -8.55e-09;
+                    
+                    %               if (str2double(Tarr{3,1}) < 378699451.239258) %sc clock start at 1 jan 2015 02:18:43.80539.
+                    assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
+                else
+                    assmpt.Iph0 = -8.55e-09;
+                end
+                
+                    
             else
-                                
                 assmpt.Iph0 = -1.19e-08; %from probe 1 Jan 03 & 29 Jan in and out of shadow
             end
-            
-            
-            assmpt.vram = 550; %m/s
-            assmpt.ionZ = +1; % ion charge
-            assmpt.ionM = 19; % atomic mass units
-            %assmpt.v_SW = 5E5; %500 km/s            
+
+            if (str2double(Tarr{3,1}) > 365904090.294412)%if past 6 aug 2014 (ESA blog post "arrival at comet"
+                
+                assmpt.vram = 550; %m/s
+                assmpt.ionZ = +1; % ion charge
+                assmpt.ionM = 19; % atomic mass units
+                %assmpt.v_SW = 5E5; %500 km/s
+            end
         end
         
         
@@ -363,7 +378,6 @@ try
         for k=1:len    % Iterate over first sweep in every potential sweep pair (one/two sweeps)
                         
             %  a= cspice_str2et(timing{1,k});
-            m = k;
             
             %% quality factor check
             qf= Qfarr(k);
@@ -389,24 +403,12 @@ try
             else
                 Vguess=-AP(k).vs;
             end
-
-            DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
-            DP_asm(k) = an_LP_Sweep_with_assmpt(Vb,Iarr(:,k),assmpt,EP(k).lum);
+              
+            [DP(k),DP_asm(k)] = an_LP_Sweep_v2(Vb, Iarr(:,k),Vguess,EP(k).lum);
+                       
+            %DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
+            %DP_asm(k) = an_LP_Sweep_with_assmpt(Vb,Iarr(:,k),assmpt,EP(k).lum);
  
-                            % Calculate ion densities velocities
-%             
-%             DP(k).ni_1comp     = max((1e-6 * DP(k).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
-%             DP_asm(k).ni_1comp = max((1e-6 * DP_asm(k).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);                 
-%             
-%          
-%             
-%             DP(k).ni_2comp     = (1e-6/(IN.probe_cA*CO.e))*sqrt(max((-assmpt.ionM*CO.mp*(DP(k).ion_intersect(1))       *DP(k).ion_slope(1)       /(2*CO.e)),0));%max out of expression and 0 -> if >0, ni=0;
-%             DP_asm(k).ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(max((-assmpt.ionM*CO.mp*(DP_asm(k).ion_intersect(1))*DP_asm(k).ion_slope(1)/(2*CO.e)),0)); %max out of expression and 0 -> if >0, ni=0;
-%             
-%      	    DP(k).v_ion     =  DP(k).ni_2comp    *assmpt.vram/DP(k).ni_1comp;                                                     
-%      	    DP_asm(k).v_ion =  DP_asm(k).ni_2comp*assmpt.vram/DP_asm(k).ni_1comp;
-                   
-            %%estimate electron densities
             
             
             Te_guess = 5;%eV
@@ -414,27 +416,11 @@ try
             %EP(k).asm_ne_5eV = abs(1e-6*DP_asm(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
             EP(k).ne_5eV     = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0); %max out of expression and 0 -> if >0, ne=0;
             EP(k).asm_ne_5eV = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_asm(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0);%max out of expression and 0 -> if >0, ne=0;
-            
-            
             EP(k).asm_Vsc_ni_ne =nansum((DP_asm(k).ion_Vb_intersect(1)-(sqrt(DP_asm(k).ion_intersect(1))*DP_asm(k).ne(1)/DP_asm(k).ni_2comp(1)).^2)/DP_asm(k).ion_slope(1));
-            EP(k).Vsc_ni_ne     =nansum((DP(k).ion_Vb_intersect(1)       -(sqrt(DP(k).ion_intersect(1))       *DP(k).ne(1)       /DP(k).ni_2comp(1)).^2)    /DP(k).ion_slope(1));
+            EP(k).Vsc_ni_ne     =nansum((DP(k).ion_Vb_intersect(1)    -(sqrt(DP(k).ion_intersect(1))     *DP(k).ne(1)   /DP(k).ni_2comp(1)).^2)    /DP(k).ion_slope(1));
             
 
-%             
-%             
-%             DP(k).ni_aion          = (1e-6/(IN.probe_cA))*sqrt(max((-assmpt.ionM*CO.mp*DP(k).ion_Up_slope(1)       *DP(k).ion_Up_intersect(1)       /((2*CO.e.^3))),0));
-%             DP_asm(k).ni_aion     = (1e-6/(IN.probe_cA))*sqrt(max((-assmpt.ionM*CO.mp*DP_asm(k).ion_Up_slope(1)*DP_asm(k).ion_Up_intersect(1)/((2*CO.e.^3))),0));
-% 
-%             DP(k).Vsc_aion        = DP(k).Vph_knee(1)       +DP(k).ion_Up_intersect(1)       /DP(k).ion_Up_slope(1) ;
-%             DP_asm(k).Vsc_aion    = DP_asm(k).Vph_knee(1)+DP_asm(k).ion_Up_intersect(1)/DP_asm(k).ion_Up_slope(1) ;
-%             
-%             
-%             DP(k).v_aion     = sqrt(-2*CO.e*(DP(k).Vsc_aion    -DP(k).Vph_knee(1))       /(CO.mp*assmpt.ionM));
-%             
-%             DP_asm(k).v_aion = sqrt(-2*CO.e*(DP_asm(k).Vsc_aion-DP_asm(k).Vph_knee(1))/(CO.mp*assmpt.ionM));
 
-%             out = EP(k)
-%             clear out
             
         end % for
         
@@ -443,9 +429,9 @@ try
         if (split~=0)    % If every sweep/pair is really two sweeps...
                         
             for k=1:length(Iarr2(1,:))     % Iterate over second sweep in every sweep pair (two sweeps together)
-                m=k+len;          %add to end of output array (fout{})
+                m=k+len;          
                 %note Vb =! Vb2, Iarr =! Iarr2, etc.
-                %% quality factor check
+                % quality factor check
                 qf= Qfarr(k);
                 
                 if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.05) %rotation of more than 0.01 degrees
@@ -468,71 +454,34 @@ try
                     Vguess=AP(m).vs; %use last calculation as a first guess
                 end
                 
-                DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),Vguess,EP(m).lum);                
-                DP_asm(m) = an_LP_Sweep_with_assmpt(Vb2,Iarr2(:,k),assmpt,EP(m).lum);
+                %DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),Vguess,EP(m).lum);                
+                %DP_asm(m) = an_LP_Sweep_with_assmpt(Vb2,Iarr2(:,k),assmpt,EP(m).lum);
                 
+               [DP(m),DP_asm(m)] = an_LP_Sweep_v2(Vb2,Iarr2(:,k),Vguess,EP(m).lum);
 
-                  % Calculate ion densities     
-%                 EP(m).ni_1comp     = max((1e-6 * DP(m).ion_slope(1)       *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
-%                 EP(m).asm_ni_1comp = max((1e-6 * DP_asm(m).ion_slope(1)*assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
-%                 
-% 
-%                 
-%                 EP(m).ni_2comp     = (1e-6/(IN.probe_cA*CO.e))*sqrt(max(assmpt.ionM*CO.mp*(DP(m).ion_intersect(1))*DP(m).ion_slope(1)/(2*CO.e),0)); %max out of expression and 0 -> if >0, ni=0;
-%                 EP(m).asm_ni_2comp = (1e-6/(IN.probe_cA*CO.e))*sqrt(max(assmpt.ionM*CO.mp*(DP_asm(m).ion_intersect(1))*DP_asm(m).ion_slope(1)/(2*CO.e),0)); %max out of expression and 0 -> if >0, ni=0;
-% 
-% 
-%                 EP(m).v_ion     =  EP(m).ni_2comp    *assmpt.vram/EP(m).ni_1comp;
-%                 EP(m).asm_v_ion =  EP(m).asm_ni_2comp*assmpt.vram/EP(m).asm_ni_1comp;
-% 
-%                 
-%                 %%estimate electron densities
-%                 
-                
+
                 
                 Te_guess = 5;%eV
                 %EP(m).ne_5eV = abs(1e-6*DP(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
                 %EP(m).asm_ne_5eV = abs(1e-6*DP_asm(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));                
 
                 EP(m).ne_5eV= max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0); %max out of expression and 0 -> if >0, n=0;
-                EP(m).asm_ne_5eV = max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_asm(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0);  %max out of expression and 0 -> if >0, ni=0;
-            
-
-                
+                EP(m).asm_ne_5eV = max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_asm(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0);  %max out of expression and 0 -> if >0, ni=0;        
                 EP(m).asm_Vsc_ni_ne =nansum((DP_asm(k).ion_Vb_intersect(1)-(sqrt(DP_asm(k).ion_intersect(1))*DP_asm(k).ne(1)/DP_asm(k).ni_2comp(1)).^2)/DP_asm(k).ion_slope(1));
                 EP(m).Vsc_ni_ne =nansum((DP(k).ion_Vb_intersect(1)-(sqrt(DP(k).ion_intersect(1))*DP(k).ne(1)/DP(k).ni_2comp(1)).^2)/DP(k).ion_slope(1));
                 
-%                 
-% 
-%                 
-%                 EP(m).ni_aion         = (1e-6/(IN.probe_cA))*sqrt(max((-assmpt.ionM*CO.mp*DP(m).ion_Up_slope(1)       *DP(m).ion_Up_intersect(1)       /((2*CO.e.^3))),0));
-%                 EP(m).asm_ni_aion     = (1e-6/(IN.probe_cA))*sqrt(max((-assmpt.ionM*CO.mp*DP_asm(m).ion_Up_slope(1)*DP_asm(m).ion_Up_intersect(1)/((2*CO.e.^3))),0));
-% 
-%                 EP(m).Vsc_aion        = DP(m).Vph_knee(1)       +DP(m).ion_Up_intersect(1)       / DP(m).ion_Up_slope(1) ;
-%                 EP(m).asm_Vsc_aion    = DP_asm(m).Vph_knee(1)+DP_asm(m).ion_Up_intersect(1)/DP_asm(m).ion_Up_slope(1) ;
-%                 
-%                 
-%                 
-%                 EP(m).v_aion     = sqrt(-2*CO.e*(EP(m).Vsc_aion -   DP(m).Vph_knee(1))       /(CO.mp*assmpt.ionM));
-%                 EP(m).asm_v_aion = sqrt(-2*CO.e*(EP(m).asm_Vsc_aion-DP_asm(m).Vph_knee(1))/(CO.mp*assmpt.ionM));
-%                 
-                
+
                 
                 
             end%for
         end%if split
         
-    %    fout = sortrows(fout,6);
-        %  [foutarr,~] = sortrows{foutarr,6,'ascend'};
-
-        
         [junk,ind] = sort({EP.tstamp});
-        
-  %      [junk,ind] = sort({EP.tstamp});
         klen=length(ind);
 
         AP=AP(ind);
         DP=DP(ind);
+        DP_asm=DP_asm(ind);
         EP=EP(ind);
         wfile= rfile;
         wfile(end-6)='A';
