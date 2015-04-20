@@ -7,7 +7,7 @@
 t_start_analysis = clock;    % NOTE: Not number of seconds, but [year month day hour minute seconds].
 
 global an_tabindex an_debug;
-an_tabindex = [];
+an_tabindex = zeros(0, 9);
 an_debug = 0; %debugging on or off!
 
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);

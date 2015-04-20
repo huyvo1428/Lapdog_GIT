@@ -1,7 +1,7 @@
 % Create LBL file for TAB file.
 % Only for LBL files based on one OBJECT = TABLE section plus headers.
 %
-% NOTE: NOT INTEGRATED INTO CODE YET. 
+% NOTE: NOT INTEGRATED INTO CODE YET / NOT USED YET.
 %       Does not "fit in" yet as should rely on adding keys to kvl_header, but kvl_header
 %       is often constructed by reading from LBL file, i.e. includes FILE_NAME
 %       Best estimates uses a kvl_set list to handle collisions. ==> May require ignore list there.
@@ -10,6 +10,8 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, kvl_header, OBJTABLE_
 % PROPOSAL: Should set RECORD_BYTES if it really is the TAB file size.
 % PROPOSAL: Should set FILE, ^TABLE, PRODUCT_ID
 % PROPOSAL: Set or check RECORD_TYPE=FIXED_LENGTH.
+% PROPOSAL: Should set PRODUCT_ID.
+%    NOTE: Rosetta Archive Conventions specifies that it should be filename without extension.
 %
 % PROPOSAL: Create ignore list for deleting keys after reading LBL file header key-values?
 

@@ -62,7 +62,7 @@ fp = fopen(indexfile,'r');
 if(fp > 0)
      fclose(fp);
      load(indexfile);
- else
+else
     
     fprintf(1,'lapdog: calling indexgen\n')    
     indexgen;
@@ -77,7 +77,7 @@ if(fp > 0)
     
 
     save(indexfile,'index');
- end
+end
 
 
 % Generate daily geometry files:

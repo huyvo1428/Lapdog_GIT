@@ -72,21 +72,21 @@ function kvl_EST_header = createLBL_create_EST_LBL_header(an_tabindex_record, in
 
                 key = kv1.keys{i1};
                 kvset_has_key = ~isempty(find(strcmp(key, kvl_set.keys)));
-                if kvset_has_key                                    % If kvl_set contains information on how to set value...
+                if kvset_has_key                                    % If kvl_set contains information on how to set value... ==> Use kvl_set later...
                     % IMPLEMENTATION NOTE: Can not set values here since this only covers the case of having two source LBL files.
                     kvl_EST_header.keys  {end+1, 1} = key;
                     kvl_EST_header.values{end+1, 1} = '<Temporary - This value should be overwritten automatically.>';
 
-                elseif strcmp(kv1.values{i1}, kv2.values{i1})       % If key AND value collision... (No problem)
+                elseif strcmp(kv1.values{i1}, kv2.values{i1})       % If key AND value collision... ==> No problem, use value.
                     kvl_EST_header.keys  {end+1, 1} = kv1.keys  {i1};
                     kvl_EST_header.values{end+1, 1} = kv1.values{i1};
 
-                else                                      % If has no information on how to resolve collision...
+                else                                      % If has no information on how to resolve collision... ==> Problem, error.
                     error_msg = sprintf('ERROR: Does not know what to do with LBL/ODL key collision for key="%s".\n', key);
                     error_msg = [error_msg, sprintf('with two different values: value="%s", value="%s\n".', kv1.values{i1}, kv2.values{i1})];
                     error_msg = [error_msg, sprintf('an_tabindex_record{1} = %s\n', an_tabindex_record{1})];
                     error(error_msg)
-                end            
+                end
 
             else  % If not key collision....
                 kvl_EST_header.keys  {end+1,1} = kv1.keys  {i1};
@@ -97,7 +97,7 @@ function kvl_EST_header = createLBL_create_EST_LBL_header(an_tabindex_record, in
         end
     end
 
-    kvl_EST_header = createLBL_KVPL_overwrite_values(kvl_EST_header, kvl_set);
-    
+    kvl_EST_header = createLBL_KVPL_overwrite_values(kvl_EST_header, kvl_set);   % NOTE: Must do this for both N_src_files == 1, AND == 2.
+
 end
 

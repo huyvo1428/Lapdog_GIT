@@ -6,9 +6,10 @@
 % fid = file identifier of file opened & closed outside of this function.
 %
 % data = struct with the following fields.
-%    data.ROWS                % lapdog: an_tabindex{i,4}
-%    data.ROW_BYTES           % lapdog: an_tabindex{i,9}
-%    data.DESCRIPTION         % Description for entire table
+%    data.COLUMNS_consistency_check     % Value from when writing TAB file. For double-checking.  tabindex{i, 6};
+%    data.ROW_BYTES_consistency_check   % Value from when writing TAB file. For double-checking.  tabindex{i, 7}, an_tabindex{i,9}
+%    data.ROWS                          % lapdog: an_tabindex{i,4}
+%    data.DESCRIPTION                   % Description for entire table.
 %    data.OBJCOL_list{i}.NAME               
 %    data.OBJCOL_list{i}.BYTES
 %    data.OBJCOL_list{i}.DATA_TYPE
@@ -23,7 +24,7 @@
 %
 % NOTE: The function does not write a finishing "END".
 %
-function createLBL_writeObjectTable(fid, data)
+function createLBL_writeObjectTable(fid, data, TAB_LBL_inconsistency_policy)
 %
 % TODO: Clarify for when values are quoted or not. Variable prefix? ODL standard says what?
 %
@@ -32,7 +33,6 @@ function createLBL_writeObjectTable(fid, data)
 %
 % PROPOSAL: Default values for absent fields (keywords).
 %    CON: Misspelled field names may mistakenly lead to default values. ==> Do not use. Absent fields should always give error.
-% PROPOSAL: Hardcode DELIMITER value?
 %
 % PROBLEM: Replacing [] with 'N/A'. Caller may use [] as a placeholder before knowing the proper value, rather than in the meaning of no value (N/A).
 % 
@@ -42,13 +42,13 @@ function createLBL_writeObjectTable(fid, data)
 % PROPOSAL: Calculate ROW_BYTES, but let caller submit a value (in an argument with another name) for what it should be
 % from the TAB files actually created ("empirically") for double-checking.
 
-
-
+    
 
     % Constants:
     BYTES_BETWEEN_COLUMNS = 2;
-    BYTES_PER_LINEBREAK = 2;      % carriage return+linefeed. Derive using sprint from linebreak_symbols constant?!!
+    BYTES_PER_LINEBREAK = 2;      % Carriage return + line feed.
     INDENTATION = '    ';
+    PERMITTED_DATA_FIELD_NAMES   = {'COLUMNS_consistency_check', 'ROW_BYTES_consistency_check', 'ROWS', 'DESCRIPTION', 'OBJCOL_list'};  % NOTE: Exclude COLUMNS, ROW_BYTES, DELIMITER.
     PERMITTED_OBJCOL_FIELD_NAMES = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'FORMAT', 'ITEMS', 'MISSING_CONSTANT', 'DESCRIPTION'};
     
     indentation_level = 0;
@@ -61,23 +61,34 @@ function createLBL_writeObjectTable(fid, data)
     
     
     
+    % --------------------------------------------------------------
+    % Check if caller only uses permissible field names. Disable?
+    % Useful when changing field names.
+    % --------------------------------------------------------------
+    if any(~ismember(fieldnames(data), PERMITTED_DATA_FIELD_NAMES))
+        error('ERROR: Found illegal field name(s) in parameter "data".')
+    end
+    
     %----------------------------------------------------------------------
-    % When a caller takes values from tabindex etc, and they are sometimes
+    % When a caller takes values from tabindex, an_tabindex etc, and they are sometimes
     % mistakenly set to []. Therefore this check is useful. Mistake might
-    % otherwise be discovered by by examining LBL files.
+    % otherwise be discovered first when examining LBL files.
     %----------------------------------------------------------------------
-    if isempty(data.COLUMNS) || isempty(data.ROW_BYTES) || isempty(data.ROWS)
+    if isempty(data.COLUMNS_consistency_check) || isempty(data.ROW_BYTES_consistency_check) || isempty(data.ROWS)
         error('ERROR: Trying to use empty value.')
     end
     
     %--------------------------------------------------------------------------------------------------
-    % Iterate over ODL OBJECT COLUMN; Consistency checks.
-    % Calculate number of TAB file columns (taking ITEMS into account) rather than take from argument.
-    % Calculate "ROW_BYTES" rather than take from argument (which takes from tabindex/an_tabindex).
+    % Iterate over ODL OBJECT COLUMN
+    % ------------------------------
+    % Calculate "COLUMNS" (taking ITEMS into account) rather than take from argument.
+    % Calculate "ROW_BYTES" rather than take from argument.
     % NOTE: ROW_BYTES is only correct if fprintf prints correctly when creating the TAB file.
     %--------------------------------------------------------------------------------------------------
-    N_row_bytes_calc = 0;
-    N_TAB_cols_calc = 0;
+    %N_row_bytes_calc = 0;
+    data.ROW_BYTES = 0;
+    %N_TAB_cols_calc = 0;
+    data.COLUMNS = 0;
     OBJCOL_names_list = {};
     for i = 1:length(data.OBJCOL_list)
         cd = data.OBJCOL_list{i};       % cd = column data
@@ -90,7 +101,7 @@ function createLBL_writeObjectTable(fid, data)
         % or adding fields that are never used by the function.
         % --------------------------------------------------------------
         if any(~ismember(fieldnames(cd), PERMITTED_OBJCOL_FIELD_NAMES))
-            error('ERROR: Found illegal field name(s).')
+            error('ERROR: Found illegal COLUMN OBJECT field name(s).')
         end
         
         if isfield(cd, 'ITEMS')
@@ -98,11 +109,14 @@ function createLBL_writeObjectTable(fid, data)
         else
             N_subcolumns = 1;
         end
-        N_TAB_cols_calc = N_TAB_cols_calc + N_subcolumns;
-        N_row_bytes_calc = N_row_bytes_calc + N_subcolumns*(cd.BYTES + BYTES_BETWEEN_COLUMNS);
+        %N_TAB_cols_calc = N_TAB_cols_calc + N_subcolumns;
+        data.COLUMNS = data.COLUMNS + N_subcolumns;
+        %N_row_bytes_calc = N_row_bytes_calc + N_subcolumns*(cd.BYTES + BYTES_BETWEEN_COLUMNS);
+        data.ROW_BYTES = data.ROW_BYTES + N_subcolumns*(cd.BYTES + BYTES_BETWEEN_COLUMNS);
         OBJCOL_names_list{end+1} = cd.NAME;
     end
-    N_row_bytes_calc = N_row_bytes_calc - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;
+    %N_row_bytes_calc = N_row_bytes_calc - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;
+    data.ROW_BYTES = data.ROW_BYTES - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;
     
     
     
@@ -117,45 +131,44 @@ function createLBL_writeObjectTable(fid, data)
     
     
     % ------------------------------------------------------------
-    % Check stated ROW_BYTES corresponds to the derived ROW_BYTES.
+    % Do consistency checks.
     % ------------------------------------------------------------
     % Since it unclear whether ROW_BYTES includes line breaks or not,
     % allow a small difference, for now.
     % /Erik P G Johansson 2015-01-15
     % ------------------------------------------------------------
-    if ~ismember(N_row_bytes_calc - data.ROW_BYTES, [0, -1])
-        fprintf(1, 'fopen(fid) = %s\n', fopen(fid));
-        fprintf(1, 'N_row_bytes_calc = %i\n', N_row_bytes_calc);
-        fprintf(1, 'data.ROW_BYTES   = %i\n', data.ROW_BYTES);
-        msg = 'data.ROW_BYTES disagrees with the corresponding calculated value.';
-        fprintf(1, '%s\n', msg)     % Print since warning is sometimes turned off automatically. Change?
-        warning(msg)
-        %error(msg)
+    %if ~ismember(N_row_bytes_calc - data.ROW_BYTES, [0, -1])
+    %if ~ismember(data.ROW_BYTES - data.ROW_BYTES_consistency_check, [0, -1])
+    if data.ROW_BYTES ~= data.ROW_BYTES_consistency_check
+        msg =       sprintf('fopen(fid) = %s\n', fopen(fid));
+        msg = [msg, sprintf('data.ROW_BYTES (derived)         = %i\n', data.ROW_BYTES)];
+        msg = [msg, sprintf('data.ROW_BYTES_consistency_check = %i\n', data.ROW_BYTES_consistency_check)];
+        msg = [msg,         'data.ROW_BYTES deviates from the consistency check value.'];
+        warning_error___LOCAL(msg, TAB_LBL_inconsistency_policy)
     end
     
-    if N_TAB_cols_calc ~= data.COLUMNS
-        fprintf(1, 'fopen(fid) = %s\n', fopen(fid));
-        fprintf(1, 'N_TAB_cols_calc = %i\n', N_TAB_cols_calc);
-        fprintf(1, 'data.COLUMNS    = %i\n', data.COLUMNS);
-        msg = 'data.COLUMNS disagrees with the corresponding calculated value.';
-        fprintf(1, '%s\n', msg)     % Print since warning is sometimes turned off automatically. Change?
-        warning(msg)
-        %error(msg)
+    %if (N_TAB_cols_calc ~= data.COLUMNS) & (enable_TAB_inconsistency_error_msg)
+    if (data.COLUMNS ~= data.COLUMNS_consistency_check)
+        msg =       sprintf('fopen(fid) = %s\n', fopen(fid));
+        msg = [msg, sprintf('data.COLUMNS (derived)         = %i\n', data.COLUMNS)];
+        msg = [msg, sprintf('data.COLUMNS_consistency_check = %i\n', data.COLUMNS_consistency_check)];
+        msg = [msg,         'data.COLUMNS deviates from the consistency check value.'];        
+        warning_error___LOCAL(msg, TAB_LBL_inconsistency_policy)
     end
-    
 
-    
-    %---------------
+
+
+    %===============
     % Write to file
-    %---------------
-    indented_print(+1, 'OBJECT = TABLE');
-    indented_print( 0,     'INTERCHANGE_FORMAT = ASCII');
-    indented_print( 0,     'ROWS               = %d',   data.ROWS );
-    indented_print( 0,     'COLUMNS            = %d',   data.COLUMNS);
-    indented_print( 0,     'ROW_BYTES          = %d',   data.ROW_BYTES);
-    indented_print( 0,     'DESCRIPTION        = "%s"', data.DESCRIPTION);
+    %===============
+    ind_print___LOCAL(+1, 'OBJECT = TABLE');
+    ind_print___LOCAL( 0,     'INTERCHANGE_FORMAT = ASCII');
+    ind_print___LOCAL( 0,     'ROWS               = %d',   data.ROWS );
+    ind_print___LOCAL( 0,     'COLUMNS            = %d',   data.COLUMNS);
+    ind_print___LOCAL( 0,     'ROW_BYTES          = %d',   data.ROW_BYTES);
+    ind_print___LOCAL( 0,     'DESCRIPTION        = "%s"', data.DESCRIPTION);
     %if isfield(data, 'DELIMITER')
-    %    indented_print( 0, 'DELIMITER          = "%s"', data.DELIMITER);
+    %    ind_print___LOCAL( 0, 'DELIMITER          = "%s"', data.DELIMITER);
     %end
 
     current_row_byte = 1;    % Starts with one, not zero.
@@ -172,35 +185,35 @@ function createLBL_writeObjectTable(fid, data)
             cd.DESCRIPTION = 'N/A';   % NOTE: Quotes are added later.
         else
             if ~isempty(strfind(cd.DESCRIPTION, '"'))
-                error('Column description contains quotes.')
+                error('Parameter field DESCRIPTION contains quotes. This is not needed as quotes are added automatically.')
             end
         end
         
-        indented_print(+1, 'OBJECT = COLUMN');
-        indented_print( 0,     'NAME             = %s', cd.NAME);
-        indented_print( 0,     'START_BYTE       = %i', current_row_byte);
-        indented_print( 0,     'BYTES            = %i', cd.BYTES);
-        indented_print( 0,     'DATA_TYPE        = %s', cd.DATA_TYPE);
-        indented_print( 0,     'UNIT             = %s', cd.UNIT);
+        ind_print___LOCAL(+1, 'OBJECT = COLUMN');
+        ind_print___LOCAL( 0,     'NAME             = %s', cd.NAME);
+        ind_print___LOCAL( 0,     'START_BYTE       = %i', current_row_byte);
+        ind_print___LOCAL( 0,     'BYTES            = %i', cd.BYTES);
+        ind_print___LOCAL( 0,     'DATA_TYPE        = %s', cd.DATA_TYPE);
+        ind_print___LOCAL( 0,     'UNIT             = %s', cd.UNIT);
         if isfield(cd, 'FORMAT')
-            indented_print( 0, 'FORMAT           = %s', cd.FORMAT);
+            ind_print___LOCAL( 0, 'FORMAT           = %s', cd.FORMAT);
         end
         if isfield(cd, 'MISSING_CONSTANT')
-            indented_print( 0, 'MISSING_CONSTANT = %f', cd.MISSING_CONSTANT);
+            ind_print___LOCAL( 0, 'MISSING_CONSTANT = %f', cd.MISSING_CONSTANT);
         end
         if isfield(cd, 'ITEMS')
-            indented_print( 0, 'ITEMS            = %i', cd.ITEMS);
+            ind_print___LOCAL( 0, 'ITEMS            = %i', cd.ITEMS);
             N_subcolumns = cd.ITEMS;
         else
             N_subcolumns = 1;
         end
-        indented_print( 0,     'DESCRIPTION = "%s"', cd.DESCRIPTION);      % NOTE: Added quotes.
-        indented_print(-1, 'END_OBJECT = COLUMN');
+        ind_print___LOCAL( 0,     'DESCRIPTION = "%s"', cd.DESCRIPTION);      % NOTE: Added quotes.
+        ind_print___LOCAL(-1, 'END_OBJECT = COLUMN');
         
         current_row_byte = current_row_byte + N_subcolumns*cd.BYTES + BYTES_BETWEEN_COLUMNS;
     end
      
-    indented_print(-1, 'END_OBJECT = TABLE');
+    ind_print___LOCAL(-1, 'END_OBJECT = TABLE');
     
     %##########################################################################################################
     
@@ -214,7 +227,7 @@ function createLBL_writeObjectTable(fid, data)
     %
     % NOTE: Adds correct carriage return and line feed at the end.
     %------------------------------------------------------------------------------------------
-    function indented_print(varargin)
+    function ind_print___LOCAL(varargin)
         indentation_increment = varargin{1};        
         printf_str = [varargin{2}, '\r\n'];
         printf_arg = varargin(3:end);
@@ -231,9 +244,17 @@ function createLBL_writeObjectTable(fid, data)
         end
     end
 
-    % ------------------------------------------------------------------------------------------
+    %##########################################################################################################
+    
+    function warning_error___LOCAL(msg, policy)
+        if strcmp(policy, 'warning')
+            %fprintf(1, '%s\n', msg)     % Print since warning is sometimes turned off automatically. Change?
+            warning(msg)
+        elseif strcmp(policy, 'error')
+            error(msg)
+        elseif ~strcmp(policy, 'nothing')
+            error('Can not interpret warning/error policy.')
+        end
+    end
     
 end
-
-
-

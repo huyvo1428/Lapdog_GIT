@@ -1,4 +1,4 @@
- % main -- LAP Dataset Overview and Geometry (lapdog) main file
+% main -- LAP Dataset Overview and Geometry (lapdog) main file
 %
 % Create overview of LAP ops and geometry files for a given data set.
 % anders.eriksson@irfu.se 2012-03-29
@@ -30,9 +30,9 @@
 %workflow
     
 
-
 'LAPDOG - LAP Data Overview and Geometry'
 ''
+tic
 
 % Define the dataset:
 'lapdog: calling control...'
@@ -50,9 +50,6 @@ preamble;
 indexversion = '2'; %index updated with a new variable 17Dec 2014
 indexfile = sprintf('index/index_%s_v%s.mat',archiveid,indexversion);
 
-
-%if (exist(indexfile) == 2)
-
 if index_cache_enabled & (exist(indexfile) == 2)
     load(indexfile);
 else
@@ -63,6 +60,20 @@ else
     save(indexfile,'index');
 end
 
+
+%--------------------------------------------
+% i_keep = [];
+% for i = 1:length(index)    
+%     if ~isempty(strfind(index(i).lblfile, '/2014/AUG/D17/'))
+%         i_keep(end+1) = i;
+%     end
+%     if isempty(strfind(index(i).lblfile, '/home/erjo/LAP_ARCHIVE_test/RO-C-RPCLAP-3-1408-CALIB-V0.3/'))
+%         ''
+%     end
+%     
+%end
+%index = index(i_keep);
+%--------------------------------------------
 
 
 scResetCount=str2double(index(1).sct0str(2));
@@ -79,11 +90,9 @@ opsblocks;
 
 tabindexfile = sprintf('tabindex/tabindex_%s.mat',archiveid);
 
-%if (exist(tabindexfile) == 2)
-
 if tabindex_cache_enabled & (exist(tabindexfile) == 2)
     load(tabindexfile);
-    'lapdog: succesfully loaded tabfiles'
+    'lapdog: successfully loaded tabfiles'
 else
     'lapdog: calling process...'
     process;  
@@ -94,18 +103,20 @@ else
     save(tabindexfile,'tabindex');
 end
 
+%return % DEBUG
 
-
-save(['~/temp.', shortphase, '.allvarsBeforeAnalysis.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
+%save(['~/temp_MATLAB/temp.', shortphase, '.allVarsBeforeAnalysis.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
 analysis;
 
 
 
 
-save(['~/temp.', shortphase, '.allvarsBeforeCreateLBL.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
 'lapdog: generate LBL files....'
+%save(['~/temp_MATLAB/temp.', shortphase, '.allVarsBeforeCreateLBL.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
 createLBL
 
 
 'lapdog: Parmesan -Done!'
+toc
 % End of main.m
+

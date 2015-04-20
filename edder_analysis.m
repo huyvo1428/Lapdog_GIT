@@ -5,7 +5,7 @@
 
 
 global an_tabindex;
-an_tabindex = [];
+an_tabindex = zeros(0, 9);
 
 %for i=1:length(tabindex);
 

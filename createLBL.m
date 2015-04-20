@@ -1,7 +1,12 @@
 %createLBL.m
 %CREATE .LBL FILES, FROM PREVIOUS LBL FILES
 
+% BUG?: RECORD_BYTES should be number of TAB file rows, not TAB file size?!
+
 t_start = clock;    % NOTE: Not number of seconds, but [year month day hour minute seconds].
+warnings_settings = warning('query');
+warning('on', 'all')
+general_TAB_LBL_inconsistency_policy = 'warning';
 
 
 
@@ -87,27 +92,24 @@ if(~isempty(tabindex));
             kvl_LBL_CALIB.keys   = CALIB_LBL_str.keys(1:end-1);    % NOTE: CALIB_LBL_str includes OBJECT = TABLE as last key-value pair.
             kvl_LBL_CALIB.values = CALIB_LBL_str.values(1:end-1);
             kvl_LBL_CALIB = createLBL_compatibility_substitute_LBL_keys(kvl_LBL_CALIB, str2num(Pnum));
-            
-            SPACECRAFT_CLOCK_STOP_COUNT = sprintf('"%s/%014.3f"', index(tabindex{i,3}).sct0str(2), obt2sct(tabindex{i,5})); % get resetcount from above, and calculate obt from sct
-            
-            kvl_LBL_set = [];
-            kvl_LBL_set.keys = {};
-            kvl_LBL_set.values = {};
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'RECORD_BYTES',                 num2str(fileinfo.bytes));
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'FILE_RECORDS',                 num2str(tabindex{i,6}));
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'FILE_NAME',                    lname);
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, '^TABLE',                       tname);
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'PRODUCT_ID',                   tname(1:end-4));
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'START_TIME',                   index(tabindex{i,3}).t0str(1:23)); % UTC start time
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'STOP_TIME',                    tabindex{i,4}(1:23));              % UTC stop time
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'SPACECRAFT_CLOCK_START_COUNT', index(tabindex{i,3}).sct0str);
-            kvl_LBL_set = createLBL_KVPL_add_kv_pair(kvl_LBL_set, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
-            
-            kvl_LBL = createLBL_KVPL_merge(kvl_LBL_set, kvl_LBL_all);
-            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL);
-            clear kvl_LBL_CALIB
 
-            
+            SPACECRAFT_CLOCK_STOP_COUNT = sprintf('"%s/%014.3f"', index(tabindex{i,3}).sct0str(2), obt2sct(tabindex{i,5})); % get resetcount from above, and calculate obt from sct
+
+            kvl_LBL = kvl_LBL_all;
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'FILE_NAME',                    lname);
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, '^TABLE',                       tname);
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'RECORD_BYTES',                 num2str(fileinfo.bytes));   % BUG?!!
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'FILE_RECORDS',                 num2str(tabindex{i,6}));
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'PRODUCT_ID',                   tname(1:end-4));
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'START_TIME',                   index(tabindex{i,3}).t0str(1:23));  % UTC start time
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'STOP_TIME',                    tabindex{i,4}(1:23));               % UTC stop time
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', index(tabindex{i,3}).sct0str);
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
+
+            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL);
+            clear   kvl_LBL_CALIB
+
+
 
             %=======================================
             %
@@ -124,8 +126,8 @@ if(~isempty(tabindex));
 
                     OBJTABLE_data = [];
                     OBJTABLE_data.ROWS        = tabindex{i, 6};
-                    OBJTABLE_data.COLUMNS     = tabindex{i, 7};
-                    OBJTABLE_data.ROW_BYTES   = 32;              % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
+                    OBJTABLE_data.COLUMNS_consistency_check     = tabindex{i, 7};
+                    OBJTABLE_data.ROW_BYTES_consistency_check   = 32;              % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
                     OBJTABLE_data.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION);
                     ocl = [];
                     ocl{end+1} = struct('NAME', 'SWEEP_TIME',                 'FORMAT', 'E14.7', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS', 'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
@@ -138,11 +140,10 @@ if(~isempty(tabindex));
                     Bfile(28) = 'B';
                     
                     OBJTABLE_data = [];
-                    OBJTABLE_data.ROWS        = tabindex{i, 6};
-                    OBJTABLE_data.COLUMNS     = tabindex{i, 7};
-                    OBJTABLE_data.ROW_BYTES   = tabindex{i, 8};
+                    OBJTABLE_data.ROWS                        = tabindex{i, 6};
+                    OBJTABLE_data.COLUMNS_consistency_check   = tabindex{i, 7};
+                    OBJTABLE_data.ROW_BYTES_consistency_check = tabindex{i, 8};
                     OBJTABLE_data.DESCRIPTION = sprintf('%s', CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION);
-                    OBJTABLE_data.DELIMITER = ', ';
                     ocl = [];
                     ocl{end+1} = struct('NAME', 'START_TIME_UTC',                   'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
                     ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',                    'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
@@ -163,15 +164,15 @@ if(~isempty(tabindex));
                 
                 OBJTABLE_data = [];
                 OBJTABLE_data.ROWS        = tabindex{i, 6};
-                %OBJTABLE_data.COLUMNS     = tabindex{i, 7};   % Does not work. Value (tabindex{...}) can be empty.
-                OBJTABLE_data.COLUMNS     = 5;                % NOTE: Hardcoded. TODO: Fix!
+                %OBJTABLE_data.COLUMNS_consistency_check     = tabindex{i, 7};   % Does not work. Value (tabindex{...}) can be empty. Wrong index nbr? 6?
+                OBJTABLE_data.COLUMNS_consistency_check     = 5;                % NOTE: Hardcoded. TODO: Fix!
                 OBJTABLE_data.DESCRIPTION = CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION;    % BUG: Possibly double quotation marks.
                 if Pnum ~= '3'
-                    OBJTABLE_data.ROW_BYTES = 83;  % NOTE: Hardcoded.
+                    OBJTABLE_data.ROW_BYTES_consistency_check = 83;  % NOTE: Hardcoded.
                 else
-                    OBJTABLE_data.ROW_BYTES = 98;
+                    OBJTABLE_data.ROW_BYTES_consistency_check = 98;
                 end                
-                %OBJTABLE_data.ROW_BYTES   = tabindex{i, 8};    % Can be empty. ==> Does not work.
+                %OBJTABLE_data.ROW_BYTES_consistency_check   = tabindex{i, 8};    % Can be empty. ==> Does not work.
                 
                 % -----------------------------------------------------------------------------
                 % Recycle OBJCOL info/columns from CALIB LBL file (!) and then add one column.
@@ -196,12 +197,12 @@ if(~isempty(tabindex));
             
             fid = fopen(strrep(tabindex{i,1},'TAB','LBL'),'w');   % Open DERIV LBL file to create/write to.
             createLBL_write_LBL_header(fid, kvl_LBL)
-            createLBL_writeObjectTable(fid, OBJTABLE_data)
+            createLBL_writeObjectTable(fid, OBJTABLE_data, general_TAB_LBL_inconsistency_policy)
             fprintf(fid,'END');
             fclose(fid);
             %createLBL_create_OBJTABLE_LBL_file(tabindex{i,1}, kvl_LBL, OBJTABLE_data)
             
-            clear kvl_LBL
+            clear   kvl_LBL   OBJTABLE_data
 
         catch err
             
@@ -242,30 +243,25 @@ if(~isempty(blockTAB));
         
         fileinfo = dir(blockTAB{i,1});
 
-        kvl_set = [];   % NOTE: Can not initialize with "struct(...)". That gives an unintended result due to a special interpretation for arrays.
-        kvl_set.keys = {};
-        kvl_set.values = {};
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES', sprintf('%i', fileinfo.bytes));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS', sprintf('%i', blockTAB{i,3}));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',    sprintf('"%s"', lname));
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',       sprintf('"%s"', tname));        
-        kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',   sprintf('"%s"', tname(1:(end-4))));
+        kvl_LBL = kvl_LBL_all;
+        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'FILE_NAME',    sprintf('"%s"', lname));
+        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, '^TABLE',       sprintf('"%s"', tname));        
+        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'RECORD_BYTES', sprintf('%i',   fileinfo.bytes));    % BUG?!
+        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'FILE_RECORDS', sprintf('%i',   blockTAB{i,3}));
+        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'PRODUCT_ID',   sprintf('"%s"', tname(1:(end-4))));
+        %kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'DESCRIPTION',   '"..."');    % Add?
 
-        kvl_LBL = createLBL_KVPL_merge(kvl_set, kvl_LBL_all);            
-        clear kvl_set
 
-        
-        
+
         %=======================================
         % LBL file: Create OBJECT TABLE section
         %=======================================
         
         OBJTABLE_data = [];
-        OBJTABLE_data.ROWS      = blockTAB{i,3};
-        OBJTABLE_data.COLUMNS   = 3;
-        OBJTABLE_data.ROW_BYTES = 55;                   % NOTE: HARDCODED! TODO: Fix.
+        OBJTABLE_data.ROWS                        = blockTAB{i,3};
+        OBJTABLE_data.COLUMNS_consistency_check   = 3;
+        OBJTABLE_data.ROW_BYTES_consistency_check = 55;                   % NOTE: HARDCODED! TODO: Fix.
         OBJTABLE_data.DESCRIPTION = 'BLOCKLIST DATA. START & STOP TIME OF MACROBLOCK AND MACROID.';
-        %OBJTABLE_data.DELIMITER = ', ';
         ocl = [];
         ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss');
         ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',       'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'LAST START TIME OF MACRO BLOCK FILE YYYY-MM-DD HH:MM:SS.sss');
@@ -274,14 +270,15 @@ if(~isempty(blockTAB));
         
         fid = fopen(strrep(blockTAB{i,1},'TAB','LBL'),'w');
         createLBL_write_LBL_header(fid, kvl_LBL)
-        createLBL_writeObjectTable(fid, OBJTABLE_data)
+        createLBL_writeObjectTable(fid, OBJTABLE_data, general_TAB_LBL_inconsistency_policy)
         fprintf(fid,'END');
         fclose(fid);
-        clear kvl_LBL        
+        clear   kvl_LBL   OBJTABLE_data
         
     end   % for
     
 end   % if 
+
 
 
 %==================================================
@@ -293,8 +290,9 @@ if (~isempty(an_tabindex));
     len=length(an_tabindex(:,3));
     
     for (i=1:len)
+                
+        TAB_LBL_inconsistency_policy = general_TAB_LBL_inconsistency_policy;   % Default value, unless overwritten for specific data file types.
         
-        %%some need-to-know things
         tname = an_tabindex{i,2};
         lname = strrep(tname,'TAB','LBL');
         
@@ -315,26 +313,22 @@ if (~isempty(an_tabindex));
             %======================
             
             TAB_file_info = dir(an_tabindex{i, 1});
-            kvl_set = [];
-            kvl_set.keys = {};
-            kvl_set.values = {};
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',    strrep(an_tabindex{i, 2}, '.TAB', '.LBL'));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',       an_tabindex{i, 2});
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS', num2str(an_tabindex{i, 4}));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',   sprintf('"%s"', strrep(an_tabindex{i, 2}, '.TAB', '')));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'DESCRIPTION',  '"Best estimates of physical quantities based on sweeps."');
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES', num2str(TAB_file_info.bytes));
-
+            kvl_LBL = kvl_LBL_all;
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'FILE_NAME',     strrep(an_tabindex{i, 2}, '.TAB', '.LBL'));
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, '^TABLE',        an_tabindex{i, 2});
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'FILE_RECORDS',  num2str(an_tabindex{i, 4}));
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'RECORD_BYTES',  num2str(TAB_file_info.bytes));    % BUG?
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'PRODUCT_ID',    sprintf('"%s"', strrep(an_tabindex{i, 2}, '.TAB', '')));
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'DESCRIPTION',   '"Best estimates of physical quantities based on sweeps."');
             try
                 %===============================================================
-                % NOTE: createLBL_create_EST_LBL_header(...)                
+                % NOTE: createLBL_create_EST_LBL_header(...)
                 % sets certain LBL/ODL variables to handle collisions:
                 %    START_TIME / STOP_TIME,
                 %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
                 %===============================================================
                 
-                kvl_LBL = createLBL_create_EST_LBL_header(an_tabindex(i, :), index, kvl_set);    % NOTE: Reads LBL file(s).
-                kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL, kvl_LBL_all);
+                kvl_LBL = createLBL_create_EST_LBL_header(an_tabindex(i, :), index, kvl_LBL);    % NOTE: Reads LBL file(s).
             catch exc
                 fprintf(1, ['ERROR: ', exc.message])
                 fprintf(1, exc.getReport)
@@ -354,21 +348,18 @@ if (~isempty(an_tabindex));
             kvl_LBL_CALIB.values = CALIB_LBL_str.values(1:end-1);
             kvl_LBL_CALIB = createLBL_compatibility_substitute_LBL_keys(kvl_LBL_CALIB, str2num(Pnum));
             
-            kvl_set = [];
-            kvl_set.keys = {};
-            kvl_set.values = {};
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES',          num2str(fileinfo.bytes));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS',          num2str(an_tabindex{i,4}));
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',             lname);
-            kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',                tname);
-            
-            kvl_LBL = createLBL_KVPL_merge(kvl_set, kvl_LBL_all);
-            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL);
+            kvl_LBL = kvl_LBL_all;
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'FILE_NAME',     lname);
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, '^TABLE',        tname);
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'FILE_RECORDS',  num2str(an_tabindex{i,4}));
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'RECORD_BYTES',  num2str(fileinfo.bytes));
+            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'PRODUCT_ID',    sprintf('"%s"', strrep(an_tabindex{i, 2}, '.TAB', '')));
+            % Add DESCRIPTION?!!
 
+            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL);
+            clear   kvl_LBL_CALIB
 
         end   % if-else
-        clear KVL_set
-        
         
         
         
@@ -383,11 +374,10 @@ if (~isempty(an_tabindex));
            
             
             OBJTABLE_data = [];
-            OBJTABLE_data.ROWS      = an_tabindex{i,4};
-            OBJTABLE_data.ROW_BYTES = an_tabindex{i,9};
-            OBJTABLE_data.COLUMNS = an_tabindex{i,5};
+            OBJTABLE_data.ROWS                        = an_tabindex{i,4};
+            OBJTABLE_data.ROW_BYTES_consistency_check = an_tabindex{i,9};
+            OBJTABLE_data.COLUMNS_consistency_check   = an_tabindex{i,5};
             OBJTABLE_data.DESCRIPTION = sprintf('"%s %s SECONDS DOWNSAMPLED"', CALIB_LBL_struct.DESCRIPTION, lname(end-10:end-9));
-            %OBJTABLE_data.DELIMITER   = ', ';
             ocl = {};
             ocl{end+1} = struct('NAME', 'TIME_UTC',                          'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',                          'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
             ocl{end+1} = struct('NAME', 'OBT_TIME',                          'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',                    'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
@@ -405,11 +395,10 @@ if (~isempty(an_tabindex));
             
                     
             OBJTABLE_data = [];
-            OBJTABLE_data.ROWS      = an_tabindex{i,4};
-            OBJTABLE_data.COLUMNS   = an_tabindex{i,5};
-            OBJTABLE_data.ROW_BYTES = an_tabindex{i,9};
+            OBJTABLE_data.ROWS                        = an_tabindex{i,4};
+            OBJTABLE_data.COLUMNS_consistency_check   = an_tabindex{i,5};
+            OBJTABLE_data.ROW_BYTES_consistency_check = an_tabindex{i,9};
             OBJTABLE_data.DESCRIPTION = sprintf('%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT', mode);
-            OBJTABLE_data.DELIMITER   = ', ';
             %---------------------------------------------
             ocl1 = {};
             ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
@@ -465,11 +454,10 @@ if (~isempty(an_tabindex));
             psdname = strrep(an_tabindex{i,2},'FRQ','PSD');
             
             OBJTABLE_data = [];
-            OBJTABLE_data.ROWS      = an_tabindex{i,4};
-            OBJTABLE_data.COLUMNS   = an_tabindex{i,5};
-            OBJTABLE_data.ROW_BYTES = an_tabindex{i,9};
+            OBJTABLE_data.ROWS                        = an_tabindex{i,4};
+            OBJTABLE_data.COLUMNS_consistency_check   = an_tabindex{i,5};
+            OBJTABLE_data.ROW_BYTES_consistency_check = an_tabindex{i,9};
             OBJTABLE_data.DESCRIPTION = 'FREQUENCY LIST OF PSD SPECTRA FILE';
-            OBJTABLE_data.DELIMITER   = ', ';
             ocl = {};
             ocl{end+1} = struct('NAME', 'FREQUENCY LIST', 'ITEMS', an_tabindex{i,5}, 'UNIT', 'kHz', 'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', 'FORMAT', 'E14.7', 'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdname));
             OBJTABLE_data.OBJCOL_list = ocl;            
@@ -482,8 +470,8 @@ if (~isempty(an_tabindex));
             
             OBJTABLE_data = [];
             OBJTABLE_data.ROWS      = an_tabindex{i,4};
-            OBJTABLE_data.COLUMNS   = an_tabindex{i,5};
-            OBJTABLE_data.ROW_BYTES = an_tabindex{i,9};
+            OBJTABLE_data.COLUMNS_consistency_check   = an_tabindex{i,5};
+            OBJTABLE_data.ROW_BYTES_consistency_check = an_tabindex{i,9};
             OBJTABLE_data.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE', tabindex{an_tabindex{i,6},2});
 
             ocl1 = {};
@@ -623,6 +611,9 @@ if (~isempty(an_tabindex));
             end
             OBJTABLE_data.OBJCOL_list = [ocl1, ocl2];
             
+            TAB_LBL_inconsistency_policy = 'nothing';   % NOTE: Different policy for A?S.LBL files.
+            %TAB_LBL_inconsistency_policy = 'warning';
+        
             
             
         elseif  strcmp(an_tabindex{i,7},'best_estimates')    %%%%%%%%%%%% BEST ESTIMATES FILE %%%%%%%%%%%%
@@ -631,9 +622,9 @@ if (~isempty(an_tabindex));
             
             MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in best_estimates!!!
             OBJTABLE_data = [];
-            OBJTABLE_data.ROWS      = an_tabindex{i,4};
-            OBJTABLE_data.COLUMNS   = an_tabindex{i,5};
-            OBJTABLE_data.ROW_BYTES = an_tabindex{i,9};
+            OBJTABLE_data.ROWS                        = an_tabindex{i,4};
+            OBJTABLE_data.COLUMNS_consistency_check   = an_tabindex{i,5};
+            OBJTABLE_data.ROW_BYTES_consistency_check = an_tabindex{i,9};
             OBJTABLE_data.DESCRIPTION = sprintf('BEST ESTIMATES OF PHYSICAL VALUES FROM MODEL FITTED ANALYSIS.');   % Bad description? To specific?
             ocl = [];
             ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
@@ -664,14 +655,15 @@ if (~isempty(an_tabindex));
         LBL_file_path = strrep(an_tabindex{i,1}, 'TAB', 'LBL');
         fid = fopen(LBL_file_path,'w');
         createLBL_write_LBL_header(fid, kvl_LBL)
-        createLBL_writeObjectTable(fid, OBJTABLE_data)            
+        createLBL_writeObjectTable(fid, OBJTABLE_data, TAB_LBL_inconsistency_policy)            
         fprintf(fid,'END');
         fclose(fid);
-        clear KVL_LBL
+        clear   kvl_LBL   OBJTABLE_data   TAB_LBL_inconsistency_policy
                
         
         
     end   % for 
 end     % if
 
+warning(warnings_settings)
 fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, t_start));

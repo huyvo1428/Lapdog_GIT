@@ -612,7 +612,7 @@ try
         an_tabindex{end,3} = tabindex{an_ind(i),3};     % first calib data file index
         %an_tabindex{end,3} = an_ind(1);                % First calib data file index of first derived file in this set
         an_tabindex{end,4} = klen; % Number of rows
-        an_tabindex{end,5} = 106;  % Number of columns
+        an_tabindex{end,5} = 110;  % Number of columns
         an_tabindex{end,6} = an_ind(i);
         an_tabindex{end,7} = 'sweep'; % Type
         an_tabindex{end,8} = timing;

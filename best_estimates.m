@@ -55,12 +55,28 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % TODO: Remove references to "et" times. Use OBT.
 %===========================================================================================
 
-    t_start = clock;             % NOTE: Not number of seconds, but [year month day hour minute seconds].
-    MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in createLBL!!!
+    try
+        warnings_settings = warning('query');
+        warning('on', 'all')
+        
+        t_start = clock;             % NOTE: Not number of seconds, but [year month day hour minute seconds].
+        MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in createLBL!!!
     
-    an_tabindex = main_INTERNAL(an_tabindex, tabindex, index, obe);
+        an_tabindex = main_INTERNAL(an_tabindex, tabindex, index, obe);
     
-    fprintf(1, '%s: %0.f s (elapsed wall time)\n', mfilename, etime(clock, t_start));
+        fprintf(1, '%s: %0.f s (elapsed wall time)\n', mfilename, etime(clock, t_start));
+        
+        warning(warnings_settings)
+    catch err
+        fprintf(1,'\nlapdog:best_estimates error message: %s\n',err.message);
+        
+        len = length(err.stack);
+        if (~isempty(len))
+            for i=1:len
+                fprintf(1,'%s, %i,\n', err.stack(i).name, err.stack(i).line);
+            end
+        end
+    end
     
     
     % #############################################################################################
@@ -71,7 +87,11 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     function an_tabindex = main_INTERNAL(an_tabindex, tabindex, index, obe)
 
         nob = length(obe);
-  
+        
+        if isempty(an_tabindex)
+            warning('"an_tabindex" is empty.')
+        end
+        
         
         
         %------------------------------------------------------------------------------
