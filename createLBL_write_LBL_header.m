@@ -135,7 +135,7 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
         %============================================================
         for i=1:length(forbidden_keys)            
             if any(strcmp(forbidden_keys{i}, kvl.keys))
-                error('Trying to write LBL file header with explicitly forbidden key/PSA LBL keyword.')
+                error(sprintf('Trying to write LBL file header with explicitly forbidden LBL keyword "%s". This indicates that the code has previously failed to substitute these keywords for new ones.', forbidden_keys{i}))
             end
         end
 

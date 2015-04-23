@@ -1,15 +1,21 @@
 %
-% Function for substituting old PDS/PSA LBL header keywords (keys in key-value pairs) for new ones.
+% Function for substituting old PDS/PSA LBL keywords (keys in key-value pairs) for new ones.
 %
 % This is to ensure compatibility with CALIB archives that still contain old keywords.
 % At some point, when all CALIB archives with obsoleted keywords are gone, then this
 % code can be modified, disabled or removed.
 %
-% NOTE: Can not handle "probe 3".
+% NOTE: Disabled for "probe 3" since the meaning might be ambiguous. Otherwise no problem.
+% NOTE: This code can NOT be moved to createLBL_write_LBL_header.m since it has to be run before
+% best estimates merges keywords from two LBL files.
 %
 % function kvl = createLBL_compatibility_substitute_LBL_keys(kvl, probe_nbr)
 function   kvl = createLBL_compatibility_substitute_LBL_keys(kvl, probe_nbr)
 
+    kvl = main_INTERNAL(kvl, probe_nbr);
+
+    %=============================================================================================
+    
     function kvl = main_INTERNAL(kvl, probe_nbr)
         if ~ismember(probe_nbr, [1 2])
             error(sprintf('Illegal probe number. probe_nbr=%d', probe_nbr))
@@ -31,14 +37,16 @@ function   kvl = createLBL_compatibility_substitute_LBL_keys(kvl, probe_nbr)
             sprintf('ROSETTA:LAP_P%i_LAP_SWEEP_FORMAT',       probe_nbr), ...
             sprintf('ROSETTA:LAP_P%i_SWEEP_RESOLUTION',       probe_nbr), ...
             sprintf('ROSETTA:LAP_P%i_SWEEP_STEP_HEIGHT',      probe_nbr) };
-        
+
         N_substitutions = 0;
         for i = 1:length(replacement_keys)
             [kvl, N_s] = KVPL_substitute_key_name_INTERNAL(kvl, old_keys{i}, replacement_keys{i});
             N_substitutions = N_substitutions + N_s;
         end
         if N_substitutions > 0
-            fprintf(1, 'Note: CALIB archive file with old PDS keywords. Renamed %i PDS keywords for compatibility.\n', N_substitutions)    % Disable log message?
+            msg = sprintf('NOTE: CALIB archive file contains obsoleted PDS LBL keywords. Renamed %i PDS keywords.', N_substitutions);
+            disp(msg)     % Disable log message?
+            %warning(msg)    % Disable log message?
         end
     end
     
