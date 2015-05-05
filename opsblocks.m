@@ -20,11 +20,25 @@ obe = [jumps; n];    % ops block end points
 obs = [1; jumps+1];  % ops block start points
 nob = length(obe);   % number of ops blocks
 
+%FKJN edit 4 May 2015, should have done this a long time ago. if the file
+%is before the archive calendar times, then we should not have it in
+%the archive. Typically happens when we have a packet that starts at
+%23:59:59 the day before the archive starts ends within next day 00:00:04 or something
+%that would create a small stub file from 23:59:59 to 23:59:59.99
+if t0(obs(1)) < datenum(missioncal_starttime)
+    obs(1) = [];
+    obe(1) = [];
+    nob = nob-1;  
+    
+end
+
+
 % Prepare obs block list for all archive
 mac = macro(obs);
 tmac0 = t0(obs);  % Start time of first file in ops block
 tmac1 = t0(obe);  % Start time of last file in ops block
 macind = [tmac0 tmac1 mac];
+
 
     % str = sprintf('blocklists/block_list_%s.txt',archiveid);
 % mf = fopen(str,'w');

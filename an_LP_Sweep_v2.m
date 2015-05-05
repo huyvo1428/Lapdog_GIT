@@ -104,6 +104,9 @@ DP.phc_intersect    = nan(1,2);
 DP.Te_exp           = nan(1,2);
 DP.Ie0_exp          = nan(1,2);
 DP.ne_exp           = nan(1,2);
+DP.Te_exp_belowVknee   = nan(1,2);
+DP.Ie0_exp_belowVknee  = nan(1,2);
+DP.ne_exp_belowVknee   = nan(1,2);
 
 DP.Quality          = sum(Q);
 
@@ -219,7 +222,7 @@ try %try the dynamic solution first, then the static.
     if (an_debug>1)%debug plot
         
         figure(33)
-        subplot(3,2,3),plot(V+Vsc,Is,'b',V+Vsc,ion.I,'g');grid on;
+        subplot(3,2,3);plot(V+Vsc,Is,'b',V+Vsc,ion.I,'g');grid on;
         title([sprintf('Ion current vs Vp, out.Q(1)=%d',ion.Q(1))])
         legend('I','I_i_o_n')
         
@@ -247,10 +250,10 @@ try %try the dynamic solution first, then the static.
     DP.ne_exp           = expfit.ne;
     
     
-    expfit_below_phknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
-    %DP.Te_exp           = expfit_below_phknee.Te; %contains both value and sigma frac.
-    %DP.Ie0_exp          = expfit_below_phknee.Ie0;
-    %DP.ne_exp           = expfit_below_phknee.ne;
+    asm_expfit_belowVknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
+    DP.Te_exp_belowVknee            = asm_expfit_belowVknee.Te; %contains both value and sigma frac.
+    DP.Ie0_exp_belowVknee           = asm_expfit_belowVknee.Ie0;
+    DP.ne_exp_belowVknee            = asm_expfit_belowVknee.ne;
     
     
     
@@ -302,9 +305,9 @@ try %try the dynamic solution first, then the static.
     
     if (an_debug>1) %debug plot
         figure(33);
-        subplot(3,2,1),plot(V,Is,'b',V,Itemp- elec.I,'g',V,Itemp-expfit.I,'r');grid on;
+        subplot(3,2,1),plot(V,Is,'b',V,Itemp- elec.I,'g',V,Itemp-expfit.I,'r',V,Itemp-asm_expfit_belowVknee.I,'black');grid on;
         title([sprintf('I, I-Ii-Ie linear, I-Ii-Ie exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
-        legend('I','I-I linear','I-I exp','Location','NorthWest')
+        legend('I','I-I linear','I-I exp','I-I expbelowVphknee','Location','NorthWest')
     end
     
     %the resultant current should only be photoelectron current (or zero)
@@ -459,13 +462,19 @@ try %try the dynamic solution first, then the static.
     
     Itot_linear=Iph+elec.I+ion.I;
     Itot_exp=Itot_linear-elec.I+expfit.I;
+    Itot_exp_belowVknee = asm_expfit_belowVknee.I+Iph+ion.I;
     
     Izero_linear = I-Itot_linear;
     Izero_exp = I - Itot_exp;
+    Izero_exp_belowVknee = I - Itot_exp_belowVknee;
+
+    
     
     Rsq_linear = 1 - nansum((Izero_linear.^2))/nansum(((I-nanmean(I)).^2));
     Rsq_exp = 1 -  nansum(Izero_exp.^2)/nansum((I-nanmean(I)).^2);
     
+    Rsq_exp_belowVknee = 1 -  nansum(Izero_exp_belowVknee.^2)/nansum((I-nanmean(I)).^2);
+
     
     %----------------------------------------------------------
     %Output Variables
@@ -515,21 +524,21 @@ try %try the dynamic solution first, then the static.
         
         
         subplot(3,2,2)
-        plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or');
+        plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or',V+Vsc,Izero_exp_belowVknee,'oblack');
         grid on;
         %  title('V vs I - ions - electrons-photoelectrons');
         title([sprintf('Vp vs I-Itot, fully auto,lum=%d, %s',illuminated,diag_info{1})])
-        legend('residual(I-Itot linear)','residual(I-Itot exp)','Location','Northwest')
+        legend('residual(I-Itot linear)','residual(I-Itot exp)','residual(I-Itot expVknee)','Location','Northwest')
         
         
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(3,2,4)
-        plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r');
+        plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r',V+Vsc,Itot_exp_belowVknee,'black');
         
         %        title('Vp vs I & Itot ions ');
         title([sprintf('Vp vs I, macro: %s',diag_info{1})])
-        legend('I','Itot linear','Itot exp','Location','NorthWest')
+        legend('I','Itot linear','Itot exp','Itot expVknee','Location','NorthWest')
         
         grid on;
         
@@ -641,7 +650,7 @@ try %try the dynamic solution first, then the static.
     
     % find region 1 V below knee and 4V above knee
     %track positions to be filtered which is in this this region
-    filter_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));
+%    filter_ind = find(ge(V+Vplasma+1,0) &le(V+Vplasma-4,0));
     
     %obtain exponential fit of plasma electron current.
     asm_expfit= LP_expfit_Te(V,asm_Itemp,Vsc, filter_ind);
@@ -650,6 +659,18 @@ try %try the dynamic solution first, then the static.
     DP_asm.Te_exp           = asm_expfit.Te; %contains both value and sigma frac.
     DP_asm.Ie0_exp          = asm_expfit.Ie0;
     DP_asm.ne_exp           = asm_expfit.ne;
+    
+    
+        
+    
+    asm_expfit_belowVknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
+    DP_asm.Te_exp_belowVknee            = asm_expfit_belowVknee.Te; %contains both value and sigma frac.
+    DP_asm.Ie0_exp_belowVknee           = asm_expfit_belowVknee.Ie0;
+    DP_asm.ne_exp_belowVknee            = asm_expfit_belowVknee.ne;
+    
+    
+    
+    
     
     %if the plasma electron current fail, try the spacecraft photoelectron
     %cloud current analyser
@@ -711,12 +732,20 @@ try %try the dynamic solution first, then the static.
     
     Itot_linear=asm_Iph+asm_elec.I+asm_ion.I;
     Itot_exp=Itot_linear-asm_elec.I+asm_expfit.I;
-    
+    Itot_exp_belowVknee =  Itot_linear-elec.I+asm_expfit_belowVknee.I;
+
     Izero_linear = I-Itot_linear;
     Izero_exp = I - Itot_exp;
+    Izero_exp_belowVknee = I - Itot_exp_belowVknee;
+
     
     Rsq_linear = 1 - nansum((Izero_linear.^2))/nansum(((I-nanmean(I)).^2));
     Rsq_exp = 1 -  nansum(Izero_exp.^2)/nansum((I-nanmean(I)).^2);
+    Rsq_exp_belowVknee = 1 -  nansum(Izero_exp_belowVknee.^2)/nansum((I-nanmean(I)).^2);
+
+    
+
+    
     
     
     
@@ -762,21 +791,32 @@ try %try the dynamic solution first, then the static.
     
     
     if (an_debug>1)  %debug plot
+        
+
+        
+        
+        
+        
         figure(34);
         subplot(3,2,2)
-        plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or');
+        plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or',V+Vsc,Izero_exp_belowVknee,'oblack');
+
+  %      plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or');
         grid on;
         %  title('V vs I - ions - electrons-photoelectrons');
         title([sprintf('WITH ASSUMPTIONS lum=%d, %s',illuminated,diag_info{1})])
-        legend('residual(I-Itot linear)','residual(I-Itot exp)','Location','Northwest')
+        legend('residual(I-Itot linear)','residual(I-Itot exp)','residual(I-Itot expVknee)','Location','Northwest')
         
         axis([-30 30 -5E-9 5E-9])
         axis 'auto x'
         subplot(3,2,4)
-        plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r');
+         plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r',V+Vsc,Itot_exp_belowVknee,'black');
+%        plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r');
         %        title('Vp vs I & Itot ions ');
         title([sprintf('Vp vs I, macro: %s',diag_info{1})])
-        legend('I','Itot linear','Itot exp','Location','NorthWest')
+                legend('I','Itot linear','Itot exp','Itot expVknee','Location','NorthWest')
+
+%        legend('I','Itot linear','Itot exp','Location','NorthWest')
         
         grid on;
         

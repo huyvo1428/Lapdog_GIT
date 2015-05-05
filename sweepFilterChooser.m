@@ -67,8 +67,8 @@ else  %i.e. if dv ~ 0.5
     sSpan = ceil(0.1*length(I));  % loose rloess filter
     sSpan =max(sSpan,6);  %HORRIBLE BUG IF SPAN == 5!!! (or 4)
     
-  %  sSpan = 0.1001;        % loose rloess filter
-    sMethod = 'rloess';
+  %  sSpan = 0.1001;        % loose loess filter
+    sMethod = 'loess';
 end
         
     I_filtered = smooth(I,sSpan,sMethod,1).'; %filter sweep NB transpose
@@ -87,7 +87,7 @@ end
      end
      
      
-     I_filtered = smooth(I,'loess',sMethod,1).';
+     I_filtered = smooth(I,'rloess',1).';
      Rsq = 1 - nansum(((I-I_filtered).^2))/nansum(((I-nanmean(I)).^2));
      
      if Rsq < 0.92         

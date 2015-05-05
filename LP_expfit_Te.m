@@ -154,7 +154,7 @@ if qbad
 end
 
 
-if(Te>=0 && ~isinf(Te))
+if(Te>=0 && ~isinf(Te) &&isreal(Te))
     %    ne = Ie0 /(0.25E-3*1.6E-19*sqrt(1.6E-19*Te/(2*pi*9.11E-31)));
     % current = charge*density * area *velocity
     % ne = Ie0 / area*charge*velocity
@@ -225,8 +225,9 @@ if an_debug >7 %debug condition
         
         subplot(1,3,1)
         plot(V,I,'bo',V_unfilt,I_unfilt,'b+',V(ind(end)),I,'black',V_unfilt,Ie,'ro');
-        axis([V(1) V(end) I_unfilt(1) max(I_unfilt)])
-        
+%        axis([V(1) V(end) I_unfilt(1) max(I_unfilt)])
+        axis([-10 30 -1E-9 1E-7])
+
         subplot(1,3,2)
         plot(Vr,log(Ir),'b',Vr,Vr*P(1)+P(2),'--');
         

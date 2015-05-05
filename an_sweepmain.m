@@ -35,9 +35,10 @@ try
     
     for i=1:length(an_ind)     % iterate over sweep files...
                 
-        % get file, read variables etcc
+        % get file, read variables etcc 
         rfile =tabindex{an_ind(i),1};                  % Sweep file
         rfolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
+        %tabindex{an_ind(i),1}(end-10:end-8) 
         mode=rfile(end-6:end-4);
         diagmacro=rfile(end-10:end-8);
         probe = rfile(end-5);
@@ -311,6 +312,11 @@ try
         DP(len).Ie0_exp             = [];
         DP(len).ne_exp              = [];
         
+        DP(len).Te_exp_belowVknee   = [];
+        DP(len).Ie0_exp_belowVknee  = [];
+        DP(len).ne_exp_belowVknee   = [];
+        
+        
         DP(len).Quality             = [];
         DP(len).Rsq                 = [];
 
@@ -330,7 +336,8 @@ try
     % try whole batch of sweep analysis at once, why not?
     % 50 sweeps would correspond to ~ 30 minutes of sweeps
 
-    if len > 1
+   % if len > 1
+   if 0 == 1
         
         lmax=min(len,50); %lmax is whichever is smallest, len or 50.
         
@@ -407,7 +414,7 @@ try
             [DP(k),DP_asm(k)] = an_LP_Sweep_v2(Vb, Iarr(:,k),Vguess,EP(k).lum);
                        
             %DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
-            %DP_asm(k) = an_LP_Sweep_with_assmpt(Vb,Iarr(:,k),assmpt,EP(k).lum);
+            %DP_asm(k) = an_LP_Sweep_with_assmpt(Vb),Iarr(:,k),assmpt,EP(k).lum);
  
             
             
@@ -502,14 +509,15 @@ try
             ', ion_Vb_intersect, sigma_ion_Vb_intersect, e_Vb_intersect, sigma_e_Vb_intersect',...
             ', Tphc, nphc, phc_slope, sigma_phc_slope, phc_intersect, sigma_phc_intersect',...
             ', ne_5eV, ni_v_dep, ni_v_indep, v_ion, Te_exp, sigma_Te_exp, ne_exp, sigma_ne_exp, Rsquared_linear, Rsquared_exp',...
-            ', asm_Vsg, asm_sigma_Vsg',...
-            ', ASM_Iph0, ASM_Tph, asm_Vsi, asm_Vph_knee, asm_sigma_Vph_knee, asm_Te_linear, asm_sigma_Te_linear, asm_ne_linear, sigma_asm_ne_linear',...
+            ', Vbar, sigma_Vbar',...
+            ', ASM_Iph0, ASM_Tph, asm_Vsi, asm_Te_linear, asm_sigma_Te_linear, asm_ne_linear, sigma_asm_ne_linear',...
             ', asm_ion_slope, asm_sigma_ion_slope, asm_ion_intersect, asm_sigma_ion_intersect, asm_e_slope, asm_sigma_e_slope, asm_e_intersect, asm_sigma_e_intersect',...
             ', asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
             ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
             ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...
             ', ASM_m_ion, ASM_Z_ion, ASM_v_ion, Vsc_ni_ne, asm_Vsc_ni_ne',...
-            ', Vsc_aion, ni_aion, v_aion, asm_Vsc_aion, asm_ni_aion, asm_v_aion, Vbar, sigma_Vbar, asm_Vbar, asm_sigma_Vbar',...    
+            ', Vsc_aion, ni_aion, v_aion, asm_Vsc_aion, asm_ni_aion, asm_v_aion',...    
+            ', Te_exp_belowVknee, sigma_Te_exp_belowVknee, ne_exp_belowVknee, sigma_ne_exp_belowVknee, asm_Te_exp_belowVknee, asm_sigma_Te_exp_belowVknee, asm_ne_exp_belowVknee, asm_sigma_ne_exp_belowVknee',...
             '\r\n'));
 
 
@@ -528,17 +536,22 @@ try
             str7  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_Vb_intersect,DP(k).e_Vb_intersect);  
             str8  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Tphc,DP(k).nphc,DP(k).phc_slope,DP(k).phc_intersect);                                                                                                      %NB DP(k).Te_exp is vector size 2, so two ouputs.           
             str9  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', EP(k).ne_5eV, DP(k).ni_1comp, DP(k).ni_2comp, DP(k).v_ion, DP(k).Te_exp, DP(k).ne_exp, DP(k).Rsq.linear, DP(k).Rsq.exp);
-            str10 = sprintf(' %14.7e, %14.7e,',DP_asm(k).Vsg);
-            str11 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).Iph0,DP_asm(k).Tph,DP_asm(k).Vsi,DP_asm(k).Vph_knee,DP_asm(k).Te,DP_asm(k).ne);
+            str10 = sprintf(' %14.7e, %14.7e,',DP(k).Vbar);
+            str11 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).Iph0,DP_asm(k).Tph,DP_asm(k).Vsi,DP_asm(k).Te,DP_asm(k).ne);
             str12 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).ion_slope,DP_asm(k).ion_intersect,DP_asm(k).e_slope,DP_asm(k).e_intersect);
             str13 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', DP_asm(k).ion_Vb_intersect, DP_asm(k).e_Vb_intersect);           
             str14 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).Tphc,DP_asm(k).nphc,DP_asm(k).phc_slope,DP_asm(k).phc_intersect);
             str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).asm_ne_5eV,DP_asm(k).ni_1comp,DP_asm(k).ni_2comp,DP_asm(k).v_ion,DP_asm(k).Te_exp,DP_asm(k).ne_exp,DP_asm(k).Rsq.linear,DP_asm(k).Rsq.exp);
             str16 = sprintf(' %03i, %02i, %14.7e, %14.7e, %14.7e,',assmpt.ionM,assmpt.ionZ,assmpt.vram,EP(k).Vsc_ni_ne,EP(k).asm_Vsc_ni_ne);
             str17 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Vsc_aion,DP(k).ni_aion,DP(k).v_aion,DP_asm(k).Vsc_aion,DP_asm(k).ni_aion,DP_asm(k).v_aion);
-            str18 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e', DP(k).Vbar,DP_asm(k).Vbar);
+            str18 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e', DP(k).Te_exp_belowVknee, DP(k).ne_exp_belowVknee, DP_asm(k).Te_exp_belowVknee, DP_asm(k).ne_exp_belowVknee);
 
+      
 
+            
+            
+            
+            
             strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16,str17,str18);
 
             strtot=strrep(strtot,'  0.0000000e+00','            NaN'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.

@@ -55,15 +55,15 @@ y = X(:,2);
 dx = diff( x );
 dy = 0.5*(y(1:length(y)-1) + y(2:length(y)));
 s = sum( dx .* dy );
-if( s > 1.3 | s < 0.7 )
+if( s > 1.3 || s < 0.7 )
 %    fprintf( 'Data is not normalized! The pdf sums to: %f. Normalizing...\n\r', s );
     y = y ./ s;
 end
 
-X = zeros( n, 3 );
-X(:,1) = 1;
-X(:,2) = x;
-X(:,3) = (x.*x);
+% X = zeros( n, 3 );
+% X(:,1) = 1;
+% X(:,2) = x;
+% X(:,3) = (x.*x);
 
 
 % try to estimate mean mu from the location of the maximum
@@ -74,7 +74,7 @@ estmu=mu;
 
 % estimate sigma
 sigma = 1/(sqrt(2*pi)*ymax);
-estsigma = sigma;
+%estsigma = sigma;
 
 if( nargin == 3 )
     sigma = sigma0;
@@ -115,22 +115,19 @@ for i=1:Nmax
 %     
 %     if mu>10
 %         diag = 1;
+%     end  
+%     if diag
+%         figure(3242)
+%         plot(x,y,'r',x,(1/(sqrt(2*pi)*sigma^2)*exp(-((x-mu).^2) / (2*sigma^2))),'g');
+% 
+%         
 %     end
-    
-    
-    
-    if diag
-        figure(3242)
-        plot(x,y,'r',x,(1/(sqrt(2*pi)*sigma^2)*exp(-((x-mu).^2) / (2*sigma^2))),'g');
-
-        
-    end
     
     
     %%break condition when sufficient accuracy reached FJ
     if (abs(da(1)/a(1)))< 0.001 && i>5 
-        i;
-        break;
+        %i
+        break; 
     end
     
     
