@@ -39,7 +39,7 @@
 %
 %
 % NOTE: Adapted from pre-existing general-purpose tool "read_ODL_to_structs" for reading ODL
-% files by Erik P G Johansson, IRF Uppsala. Therefore maybe somewhat overkill for the purposes of lapdog.
+% files by Erik P G Johansson, IRF Uppsala. May therefore be somewhat overkill for the purposes of lapdog.
 % Initially created 2014-11-18.
 %
 function [s_str_lists, s_simple] = createLBL_read_ODL_to_structs(file_path)
@@ -81,6 +81,14 @@ function [s_str_lists, s_simple] = createLBL_read_ODL_to_structs(file_path)
     %    (CON: Must fopen/fclose.)
     % QUESTION: How handle file format errors (and not only related to ODL)?
 
+        % Check if file exists.
+        % ---------------------
+        % It is useful for the user to know which LBL file is missing so that he/she can more quickly 
+        % determine where in pds or lapdog the original error lies (e.g. a LBL file produced by pds, 
+        % or lapdog code producing or I2L.LBL files, or A?S.LBL files, or EST.LBL files).
+        if (exist(file_path) ~= 2)
+            error(sprintf('Can not find file: "%s"', file_path))
+        end        
         line_list = importdata(file_path, '\n');      % Read list of lines/rows. No parsing.
 
         kv_list.keys   = cell(length(line_list), 1);

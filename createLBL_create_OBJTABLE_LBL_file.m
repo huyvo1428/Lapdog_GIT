@@ -7,6 +7,13 @@
 %       Best estimates uses a kvl_set list to handle collisions. ==> May require ignore list there.
 %
 function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, kvl_header, OBJTABLE_data)
+% SPECIAL CASES:
+%    Data measurement files (DATA/)
+%    Geometry files.
+%       => Do not require etc. SPACECRAFT_CLOCK_START_COUNT
+%
+% PROPOSAL: Only set/require keys that are common for all OBJECT=TABLE files.
+%     PROPOSAL: Different requirements for different LBL files can be implemented in the form of wrapping functions.
 % PROPOSAL: Should set RECORD_BYTES if it really is the TAB file size.
 % PROPOSAL: Should set FILE, ^TABLE, PRODUCT_ID
 % PROPOSAL: Set or check RECORD_TYPE=FIXED_LENGTH.
@@ -17,7 +24,11 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, kvl_header, OBJTABLE_
 
 % IMPLEMENTATION NOTE: Keeps createLBL_writeObjectTable and createLBL_write_LBL_header as separate functions to
 %   1) keep code in smaller logical modules,
-%   2) still be able to recycle createLBL_write_LBL_header for other kinds of LBL files.
+%   2) still be able to recycle createLBL_write_LBL_header for other kinds of LBL files
+%      CON: Can achieve this with wrapping functions.
+%
+% PROPOSAL: Use single code for createLBL_writeObjectTable and createLBL_write_LBL_header
+%    PRO: Can derive RECORD_BYTES (header) from OBJECT=TABLE part.
 
     error('IMPLEMENTATION NOT FINISHED.')
 
@@ -31,7 +42,7 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, kvl_header, OBJTABLE_
     kvl_set = [];   % NOTE: Can not initialize with "struct(...)". That gives an unintended result due to a special interpretation for arrays.
     kvl_set.keys = {};
     kvl_set.values = {};
-    kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES', sprintf('%i',   fileinfo.bytes));
+    kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES', sprintf('%i',   fileinfo.bytes));    % BUG?!
     kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',    sprintf('"%s"', LBL_filename));
     kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',       sprintf('"%s"', TAB_filename));
     kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',   sprintf('"%s"', file_basename));
@@ -40,8 +51,8 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, kvl_header, OBJTABLE_
     
 
     fid = fopen(LBL_file_path, 'w');   % Open LBL file to create/write to.
-    createLBL_writeObjectTable(fid, kvl_header);
     createLBL_write_LBL_header(fid, OBJTABLE_data);
+    createLBL_writeObjectTable(fid, kvl_header);
     fprintf(fid,'END');    
     fclose(fid);
 end

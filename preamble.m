@@ -42,24 +42,14 @@ fc = fopen(missioncalendar,'r');
 if fc < 0
     fprintf(1,'Error, cannot open %s.\n', missioncalendar);
 else
-    %line = fgetl(fc);
     jj = 0;
-    
-%     while(jj<100 && isempty(line))
-%         line = fgetl(fc);
-%         jj= jj + 1;        
-%     end    
-%     while((jj<100) && isempty(strfind(line,shortphase)) || (strcmp(line(1),'#')))
-%             line = fgetl(fc);
-%             jj = jj + 1;
-%     end
-    
     while (jj<1000)
         line = fgetl(fc);
         
         if (line == -1)
             error('Can not identify mission phase in mission calendar.');
         elseif ~(strcmp(line(1),'#') || isempty(line))
+            % Parse a line which is neither a comment, nor empty.
             parts = textscan(line,'%s %s %*s %*s %s %s %s %s','delimiter',':');      % * means the field will be skipped.
             shortphase_line = strtrim(strrep(char(parts{2}), '"', ''));  % Need to remove double quotes and trailing blanks from strings (strrep, strtrim)
             if strcmp(shortphase_line, shortphase)

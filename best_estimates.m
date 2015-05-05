@@ -5,7 +5,7 @@
 %
 % IMPORTANT NOTE: Uses the non-PDS compliant first row
 % of column headers in AxS to label variables (struct fields).
-% When that becomes PDS compliant, this code WILL NOT WORK!
+% When/if that becomes PDS compliant, this code WILL NOT WORK!
 %    
 % IMPORTANT NOTE: Uses file existence to check for existence of pre-sweep low-freq. bias potential.
 
@@ -53,6 +53,17 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % TODO: Check whether to expect low-freq bias potential using macro, instead of checking file existence?
 %
 % TODO: Remove references to "et" times. Use OBT.
+%
+% NOTE/BUG: It is perfectly possible for there to legitimately be no IxL/IxH file for short time
+% intervals within a UTC day, e.g. a macro that starts just before midnight.
+% ==> There might not have been any IxL/H measurements at all.
+% ==> Absense of IxL/H TAB file is not an indication of error.
+% The current implementation of code does not appear to take this possibility into account and gives error when there should be none.
+% NOTE/BUG: !!! Tentatively, it appears that tabindex may contain references to IxLH files that do not exist. If that is fixed,
+% the bug is fixed.
+% Example: 2015/MAY/D01/RPCLAP_20150501_235959_807*
+%    PROPOSAL: try-catch for every particular EST file, not for all EST files together.
+%    PROPOSAL: try-catch for reading IxL/H files and permit absense of file.
 %===========================================================================================
 
     try
@@ -409,123 +420,6 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         end   % while
         
     end
-    
-
-
-    % #############################################################################################
-    
-    
-    
-    %-------------------------------------------------------------------------------------------------------------------------
-    % IMPLEMENTATION OF FUNCTION: Version 1.0
-    % NOTE: OLD IMPLEMENTATION NOT IN USE! SEE "select_best_estimates_INTERNAL" (or similar).
-    % NOTE: To be removed once the new function/implementation has been tested well enough.
-    % ---------------------------------------------------------------------------------------
-    % NOTE: Several index variables (values are indices into other variables) also function
-    % as boolean flags ([] = false; 1 or greater = true), but one has to use ~isempty() to be sure they work as intended.
-    %-------------------------------------------------------------------------------------------------------------------------
-%     function data_est = select_best_estimates_OLD_INTERNAL(sim_sweep_data)
-% 
-%         data = sim_sweep_data;
-%         data.direction = str2double(data.direction);        
-%     
-%         % up/dn = up/down sweep.
-%         i_P1_up = find((data.probe_nbr == 1) & (data.direction == 1));
-%         i_P1_dn = find((data.probe_nbr == 1) & (data.direction == 0));
-%         
-%         i_P2_up = find((data.probe_nbr == 2) & (data.direction == 1));
-%         i_P2_dn = find((data.probe_nbr == 2) & (data.direction == 0));
-% 
-%         % Find index to first/second sweep in pair for P2.
-%         % 1st/2nd = first/second sweep (of sweep pair on the same probe).
-%         % BUG: Can NOT handle only one sweep.    (false??? /EJ 2015-01-09)
-%         m = sort(find(data.probe_nbr == 2));     % ASSUMES: data/sweeps sorted in ascending time-order, so that index increases with time.
-%         i_P2_1st = [];
-%         i_P2_2nd = [];
-%         if length(m) >= 1
-%             i_P2_1st = m(1);
-%         end
-%         if length(m) == 2
-%             i_P2_2nd = m(2);
-%         end
-%         
-%         
-%         
-%         % ----------------------------
-%         % Select P1 sweep to use: i_P1
-%         % ----------------------------
-%         if     ~isempty(i_P1_up)
-%             i_P1 = i_P1_up;
-%         elseif ~isempty(i_P1_dn)
-%             i_P1 = i_P1_dn;
-%         else
-%             i_P1 = [];
-%         end
-%         
-%         
-% 
-%         % ----------------------------
-%         % Select P2 sweep to use: i_P2
-%         % ----------------------------
-%         % NOTE: Can probably be shortened if the idea is to select sweep with
-%         % preceeding voltage (low freq. bias or sweep) positive.
-%         % NOTE: Uses "&&" so not to require i_P2_1st.
-%         has_P2_updn_pair = ~isempty(i_P2_1st) && (data.direction(i_P2_1st) == 1) && ~isempty(i_P2_2nd) && (data.direction(i_P2_2nd) == 0);   % NOTE: Uses && so not to require i_P2_1st.
-%         if has_P2_updn_pair && (data.V_LF_HF_before_sweep(i_P2_1st) > 0)
-%             i_P2 = i_P2_2nd;
-%         elseif ~isempty(i_P2_up)
-%             i_P2 = i_P2_up;
-%         else
-%             i_P2 = i_P2_dn;
-%         end
-%         
-%         
-%         
-%         i_selected = [i_P1; i_P2];    % Sweeps selected to be used for best estimatas.
-%        
-%         % Clear fields that are to be used, both to be sure they exist and that they are "empty".
-%         data.npl_est = zeros(size(data.START_TIME_UTC)) + NaN;
-%         data.Te_est  = zeros(size(data.START_TIME_UTC)) + NaN;
-%         data.Vsc_est = zeros(size(data.START_TIME_UTC)) + NaN;
-% 
-% 
-% 
-%         % Choose probe to use for n_plasma, then select data.
-%         % --------------------------------------------------- 
-%         % NOTE: Zero is a common non-sensical value for asm_ni_v_indep.
-%         % BUG(?): For non-sensical values, switches to using value from other probe,
-%         % rather than the other sweep (in sweep pair) on the same probe.
-%         % --------------------------------------------------------------------
-%         data.asm_ni_v_indep = str2double(data.asm_ni_v_indep);
-%         if ~isempty(i_P2)   &&   ~isnan(data.asm_ni_v_indep(i_P2))    &&    (data.asm_ni_v_indep(i_P2) ~= 0)
-%             i = i_P2;
-%         else
-%             i = i_P1;
-%         end
-%         npl = data.asm_ni_v_indep(i);                            % NOTE: May assign/return empty matrix if i = [].
-%         if ~isempty(npl)   &&   ~isnan(npl)   &&   (npl ~= 0)    % Use value if not obviously nonsensical...
-%             data.npl_est(i) = npl;
-%         end
-% 
-%         
-% 
-%         % Choose probe to use for T_e & V_sc, then select data.
-%         % -----------------------------------------------------
-%         % NOTE: j_P = Probe number
-%         data.asm_Te_exp = str2double(data.asm_Te_exp);
-%         data.asm_Vsg    = str2double(data.asm_Vsg);
-%         if ~isempty(i_P2) && ~str2num(data.Illumination{i_P2})
-%             i = i_P2;
-%         elseif ~isempty(i_P1)
-%             i = i_P1;
-%         else
-%             i = i_P2;
-%         end
-%         data.Te_est(i)  = data.asm_Te_exp(i);
-%         data.Vsc_est(i) = data.asm_Vsg   (i);
-%         
-%         data_est = select_structs_arrays_INTERNAL(data, i_selected);
-%     end
 
 
 
