@@ -266,6 +266,7 @@ try
                 if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
                     if delfile == 1 %doublecheck!
                         delete(filename); %will this work on any OS, any user?
+                        tabindex(end,:) = []; %delete tabindex listing to prevent errors.
                     end
                     
                 else

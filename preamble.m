@@ -63,6 +63,9 @@ else
             parts = textscan(line,'%s %s %*s %*s %s %s %s %s','delimiter',':');      % * means the field will be skipped.
             shortphase_line = strtrim(strrep(char(parts{2}), '"', ''));  % Need to remove double quotes and trailing blanks from strings (strrep, strtrim)
             if strcmp(shortphase_line, shortphase)
+                %need this for opsblocks.m
+                missioncal_starttime= textscan(line,'%*s %*s %s %*s %*s %*s %*s %*s','delimiter',':');
+                missioncal_starttime=strtrim(missioncal_starttime{1});
                 break
             end
         end

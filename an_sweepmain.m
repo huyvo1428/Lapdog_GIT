@@ -336,7 +336,8 @@ try
     % try whole batch of sweep analysis at once, why not?
     % 50 sweeps would correspond to ~ 30 minutes of sweeps
 
-    if len > 1
+   % if len > 1
+   if 0 == 1
         
         lmax=min(len,50); %lmax is whichever is smallest, len or 50.
         

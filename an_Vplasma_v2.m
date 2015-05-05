@@ -156,7 +156,8 @@ ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative
 
 
 %if nan or vbKnee2 and vbKnee1 peaks overlap
-%if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1+sigma2  
+%if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1+sigma2  sigma 2 is often
+%very small...
     if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1*2  
 
     vbKnee2=vbKnee1;
