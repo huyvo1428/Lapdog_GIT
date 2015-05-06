@@ -18,11 +18,16 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
 %   CON: Should sometimes overwrite a default list of kvl, sometimes complement it (merge).
 % PROPOSAL: Set which keywords that should have quoted values or not.
 % PROPOSAL: Error-check that all keys are unique.
+% PROPOSAL: Should set keywords that apply to all LBL/CAT files (not just OBJECT=TABLE).
+%    Ex: PDS_VERSION_ID
+% PROPOSAL: Should require keywords that apply to all LBL/CAT files (not just OBJECT=TABLE).
     
     main_INTERNAL(fid, kvl)
     
     function main_INTERNAL(fid, kvl)
 
+        % PROPOSAL: Order by groups.
+        %   Ex: General ODL/PDS. Mission_specific.
         general_key_order_list = { ...
             'PDS_VERSION_ID', ...    % PDS standard requires this to be first, I think.
             'RECORD_TYPE', ...
@@ -114,8 +119,14 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
             'ROSETTA:LAP_SWEEP_RESOLUTION', ...
             'ROSETTA:LAP_SWEEP_STEP_HEIGHT'};
 
+        
 
+        % Log message
+        %LBL_file_path = fopen(fid);   % Find name of file. (Does NOT open the file.)
+        %fprintf(1, 'Write LBL header %s\n', LBL_file_path);
 
+        
+        
         %===========================================================================
         % Put key-value pairs in certain order.
         % -------------------------------------
@@ -140,27 +151,25 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
         end
 
 
-
-        LBL_file_path = fopen(fid);
-        %fprintf(1, 'Write LBL header %s\n', LBL_file_path);
-        
+        % Parameter error check.
         if length(unique(kvl.keys)) ~= length(kvl.keys)
             error('Found doubles among the keys/ODL attribute names.')
         end
-        
-        if ~isempty(kvl.keys)
-            max_key_length = max(cellfun(@length, kvl.keys));
+        if isempty(kvl.keys)                    % Not sure why checks for this specifically. Previously checked before calculating max_key_length.
+            error('kvl.keys is empty.')
         end
+        
+        max_key_length = max(cellfun(@length, kvl.keys));
         
         for j = 1:length(kvl.keys) % Print header of analysis file
             key   = kvl.keys{j};
             value = kvl.values{j};
             
             if ~ischar(value)
-                error(sprintf('(key-) value is not a string:\n key = "%s", fopen(fid) = "%s"', key, fopen(fid)))
+                error(sprintf('(key-) value is not a MATLAB string:\n key = "%s", fopen(fid) = "%s"', key, fopen(fid)))
             end
             
-            fprintf(fid, ['%-', num2str(max_key_length), 's = %s\r\n'], key, value);      % NOTE: Adds correct \r\n at the end.
+            fprintf(fid, ['%-', num2str(max_key_length), 's = %s\r\n'], key, value);
         end
         
     end   % function

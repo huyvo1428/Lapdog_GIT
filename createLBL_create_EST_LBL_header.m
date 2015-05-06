@@ -6,7 +6,7 @@
 % 
 % ASSUMES: The two LBL files have identical header keys on identical positions (line numbers).
 %==============================================================================================
-function kvl_EST_header = createLBL_create_EST_LBL_header(an_tabindex_record, index, kvl_set)
+function kvl_EST_header = createLBL_create_EST_LBL_header(an_tabindex_record, index, kvl_set, delete_header_key_list)
 %
 % PROPOSAL: Move out ODL variables that are in common (key+value) for all LBL files.
 % PROPOSAL: Move collision-handling code into separate general-purpose function(s).
@@ -33,10 +33,12 @@ function kvl_EST_header = createLBL_create_EST_LBL_header(an_tabindex_record, in
     START_TIME_list = {};
     STOP_TIME_list  = {};
     for i_index = 1:N_src_files   % For every source file (A1S, A2S)...
-        CALIB_LBL_file_path = index(an_tabindex_record{3}(i_index)).lblfile;    % Find CALIB LBL files.
-        kvl_LBL_src = createLBL_read_LBL_header(CALIB_LBL_file_path);
-        kvl_LBL_src = createLBL_compatibility_substitute_LBL_keys(kvl_LBL_src, index(an_tabindex_record{3}(i_index)).probe);    % NOTE: Changes name of selected keys.
-
+        %CALIB_LBL_file_path = index(an_tabindex_record{3}(i_index)).lblfile;    % Find CALIB LBL files.
+        %kvl_LBL_src = createLBL_read_LBL_header(CALIB_LBL_file_path);
+        %kvl_LBL_src = createLBL_compatibility_substitute_LBL_keys(kvl_LBL_src, index(an_tabindex_record{3}(i_index)).probe);    % NOTE: Changes name of selected keys.
+        %kvl_LBL_src = createLBL_KVPL_delete_keys(kvl_LBL_src, {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'}, 'may have keys');   % Remove keys which will be added later.
+        [kvl_LBL_src, junk] = createLBL_read_LBL_file(index(an_tabindex_record{3}(i_index)).lblfile, delete_header_key_list, index(an_tabindex_record{3}(i_index)).probe);
+        
         kvl_src_list{end+1} = kvl_LBL_src;            
         START_TIME_list{end+1} = createLBL_KVPL_read_value(kvl_LBL_src, 'START_TIME');
         STOP_TIME_list{end+1}  = createLBL_KVPL_read_value(kvl_LBL_src, 'STOP_TIME');
