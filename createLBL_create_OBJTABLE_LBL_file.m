@@ -45,19 +45,21 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
 % PROPOSAL: Check non-PDS-compliant inline headers of AxS files with the LBL column descriptions (column names)?
 %
 % PROBLEM: Replacing [] with 'N/A'. Caller may use [] as a placeholder before knowing the proper value, rather than in the meaning of no value (N/A).
+%
+% PROPOSAL: Ignore FORMAT? Warning/error on finding FORMAT? (Flag for whether to trigger error?)
+%   NOTE: Current usage of "FORMAT" seems wrong. DVAL checks imply that FORMAT can be omitted.
 % 
-
-    %error('IMPLEMENTATION NOT FINISHED.')
 
     % Constants:
     BYTES_BETWEEN_COLUMNS = 2;
     BYTES_PER_LINEBREAK   = 2;      % Carriage return + line feed.
     PERMITTED_OBJTABLE_FIELD_NAMES = {'COLUMNS_consistency_check', 'ROW_BYTES_consistency_check', 'DESCRIPTION', 'OBJCOL_list'};  % NOTE: Exclude COLUMNS, ROW_BYTES, DELIMITER, ROWS.
     PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'FORMAT', 'ITEMS', 'MISSING_CONSTANT', 'DESCRIPTION'};
-    INDENTATION = '    ';         % Indentation between every "OBJECT level" in LBL file. Must be "function global" since used by ind_print___LOCAL.
+    INDENTATION                    = '    ';         % Indentation between every "OBJECT level" in LBL file. Must be "function global" since used by ind_print___LOCAL.
+    IGNORE_OBJCOLUMN_FORMAT        = 1;              % Flag for whether to ignore all FORMAT fields.
 
     % "function global" variables.
-    indentation_level = 0;    
+    indentation_level = 0;
     
     main_INTERNAL(TAB_file_path, LBL_data, TAB_LBL_inconsistency_policy);
 
@@ -127,6 +129,12 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
             if any(~ismember(fieldnames(cd), PERMITTED_OBJCOL_FIELD_NAMES))
                 error('ERROR: Found illegal COLUMN OBJECT field name(s).')
             end
+            
+            
+            if IGNORE_OBJCOLUMN_FORMAT && isfield(cd, 'FORMAT')
+                OBJTABLE_data.OBJCOL_list{i} = rmfield(OBJTABLE_data.OBJCOL_list{i}, 'FORMAT');
+            end
+            
             
             if isfield(cd, 'ITEMS')
                 N_subcolumns = cd.ITEMS;

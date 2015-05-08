@@ -6,6 +6,11 @@
 % NOTE: Can not handle empty lines.
 %
 function [kvl_header, CALIB_LBL_struct] = createLBL_read_LBL_file(file_path, delete_header_key_list, probe_nbr)
+%
+% PROPOSAL: Move keyword compatibility subsitution code (createLBL_compatibility_substitute_LBL_keys) into this function.
+%    NOTE: createLBL_compatibility_substitute_LBL_keys is only called from here.
+% PROPOSAL: Change name to something implying only reading CALIB LBL files?
+%
 
     [CALIB_LBL_str, CALIB_LBL_struct] = createLBL_read_ODL_to_structs(file_path);   % Read CALIB LBL file.
     kvl_header = [];

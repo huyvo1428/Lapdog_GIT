@@ -7,10 +7,13 @@
 %
 % NOTE: Disabled for "probe 3" since the meaning might be ambiguous. Otherwise no problem.
 % NOTE: This code can NOT be moved to createLBL_write_LBL_header.m since it has to be run before
-% best estimates merges keywords from two LBL files.
+% the best estimates LBL code merges keywords from two LBL files.
 %
 % function kvl = createLBL_compatibility_substitute_LBL_keys(kvl, probe_nbr)
 function   kvl = createLBL_compatibility_substitute_LBL_keys(kvl, probe_nbr)
+%
+% PROPOSAL: Move functionality into createLBL_read_LBL_file.
+%
 
     kvl = main_INTERNAL(kvl, probe_nbr);
 

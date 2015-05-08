@@ -81,6 +81,8 @@ Offset.V2L = 0;
 Offset.V3L = 0;
 
 
+% NOTE: fileflag = B1S/B2S really refers to BxS + IxS.
+% For that case, CURRENTOFFSET refers to the IxS files (not the BxS files which only contain voltages).
 switch fileflag     %we have detected different offset on different modes
     case 'I1L'
         if macroNo == 604
