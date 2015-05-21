@@ -125,7 +125,7 @@ end
 
 
 
-filename = sprintf('%sRPCLAP_%s_%s_%03X_%s.TAB', tabfolder, datestr(macrotime,'yyyymmdd'), datestr(macrotime,'HHMMSS'), macroNo, fileflag);
+filename = sprintf('%sRPCLAP_%s_%s_%03x_%s.TAB', tabfolder, datestr(macrotime,'yyyymmdd'), datestr(macrotime,'HHMMSS'), macroNo, fileflag);
 filenamep = strrep(filename,tabfolder,'');
 twID = fopen(filename,'w');
 

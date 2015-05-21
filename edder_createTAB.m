@@ -89,8 +89,7 @@ CURRENTOFFSET = 0;
 CURRENTO1 = 0;
 CURRENTO2 = 0;
 
-%filename = sprintf('%sRPCLAP_%s_%s_%d_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),macroNo,fileflag);
-filename = sprintf('%sRPCLAP_%s_%s_%\03X_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),macroNo,fileflag); % PREL BUG FIX
+filename = sprintf('%sRPCLAP_%s_%s_%\03x_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),macroNo,fileflag);
 filenamep = strrep(filename,tabfolder,'');
 twID = fopen(filename,'w');
 
