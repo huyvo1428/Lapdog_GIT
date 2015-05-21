@@ -3,7 +3,7 @@
 % (1) Assumes that kvl_1 and kvl_2 have no keys in common (error otherwise), and
 % (2) return key-value pair list with the key-value pairs of kvl_1 and kvl_2 combined.
 %
-% NOTE: Compare KVPL_overwrite_values
+% NOTE: Compare with KVPL_overwrite_values.m .
 %
 % function kvl_dest = createLBL_KVPL_merge(kvl_1, kvl_2)
 function   kvl_dest = createLBL_KVPL_merge(kvl_1, kvl_2)

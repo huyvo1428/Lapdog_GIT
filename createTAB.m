@@ -1,11 +1,11 @@
 function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 %function [] = createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
-%derivedpath   =  filepath
-%tabind         = data block indices for each measurement type, array
-%index          = index array from earlier creation - Ugly way to remember index
-%inside function.
-%fileflag       = identifier for type of data
-%sweept         = start&stop times for sweep in macroblock
+% derivedpath   =  filepath
+% tabind         = data block indices for each measurement type, array
+% index          = index array from earlier creation - Ugly way to remember index
+%                  inside function.
+% fileflag       = identifier for type of data
+% sweept         = start&stop times for sweep in macroblock
 %    FILE GENESIS
 
 % After Discussion 24/1 2014, updated 10/7 2014 FJ
@@ -54,7 +54,7 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 % poor analysis fit	  = +1
 
 
-%e.g. QF = 320 -> Sweep during measurement, bug during measurement, bias change during measurement
+% e.g. QF = 320 -> Sweep during measurement, bug during measurement, bias change during measurement
 %  QF =000 ALL OK.
 
 
@@ -67,7 +67,7 @@ dirM = upper(datestr(index(tabind(1)).t0,'mmm'));
 dirD = strcat('D',datestr(index(tabind(1)).t0,'dd'));
 tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 
-%offset handling
+% Offset handling
 % Now with hardcoded current offset (possibly due to a constant stray
 % current during calibration which is not present during measurements)
 Offset = [];
@@ -146,7 +146,7 @@ global LDLMACROS; %global constant list
 tabindex{end+1,1} = filename; %% Let's remember all TABfiles we create
 tabindex{end,2} = filenamep; %%their shortform name
 tabindex{end,3} = tabind(1); %% and the first index number
-%tabindex{end,9} = tabind(end);  % Last "index" number.
+tabindex{end,9} = tabind(end);  % Last "index" number.
 
 
 len = length(tabind);
@@ -502,6 +502,3 @@ end
 
 
 end
-
-
-
