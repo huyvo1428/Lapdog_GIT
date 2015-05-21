@@ -32,6 +32,8 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %   Usage: However the Swedish Institute of Space Physics sees fit.
 %   $Revision: 1.0 $  $Date: 2009/05/21 13:28 $ 
 %
+%
+%   NOTE: Current implementation (2015-05-08) sets START_TIME to an actual time, but sets SPACECRAFT_CLOCK_START_COUNT = "N/A". Change?
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   * Sets the values for the basic parameters.
@@ -53,7 +55,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     
     MIN_CORRELATION = 0.99;
     
-    CALIB_COEF_files_dir = '/data/LAP_ARCHIVE/CALIB_MEAS_files/';
+    CALIB_COEF_files_dir = '/data/LAP_ARCHIVE/CALIB_MEAS_files/';   % Directory path to where to save calibration coefficients files for debugging.
 
     
     INITIAL_CALIBDATA_NEVER_COLD_AFTER_TIME = datenum('2014-06-01T00:00:00.000', 'yyyy-mm-ddTHH:MM:SS.FFF');   % Unit: days
@@ -707,7 +709,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   * Determines wether to supply the offset data as output argument.
+    %   * Determines whether to supply the offset data as output argument.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if nargout == 1
         

@@ -38,7 +38,7 @@ mac = macro(obs);
 tmac0 = t0(obs);  % Start time of first file in ops block
 tmac1 = t0(obe);  % Start time of last file in ops block
 macind = [tmac0 tmac1 mac];
-
+%clear macro % TEST BUG FIX: Clear "macro" to make sure this value never used again in some other file. NOTE: This file is a script, not a function!!
 
     % str = sprintf('blocklists/block_list_%s.txt',archiveid);
 % mf = fopen(str,'w');

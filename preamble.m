@@ -111,7 +111,7 @@ fclose(dp);
 var = cellstr(char(datasetcat{1}));
 val = char(datasetcat{2});
 ind = find(strcmp('DATA_SET_NAME', var));
-datasetname = strtrim(strrep(val(ind, :), '"', ''));
+datasetname = strtrim(strrep(val(ind, :), '"', ''));   % DATA_SET_NAME of CALIB data set.
 ind = find(strcmp('DATA_SET_ID', var));
 datasetid   = strtrim(strrep(val(ind,:),'"',''));
 tmp = textscan(datasetid,'%*s %*s %*s %d %*s %*s %*s', 'delimiter','-');

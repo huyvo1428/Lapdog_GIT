@@ -17,7 +17,7 @@
 % calculation should be 0.00123*2^6/100000
 function sct = obt2sct(value)
 
-integ = floor(value);
-frac = value-integ;
-sct = integ +(frac/2^16)*100000;
+    integ = floor(value);
+    frac = value-integ;
+    sct = integ +(frac/2^16)*100000;
 end
