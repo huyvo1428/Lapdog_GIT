@@ -80,7 +80,7 @@ index(n).sct1str = [];
 index(n).macrostr = [];
 index(n).t0 = -1;
 index(n).t1 = -1;
-index(n).macro = -1;
+index(n).macro = -1; % (temporary invalid value). Correct value is defined as the macro number interpreted as a hexadecimal number (not decimal number).
 index(n).lf = -1;
 index(n).hf = -1;
 index(n).sweep = -1;
@@ -117,8 +117,10 @@ for ii=1:n  % Loop the label files
           % Find macro:
           ind = find(strcmp('INSTRUMENT_MODE_ID',var));
           macrostr = val(ind,:);
-          %macro = sscanf(macrostr,'%7*c%f');
-          macro = str2double(macrostr(8:10));
+          macro = hex2dec(macrostr(8:10));
+          if isnan(macro)
+              warning('Can not interpret macro number from macro string (INSTRUMENT_MODE_ID).')
+          end
 
               
           

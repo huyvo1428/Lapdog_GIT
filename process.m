@@ -6,7 +6,7 @@
 % 2. ops blocks are defined (opsblock.m)
 
 global tabindex;
-tabindex = {};
+tabindex = {};    % Set by createTAB.m. Must be cleared first e.g. in case of manual reruns.
 
 sctconv=@sct2obt;
 
@@ -112,6 +112,6 @@ for b = 1:nob   % Loop through all ops blocks
     if(~isempty(p3nl)) createTAB(derivedpath,ob(p3nl),index,index(obs(b)).t0,'I3L',sweept3); end
     if(~isempty(p3nh)) createTAB(derivedpath,ob(p3nh),index,index(obs(b)).t0,'I3H',sweept3); end
 
- fprintf(1,'Macroblock %i out of  %i.\n Latest file created from %s\n ',b,nob,index(obe(b)).t1str);
+    fprintf(1,'Macroblock %i out of  %i.\n Latest file created from %s\n ',b,nob,index(obe(b)).t1str);
     
 end %observation block for loop

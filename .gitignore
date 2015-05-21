@@ -8,13 +8,10 @@ metakernel_rosetta.txt
 main.m
 control.m
 *.TAB
-
 *.BC
-
 *.TLS
-
 *.BSP
-
 *.TSC
-
 batch_control.m
+gout.txt
+gtimes.txt

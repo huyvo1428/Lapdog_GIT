@@ -85,7 +85,7 @@ Offset.V3L = 0;
 % For that case, CURRENTOFFSET refers to the IxS files (not the BxS files which only contain voltages).
 switch fileflag     %we have detected different offset on different modes
     case 'I1L'
-        if macroNo == 604
+        if macroNo == hex2dec('604')
             CURRENTOFFSET = -12E-9;
         else
             CURRENTOFFSET = Offset.I1L;
@@ -93,7 +93,7 @@ switch fileflag     %we have detected different offset on different modes
     case 'B1S'
         CURRENTOFFSET = Offset.B1S;
     case 'I2L'
-        if macroNo == 604
+        if macroNo == hex2dec('604')
             CURRENTOFFSET = -12E-9;
         else
             CURRENTOFFSET = Offset.I2L;
@@ -125,7 +125,7 @@ end
 
 
 
-filename = sprintf('%sRPCLAP_%s_%s_%d_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),macroNo,fileflag); %%
+filename = sprintf('%sRPCLAP_%s_%s_%03X_%s.TAB', tabfolder, datestr(macrotime,'yyyymmdd'), datestr(macrotime,'HHMMSS'), macroNo, fileflag);
 filenamep = strrep(filename,tabfolder,'');
 twID = fopen(filename,'w');
 
@@ -141,13 +141,14 @@ global LDLMACROS; %global constant list
 %{ ,5} end time (S/C clock)
 %{ ,6} number of columns
 %{ ,7} number of rows
+%{ ,8} ?
+%{ ,9} last index number
 
-
-tabindex{end+1,1} = filename; %% Let's remember all TABfiles we create
+% NOTE: This is not the only location where tabindex is set, even for fields set here.
+tabindex{end+1,1} = filename; %% Let's remember all TAB files we create
 tabindex{end,2} = filenamep; %%their shortform name
 tabindex{end,3} = tabind(1); %% and the first index number
 tabindex{end,9} = tabind(end);  % Last "index" number.
-
 
 len = length(tabind);
 counttemp = 0;
@@ -294,7 +295,7 @@ try
         
         
         
-        for(i=1:len); %read&write loop iterate over all files, create B*S.TAB and I*S.TAB
+        for(i=1:len); % read&write loop iterate over all files, create B*S.TAB and I*S.TAB
             qualityF = 0;     % qualityfactor initialised!
             trID = fopen(index(tabind(i)).tabfile);
             
@@ -462,6 +463,7 @@ try
                 
                 tabindex(end+1,1:7)={filename2,strrep(filename2,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len,length(potbias)+5};
                 tabindex{end,8} = b2+b3+b4;
+                tabindex{end,9} = tabind(end);
                 %           tabindex(end+1,1:6)={filename3,strrep(filename3,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len};
                 %one index for currents and two timestamps
                 
@@ -473,7 +475,7 @@ try
             end
             
             clear scantemp;
-        end
+        end  % loop to create B*S.TAB and I*S.TAB (?)
         fclose(twID2); %write file nr 2, condensed data, terminated asap
         
     end

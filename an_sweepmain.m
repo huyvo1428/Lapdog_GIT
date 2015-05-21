@@ -597,7 +597,7 @@ catch err
     len = length(err.stack);
     if (~isempty(len))
         for i=1:len
-            fprintf(1,'%s, %i,',err.stack(i).name,err.stack(i).line);
+            fprintf(1,'%s, %i; ',err.stack(i).name,err.stack(i).line);
         end
     end
     cspice_kclear;  %unload ALL kernels when exiting function

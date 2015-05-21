@@ -93,12 +93,14 @@ if(strcmp(shortphase,'MARS')) %bug from older mission calendar
     target = 'MARS';
 end
 
-%some macros need to be handled with special care
-%constant list known everywhere
+% Some macros need to be handled with special care
+% Constant list known everywhere
+% Must be interpreted the same way as index(:).macro, i.e.
+% the macro interpreted as a hexadecimal number.
 global LDLMACROS;
-LDLMACROS = [807,805,804,803, 703,704];
+LDLMACROS = hex2dec({'807','805','804','803', '703','704'});    % NOTE: Must cell array with strings for hex2dec ({} not []).
 
-    
+
 
 
 

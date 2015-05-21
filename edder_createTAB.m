@@ -89,7 +89,8 @@ CURRENTOFFSET = 0;
 CURRENTO1 = 0;
 CURRENTO2 = 0;
 
-filename = sprintf('%sRPCLAP_%s_%s_%d_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),macroNo,fileflag); %%
+%filename = sprintf('%sRPCLAP_%s_%s_%d_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),macroNo,fileflag);
+filename = sprintf('%sRPCLAP_%s_%s_%\03X_%s.TAB',tabfolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),macroNo,fileflag); % PREL BUG FIX
 filenamep = strrep(filename,tabfolder,'');
 twID = fopen(filename,'w');
 
@@ -160,9 +161,9 @@ if(~index(tabind(1)).sweep); %% if not a sweep, do:
             
             lee= length(scantemp{1,2}(:));
             del = false(1,lee);
-            if macroNo == 604
+            %if macroNo == hex2dec('604')
             %'hello'
-            end
+            %end
 
             if scantemp{1,2}(end)<sweept(1,1) || scantemp{1,2}(1)>sweept(2,end)
             

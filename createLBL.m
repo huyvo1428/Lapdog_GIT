@@ -12,7 +12,7 @@
 %
 
 t_start = clock;    % NOTE: Not number of seconds, but [year month day hour minute seconds].
-warnings_settings = warning('query');
+previous_warnings_settings = warning('query');
 warning('on', 'all')
 general_TAB_LBL_inconsistency_policy = 'warning';
 AxS_TAB_LBL_inconsistency_policy     = 'warning';
@@ -118,9 +118,13 @@ if(~isempty(tabindex));
             % Retrieve SPACECRAFT_CLOCK_STOP_COUNT value from new version of tabindex, but only if it is available.
             % This is a way to handle old cached versions of tabindex.
             if size(tabindex, 2) >= 9
-                SPACECRAFT_CLOCK_STOP_COUNT = index(tabindex{i,9}).sct1str;
+                if isempty(tabindex{i,9})
+                    warning('tabindex{i,9} (necessary for SPACECRAFT_CLOCK_STOP_COUNT) does exist, but is empty.')
+                else
+                    SPACECRAFT_CLOCK_STOP_COUNT = index(tabindex{i,9}).sct1str;
+                end
             end
-            
+
 
             kvl_LBL = kvl_LBL_all;
             %kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'START_TIME',                   index(tabindex{i,3}).t0str(1:23));  % UTC start time
@@ -667,5 +671,5 @@ if (~isempty(an_tabindex));
     end   % for 
 end     % if
 
-warning(warnings_settings)
+warning(previous_warnings_settings)
 fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, t_start));
