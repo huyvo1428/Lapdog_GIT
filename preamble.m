@@ -61,7 +61,7 @@ else
         end
         jj = jj + 1;
     end
-    fclose(fc)
+    fclose(fc);
 end
 
 % Need to remove double quotes and trailing blanks from strings (strrep, strtrim)

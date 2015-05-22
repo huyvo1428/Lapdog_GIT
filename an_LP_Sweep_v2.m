@@ -555,7 +555,7 @@ try %try the dynamic solution first, then the static.
         %plot(V+Vsc,I-Iph,'b',V+Vsc,(ion.I+elec.I)+ion.mean(1),'g',V+Vsc,ion.I+expfit.I+ion.mean(1),'r',V+Vsc+Vplasma,Iph,'black')
         axis([min(V)+Vsc max(V)+Vsc min(I) max(I)])
         title([sprintf('Vp vs I, fully auto,lum=%d, %s',illuminated,diag_info{1})])
-        legend('I','ion+e(linear)','Ions+e(exp)','pe','Location','Northwest')
+        legend('I-pe','ion+e(linear)','Ions+e(exp)','pe','Location','Northwest')
         
         
         grid on;
