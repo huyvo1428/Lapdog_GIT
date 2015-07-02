@@ -1,50 +1,47 @@
 %Vplasma
 %takes an sweep potential array and current array, and optionally a guess for the
 %Vplasma and its sigma (suggested sigma 3 V), outputs an estimate for the
-%plasma potential, Vsc and Vbar and it's confidence level (std)
+%plasma potential and it's confidence level (std)
+%function [Vsg,Sgsigma,Vph_knee,Vph_knee_sigma] = an_VsgVphknee(Vb,Ib,vGuess,sigmaGuess)
 function [out] = an_Vplasma_v2(Vb,Ib,vGuess,sigmaGuess)
 
 
 out = [];
+out.Vsc      = nan(1,2);
+out.Vph_knee = nan(1,2);
+out.Vbar     = nan(1,2);
 
 
-%default every value to [NaN,NaN]. Also if the algorithm doesn't converge, NaN is outputted
-out.Vsc      = nan(1,2); %value & relative std
-out.Vph_knee = nan(1,2); 
-out.Vbar     = nan(1,2); 
-
-%|Vph_knee|≤|Vsc| and sign(Vph_knee) = sign(Vph_knee
-
-%Vbar = Vsc unless max(di)==di(end).(hot electrons,maybe Vsc <-30V). 
-%we have reasons to distrust results where max(di)==di(end).
-
-
-global an_debug ; %debug plot variable
+global an_debug ; 
 
 
 len= length(Vb);
 
-[di,d2i]= centralDD(Ib,Vb,0.28); %get central difference of Derivative and 2nd Deriv. Smoothed
+[di,d2i]= leapfd(Ib,Vb,0.28);
 
-[Vb,ind]=sort(Vb); %maybe not needed
+[Vb,ind]=sort(Vb);
 d2i=d2i(ind);
 di=di(ind);
 
 
 
-posd2i =(abs(d2i)+d2i)/2;  %ignore negative values
+posd2i =(abs(d2i)+d2i)/2;
 
 %sort absolute values of derivative
 
 if nargin>2   %if a guess is given
     
+%    vSC=vGuess/VSC_TO_VPLASMA;
+%    vbGuess=vGuess-vSC;
+
     vbGuess=-vGuess;
     
+
 [junk,firstpeak] =min(abs(Vb-vbGuess));
 else
 [junk,pos]= sort(abs(posd2i));
-top10ind= floor(len*0.9+0.5); %get top 10 percent of potential peak positions
-firstpeak=min(pos(top10ind:end)); % prioritise earlier left peaks, because electron side (end) can be noisy    
+top10ind= floor(len*0.9+0.5); %get top 10 percent of peaks
+firstpeak=min(pos(top10ind:end)); % prioritise earlier peaks, because electron side (end) can be noisy    
 end
 
 %get a region around our chosen guesstimate.
@@ -70,29 +67,28 @@ else
 
 end
 
-%if the algorithm doesn't converge,try the whole spectrum, no fancy guesswork.
 
-if isnan(vbKnee1) 
+if isnan(vbKnee1)
+    %if it's NaN, try the whole spectrum, no fancy guesswork.
     [sigma1,vbKnee1] =gaussfit(Vb,posd2i);
 end
 
-%-------- second peak? ---------------------------------------------
-% take first fit, normalize it to 2nd derivative and subtract.
 
-gaussian_reduction = gaussmf(Vb,[sigma1 vbKnee1]).'; %get gaussian from fit.
+gaussian_reduction = gaussmf(Vb,[sigma1 vbKnee1]).';
 reduced_posd2i = posd2i/mean(abs(posd2i))-gaussian_reduction*max(posd2i/mean(abs(posd2i)));
 
 reduced_posd2i =(abs(reduced_posd2i)+reduced_posd2i)/2; %set negative values to 0
 
-[junk,pos2]= sort(abs(reduced_posd2i)); %sort by absolute value)
+[junk,pos]= sort(abs(reduced_posd2i)); %sort by absolute value)
+%top10ind= floor(len*0.9+0.5); %get top 10 percent of peaks
+%secondpeak=min(pos(top10ind:end)); % prioritise earlier peaks, because electron side (end) can be noisy    
+secondpeak=pos(end); %maximum point 
 
-secondpeak=pos2(end); %maximum point 
-
+epsilon = 2; %the last (and first) two points on the second derivative have larger errors
 
 %-------- Time for logic ---------------------------------------------
 
 %-------- Get out early? ------------------------
-epsilon = 2; %the last (and first) two points on the second derivative have larger errors
 if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if this position is on the max or min Vb(step),then
     Vsc=-Vb(end);
     Sgsigma = NaN;
@@ -105,7 +101,7 @@ if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if thi
     out.Vph_knee = [Vph_knee,Vph_knee_sigma];
 
     
-    if an_debug > 1 %debug plot
+    if an_debug > 1
     
         figure(44);
         %just for diagnostics
@@ -149,8 +145,12 @@ ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative
               
 [sigma2,vbKnee2] =gaussfit(Vb(ind),reduced_posd2i(ind)); %second knee in sweep!
    
-
-
+    
+%vbKnee2 may be NaN
+% if isnan(vbKnee2)
+%     %if it's NaN, try the whole spectrum, no fancy guesswork.
+% %    [Kneesigma,vbKnee] =gaussfit(Vb,posd2i);
+% end
 
 %-------- Time for more logic ---------------------------------------------
 
@@ -165,33 +165,52 @@ ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative
 end
 
 
-if sign(vbKnee1)~= sign(vbKnee2) %if peaks on different sides of Vb = 0, ignore second peak
-%maybe have a check if secondpeak>firstpeak. if so, pos(end) == pos2(end). This will be bad if Vsc>>1
-    Vsc = -vbKnee1;
-    Sgsigma = abs(sigma1/vbKnee1);
-    Vph_knee = Vsc;
-    Vph_knee_sigma = Sgsigma;
+%if sign(vbKnee1)~= sign(vbKnee2) %if peaks on different sides of Vb = 0, ignore second peak
 
-else
+% Vsc   Vsc = -vbKnee1;
+%    Sgsigma = abs(sigma1/vbKnee1);
+%    Vph_knee = Vsc;
+%    Vph_knee_sigma = Sgsigma;
+%
+%else
 
-    
-    if abs(vbKnee1)>abs(vbKnee2) %abs(Vsc)is always larger than abs(Vph_knee)
+
+
+    if vbKnee1>vbKnee2 %abs(Vsc)is always larger than abs(Vph_knee)     x>y -> vsc = -x, vph_knee = -y 
         Vsc = -vbKnee1;
         Sgsigma=abs(sigma1/vbKnee1);
         Vph_knee = -vbKnee2;
         Vph_knee_sigma=abs(sigma2/vbKnee2);
-        
-        
+
+
     else
         Vsc = -vbKnee2;
         Sgsigma=abs(sigma2/vbKnee2);
         Vph_knee = -vbKnee1;
         Vph_knee_sigma=abs(sigma1/vbKnee1);
-        
+
     end
+
+
+
+    
+%    if abs(vbKnee1)>abs(vbKnee2) %abs(Vsc)is always larger than abs(Vph_knee)
+%        Vsc = -vbKnee1;
+%        Sgsigma=abs(sigma1/vbKnee1);
+%        Vph_knee = -vbKnee2;
+%        Vph_knee_sigma=abs(sigma2/vbKnee2);
+%        
+%        
+%    else
+%        Vsc = -vbKnee2;
+%        Sgsigma=abs(sigma2/vbKnee2);
+%        Vph_knee = -vbKnee1;
+%        Vph_knee_sigma=abs(sigma1/vbKnee1);
+%        
+%    end
     
 
-end
+%end
 
 
 
@@ -237,7 +256,7 @@ if an_debug > 1
     %    Ib5 = smooth(Ib,0.14,'sgolay');
 
 %     Ib3 = accumarray(ic,Ib,[],@mean);
-%     [junk,d2i2]= centralDD(Ib3,Vb,0.14);
+%     [junk,d2i2]= leapfd(Ib3,Vb,0.14);
 %     d2i2=d2i2(ind);
 %      posd2i2=(abs(d2i2)+d2i2)/2;
 % %     ind02= find(~d2i,1,'first');
