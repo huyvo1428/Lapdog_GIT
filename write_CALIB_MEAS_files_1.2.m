@@ -16,24 +16,34 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %   
 %   SYNTAX:
 %       
-%                    write_CALIB_MEAS_files(pearch,missionphasename,outpath)
+%                    write_CALIB_MEAS_files(pearch, missionphasename, outpath)
 %       
-%       offsetData =  write_CALIB_MEAS_files(pearch,missionphasename,outpath)
+%       offsetData = write_CALIB_MEAS_files(pearch, missionphasename, outpath)
 %       
-%       
-%                   
-%   Author: Martin Ulfvik 
-%   Rewritten by Reine Gill
-%   Third degree polynomial solution by FKJN 28/8 2014
-%   Added condition for only being able to label calibration data "cold" if they come before a specified date OR are not the very first in the archive.
-%   /Fredrik Johansson, Erik P G Johansson, 2015-02-04
-%   Primarily added check for finding calibration data of which none is useful. /Erik P G Johansson, 2015-02-04
-%
+%   ----------------------------------------------------------------------------
 %   Usage: However the Swedish Institute of Space Physics sees fit.
 %   $Revision: 1.0 $  $Date: 2009/05/21 13:28 $ 
 %
+%   Author: Martin Ulfvik 
+%   Rewritten by Reine Gill
+%   ----------------------------------------------------------------------------
+%   Third degree polynomial solution by FKJN 28/8 2014
+%
+%   Added condition for only being able to label calibration data "cold" if they come before a
+%   specified date OR are not the very first in the archive.
+%   /Fredrik Johansson, Erik P G Johansson, 2015-02-04
+%
+%   Primarily added check for finding calibration data which are not useful.
+%   /Erik P G Johansson, 2015-02-04
+%   
+%   Updated ADC20 TM-to-physical-units conversion factors according to calibration of
+%   ADC20 relative ADC16 based on data for 2015-05-28. New values are multiples of ADC16 values
+%   and are used retroactively.
+%   /Erik P G Johansson 2015-06-11
+%   ----------------------------------------------------------------------------
 %
 %   NOTE: Current implementation (2015-05-08) sets START_TIME to an actual time, but sets SPACECRAFT_CLOCK_START_COUNT = "N/A". Change?
+%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   * Sets the values for the basic parameters.
@@ -88,7 +98,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     if pearch(end) == filesep        
         pearch(end) = [];    % Remove trailing file separator (slash).
     end
-    [dummy,earch]=fileparts(pearch);    % Split to get DATA_SET_ID. Sensitive to whether path ends with slash or not.
+    [dummy, earch] = fileparts(pearch);    % Split to get DATA_SET_ID. NOTE: Sensitive to whether path ends with slash or not.
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -591,6 +601,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         fileID = fopen(filePathLBL, 'wt');
         
         fprintf(fileID, 'PDS_VERSION_ID = PDS3\r\n');
+        fprintf(fileID, 'LABEL_REVISION_NOTE = "2015-06-03, EJ: Updated LAP_*_CAL_20B* calibration factors"\r\n');
         fprintf(fileID, 'RECORD_TYPE = FIXED_LENGTH\r\n');
         fprintf(fileID, 'RECORD_BYTES = 7936\r\n');
         fprintf(fileID, 'FILE_RECORDS = 256\r\n');
@@ -615,12 +626,23 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         fprintf(fileID, horzcat('START_TIME = ', startTimeString, '\r\n'));
         fprintf(fileID, 'SPACECRAFT_CLOCK_START_COUNT = "N/A"\r\n');
         fprintf(fileID, 'DESCRIPTION = "CONVERSION FROM TM UNITS TO AMPERES AND VOLTS"\r\n');
+        
+        %----------------------------------------------------------------------------------------
         fprintf(fileID, 'ROSETTA:LAP_VOLTAGE_CAL_16B = "1.22072175E-3"\r\n');
-        fprintf(fileID, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.62940181E-5"\r\n');
+        %--------
+        %fprintf(fileID, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.62940181E-5"\r\n');   % Original value used up until ca 2015-06-11.
+        fprintf(fileID, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.534142050781250E-05"\r\n');   %  1.22072175E-3 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
+        %--------    
         fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_16B_G1 = "3.05180438E-10"\r\n');
-        fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.90735045E-11"\r\n');
+        %--------        
+        %fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.90735045E-11"\r\n');   % Original value used up until ca 2015-06-11.
+        fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.883535515781250E-11"\r\n');   % 3.05180438E-10 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
+        %--------        
         fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_16B_G0_05 = "6.10360876E-9"\r\n');
-        fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.81470090E-10"\r\n');
+        %--------        
+        %fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.81470090E-10"\r\n');   % Original value used up until ca 2015-06-11.
+        fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.767071031562500E-10"\r\n');     % 6.10360876E-9 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
+        %----------------------------------------------------------------------------------------
         
         fprintf(fileID, 'OBJECT = TABLE\r\n');
         fprintf(fileID, 'INTERCHANGE_FORMAT = ASCII\r\n');

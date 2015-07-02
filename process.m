@@ -92,7 +92,7 @@ for b = 1:nob   % Loop through all ops blocks
     %Generate sweep files
     %
     if(~isempty(p1s)) createTAB(derivedpath,ob(p1s),index,index(obs(b)).t0,'B1S',sweept1); end
-    if(~isempty(p2s)) createTAB(derivedpath,ob(p2s),index,index(obs(b)).t0,'B2S',sweept1); end
+    if(~isempty(p2s)) createTAB(derivedpath,ob(p2s),index,index(obs(b)).t0,'B2S',sweept2); end
     
     %Generate E data files
     if(~isempty(p1el)) createTAB(derivedpath,ob(p1el),index,index(obs(b)).t0,'V1L',sweept1); end

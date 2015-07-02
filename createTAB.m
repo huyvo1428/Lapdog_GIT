@@ -4,16 +4,17 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 % tabind         = data block indices for each measurement type, array
 % index          = index array from earlier creation - Ugly way to remember index
 %                  inside function.
+% macrotime      = Date & time that will be used for the filename
 % fileflag       = identifier for type of data
 % sweept         = start&stop times for sweep in macroblock
 %    FILE GENESIS
 
-% After Discussion 24/1 2014, updated 10/7 2014 FJ
+% After Discussion 24/1 2014, updated 10/7 2014 FJ, updated 2015-06-09 EJ
 % FILE CONVENTION for three file types: RPCLAP_YYMMDD_hhmmss_###_QPO.TAB
 % (OR RPCLAP_YYMMDD_hhmmss_###_QPO.LBL OR RPCLAP_YYMMDD_hhmmss_BLKLIST.TAB)
 % where
 % ### is either:
-% 	MacroID (number between 000-999)
+% 	MacroID (hexadecimal number between 000-FFF)
 % 	?PSD?,power spectrum of high frequency data (only for mode 'H')
 % 	'FRQ',corresponding frequency list to PSD data (only for mode ?H?)
 % 	Downsample period, number from 00-99 and letter U, where U is the unit (S = seconds, M = minutes, H = hours),
@@ -21,8 +22,8 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 % Q= measured Quantity (?B?/?I?/?V?/?A?), where:
 %
 %     B = probe bias voltage, exists only for mode = S
-%     I = Current , all modes
-%     V = Potential , only for mode = H/L
+%     I = Current, all modes
+%     V = Potential, only for mode = H/L
 %     A = Derived (analysed) variables results, exists only for mode = S
 %
 % P= Probe number(1/2/3),   (Probe 3 = combined Probe 1 & Probe 2 measurement)
@@ -52,8 +53,6 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 % low sample size(for avgs) = +2
 % zeropadding(for psd)	  = +2
 % poor analysis fit	  = +1
-
-
 % e.g. QF = 320 -> Sweep during measurement, bug during measurement, bias change during measurement
 %  QF =000 ALL OK.
 
@@ -71,9 +70,10 @@ tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 % Now with hardcoded current offset (possibly due to a constant stray
 % current during calibration which is not present during measurements)
 Offset = [];
-Offset.I1L = -23E-9;
+Offset.I1L = 0;   % The old value -23E-9 is now part of pds ADC20 calibration ("Delta").
 Offset.B1S = +1E-9;
-Offset.I2L = -23E-9;
+%Offset.I2L = -23E-9;
+Offset.I2L = 0;   % The old value -23E-9 is now part of pds ADC20 calibration ("Delta").
 Offset.B2S = +6.5E-9;
 Offset.I3L = 0;
 Offset.V1L = 0;
@@ -86,7 +86,7 @@ Offset.V3L = 0;
 switch fileflag     %we have detected different offset on different modes
     case 'I1L'
         if macroNo == hex2dec('604')
-            CURRENTOFFSET = -12E-9;
+            CURRENTOFFSET = -12E-9 +23E-9; % Approximate new calibration offset due to moving ADC20 delta calibration to pds (all macros).
         else
             CURRENTOFFSET = Offset.I1L;
         end
@@ -94,7 +94,7 @@ switch fileflag     %we have detected different offset on different modes
         CURRENTOFFSET = Offset.B1S;
     case 'I2L'
         if macroNo == hex2dec('604')
-            CURRENTOFFSET = -12E-9;
+            CURRENTOFFSET = -12E-9 +23E-9; % Approximate new calibration offset due to moving ADC20 delta calibration to pds (all macros).
         else
             CURRENTOFFSET = Offset.I2L;
         end

@@ -8,19 +8,14 @@
 % When/if that becomes PDS compliant, this code WILL NOT WORK!
 %    
 % IMPORTANT NOTE: Uses file existence to check for existence of pre-sweep low-freq. bias potential.
-
+%
+% IMPORTANT NOTE: This function may have a memory problem for large files or large datasets.
+%    May therefore contain extra code on memory use. Only a limited effort on reducing
+%    memory usage have been made so far.
+%
 function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 
 %===========================================================================================
-% QUESTION: Filenames for new files?
-%     EST = Estimates
-%     BES = Best estimates
-%     PPS = Plasma parameters.
-%     EXS = Estimate (no probe), sweep
-%     NOTE: 1/2/3 hints of probe number.
-%     NOTE: "S" hints of sweep.
-%     NOTE: "B" hints of "bias potential during sweep"
-%
 % NOTE: In principle: Not one EST file per A1S/A2S file, but
 % per operations block (both probes together). 
 %
@@ -64,6 +59,15 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % Example: 2015/MAY/D01/RPCLAP_20150501_235959_807*
 %    PROPOSAL: try-catch for every particular EST file, not for all EST files together.
 %    PROPOSAL: try-catch for reading IxL/H files and permit absense of file.
+%-------------------------------------------------------------------------------------------
+% MEMORY PROBLEM:
+% ---------------
+% PROPOSAL: Eliminate main_INTERNAL function to eliminate temporary variables (in particular "index" is sizable).
+%    CON: "Ugly" having try-catch covering all code.
+%    CON: Function-global variables available in subfunctions.
+%       PROPOSAL: Put subfunctions in other files.
+%          CON: Eight subfunctions. Too many files.
+% PROPOSAL: Do not build up PO_table.
 %===========================================================================================
 
     try
@@ -72,6 +76,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         
         t_start = clock;             % NOTE: Not number of seconds, but [year month day hour minute seconds].
         MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in createLBL!!!
+        MEMORY_USE_LOG_ENABLED = 1;  % Enable/disable memory usage log output. Printouts should be removed permanently some day.
     
         an_tabindex = main_INTERNAL(an_tabindex, tabindex, index, obe);
     
@@ -109,6 +114,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         % Create table of data from resp. probes. Table has indicies (<ops block>, <probe number>).
         % NOTE: Not all entries will necessarily be assigned.
         % Some ops blocks may not contain sweeps, some may sweep on only one probe, or none.
+        % NOTE: ant = "an_tabindex"
         %------------------------------------------------------------------------------
         i_ant_list = find(strcmp(an_tabindex(:,7), 'sweep'));   % ant = "an_tabindex"
         PO_table = cell(nob, 2);               % PO = probe-operations block. Data for one probe during one ops block.
@@ -174,9 +180,17 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             O_list{i_ob}.EST_file_path = EST_file_path;
             O_list{i_ob}.EST_file_name = EST_file_name;
             
-            PO_table{i_ob, i_probe} = PO;            
+            PO_table{i_ob, i_probe} = PO;
+            clear PO
+            if MEMORY_USE_LOG_ENABLED
+                fprintf(1, 'main_INTERNAL: End of iteration in first loop - call "whos PO_table"\n')
+                whos PO_table   % DEBUG
+            end
         end
-
+        if MEMORY_USE_LOG_ENABLED
+            fprintf(1, 'main_INTERNAL: After first loop - call "whos PO_table index"\n')
+            whos PO_table index% DEBUG
+        end
         
         
         %---------------------------------------------------------------------
@@ -208,7 +222,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             % command since it is uncertain whether PO1 and PO2 are empty,
             % not whether PO1.data/PO2.data themselves are empty.
             %--------------------------------------------------------
-            %% --- Older implementation. Delete? ---
+            % --- Older implementation. Delete? ---
             %sweep_data = [];
             %V_bias_limits = {[], []};
             %if ~isempty(PO1)
@@ -720,34 +734,115 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     % -----------------
     % WARNING: Relies on hardcoded column numbers.
     % IxL and IxH files have the same format.
-    function data = read_IxLH_file_bias_voltage_INTERNAL(file_path, probe_nbr)
+    %
+    % =============================================================================================
+    % NOTE: An out-of-memory error has been observed here once on squid with output as below.
+    % The code was executed some weeks before 2015-06-11 for archive 1504 (May 2015).
+    % The line numbers could not be used since the code version had changed.
+    % THIS IMPLIES THAT THIS FUNCTION SHOULD BE OPTIMIZED WITH REGARDS TO MEMORY USE.
+    % Therefore tries to catch error locally when information is still available (e.g. file_path).
+    % -------------------------------------------------------------------------------------
+    % ....
+    %  Macroblock 40 out of  40.
+    %  Latest file created from 2015-04-30T23:56:45.123
+    %  Analysing sweeps
+    % 1 bad smoothening performance
+    % Downsample Low frequency measurements
+    % Generating Spectra
+    % Best estimates
+    % 
+    % lapdog:best_estimates error message: Out of memory. Type HELP MEMORY for your options.
+    % best_estimates/read_IxLH_file_bias_voltage_INTERNAL, 839,
+    % best_estimates/main_INTERNAL, 142,
+    % best_estimates, 65,
+    % analysis, 92,
+    % lapdog, 113,
+    % analysis (incl. best_estimates): 32178 s (elapsed wall time)
+    % lapdog: generate LBL files....
+    % createLBL: 180 s (elapsed wall time)
+    % lapdog: DONE!
+    % moving derived archive to /data/LAP_ARCHIVE/
+    % moving edited& calibrated archives to /data/LAP_ARCHIVE
+    % removing archives from workfolder
+    % DONE!
+    % =============================================================================================
+    % Command-line experiment on memory use when reading file
+    % (all columns, double precision; middle column is unnecessarily string).
+    % ----------------------------------------------------------------------
+    % % -rw-r--r-- 1 ros1a rosetta 436M 2015-06-06 18.40:42 D09/RPCLAP_20150409_000150_807_I1H.TAB
+    %
+    % >> fid = fopen('/data/LAP_ARCHIVE/RO-C-RPCLAP-5-1504-DERIV-V0.3/2015/APR/D09/RPCLAP_20150409_000150_807_I1H.TAB', 'r');
+    % >> file_contents = textscan(fid, '%s%f%s%f%s', 'delimiter', ',');
+    % >> fc_1 = file_contents{1,1};
+    % >> fc_2 = file_contents{1,2};
+    % >> fc_3 = file_contents{1,3};
+    % >> fc_4 = file_contents{1,4};
+    % >> fc_5 = file_contents{1,5};
+    % >> whos file_contents fc_1 fc_2 fc_3 fc_4 fc_5
+    %   Name                     Size                 Bytes  Class     Attributes
+    % 
+    %   fc_1               5499840x1              615982080  cell                
+    %   fc_2               5499840x1               43998720  double              
+    %   fc_3               5499840x1              475064408  cell                
+    %   fc_4               5499840x1               43998720  double              
+    %   fc_5               5499840x1              362989440  cell                
+    %   file_contents            1x5             1542033668  cell                    // 1.5 GB!!!!
+    function data = read_IxLH_file_bias_voltage_INTERNAL(file_path, probe_nbr)        
+        try        
+            fid = fopen(file_path, 'r');
+            if fid < 0
+                error(sprintf('Can not read file: %s', file_path))
+            end
+            fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
+            
+            % IMPLEMENTATION NOTE: Letting textscan parse numbers is much faster (about ~7 times)
+            % than doing so manually with str2double after having read file into strings.
+            % IxL files can be so large that speed matters.
+            %
+            % IMPLEMENTATION NOTE: Only reads the necessary columns and only at single precision to
+            % reduce memory use. The lower precision (and hence lower memory use) does seem to
+            % follow the values into other variables.
+            % %f32 - read a number and convert to single
+            % * - Ignore field, do not read
+            file_contents = textscan(fid, '%*s%f32%*s%f32%*s', 'delimiter', ',');
+            
+            N_rows = length(file_contents{1});
+            fclose(fid);
         
-        % IMPLEMENTATION NOTE: Letting textscan parse numbers is much faster (about ~7 times)
-        % than doing so manually with str2double after having read file into strings.
-        % IxL files can be so large that speed matters.
-        fid = fopen(file_path, 'r');
-        if fid < 0
-            warning(sprintf('Can not read file: %s', file_path))
-        end
-        %fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
-        file_contents = textscan(fid, '%s%f%s%f%s', 'delimiter', ',');        
-        N_rows = length(file_contents{1});
-        fclose(fid);
-        
-        
-        data.UTC_TIME = file_contents{1};    % For debugging.
-        data.TIME_OBT = file_contents{2};
-        data.V_bias   = file_contents{4};               
-        
-        
+            %data.UTC_TIME = file_contents{1};    % For debugging. Can disable to reduce memory use.
+            data.TIME_OBT = file_contents{1};
+            data.V_bias   = file_contents{2};
 
-        % Add extra fields that may be needed by algorithms.
-        data.probe_nbr = zeros(N_rows, 1) + probe_nbr;
-%        t = tic;
-%        for i_row = 1:N_rows
-%            data.TIME_et(i_row, 1) = cspice_str2et(data.TIME_UTC{i_row});    % Very slow for large files.
-%        end
-%        toc(t)
+            % Add extra fields that may be needed by algorithms.
+            data.probe_nbr = zeros(N_rows, 1) + probe_nbr;
+%           t = tic;
+%           for i_row = 1:N_rows
+%               data.TIME_et(i_row, 1) = cspice_str2et(data.TIME_UTC{i_row});    % Very slow for large files.
+%           end
+%           toc(t)
+
+            if MEMORY_USE_LOG_ENABLED
+                fprintf(1, 'read_IxLH_file_bias_voltage_INTERNAL: End of function (try clause) - calling "whos file_contents"\n')
+                whos file_contents   % DEBUG
+            end
+        catch err
+            % Try catch error locally to try to give information on out-of-memory errors.
+            
+            fprintf(1,'\nlapdog: best_estimates error message: %s\n',err.message);
+        
+            len = length(err.stack);
+            if (~isempty(len))
+                for i=1:len
+                    fprintf(1,'%s, %i,\n', err.stack(i).name, err.stack(i).line);
+                end
+            end
+            
+            if MEMORY_USE_LOG_ENABLED
+                fprintf(1, 'read_IxLH_file_bias_voltage_INTERNAL: End of function (catch clause) - calling "whos file_contents"\n')
+                whos file_contents   % DEBUG
+            end
+            error(sprintf('Error occurred when reading IxL/IxH file "%s".\n', file_path))
+        end
     end
     
     % #############################################################################################

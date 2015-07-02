@@ -53,6 +53,7 @@ kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PROCESSING_LEVEL_ID',    
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
+%kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_ID',               producershortname);
 kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');

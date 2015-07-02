@@ -26,6 +26,12 @@
 % The implementation should add that when appropriate.
 % The implementation will add certain keywords to kvl_header, and derive the values, and assume that caller has not set them. Error otherwise.
 %
+%
+%
+% BUG: ITEMS sections: BYTES gives the wrong value. ITEM_OFFSET, ITEM_BYTES missing.
+%      See "Planetary Data Systems Data Reference v3.6", sections A.7 and A.7.6.
+% BUG?!: Use/not use DELIMITER field? Uncertain if PDS compliant.
+%
 function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inconsistency_policy)
 % CONCEIVABLE LBL FILE SPECIAL CASES that may have different requirements:
 %    Data measurement files (DATA/)
@@ -42,6 +48,9 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
 %
 % PROPOSAL: Derive number of TAB file rows from TAB file itself?
 % PROPOSAL: Check TAB file size = N_rows * N_bytes_per_row.
+%     PRO: Fast way of checking (almost) N_rows and N_bytes_per_row.
+%        CON: When something is wrong, it will not be able to tell which is.
+%     NOTE: AxS files will give irrelevant errors. Use TAB_LBL_inconsistency_policy.
 % PROPOSAL: Check non-PDS-compliant inline headers of AxS files with the LBL column descriptions (column names)?
 %
 % PROBLEM: Replacing [] with 'N/A'. Caller may use [] as a placeholder before knowing the proper value, rather than in the meaning of no value (N/A).
@@ -50,17 +59,25 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
 %   NOTE: Current usage of "FORMAT" seems wrong. DVAL checks imply that FORMAT can be omitted.
 % 
 
+    %========================================
+    % "Function global" constants/variables.
+    %========================================
+
     % Constants:
     BYTES_BETWEEN_COLUMNS = 2;
     BYTES_PER_LINEBREAK   = 2;      % Carriage return + line feed.
-    PERMITTED_OBJTABLE_FIELD_NAMES = {'COLUMNS_consistency_check', 'ROW_BYTES_consistency_check', 'DESCRIPTION', 'OBJCOL_list'};  % NOTE: Exclude COLUMNS, ROW_BYTES, DELIMITER, ROWS.
+    
+    % NOTE: Exclude COLUMNS, ROW_BYTES, DELIMITER, ROWS.
+    PERMITTED_OBJTABLE_FIELD_NAMES = {'COLUMNS_consistency_check', 'ROW_BYTES_consistency_check', 'DESCRIPTION', 'OBJCOL_list'};
     PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'FORMAT', 'ITEMS', 'MISSING_CONSTANT', 'DESCRIPTION'};
-    INDENTATION                    = '    ';         % Indentation between every "OBJECT level" in LBL file. Must be "function global" since used by ind_print___LOCAL.
+    INDENTATION                    = '    ';         % Indentation between every "OBJECT level" in LBL file.
     IGNORE_OBJCOLUMN_FORMAT        = 1;              % Flag for whether to ignore all FORMAT fields.
 
-    % "function global" variables.
+    % Variables
     indentation_level = 0;
-    
+
+
+
     main_INTERNAL(TAB_file_path, LBL_data, TAB_LBL_inconsistency_policy);
 
 
@@ -231,6 +248,9 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
         ind_print___LOCAL( 0, fid,     'COLUMNS            = %d',   OBJTABLE_data.COLUMNS);
         ind_print___LOCAL( 0, fid,     'ROW_BYTES          = %d',   OBJTABLE_data.ROW_BYTES);
         ind_print___LOCAL( 0, fid,     'DESCRIPTION        = "%s"', OBJTABLE_data.DESCRIPTION);
+        %if isfield(OBJTABLE_data, 'DELIMITER')
+        %    ind_print___LOCAL( 0, fid, 'DELIMITER          = "%s"', OBTTABLE_data.DELIMITER);
+        %end
         
         current_row_byte = 1;    % Used for deriving START_BYTE. Starts with one, not zero.
         for i = 1:length(OBJTABLE_data.OBJCOL_list)   % Iterate over list of ODL OBJECT COLUMN
