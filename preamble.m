@@ -98,7 +98,7 @@ end
 % Must be interpreted the same way as index(:).macro, i.e.
 % the macro interpreted as a hexadecimal number.
 global LDLMACROS;
-LDLMACROS = hex2dec({'807','805','804','803', '703','704'});    % NOTE: Must cell array with strings for hex2dec ({} not []).
+LDLMACROS = hex2dec({'807','817','805','804','803', '703','704'});    % NOTE: Must cell array with strings for hex2dec ({} not []).
 
 
 

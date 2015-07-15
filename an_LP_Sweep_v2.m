@@ -152,6 +152,9 @@ try %try the dynamic solution first, then the static.
     %    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
     
     twinpeaks   = an_Vplasma_v2(V,Is);
+    %twinpeaks   = an_Vplasma_v3(V,Is);
+    %twinpeaks   = an_Vplasma_v2(V,I);
+
     Vknee       = twinpeaks.Vph_knee(1);
     Vknee_sigma = twinpeaks.Vph_knee(2);
     %    [Vsc, Vsc_sigma] =twinpeaks.Vsc;
@@ -250,10 +253,10 @@ try %try the dynamic solution first, then the static.
     DP.ne_exp           = expfit.ne;
     
     
-    asm_expfit_belowVknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
-    DP.Te_exp_belowVknee            = asm_expfit_belowVknee.Te; %contains both value and sigma frac.
-    DP.Ie0_exp_belowVknee           = asm_expfit_belowVknee.Ie0;
-    DP.ne_exp_belowVknee            = asm_expfit_belowVknee.ne;
+    expfit_belowVknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
+    DP.Te_exp_belowVknee            = expfit_belowVknee.Te; %contains both value and sigma frac.
+    DP.Ie0_exp_belowVknee           = expfit_belowVknee.Ie0;
+    DP.ne_exp_belowVknee            = expfit_belowVknee.ne;
     
     
     
@@ -305,7 +308,7 @@ try %try the dynamic solution first, then the static.
     
     if (an_debug>1) %debug plot
         figure(33);
-        subplot(3,2,1),plot(V,Is,'b',V,Itemp- elec.I,'g',V,Itemp-expfit.I,'r',V,Itemp-asm_expfit_belowVknee.I,'black');grid on;
+        subplot(3,2,1),plot(V,Is,'b',V,Itemp- elec.I,'g',V,Itemp-expfit.I,'r',V,Itemp-expfit_belowVknee.I,'black');grid on;
         title([sprintf('I, I-Ii-Ie linear, I-Ii-Ie exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
         legend('I','I-I linear','I-I exp','I-I expbelowVphknee','Location','NorthWest')
     end
@@ -462,7 +465,7 @@ try %try the dynamic solution first, then the static.
     
     Itot_linear=Iph+elec.I+ion.I;
     Itot_exp=Itot_linear-elec.I+expfit.I;
-    Itot_exp_belowVknee = asm_expfit_belowVknee.I+Iph+ion.I;
+    Itot_exp_belowVknee = expfit_belowVknee.I+Iph+ion.I;
     
     Izero_linear = I-Itot_linear;
     Izero_exp = I - Itot_exp;
@@ -532,7 +535,7 @@ try %try the dynamic solution first, then the static.
         
         
         axis([-30 30 -5E-9 5E-9])
-        axis 'auto x'
+        %axis 'auto x'
         subplot(3,2,4)
         plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r',V+Vsc,Itot_exp_belowVknee,'black');
         
@@ -808,7 +811,7 @@ try %try the dynamic solution first, then the static.
         legend('residual(I-Itot linear)','residual(I-Itot exp)','residual(I-Itot expVknee)','Location','Northwest')
         
         axis([-30 30 -5E-9 5E-9])
-        axis 'auto x'
+        %axis 'auto x'
         subplot(3,2,4)
          plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r',V+Vsc,Itot_exp_belowVknee,'black');
 %        plot(V+Vsc,Is,'b',V+Vsc,Itot_linear,'g',V+Vsc,Itot_exp,'r');

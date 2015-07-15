@@ -17,4 +17,4 @@ scp frejon@spis.irfu.se:/home/elias/Rosetta/MATLAB/metakernel_rosetta.txt $lapdo
 
 sed -i ''  "s@/home/elias/Rosetta/SPICE@$lapdogpath@g" $metakernel
 sed -i '' "s@/home/elias@$lapdogpath@g" $metakernel
-sed -i ä'' "s@/share/SPICE/mice@$lapdogpath/mice@g" $metakernel
+sed -i '' "s@/share/SPICE/mice@$lapdogpath/mice@g" $metakernel
