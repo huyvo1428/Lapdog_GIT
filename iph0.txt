@@ -1,0 +1,16 @@
+%anything with a % sign is a comment and will be ignored
+% Author: Fredrik Johansson 01-Aug 2015
+%Iph0.txt is a file that lists the photosaturation current as detected by semi-automatic or manual routines and is used by an_sweepmain.m for sweep analysis
+%the format is:
+% UTC, OBT, Iph0, description
+% where:
+% UTC= "UTC TIME YYYY-MM-DDThh:mm:ss.ffffff"
+% OBT= SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)"
+% Iph0 = Photosaturation value in Ampere
+% description = Human readable description of the Iph0 value specified
+% first iteration of Iph0.txt should list the photosaturation ampere that should be used from respective point in time.
+% further iterations of this file or the routine that uses this file should incorprate an interpolation routine, preferably as a function of distance to Sun and/or a function of a relevant sunflux estimate, like Mg-II band F10.7 
+2005-01-01T00:00:00.0,63072000,-6.647e-09,'before first Earth swing by- preliminary'
+2014-10-01T00:00:00.0,370915207.526316,-8.55e-09,'after arrival at comet'
+2015-01-01T00:00:00.0,378691127.436616,-1.19e-08,'new measurement of Iph0'
+2015-08-01T00:00:00.0,397007922.439373,-2.4e-8,'preliminary measurement of Iph0 from 3Aug 2015'

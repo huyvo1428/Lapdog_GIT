@@ -2,7 +2,7 @@
 %takes an sweep potential array and current array, and optionally a guess for the
 %Vplasma and its sigma (suggested sigma 3 V), outputs an estimate for the
 %plasma potential, Vsc and Vbar and it's confidence level (std)
-function [out] = an_Vplasma_v2(Vb,Ib,vGuess,sigmaGuess)
+function [out] = an_Vplasma_highAc(Vb,Ib,vGuess,sigmaGuess)
 
 
 out = [];
@@ -40,7 +40,7 @@ posd2i =(abs(d2i)+d2i)/2;  %ignore negative values
 posd2i_filt= posd2i;
 
 
-posd2i_filt(Ib>0) = 0;
+posd2i_filt(Ib>0) = 0; %Vph_Knee is at negative currents
 
 
 %sort absolute values of derivative

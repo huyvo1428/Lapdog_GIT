@@ -76,6 +76,12 @@ DP.Vsg              = nan(1,2);
 DP.Vph_knee         = nan(1,2);
 DP.Vbar             = nan(1,2);
 
+DP.Vsg_lowAc              = nan(1,2);
+DP.Vph_knee_lowAc         = nan(1,2);
+DP.Vbar_lowAc             = nan(1,2);
+
+
+
 DP.ion_Vb_slope     = nan(1,2);
 DP.ion_Vb_intersect = nan(1,2);
 DP.ion_slope        = nan(1,2);
@@ -151,10 +157,15 @@ try %try the dynamic solution first, then the static.
     %    [Vknee, Vknee_sigma] = an_Vplasma(V,Is);
     %    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
     
-    twinpeaks   = an_Vplasma_v2(V,Is);
-    %twinpeaks   = an_Vplasma_v3(V,Is);
-    %twinpeaks   = an_Vplasma_v2(V,I);
+    twinpeaks_low   = an_Vplasma_v2(V,Is);
+    twinpeaks_high = an_Vplasma_highAc(V,Is);
+    twinpeaks = twinpeaks_high; %use high activity analysis always for now
 
+   
+    DP.Vsg_lowAc              = twinpeaks_low.Vsc;
+    DP.Vph_knee_lowAc         = twinpeaks_low.Vph_knee;
+    DP.Vbar_lowAc             = twinpeaks_low.Vbar;
+    
     Vknee       = twinpeaks.Vph_knee(1);
     Vknee_sigma = twinpeaks.Vph_knee(2);
     %    [Vsc, Vsc_sigma] =twinpeaks.Vsc;
@@ -363,10 +374,10 @@ try %try the dynamic solution first, then the static.
         [phpol,S]=polyfit(Vdagger(phind),log(abs(Iph(phind))),1);
         S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df);
         
-        Tph = -1/phpol(1);
+        Tph = -1/phpol(1);   %Tph>> 1 -> slope very small and negative.  Tph < 0 -> slope positive (not photoelectron knee)
         Iftmp = -exp(phpol(2));
         
-        %get V intersection:
+        %get V intersection of ion and photoelectron current:
         
         %diph = abs(  ion current(tempV)  - photelectron log current(Vdagger) )
         diph = abs(ion.a(1)*V + ion.b(1)-Iftmp*exp(-(V+Vknee)/Tph));
@@ -430,7 +441,7 @@ try %try the dynamic solution first, then the static.
             end
             
             %----------------------------------------------------------------------------------------------------------------------%
-            if Tph>0 %very bad
+            if Tph>0 
                 Iph(:) = DP.Iph0;  %set everything to photosaturation current
                 
                 %    Iph(1:idx1)=DP.Iph0; %add photosaturation current
@@ -439,8 +450,9 @@ try %try the dynamic solution first, then the static.
                 %Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
                 Iph(idx1+1:end)=Iftmp*exp(-Vdagger(idx1+1:end)/Tph);
                 
-            else
+            else %very bad 
                 Iph(:)=0;
+                Tph = NaN;
             end
             
             

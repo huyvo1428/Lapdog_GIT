@@ -176,9 +176,8 @@ try
         %% initialise output struct
         
         
-        
-        
-        
+        %tscsweep = str2double(Tarr{3,1});
+
         %check if we are close to comet
         %(3000 km ? 1000*radius of comet)
         
@@ -194,13 +193,12 @@ try
             
             
             
-            if (str2double(Tarr{3,1}) < 378691127.436616) %sc clock start at 1 jan 2015 00:00:00.00000.
+            if (str2double(Tarr{3,1}) < 378691127.436616) %sc clock at 1 jan 2015 00:00:00.00000.
                 
                 
                 if(str2double(Tarr{3,1}) < 370915207.526316) %1 oct 2014
-                    %  assmpt.Iph0 = -8.55e-09;
-                    
-                    %               if (str2double(Tarr{3,1}) < 378699451.239258) %sc clock start at 1 jan 2015 02:18:43.80539.
+
+                    %               if (str2double(Tarr{3,1}) < 378699451.239258) %sc clock  at 1 jan 2015 02:18:43.80539.
                     assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
                 else
                     assmpt.Iph0 = -8.55e-09;
@@ -220,6 +218,11 @@ try
             end
         end
         
+        
+        
+        %Edit 31 Aug added new Iph0 selector, to be used with Norwegian Iph0
+        %results. 
+        assmpt.Iph0= Iph0selector('Iph0.txt',str2double(Tarr{3,1}));        
         
         
         %Anders analysed parameters
@@ -280,6 +283,10 @@ try
         DP(len).Vph_knee            = [];   
         DP(len).Vbar                = [];
 
+        DP(len).Vsg_lowAc           = [];
+        DP(len).Vph_knee_lowAc      = [];   
+        DP(len).Vbar_lowAc          = [];
+        
         
         DP(len).ion_Vb_slope        = [];
         DP(len).ion_Vb_intersect    = [];
@@ -518,9 +525,8 @@ try
             ', ASM_m_ion, ASM_Z_ion, ASM_v_ion, Vsc_ni_ne, asm_Vsc_ni_ne',...
             ', Vsc_aion, ni_aion, v_aion, asm_Vsc_aion, asm_ni_aion, asm_v_aion',...    
             ', Te_exp_belowVknee, sigma_Te_exp_belowVknee, ne_exp_belowVknee, sigma_ne_exp_belowVknee, asm_Te_exp_belowVknee, asm_sigma_Te_exp_belowVknee, asm_ne_exp_belowVknee, asm_sigma_ne_exp_belowVknee',...
+            ', Vsg_lowAc, sigma_Vsg_lowAc, Vph_knee_lowAc, sigma_Vph_knee_lowAc, Vbar_lowAc, sigma_Vbar_lowAc',...
             '\r\n'));
-
-
 
         
         % fpformat = '%s, %s, %03i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e  %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
@@ -545,14 +551,17 @@ try
             str16 = sprintf(' %03i, %02i, %14.7e, %14.7e, %14.7e,',assmpt.ionM,assmpt.ionZ,assmpt.vram,EP(k).Vsc_ni_ne,EP(k).asm_Vsc_ni_ne);
             str17 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Vsc_aion,DP(k).ni_aion,DP(k).v_aion,DP_asm(k).Vsc_aion,DP_asm(k).ni_aion,DP_asm(k).v_aion);
             str18 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e', DP(k).Te_exp_belowVknee, DP(k).ne_exp_belowVknee, DP_asm(k).Te_exp_belowVknee, DP_asm(k).ne_exp_belowVknee);
-
+  
+            
+            str19 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Vsg_lowAc, DP(k).Vph_knee_lowAc,DP(k).Vbar_lowAc);
+        
       
 
             
             
             
             
-            strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16,str17,str18);
+            strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16,str17,str18,str19);
 
             strtot=strrep(strtot,'  0.0000000e+00','            NaN'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
             strtot=strrep(strtot,'-Inf',' NaN');

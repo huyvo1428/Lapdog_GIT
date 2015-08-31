@@ -1,7 +1,7 @@
 
 
     
-%fileList = getAllFiles('/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/204/I_S/');
+fileList = getAllFiles('/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/204/I_S/');
 
 bfileList = getAllFiles('/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/204/B_S/');
 
@@ -11,7 +11,7 @@ bfileList = getAllFiles('/Users/frejon/Documents/RosettaArchive/PDS_Archives/DAT
         
         j=i*2 -1 ;
         
-        
+        if(j>length(fileList));break;end  
         rfile=fileList{j,1}(1:end);
         rfile2=fileList{j+1,1}(1:end);
         
@@ -55,7 +55,7 @@ diffI1supdown = I1sdown - I1sup;
 diffI2supdown = I2sdown - I2sup;
 
 
-g8 = floor(length(temp.sweeps(:,1))/8);
+g8 = floor(length(temp.sweeps(1,:))/8);
 
 i1s_1 = temp.sweeps(:,1:g8);
 i1s_2 = temp.sweeps(:,g8+1:2*g8);
@@ -159,7 +159,7 @@ title([sprintf('%s Macro 204       Probe 2',time1)]);
 subplot(2,2,1);
 plot(1E9*temp2.sweeps);
 grid on;
-axis([0 210 -12 40]);
+axis([0 210 -100 40]);
 xlabel('step nr');
 ylabel('nA');
 title([sprintf('%s Macro 204        P2 Sweep current vs time',time1)]);
@@ -168,6 +168,7 @@ title([sprintf('%s Macro 204        P2 Sweep current vs time',time1)]);
 subplot(2,2,2);
 plot(V_P2,1E9*temp2.sweeps(:,:));
 grid on;
+axis([-30 30 -40 100]);
 
 title([sprintf('%s Macro 204        P2 Sweep current vs Vbias',time1)]);
 
@@ -180,7 +181,7 @@ V2 = V_P2(1:104);
 subplot(2,2,3);
 plot(V2,1E9*diffI2supdown);
 grid on;
-axis([-25 25 -10 10]);
+axis([-25 25 -40 40]);
 xlabel('V');
 ylabel('nA');
 
@@ -194,7 +195,7 @@ plot(1E9*temp.sweeps);
 grid on;
 title([sprintf('%s Macro 204        P1 Sweep current vs time',time1)]);
 
-axis([0 240 -12 40]);
+axis([0 240 -100 40]);
 xlabel('step nr');
 ylabel('nA');
 
@@ -203,7 +204,7 @@ subplot(2,2,4);
 plot(V1,i1_1,V1,i1_2,V1,i1_3,V1,i1_4,V1,i1_4,V1,i1_6,V1,i1_7,V1,i1_8);
 %plot(V_P1(1:120),1E9*diffI1supdown);
 grid on;
-axis([-30 30 -10 10]);
+axis([-30 30 -20 20]);
 title([sprintf('%s Macro 204        P1 diff up/down on each potential step',time1)]);
 
 xlabel('V');
