@@ -75,10 +75,11 @@ hi = min([hi,len]);
 d1v= floor(1/(Vb(2)-Vb(1)));
 
 pox = diff(d2i);
+pox(end +1) = 0; %makes sure length(pox) = len
 
 if hi>firstpeak+1 %careful
-    for i = firstpeak+d1v:hi
-        if ge(pox(i),0)
+    for i = firstpeak+d1v:hi % check 1 V to the right
+        if ge(pox(i),0)    %if slope is not negative, then we found a local minimum and should stop here
             hi = i;
             break; % let's stop the region here, we don't want unwanted peaks to the right of the first peak
         end

@@ -158,9 +158,14 @@ try %try the dynamic solution first, then the static.
     %    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
     
     twinpeaks_low   = an_Vplasma_v2(V,Is);
-    twinpeaks_high = an_Vplasma_highAc(V,Is);
-    twinpeaks = twinpeaks_high; %use high activity analysis always for now
-
+    
+    if illuminated == 0   %an_Vplasma_highAc doesn't work if shadowed
+        twinpeaks = twinpeaks_low;   
+    else
+        twinpeaks_high = an_Vplasma_highAc(V,Is);
+        twinpeaks = twinpeaks_high; %use high activity analysis for the rest, it's better
+    end
+    
    
     DP.Vsg_lowAc              = twinpeaks_low.Vsc;
     DP.Vph_knee_lowAc         = twinpeaks_low.Vph_knee;

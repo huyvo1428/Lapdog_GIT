@@ -73,7 +73,7 @@ end
          
          i = i+10000;
          
-         I_filtered = I;
+         I_filtered = I; %skip filtering enterirely
  
          
      end
