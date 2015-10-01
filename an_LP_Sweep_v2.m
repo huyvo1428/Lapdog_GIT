@@ -374,7 +374,7 @@ try %try the dynamic solution first, then the static.
         %get Iph0_limit (max value, realistically Iph0_limit should be Iph0+Iion0(Vintersect))
 
         top = floor(min(phind)*0.8 +0.5); %get 80% of points from start to Vknee
-        Iph0_limit = mean(Iph(1:top); %mean of Iph before Vknee
+        Iph0_limit = mean(Iph(1:top)); %mean of Iph before Vknee
         diph = abs(Iph0_limit-Iftmp*exp(-(V+Vknee)/Tph));
 
 
