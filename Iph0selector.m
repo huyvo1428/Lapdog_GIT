@@ -3,6 +3,9 @@
 %The filepath is most probably Iph0.txt and should be in the lapdog folder
 function [iph0_out]= Iph0selector(filepath,OBT_timeofsweep,probenr)
 
+%'probenr: ';
+%probenr
+
 iph0_out = -6.647e-09; % default value; %just in case of error.
 
 %iph0file='Iph0.txt';            
@@ -25,8 +28,8 @@ switch probenr
     case 1
         scanmat = scanmat(~isnan(scanmat(:,2)),:);
         iph0vec = scanmat(:,2);
-    case 2
         
+    case 2
         scanmat = scanmat(~isnan(scanmat(:,3)),:);
         iph0vec = scanmat(:,3);
 

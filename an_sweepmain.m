@@ -207,7 +207,7 @@ try
         %Edit 31 Aug added new Iph0 selector, to be used with Norwegian Iph0
         %results. 
         
-        assmpt.Iph0= Iph0selector('iph0.txt',str2double(Tarr{3,1}),probe);        
+        assmpt.Iph0= Iph0selector('iph0.txt',str2double(Tarr{3,1}),str2double(probe));        
         
         
         %Anders analysed parameters
