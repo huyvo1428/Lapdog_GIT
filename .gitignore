@@ -16,3 +16,5 @@ control.m
 batch_control.m
 gout.txt
 gtimes.txt
+kernels/
+tabindex/

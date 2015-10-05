@@ -128,7 +128,7 @@ end
 
 
 
-Te = 1/P(1);
+Te = 1/P(1); %small slope -> large Te, Te<0 -> unphysical
 Ie0 = exp(P(2));
 
 try  %super risky sigma calculation. 

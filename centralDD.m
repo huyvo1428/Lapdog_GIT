@@ -7,11 +7,10 @@ function [dx,d2x] = centralDD(x,y,varargin)
 dx= zeros(length(y),1);
 d2x = zeros(length(y),1);
 
-spread=varargin{1,1};
 
 
 if nargin >2
-    
+    spread=varargin{1,1};
     x= smooth(x,spread,'sgolay');
 end
 

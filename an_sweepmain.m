@@ -179,9 +179,8 @@ try
         %% initialise output struct
         
         
-        
-        
-        
+        %tscsweep = str2double(Tarr{3,1});
+
         %check if we are close to comet
         %(3000 km ? 1000*radius of comet)
         
@@ -195,26 +194,9 @@ try
             %linux/mac differences.
             %            if datenum(Tarr{1,1}(1:19),formatin) < datenum('2015-01-01T00:00:00',formatin)378691143.436616
             
-            
-            
-            if (str2double(Tarr{3,1}) < 378691127.436616) %sc clock start at 1 jan 2015 00:00:00.00000.
-                
-                
-                if(str2double(Tarr{3,1}) < 370915207.526316) %1 oct 2014
-                    %  assmpt.Iph0 = -8.55e-09;
-                    
-                    %               if (str2double(Tarr{3,1}) < 378699451.239258) %sc clock start at 1 jan 2015 02:18:43.80539.
-                    assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
-                else
-                    assmpt.Iph0 = -8.55e-09;
-                end
-                
-                    
-            else
-                assmpt.Iph0 = -1.19e-08; %from probe 1 Jan 03 & 29 Jan in and out of shadow
-            end
 
-            if (str2double(Tarr{3,1}) > 365904090.294412)%if past 6 aug 2014 (ESA blog post "arrival at comet"
+
+            if (str2double(Tarr{3,1}) > 365904090.294412)%if past 6 aug 2014 (ESA blog post "arrival at comet")
                 
                 assmpt.vram = 550; %m/s
                 assmpt.ionZ = +1; % ion charge
@@ -223,6 +205,12 @@ try
             end
         end
         
+        
+        
+        %Edit 31 Aug added new Iph0 selector, to be used with Norwegian Iph0
+        %results. 
+        
+        assmpt.Iph0= Iph0selector('iph0.txt',str2double(Tarr{3,1}),str2double(probe));        
         
         
         %Anders analysed parameters
@@ -283,6 +271,10 @@ try
         DP(len).Vph_knee            = [];   
         DP(len).Vbar                = [];
 
+        %DP(len).Vsg_lowAc           = [];
+        %DP(len).Vph_knee_lowAc      = [];   
+        %DP(len).Vbar_lowAc          = [];
+        
         
         DP(len).ion_Vb_slope        = [];
         DP(len).ion_Vb_intersect    = [];
@@ -327,11 +319,7 @@ try
         DP_asm= DP;
         
         % initial estimate
-        
-    
 
-            
-    
     %these asumptions should be printed somewhere. Maybe in the LBL file?
     %print in description of LBL file?
     
@@ -415,7 +403,7 @@ try
             end
               
             [DP(k),DP_asm(k)] = an_LP_Sweep_v2(Vb, Iarr(:,k),Vguess,EP(k).lum);
-                       
+
             %DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
             %DP_asm(k) = an_LP_Sweep_with_assmpt(Vb),Iarr(:,k),assmpt,EP(k).lum);
  
@@ -522,8 +510,7 @@ try
             ', Vsc_aion, ni_aion, v_aion, asm_Vsc_aion, asm_ni_aion, asm_v_aion',...    
             ', Te_exp_belowVknee, sigma_Te_exp_belowVknee, ne_exp_belowVknee, sigma_ne_exp_belowVknee, asm_Te_exp_belowVknee, asm_sigma_Te_exp_belowVknee, asm_ne_exp_belowVknee, asm_sigma_ne_exp_belowVknee',...
             '\r\n'));
-
-
+            %', Vsg_lowAc, sigma_Vsg_lowAc, Vph_knee_lowAc, sigma_Vph_knee_lowAc, Vbar_lowAc, sigma_Vbar_lowAc',...
 
         
         % fpformat = '%s, %s, %03i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e  %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
@@ -548,11 +535,12 @@ try
             str16 = sprintf(' %03i, %02i, %14.7e, %14.7e, %14.7e,',assmpt.ionM,assmpt.ionZ,assmpt.vram,EP(k).Vsc_ni_ne,EP(k).asm_Vsc_ni_ne);
             str17 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Vsc_aion,DP(k).ni_aion,DP(k).v_aion,DP_asm(k).Vsc_aion,DP_asm(k).ni_aion,DP_asm(k).v_aion);
             str18 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e', DP(k).Te_exp_belowVknee, DP(k).ne_exp_belowVknee, DP_asm(k).Te_exp_belowVknee, DP_asm(k).ne_exp_belowVknee);
-
+  
+           
+            %str19 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e', DP(k).Vsg_lowAc, DP(k).Vph_knee_lowAc,DP(k).Vbar_lowAc);
+        
       
 
-            
-            
             
             
             strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16,str17,str18);

@@ -9,7 +9,7 @@ function [spiceDirectory] = paths()
 
 % Read metakernel file
 fid = fopen('metakernel_rosetta.txt');
-C = textscan(fid, '%s', 'EndOfLine');
+C = textscan(fid, '%s');
 fclose(fid);
 
 
