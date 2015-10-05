@@ -108,8 +108,12 @@ LDLMACROS = hex2dec({'807','805','804','803', '703','704'});    % NOTE: Must cel
 % Read info from DATASET.CAT:
 dname = strcat(archivepath,'/CATALOG/DATASET.CAT'); 
 dp = fopen(dname,'r');
+if dp == -1
+    error('Can not find DATASET.CAT. This usually due to not being able to find the CALIB data set directory.')
+end
 datasetcat = textscan(dp,'%s %s','Delimiter','=');
 fclose(dp);
+
 var = cellstr(char(datasetcat{1}));
 val = char(datasetcat{2});
 ind = find(strcmp('DATA_SET_NAME', var));

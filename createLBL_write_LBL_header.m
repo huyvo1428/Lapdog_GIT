@@ -6,11 +6,6 @@
 %
 %
 function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
-% PROPOSAL: Merge with createLBL_writeObjectTable.
-%       PRO: Can design LBL filename and path.
-%       PRO: Can open close & close LBL file.
-%       PRO: Can set FILE_NAME (LBL file), ^TABLE (TAB file), RECORD_BYTES (TAB file size),
-%       PRO: Can set PRODUCT_ID?!!  Rosetta archive conventions specify that should be based on filename without extension.
 % PROPOSAL: Take parameter TAB_file_path ==> Set RECORD_BYTES (file size), ^TABLE, (RECORDS?!!)
 %
 % PROPOSAL: Separate parameter for (overwrite) values for e.g. PRODUCT_TYPE, PROCESSING_LEVEL_ID and other values which are the same for all files.
@@ -43,6 +38,13 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
 
         % PROPOSAL: Order by groups.
         %   Ex: General ODL/PDS. Mission_specific.
+        
+        %=======================================================
+        % Keys which should preferably come in a certain order.
+        % They are not required.
+        %=======================================================        
+        
+        % Keywords which are quite independent of type of file.
         general_key_order_list = { ...
             'PDS_VERSION_ID', ...    % PDS standard requires this to be first, I think.
             'RECORD_TYPE', ...
@@ -77,8 +79,8 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
             'STOP_TIME', ...
             'SPACECRAFT_CLOCK_START_COUNT', ...
             'SPACECRAFT_CLOCK_STOP_COUNT', ...
-            'DESCRIPTION'};
-        
+            'DESCRIPTION'};        
+        % Keywords which refer to very specific settings.
         ROSETTA_key_order_list = { ...
             'ROSETTA:LAP_TM_RATE', ...
             'ROSETTA:LAP_BOOTSTRAP', ...

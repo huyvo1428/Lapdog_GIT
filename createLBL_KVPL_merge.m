@@ -1,4 +1,4 @@
-% 
+% Generic utility function.
 % 
 % (1) Assumes that kvl_1 and kvl_2 have no keys in common (error otherwise), and
 % (2) return key-value pair list with the key-value pairs of kvl_1 and kvl_2 combined.

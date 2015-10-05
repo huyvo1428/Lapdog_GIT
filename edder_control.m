@@ -10,8 +10,8 @@
 % ============
 ume_user = 'liza';  % Your username on vroom.irf.umea.se
 
-producerfullname='Fredrik Johansson';
-producershortname='FJ';
+producerfullname='Erik Johansson';
+producershortname='EJ';
 
 
 
@@ -27,7 +27,7 @@ fix_geom_bug = 1;  % To change signs of position and velocity coordinates
 
 % Info for geometry labels
 lbltime = '2013-02-03T12:00:00';  % label revision time
-lbleditor = 'FJ';
+lbleditor = 'EJ';
 lblrev = '4th draft';
 
 % 4. Dataset selection and description

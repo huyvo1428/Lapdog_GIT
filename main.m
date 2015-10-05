@@ -61,7 +61,10 @@ else
 end
 
 
-%--------------------------------------------
+
+%--------------------------------------------------
+% Debugging code for only keeping a specific date?
+%--------------------------------------------------
 % i_keep = [];
 % for i = 1:length(index)    
 %     if ~isempty(strfind(index(i).lblfile, '/2014/AUG/D17/'))
@@ -73,7 +76,7 @@ end
 %     
 %end
 %index = index(i_keep);
-%--------------------------------------------
+%-------------------------------------------------
 
 
 scResetCount=str2double(index(1).sct0str(2));

@@ -40,10 +40,16 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %   ADC20 relative ADC16 based on data for 2015-05-28. New values are multiples of ADC16 values
 %   and are used retroactively.
 %   /Erik P G Johansson 2015-06-11
+%
+%   Updated to RECORD_BYTES=31 (characters per row incl CR+LF). Was previously 7936 (file size).
+%   /Erik P G Johansson 2015-07-07
+%
+%   Updated to INSTRUMENT_ID = RPCLAP (no quotes).
+%   /Erik P G Johansson 2015-07-08
 %   ----------------------------------------------------------------------------
 %
 %   NOTE: Current implementation (2015-05-08) sets START_TIME to an actual time, but sets SPACECRAFT_CLOCK_START_COUNT = "N/A". Change?
-%
+%   
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -603,14 +609,17 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         
         fprintf(fileID, 'PDS_VERSION_ID = PDS3\r\n');
         fprintf(fileID, 'LABEL_REVISION_NOTE = "2015-06-03, EJ: Updated LAP_*_CAL_20B* calibration factors"\r\n');
+        %fprintf(fileID, 'LABEL_REVISION_NOTE = "2015-07-07, EJ: RECORD_BYTES=31"\r\n');   % Use??
         fprintf(fileID, 'RECORD_TYPE = FIXED_LENGTH\r\n');
-        fprintf(fileID, 'RECORD_BYTES = 7936\r\n');
+        fprintf(fileID, 'RECORD_BYTES = 31\r\n');
         fprintf(fileID, 'FILE_RECORDS = 256\r\n');
         fprintf(fileID, strcat('FILE_NAME = "', fileName, '.LBL"\r\n'));
         fprintf(fileID, strcat('^TABLE = "', fileName, '.TAB"\r\n'));
         fprintf(fileID, 'DATA_SET_ID = "%s"\r\n', earch);
+        
         % DATA_SET_NAME is optional, RO-EST-TN-3372, "ROSETTA Archiving Conventions", Issue 7, Rev. 8
         %fprintf(fileID, 'DATA_SET_NAME = "ROSETTA-ORBITER EARTH RPCLAP 3 MARS CALIB V1.0"\r\n');    % Incorrect value.
+        
         fprintf(fileID, 'MISSION_ID = ROSETTA\r\n');
         fprintf(fileID, 'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\r\n');
         fprintf(fileID, 'MISSION_PHASE_NAME = %s\r\n', mp);
@@ -622,7 +631,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         fprintf(fileID, 'INSTRUMENT_HOST_ID = RO\r\n');
         fprintf(fileID, 'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\r\n');
         fprintf(fileID, 'INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\r\n');
-        fprintf(fileID, 'INSTRUMENT_ID = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\r\n');
+        fprintf(fileID, 'INSTRUMENT_ID = RPCLAP\r\n');
         fprintf(fileID, 'INSTRUMENT_TYPE = "PLASMA INSTRUMENT"\r\n');
         fprintf(fileID, horzcat('START_TIME = ', startTimeString, '\r\n'));
         fprintf(fileID, 'SPACECRAFT_CLOCK_START_COUNT = "N/A"\r\n');

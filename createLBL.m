@@ -182,7 +182,7 @@ if(~isempty(tabindex));
                     ocl{end+1} = struct('NAME', 'START_TIME_OBT',                   'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
                     ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',                    'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION', 'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
                     ocl{end+1} = struct('NAME', 'QUALITY',                          'DATA_TYPE', 'ASCII_REAL', 'BYTES', 3,  'UNIT', 'N/A',     'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
-                    ocl{end+1} = struct('NAME', sprintf('P%i_SWEEP_CURRENT', Pnum), 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'AMPERE', 'ITEMS', tabindex{i,7}-5, 'FORMAT', 'E14.7', ...
+                    ocl{end+1} = struct('NAME', sprintf('P%i_SWEEP_CURRENT', Pnum), 'DATA_TYPE', 'ASCII_REAL', 'ITEM_BYTES', 14, 'UNIT', 'AMPERE', 'ITEMS', tabindex{i,7}-5, 'FORMAT', 'E14.7', ...
                         'DESCRIPTION', sprintf('Averaged current measured of potential sweep, at different potential steps as described by %s', Bfile));
                     
                     LBL_data.OBJTABLE.OBJCOL_list = ocl;
@@ -225,7 +225,7 @@ if(~isempty(tabindex));
                 clear ocl
 
             end
-            
+
             createLBL_create_OBJTABLE_LBL_file(tabindex{i,1}, LBL_data, general_TAB_LBL_inconsistency_policy);            
             clear   LBL_data
 
@@ -441,7 +441,11 @@ if (~isempty(an_tabindex));
                 fprintf(1, 'Error, bad mode identifier in an_tabindex{%i,1}', i);
             end
             for i_oc = 1:length(ocl2)
-                ocl2{i_oc}.BYTES     = 14;
+                if isfield(ocl2{i_oc}, 'ITEMS')
+                    ocl2{i_oc}.ITEM_BYTES = 14;
+                else
+                    ocl2{i_oc}.BYTES = 14;
+                end
                 ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
                 ocl2{i_oc}.FORMAT    = 'E14.7';
             end
@@ -460,7 +464,7 @@ if (~isempty(an_tabindex));
             LBL_data.OBJTABLE = [];
             LBL_data.OBJTABLE.DESCRIPTION = 'FREQUENCY LIST OF PSD SPECTRA FILE';
             ocl = {};
-            ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', an_tabindex{i,5}, 'UNIT', 'kHz', 'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
+            ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', an_tabindex{i,5}, 'UNIT', 'kHz', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
                 'FORMAT', 'E14.7', 'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdname));
             LBL_data.OBJTABLE.OBJCOL_list = ocl; 
             clear   ocl pdsname
@@ -480,7 +484,7 @@ if (~isempty(an_tabindex));
             ocl1{end+1} = struct('NAME', 'START_TIME_OBT',  'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Start time of sweep. SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
             ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION',  'Stop time of sweep. SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');            
             ocl1{end+1} = struct('NAME', 'Qualityfactor',   'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Quality factor from 0-100.');   % TODO: Correct?
-            ocl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'degrees',   'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle from x-axis of spacecraft.');
+            ocl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'degrees',   'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle in spacecraft XZ plane, measured from Z+ axis.');
             ocl1{end+1} = struct('NAME', 'Illumination',    'UNIT', NO_ODL_UNIT, 'BYTES',  4, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
             ocl1{end+1} = struct('NAME', 'direction',       'UNIT', NO_ODL_UNIT, 'BYTES',  1, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
             % ----- (Changing from ocl1 to ocl2.) -----

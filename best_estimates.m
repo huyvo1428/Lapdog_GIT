@@ -74,9 +74,9 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         warnings_settings = warning('query');
         warning('on', 'all')
         
-        t_start = clock;             % NOTE: Not number of seconds, but [year month day hour minute seconds].
         MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in createLBL!!!
-        MEMORY_USE_LOG_ENABLED = 1;  % Enable/disable memory usage log output. Printouts should be removed permanently some day.
+        MEMORY_USE_LOG_ENABLED = 0;  % Enable/disable memory usage log output. Printouts should be removed permanently some day.
+        t_start = clock;             % NOTE: Not number of seconds, but [year month day hour minute seconds].
     
         an_tabindex = main_INTERNAL(an_tabindex, tabindex, index, obe);
     
@@ -668,7 +668,10 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     % PROPOSAL: Rename _et to _arbitrary since probably no particular offset/origin and misleading.
     
         line_list = importdata(file_path, '\n');               % Read file into cell array, one line per cell.
-        line_value_list = regexp(line_list, ',', 'Split');     % Split strings using delimiter.        
+        line_value_list = regexp(line_list, ',', 'Split');     % Split strings using delimiter.
+        if (length(line_value_list) >= 2) && (length(line_value_list{1}) ~= length(line_value_list{2}))
+            error('Error in AxS file: The number of column names on the first line is NOT equal to the number of data columns. Can therefore not interpret columns.')
+        end
         value_list = vertcat(line_value_list{:});              % Concatenate (cell) array of (cell) arrays to create one long vector (Nx1).
     
         N_rows = length(line_value_list);
