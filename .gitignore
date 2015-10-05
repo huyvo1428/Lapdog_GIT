@@ -13,7 +13,6 @@ control.m
 *.TLS
 *.BSP
 *.TSC
-batch_control.m
 gout.txt
 gtimes.txt
 kernels/

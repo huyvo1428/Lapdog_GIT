@@ -1,6 +1,9 @@
 %Computes a central difference derivative and second derivative, with some
 %smoothing if asked to(i.e. if a spread for the smooth is one of the inputs).
 %the first and last derivative points is calculated by a forward and backward differentiaion
+%
+% NOTE: Suspiciously similar to leapfd.m
+% 
 function [dx,d2x] = centralDD(x,y,varargin)
 
 
