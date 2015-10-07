@@ -1,5 +1,5 @@
 function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
-
+%
 % write_CALIB_MEAS_files
 %	
 %   Given that the path and name of the EDITED archive
@@ -122,8 +122,8 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     fileID   = fopen(filePath, 'r');
 
     if(fileID<=0)
-    fprintf(1,'Could not open file: %s',filePath);
-    return;
+        fprintf(1,'Could not open file: %s',filePath);
+        return;
     end
 
     index = textscan(fileID,'%s%s%*s%*s%*s%*s','Delimiter',','); 
@@ -147,7 +147,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     fprintf(1,'\n');
 
     ind=1;
-    fprintf(1,'Removing House Keeping files from index file\n');
+    fprintf(1,'Removing housekeeping (HK) files from index file\n');
     while(ind<nfiles)
       if(index{1}{ind}(end-4)=='H')
         index{1}(ind)=[];
@@ -157,9 +157,9 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         ind=ind+1;
       end
 
-     if(mod(ind,100)==0)
+      if(mod(ind,100)==0)
         fprintf(1,'\rProgress % 04.1f %%',100*ind/nfiles);
-     end
+      end
     end
 
 

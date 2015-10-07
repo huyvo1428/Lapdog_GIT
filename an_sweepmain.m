@@ -126,9 +126,6 @@ try
                 
                 % Take start time and add time interval.
                 % NOTE: Not important which time system is used for converting UTC string, since converts back to UTC string anyway.
-                % "cspice_str2et converts a string representing an epoch to a
-                % double precision value representing the number of TDB seconds
-                % past the J2000 epoch corresponding to the input epoch"
                 t_spm_utc_str = cspice_et2utc(   cspice_str2et(Tarr{ 1, i_sp}) + t_diff, 'ISOC', 6);    % spm = sweep pair middle
                 t_spm_nbr_str = num2str( str2double(Tarr{ 4, i_sp}) + t_diff,   '%f' );
                 
