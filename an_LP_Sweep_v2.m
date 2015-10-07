@@ -76,6 +76,10 @@ DP.Vsg              = nan(1,2);
 DP.Vph_knee         = nan(1,2);
 DP.Vbar             = nan(1,2);
 
+DP.Vsg_lowAc              = nan(1,2);
+DP.Vph_knee_lowAc         = nan(1,2);
+DP.Vbar_lowAc             = nan(1,2);
+
 DP.ion_Vb_slope     = nan(1,2);
 DP.ion_Vb_intersect = nan(1,2);
 DP.ion_slope        = nan(1,2);
@@ -150,8 +154,21 @@ try %try the dynamic solution first, then the static.
     % The spacecraft potential is denoted Vsc
     %    [Vknee, Vknee_sigma] = an_Vplasma(V,Is);
     %    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
+        twinpeaks_low   = an_Vplasma_v2(V,Is);
 
-    twinpeaks   = an_Vplasma_v2(V,Is);
+        if illuminated == 0   %an_Vplasma_highAc doesn't work if shadowed
+            twinpeaks = twinpeaks_low;
+        else
+            twinpeaks_high = an_Vplasma_highAc(V,Is);
+            twinpeaks = twinpeaks_high; %use high activity analysis for the rest, it's better
+        end
+
+
+        DP.Vsg_lowAc              = twinpeaks_low.Vsc;
+        DP.Vph_knee_lowAc         = twinpeaks_low.Vph_knee;
+        DP.Vbar_lowAc             = twinpeaks_low.Vbar;
+
+
     Vknee       = twinpeaks.Vph_knee(1);
     Vknee_sigma = twinpeaks.Vph_knee(2);
     %    [Vsc, Vsc_sigma] =twinpeaks.Vsc;
