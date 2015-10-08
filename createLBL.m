@@ -15,7 +15,8 @@ t_start = clock;    % NOTE: Not number of seconds, but [year month day hour minu
 previous_warnings_settings = warning('query');
 warning('on', 'all')
 general_TAB_LBL_inconsistency_policy = 'warning';
-AxS_TAB_LBL_inconsistency_policy     = 'warning';
+%AxS_TAB_LBL_inconsistency_policy     = 'warning';
+AxS_TAB_LBL_inconsistency_policy     = 'nothing';
 
 
 

@@ -670,7 +670,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         line_list = importdata(file_path, '\n');               % Read file into cell array, one line per cell.
         line_value_list = regexp(line_list, ',', 'Split');     % Split strings using delimiter.
         if (length(line_value_list) >= 2) && (length(line_value_list{1}) ~= length(line_value_list{2}))
-            error('Error in AxS file: The number of column names on the first line is NOT equal to the number of data columns. Can therefore not interpret columns.')
+            error('Error in AxS file %s: The number of column names on the first line is NOT equal to the number of data columns. Can therefore not interpret columns.', file_path)
         end
         value_list = vertcat(line_value_list{:});              % Concatenate (cell) array of (cell) arrays to create one long vector (Nx1).
     
