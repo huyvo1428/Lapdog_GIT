@@ -259,8 +259,13 @@ end
     %out.ni_1comp     = max((1e-6 * out.Vpa(1) *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
 
     %finally units of L^-3, not allowed to go below 0.
-    out.ni_1comp     = max((-1e-6 * out.Vpa(1)/(assmpt.vram*2*IN.probe_cA*CO.e)),0);
 
+
+    if (out.Vpa(1)>0)
+    out.ni_1comp     = (1e-6 * out.Vpa(1)/(assmpt.vram*2*IN.probe_cA*CO.e));
+    else
+    out.ni_1comp = 0;
+    end
 
 
     if (out.Vpb(1) < 0) %unphysical if intersection is above zero!
