@@ -36,7 +36,7 @@ fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n');
 
 
 
- fprintf(1,'rerunlapdog(%s,%s,%s,%s) activated ...\n',archpath, archID, missioncalendar,rerun_mode);
+fprintf(1,'rerunlapdog(%s,%s,%s,%s) activated ...\n',archpath, archID, missioncalendar,rerun_mode);
 
 
 rerun_mode = str2double(rerun_mode);
@@ -97,7 +97,7 @@ switch rerun_mode
     case 5
         remake_index = 0;
         remake_tabindex = 0;
-	remake_sweepsonly = 1;
+        remake_sweepsonly = 1;
 %        remake_analysis = 1;
 %        remake_bestestimates = 1;
 %        remake_LBL =1;
@@ -111,9 +111,9 @@ switch rerun_mode
         remake_index = 0;
         remake_tabindex = 0;
         remake_BLKLISTONLY = 1;
-
  
-        
+    otherwise
+        error('Can not intepret parameter rerun_mode=%f.', rerun_mode)
 end
 
 
