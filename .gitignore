@@ -14,9 +14,11 @@ metakernel_rosetta.txt
 main.m
 control.m
 
+# Need to include "mice" in case it is a symbolic link to a directory.
 irfu-matlab/
 server/
 mice/
+mice
 kernels/
 tabindex/
 index/

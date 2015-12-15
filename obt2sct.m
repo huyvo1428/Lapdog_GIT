@@ -1,7 +1,8 @@
 % Convert OBT time (true decimal point) to the SCT number part (not reset count, string).
+% Compare sct2obt.m
 %
 % Return value: String, e.g. 386207924.64832 where decimals are "fake".
-% 
+%
 % NOTE: Input is a double, not a string.
 % NOTE: Here SCT = SCS = "Spacecraft clock string" (SPICE uses that terminology.)
 % ===================== OLD COMMENTS BELOW ==========================
@@ -35,7 +36,7 @@ function sct_str = obt2sct(value)
     fake_decimals = round(fraction*2^16);
     
     % Handle overflow (e.g. fraction = 0.999999 ==> fake_decimals = 1)
-    if (fake_decimals >= 65535)
+    if (fake_decimals >= 2^16)
         fake_decimals = 0;
         int = int + 1;
     end
