@@ -7,6 +7,7 @@
 % macro during a certain day.
 %
 % Assumes index has been generated and exists in workspace.
+% Creates data directories under the data set directory.
 
 % Define file start times:
 t0 = [index.t0]';
@@ -35,8 +36,8 @@ end
 
 % Prepare obs block list for all archive
 mac = macro(obs);
-tmac0 = t0(obs);  % Start time of first file in ops block
-tmac1 = t0(obe);  % Start time of last file in ops block
+tmac0 = t0(obs);  % Start time of first file in ops block.
+tmac1 = t0(obe);  % Start time of last  file in ops block.
 
     % str = sprintf('blocklists/block_list_%s.txt',archiveid);
 % mf = fopen(str,'w');
@@ -60,10 +61,10 @@ rcount = 0;
 cmpdate='';
 
 
-for j=1:nob
+for j=1:nob    % For every macro block.
     
     
-    if(strcmp(datestr(tmac0(j),'yyyymmdd'),cmpdate)) % if adding to an existing block list file.
+    if(strcmp(datestr(tmac0(j),'yyyymmdd'),cmpdate)) % if adding to an existing block list file (same day).
         
         %append to file
         bf = fopen(blockfile,'a');
@@ -79,10 +80,10 @@ for j=1:nob
         dirM = upper(datestr(tmac0(j),'mmm'));
         dirD = strcat('D',datestr(tmac0(j),'dd'));
         
-        bfolder=strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD);
+        bfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD);
         
         if exist(bfolder,'dir')~=7
-            mkdir(bfolder);
+            mkdir(bfolder);    % NOTE: Will create parent directories as needed.
         end
         
         

@@ -1,14 +1,12 @@
 % indexcorr.m Some corrections after index creation
 %
-% Split data periods in "index" that span over midnight into two parts, one for each day.
+% Splits data periods in "index" that span over midnight into two parts, one for each day.
+% Creates temporary files in sundirectory temp/.
 %
 count = 0;
 
 
 lindex = length(index);
-
-
-%mkdir(sprintf('%s/temp',archivepath))
 
 
 dynampath= mfilename('fullpath'); %find path & remove/lapdog from string
@@ -26,7 +24,7 @@ for i=1:length(index)
     flag = 1;
     
     
-    % if start and end time in file is on different days
+    % If start and end time in file is on different days
     % Exception: if file is a sweep file, then don't separate files!
     
     if (strcmp(index(i).t0str(1:10), index(i).t1str(1:10)) == 0 )   &&   (index(i).sweep ==0)
@@ -57,10 +55,13 @@ for i=1:length(index)
         
         fclose(trID);
         
+        %=============================
+        % Create first temporary file
+        %=============================
         primfname = sprintf('%s/primary_%s',folder,index(i).tabfile(end-28:end));
         primwID = fopen(primfname,'w'); %clear original file
         index(i).tabfile = primfname; %#ok<*SAGROW> %!!
-        % Now index stops pointing to original tabfile, and instead points to temporary file
+        % Now index stops pointing to original tabfile, and instead points to temporary file.
         
         
         dday = index(i).t0str(1:10);
@@ -70,15 +71,10 @@ for i=1:length(index)
             t1line = datenum(strrep(scantemp{1,1}{j,1},'T',' ')); %time of suspicious line
             
             
-            if (strcmp(dday,scantemp{1,1}{j,1}(1:10)))  %if line is same day as t0str
-                
-                %    if (strcmp(datestr(index(i).t0,'yymmdd'),datestr(t1line,'yymmdd'))==1) %if line is same calendar day as t0
-                
-                % Previous strcmp  was shit, datestr says
-                % 01T23:59:59.999865 = 02T00:00:00
-                
-                %so this line is okay, print it to same file unchanged.
-                
+            if (strcmp(dday, scantemp{1,1}{j,1}(1:10)))  %if line is same day as t0str
+                %===========================
+                % Fill first temporary file
+                %===========================
                 if index(i).probe == 3 %file for probe == 3 is different
                     fprintf(primwID,'%s,%16.6f,%14.7e,%14.7e,%14.7e\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j));
                 else
@@ -86,9 +82,12 @@ for i=1:length(index)
                 end
                 
             else % IF NOT THE SAME DATE
-                               
+                
                 
                 if (flag==1) %if first item
+                    %==============================
+                    % Create second temporary file
+                    %==============================
                     tempfilename = sprintf('%s/appendix_%i_%i_%s',folder,i,j,index(i).tabfile(end-28:end));   %let's preserve most of the file name
                     
                     % tempfilename = sprintf('%s/temp/appendix_%i_%i_%s',archivepath,i,j,index(i).tabfile(end-28:end));   %let's preserve most of the file name
@@ -117,6 +116,9 @@ for i=1:length(index)
                 twID=fopen(tempfilename,'a');
                 
                 
+                %============================
+                % Fill second temporary file
+                %============================
                 if index(i).probe == 3 %file for probe == 3 is different
                     fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,%14.7e\n',scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j));
                 else

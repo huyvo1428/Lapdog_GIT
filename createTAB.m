@@ -141,7 +141,7 @@ global LDLMACROS; %global constant list
 %{ ,5} end time (S/C clock)
 %{ ,6} number of columns
 %{ ,7} number of rows
-%{ ,8} ?
+%{ ,8} number of bytes per row (including CR+LF)
 %{ ,9} last index number
 
 % NOTE: This is not the only location where tabindex is set, even for fields set here.

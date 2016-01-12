@@ -1,3 +1,5 @@
+% Does not appear to be used (called) by Lapdog itself.
+
 %function [] = readA_S()
 SAA=[];
 Vplasma=[];

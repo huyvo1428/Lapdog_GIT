@@ -2,7 +2,7 @@
 % Create LBL file for TAB file.
 % 
 % ("OBJTABLE" refers to "OBJECT = TABLE" in ODL files.)
-% Only for LBL files based on one OBJECT = TABLE section (plus header keiywords).
+% Only for LBL files based on one OBJECT = TABLE section (plus header keywords).
 %
 %
 % PARAMETER LBL_data = struct with the following fields.
@@ -21,18 +21,24 @@
 %       .OBJCOL_list{i}.DESCRIPTION        % Replaced by standardized default value if empty. Automatically quoted.
 %       .OBJCOL_list{i}.MISSING_CONSTANT   % Optional
 %
-% PARAMETER TAB_LBL_inconsistency_policy = 'warning', 'error', or 'nothing'. Determines how to react in the event of
+% PARAMETER TAB_LBL_inconsistency_policy = 'warning', 'error', or 'nothing'.
+%    Determines how to react in the event of
 %    inconsistencies.
+%
+% NOTE: LBL_data.consistency_check.* are not actually needed to complete the function's tasks. They are there
+% as consistency checks so that the caller can submit those values when they came from code creating
+% the TAB file, e.g. fprintf and when setting tabindex{:,6} (number of columns). The code will then
+% produce error/warning if they differ from what the other arguments suggest.
 %
 % NOTE: The caller is NOT supposed to surround key value strings with quotes, or units with </>.
 % The implementation should add that when appropriate.
 % NOTE: The implementation will add certain keywords to kvl_header, and derive the values, and assume that caller has not set them. Error otherwise.
 %
-% NOTE: The implementation temporarily adds a DELIMITER field to OBJECT=TABLE segments despite it being
-% uncertain whether it is PDS compliant.
-%
-%
-% BUG?!: Use/not use DELIMITER field? Uncertain if PDS compliant.
+% NOTE: Previous implementations have added a DELIMITER=", " field (presumably not PDS compliant) in
+% agreement with Imperial College/Tony Allen to somehow help them process the files
+% It appears that at least part of the reason was to make it possible to parse the files before
+% we used ITEM_OFFSET+ITEM_BYTES correctly. DELIMITER IS NO LONGER NEEDED AND SHOULD BE PHASED OUT!
+% (E-mail Tony Allen->Erik Johansson 2015-07-03 adn that thread). 
 %
 function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inconsistency_policy)
 %
@@ -67,6 +73,8 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
 %
 % PROPOSAL: Ignore FORMAT? Warning/error on finding FORMAT? (Flag for whether to trigger error?)
 %   NOTE: Current usage of "FORMAT" seems wrong. DVAL checks imply that FORMAT can be omitted.
+%
+% PROPOSAL: Change name from "consistency_checks" to "assertions".
 % 
 
     %========================================
@@ -244,8 +252,7 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
             msg = [msg, sprintf('LBL_data.consistency_check.N_TAB_bytes_per_row = %i\n', LBL_data.consistency_check.N_TAB_bytes_per_row)];
             msg = [msg,         'OBJTABLE_data.ROW_BYTES deviates from the consistency check value.'];
             warning_error___LOCAL(msg, TAB_LBL_inconsistency_policy)
-        end
-        
+        end        
         if (OBJTABLE_data.COLUMNS ~= LBL_data.consistency_check.N_TAB_columns)
             msg =       sprintf('LBL_file_path = %s\n', LBL_file_path);
             msg = [msg, sprintf('OBJTABLE_data.COLUMNS (derived)          = %i\n', OBJTABLE_data.COLUMNS)];
@@ -276,6 +283,11 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
         %################################################################################################        
         
         fid = fopen(LBL_file_path, 'w');   % Open LBL file to create/write to.        
+        
+        % Log message
+        fprintf(1, 'Writing LBL file: "%s"\n', LBL_file_path);
+
+        
         
         %=========================
         % Write LBL file "header"

@@ -1,4 +1,4 @@
-
+% Does not appear to be used (called) by Lapdog itself.
 
     
 fileList = getAllFiles('/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/204/I_S/');

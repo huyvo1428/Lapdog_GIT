@@ -262,9 +262,9 @@ end
 
 
     if (out.Vpa(1)>0)
-    out.ni_1comp     = (1e-6 * out.Vpa(1)/(assmpt.vram*2*IN.probe_cA*CO.e));
+        out.ni_1comp     = (1e-6 * out.Vpa(1)/(assmpt.vram*2*IN.probe_cA*CO.e));
     else
-    out.ni_1comp = 0;
+        out.ni_1comp = 0;
     end
 
 
@@ -280,8 +280,8 @@ end
     end
 
     if out.Upa(1) ~= 0
-    out.Vsc_aion    = Vknee  +out.Upb(1)/out.Upa(1);
-    out.v_aion      = sqrt(-2*CO.e*(out.Vsc_aion-Vknee)/(CO.mp*assmpt.ionM));
+        out.Vsc_aion    = Vknee  +out.Upb(1)/out.Upa(1);
+        out.v_aion      = sqrt(-2*CO.e*(out.Vsc_aion-Vknee)/(CO.mp*assmpt.ionM));
     end
 
   % Ii(1:len) = 0;
