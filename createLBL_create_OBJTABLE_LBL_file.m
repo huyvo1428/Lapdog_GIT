@@ -285,7 +285,7 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
         fid = fopen(LBL_file_path, 'w');   % Open LBL file to create/write to.        
         
         % Log message
-        fprintf(1, 'Writing LBL file: "%s"\n', LBL_file_path);
+        %fprintf(1, 'Writing LBL file: "%s"\n', LBL_file_path);
 
         
         

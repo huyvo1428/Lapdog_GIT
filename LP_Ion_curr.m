@@ -54,15 +54,15 @@
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [out] = LP_Ion_curr(V,I,Vsc,Vknee,SM_Below_Vs)
-global CO IN     % Physical &instrumental constants
-global assmpt; %global assumptions
+function [out] = LP_Ion_curr(V, I, Vsc, Vknee, SM_Below_Vs)
+global CO IN     % Physical & instrumental constants
+global assmpt;   % Global assumptions
 
 Ii = I;
-Ii(1:end)=0;
+Ii(1:end) = 0;
 out = [];
 
-a=nan(1,2);
+a = nan(1,2);
 b = nan(1,2);
 
 out.I = Ii;
@@ -76,18 +76,18 @@ out.Q = 0;
 out.mean = nan(1,2);
 
 
-out.ni_1comp         = NaN;
-out.ni_2comp         = NaN;
-out.v_ion            = NaN;
+out.ni_1comp = NaN;
+out.ni_2comp = NaN;
+out.v_ion    = NaN;
 
-out.ni_aion  =NaN;
-out.Vsc_aion =NaN;
-out.v_aion   =NaN;
+out.ni_aion  = NaN;
+out.Vsc_aion = NaN;
+out.v_aion   = NaN;
 
 %global ALG;
 
-if nargin<5     %if SM_Below_Vs is not specified, default to 0.3
-  SM_Below_Vs =0.4;
+if nargin < 5     % if SM_Below_Vs is not specified, default to 0.3
+  SM_Below_Vs = 0.4;
 end
 
 
@@ -97,7 +97,7 @@ end
 % Find the number of data points in the sweep
 len = length(V);  % the function length returns the length of the vector V
 
-Vp = V+Vsc; % Setting the probe potential
+Vp = V + Vsc;   % Setting the probe potential.
 
 % Find the data points below the spacecraft potential
 ind = find(V < -Vknee ); % Saving indices of all potential values below the knee potential.
@@ -106,7 +106,7 @@ if isempty(ind)
     out.Q = 2;
     return
 end
-%remove first point. it's not very trustworthy due to smoothing.
+% Remove first point. It's not very trustworthy due to smoothing.
 ind =ind(2:end);
 
 
@@ -114,7 +114,6 @@ ind =ind(2:end);
 % The data is sorted from lowest bias voltage to highest bias voltage so
 % the first ALG.SM_Below_Vs*100% is OK to use
 l_ind = length(ind); % Need the number of data points of the vector ind
-                     % the function length returns the length of vector ind
 
 
 
@@ -125,14 +124,14 @@ top = floor(l_ind*SM_Below_Vs +0.5);
                          % towards minus infinity.
 
 ind = ind(1:top); % Only the first ALG.SM_Below_Vs*100% below the spacecraft potential is now
-Vr  = V(ind);     % kept of the vector ind
+Vr  = V(ind);     % kept of the vector ind.
 Ir  = I(ind);     % The "ion-voltage" and "ion-current" are set. Note that this
                   % is not the ion-voltage or ion-current in the physical sense
 		          % as there may be contamination from other sources
-                  % but the notation is used for convenience in the coding
+                  % but the notation is used for convenience in the coding.
                   % Also note that the current vector and the potential vector
                   % have a one-to-one dependence on their elements, so they
-                  % can, and must, be changed identically
+                  % can, and must, be changed identically.
 
 clear ind l_ind; % Clearing the previous data, the function clear clears the
                  % function specified
@@ -143,33 +142,36 @@ clear ind l_ind; % Clearing the previous data, the function clear clears the
 % Vi = Vi(ind);            % farther from -Vsc than ALG.SM_Bias_Limit V. These are kept, the rest
 % Ii = Ii(ind);            % of the data points are discarded
 
-ind = find(Ir < 0); % There may be no positive current values and thus all
+% Exclude positive currents.
+ind = find(Ir < 0);   
 if(isempty(ind) || length(ind) < 2 )
     return
 end
-
-Vpr = Vp(ind);
-Vr = Vr(ind);       % negative current values in our vector are kept, the
-Ir = Ir(ind);       % rest of the data points are, again, discarded
+%Vpr = Vp(ind);
+Vr = Vr(ind);       % Negative current values in our vector are kept, the
+Ir = Ir(ind);       % rest of the data points are, again, discarded.
 
 
 if (size(Vr) ~= size(Ir))
   Vr = Vr';
 end
 
+
 % 'This part of our data is now linearly fitted, in a least square sense
-[P_Vb,S] = polyfit(Vr,Ir,1); % The function polyfit finds the coefficients of a
-                      % polynomial P(Vi) of degree 1 that fits the data Ii best
-                      % in a least-squares sense. P is a row vector of length
-                      % 2 containing the polynomial coefficients in descending
-                      % powers, P(1)*Vi+P(2)
+% The function polyfit finds the coefficients of a
+% polynomial P(Vi) of degree 1 that fits the data Ii best
+% in a least-squares sense. P is a row vector of length
+% 2 containing the polynomial coefficients in descending
+% powers, P(1)*Vi+P(2)
+[P_Vb,S] = polyfit(Vr,Ir,1);
+
 a(1) = P_Vb(1); % This is accordingly the slope of the line...
 b(1) = P_Vb(2); % ...and this is the crossing on the y-axis of the line
 
 S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
 
-a(2) = abs(S.sigma(1)/P_Vb(1)); %Fractional error
-b(2) = abs(S.sigma(2)/P_Vb(2)); %Fractional error
+a(2) = abs(S.sigma(1)/P_Vb(1));   % Fractional error
+b(2) = abs(S.sigma(2)/P_Vb(2));   % Fractional error
 
 
 
@@ -177,18 +179,18 @@ b(2) = abs(S.sigma(2)/P_Vb(2)); %Fractional error
 %[PVp,junk] = polyfit(Vpr,Ir,1); %this is slow, we need only a simple
 %calculation to fit as function of Vsc.
 P_Vp = P_Vb;                  %same slope, but we need to change intersect
-P_Vp(2) = P_Vb(2)-P_Vb(1)*Vsc; %fit as function of Vp= V-Vsc.
+P_Vp(2) = P_Vb(2) - P_Vb(1)*Vsc; %fit as function of Vp= V-Vsc.
 
-P_Up= P_Vb;
-P_Up(2) = P_Vb(2)-P_Vb(1)*Vknee; %same slope, but intersect if ions are function of Up, where Up = V-Vknee)
-
-
+P_Up = P_Vb;
+P_Up(2) = P_Vb(2) - P_Vb(1)*Vknee; %same slope, but intersect if ions are function of Up, where Up = V-Vknee)
 
 
-if (a(2) > 1)||(a(1) < 0) % if error is large (!) or slope in wrong direction (unphysical)
 
-    a = [0 0]; % no slope
-    b = [mean(Ir) std(Ir)]; % offset
+
+if (a(2) > 1) || (a(1) < 0)   % if error is large (!) or slope is in the wrong direction (unphysical)
+
+    a = [0 0];   % no slope
+    b = [mean(Ir) std(Ir)];   % offset
     out.Q(1) = 1;
 
     P_Vp(1) = a(1); % no slope
@@ -197,9 +199,8 @@ if (a(2) > 1)||(a(1) < 0) % if error is large (!) or slope in wrong direction (u
     P_Up(1) = a(1);
     P_Up(2) = b(1);
 
-
-    if nargin<5     %Try it again with a different SM_below_Vs value.
-        [out] = LP_Ion_curr(V,I,Vsc,Vknee,0.6);
+    if nargin < 5     % Try it again with a different SM_below_Vs value.
+        [out] = LP_Ion_curr(V, I, Vsc, Vknee, 0.6);     % NOTE: RECURSIVE CALL
         return
     end
 
@@ -239,8 +240,6 @@ end
 
     % IiVp = (IiVp-abs(IiVp))/2;
     % IiUp = (IiUp-abs(IiUp))/2;
-    %
-    %
 
     out.I = Ii;
     out.a = a;
@@ -284,8 +283,8 @@ end
         out.v_aion      = sqrt(-2*CO.e*(out.Vsc_aion-Vknee)/(CO.mp*assmpt.ionM));
     end
 
-  % Ii(1:len) = 0;
- %   out.I = Ii; initialised to zero
+    % Ii(1:len) = 0;
+    %   out.I = Ii; initialised to zero
 
 
 
