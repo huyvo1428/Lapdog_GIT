@@ -78,6 +78,7 @@ try
         
         
         %need to split **H.TAB file into separate high frequency snap shots
+        %and remove times when MIP is operating
         
         reltime= scantemp{1,2} - scantemp{1,2}(1);
         dt = reltime(2);
@@ -107,18 +108,13 @@ try
                 
             end
             
+             %Here's the actual filtering. Ignore the first 2ms every 8ms.                
             if reltime(n+1)-t0 >= 2e-3 && reltime(n+1)-t0 <= 8e-3
-                
                 sind(n+1) = count;
                 %         else
                 %             sind(n) = 0;
                 
             end
-            
-            %         if count==1 && reltime(n+1)-t0 >= 2e-3
-            %
-            %             sind(n+1) = count;
-            %         end
             
             
             
