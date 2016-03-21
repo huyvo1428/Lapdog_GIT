@@ -1,11 +1,11 @@
-%analyses sweeps, utilising modded version of Anders an_swp code, and other
-%methods
-function []= an_sweepmain(an_ind,tabindex,targetfullname)
+% Analyses sweeps, utilising modded version of Anders an_swp code, and other
+% methods.
+function [] = an_sweepmain(an_ind,tabindex,targetfullname)
 
 global an_tabindex;
 global target;
 global diag_info
-global CO IN     % Physical &instrumental constants
+global CO IN     % Physical & instrumental constants
 
 
 
@@ -14,8 +14,8 @@ global assmpt;
         assmpt =[];
         assmpt.Vknee = 0; %dummy
         assmpt.Tph = 2; %eV
-        assmpt.Iph0 = -6.6473e-09; %from median of M06 & SPIS simulation
-        %    assmpt.Iph0 = -8.55e-09; %from mean of M08, probably too high.
+        assmpt.Iph0 = -6.6473e-09;   % from median of M06 & SPIS simulation
+        %    assmpt.Iph0 = -8.55e-09; % from mean of M08, probably too high.
         assmpt.vram = 4E5; % Solar wind assumption
         assmpt.ionZ = 1;   % SW assumption
         assmpt.ionM = 1;   % SW assumption
@@ -35,13 +35,13 @@ try
 
     for i=1:length(an_ind)     % iterate over sweep files...
 
-        % get file, read variables etcc
+        % get file, read variables etc
         rfile =tabindex{an_ind(i),1};                  % Sweep file
         rfolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
         %tabindex{an_ind(i),1}(end-10:end-8)
-        mode=rfile(end-6:end-4);
-        diagmacro=rfile(end-10:end-8);
-        probe = rfile(end-5);
+        mode      = rfile(end- 6:end-4);
+        diagmacro = rfile(end-10:end-8);
+        probe     = rfile(end-5);
 
         diag_info{1} = strcat(diagmacro,'P',probe); %remember probe and macro everywhere for debugging
         diag_info{2} = rfile; %let's also remember the full name
@@ -65,7 +65,7 @@ try
         % scantemp=textscan(arID,'%s%f%f%f%d','delimiter',',');
         fclose(arID);
 
-        steps=    length(scantemp2{1,2})+5;     % Nbr of values per sweep: currents/voltages + 4 timestamps + 1 QF
+        steps = length(scantemp2{1,2})+5;       % Nbr of values per sweep: currents/voltages + 4 timestamps + 1 QF
         N_file_values = numel(scantemp{1,1});   % Nbr of values in sweep data file (all sweeps & columns).
         N_sp = N_file_values/steps;             % Nbr of sweep/pairs. sp = sweep/pair
 
@@ -75,34 +75,32 @@ try
         end
 
 
-        A= reshape(scantemp{1,1},steps,N_file_values/steps);        % Matrix of STRINGS (<column nbr>, <sweep/pair index>)
+        A = reshape(scantemp{1,1},steps,N_file_values/steps);        % Matrix of STRINGS (<column nbr>, <sweep/pair index>)
         Iarr= str2double(A(6:end,1:end));                  % Matrix of doubles (<sweep voltage nbr>, <sweep/pair index>)
         timing = {A{1,1},A{2,end},A{3,1},A{4,end}};        % Timing for entire analysis file.
         Qfarr =str2double(A(5,:));
 
         Vb = scantemp2{1,2};              % Voltage, for each sweep/pair.
 
-        Tarr= A(1:4,1:end);               % Matrix for individual sweep times: (<column nbr>, <sweep/pair index>)
+        Tarr = A(1:4,1:end);              % Matrix for individual sweep times: (<column nbr>, <sweep/pair index>)
 
-        %special case where V increases e.g. +15to -15 to +15, or -15 to +15 to -15V
-        potdiff=diff(Vb);
-
-        upd =max(0,sign(potdiff)); %dir is an int either 0 or 1...
-
-        if potdiff(1) > 0 && Vb(end)~=max(Vb) % potbias looks like a V
+        
+        % Classify "sweep" depending on voltage curve: one/two sweeps, up/down, where split.
+        potdiff = diff(Vb);
+        upd = max(0,sign(potdiff));    % is an int either 0 or 1...
+        if potdiff(1) > 0 && Vb(end)~=max(Vb)
+            % potbias looks like V.
 
             mind=find(Vb==max(Vb));
             split = 1;
-            upd = [ 0 1]; %...or it's an array of size two
-            %downup
+            upd = [ 0 1];
 
         elseif potdiff(1) <0 && Vb(end)~=min(Vb)
-            %%potbias looks like upside-down V
+            % potbias looks like upside-down V.
 
             mind=find(Vb==min(Vb));
             split = -1;
             upd = [ 1 0];
-            %updown
         else
             split = 0;
         end
@@ -112,11 +110,11 @@ try
         if split
 
             % Split data for first and second sweep in sweep pair.
-            Vb2=Vb(mind:end);
-            Iarr2=Iarr(mind:end,:);
+            Vb2   = Vb(mind:end);
+            Iarr2 = Iarr(mind:end,:);
 
-            Vb=Vb(1:mind);
-            Iarr= Iarr(1:mind,:);
+            Vb   = Vb(1:mind);
+            Iarr = Iarr(1:mind,:);
 
             Tarr2 = Tarr;
             t_sweep_rel = scantemp2{1,1};     % Time, relative to beginning of sweep/pair sequence (one/two sweeps).
@@ -138,8 +136,8 @@ try
 
 
 
-        %'preloaded' is a dummy entry, just so orbit realises spice kernels
-        %are already loaded
+        % 'preloaded' is a dummy entry, just so orbit realises spice kernels
+        % are already loaded.
         [altitude,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
         clear junk
 
@@ -151,7 +149,6 @@ try
             Phi12 = 181;
 
             illuminati = ((SAA < Phi11) | (SAA > Phi12));
-
 
         else %we will hopefully never have sweeps with probe number "3"
 
@@ -191,8 +188,6 @@ try
             %linux/mac differences.
             %            if datenum(Tarr{1,1}(1:19),formatin) < datenum('2015-01-01T00:00:00',formatin)378691143.436616
 
-
-
             if (str2double(Tarr{3,1}) > 365904090.294412)%if past 6 aug 2014 (ESA blog post "arrival at comet")
 
                 assmpt.vram = 550; %m/s
@@ -204,11 +199,10 @@ try
 
 
 
-        %Edit 31 Aug added new Iph0 selector, to be used with Norwegian Iph0
+        %Edit 31 Aug 2015 added new Iph0 selector, to be used with Norwegian Iph0
         %results.
 
-        assmpt.Iph0= Iph0selector('iph0.txt',str2double(Tarr{3,1}),str2double(probe));
-
+        assmpt.Iph0 = Iph0selector('iph0.txt',str2double(Tarr{3,1}),str2double(probe));
 
         %Anders analysed parameters
         AP(len).ts       = [];
@@ -248,7 +242,7 @@ try
 %         EP(len).v_aion = [];
 %         EP(len).asm_ni_aion    = [];
 %         EP(len).asm_Vsc_aion   = [];
-%          EP(len).asm_v_aion = [];
+%         EP(len).asm_v_aion = [];
 %
 %         EP(len).asm_ni_1comp = [];
 %         EP(len).asm_ni_2comp = [];
@@ -317,67 +311,65 @@ try
 
         % initial estimate
 
-    %these asumptions should be printed somewhere. Maybe in the LBL file?
-    %print in description of LBL file?
+        %these asumptions should be printed somewhere. Maybe in the LBL file?
+        %print in description of LBL file?
 
 
-    % try whole batch of sweep analysis at once, why not?
-    % 50 sweeps would correspond to ~ 30 minutes of sweeps
+        % try whole batch of sweep analysis at once, why not?
+        % 50 sweeps would correspond to ~ 30 minutes of sweeps
 
-   % if len > 1
-   if 0 == 1
+        % if len > 1
+        if 0 == 1
 
-        lmax=min(len,50); %lmax is whichever is smallest, len or 50.
+            lmax=min(len,50); %lmax is whichever is smallest, len or 50.
 
-        lind=logical(floor(mean(reshape(illuminati,2,len),1)));% logical index of all sunlit sweeps
-        dind=~logical((mean(reshape(illuminati,2,len),1))); %logical index of all fully shadowed sweeps
+            lind=logical(floor(mean(reshape(illuminati,2,len),1)));% logical index of all sunlit sweeps
+            dind=~logical((mean(reshape(illuminati,2,len),1))); %logical index of all fully shadowed sweeps
 
 
-        if sum(unique(lind(1:lmax))) % if we have sunlit sweeps, do this
-            I_50 = mean(Iarr(:,lind),2);   %average each potential step current
-            [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vph_knee estimate from that.
+            if sum(unique(lind(1:lmax))) % if we have sunlit sweeps, do this
+                I_50 = mean(Iarr(:,lind),2);   %average each potential step current
+                [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vph_knee estimate from that.
 
-            assmpt.Vknee =Vknee;
+                assmpt.Vknee =Vknee;
 
-     %       init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,1);  %get initial estimate of all variables in that sweep.
+                % init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,1);  %get initial estimate of all variables in that sweep.
+            end
+
+            if sum(unique(~(lind(1:lmax)))) % if we also) have non-sunlit sweeps?
+
+                I_50 = mean(Iarr(:,~lind),2);
+                [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vsg estimate from that.
+                assmpt.Vknee = Vknee;
+                % init_2 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0);  %get initial estimate of all variables in that sweep.
+            end
+            % non-sunlit sweep V_SC should have priority!!
+
+
+
+            if unique(lind+dind)==0 %if everything is in partial shade
+
+                I_50 = mean(Iarr(:,1:lmax),2); %all
+                [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vph_knee estimate from that.
+
+                assmpt.Vknee =Vknee;
+
+                % init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0.4);  %get initial estimate of all variables in that sweep.
+            end
+
         end
-
-        if sum((unique(~(lind(1:lmax))))) % if we also) have non-sunlit sweeps?
-
-            I_50 = mean(Iarr(:,~lind),2);
-            [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vsg estimate from that.
-            assmpt.Vknee = Vknee;
-      %      init_2 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0);  %get initial estimate of all variables in that sweep.
-        end
-        % non-sunlit sweep V_SC should have priority!!
-
-
-
-        if unique(lind+dind)==0 %if everything is in partial shade
-
-            I_50 = mean(Iarr(:,1:lmax),2); %all
-            [Vknee,sigma]=an_Vplasma(Vb,I_50); %get Vph_knee estimate from that.
-
-            assmpt.Vknee =Vknee;
-
-       %     init_1 = an_LP_Sweep_with_assmpt(Vb, I_50,assmpt,0.4);  %get initial estimate of all variables in that sweep.
-        end
-
-
-    end
 
 
         % analyse!
 
 
         for k=1:len    % Iterate over first sweep in every potential sweep pair (one/two sweeps)
-
             %  a= cspice_str2et(timing{1,k});
 
-            %% quality factor check
-            qf= Qfarr(k);
+            % quality factor check
+            qf = Qfarr(k);
 
-            if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.05) %rotation of more than 0.05 degrees  %arbitrary chosen value... seems decent
+            if (abs(SAA(1, 2*k-1)-SAA(1, 2*k)) >0.05) %rotation of more than 0.05 degrees  %arbitrary chosen value... seems decent
                 qf = qf+20; %rotation
             end
 
@@ -385,41 +377,33 @@ try
             EP(k).SAA = mean(SAA(1,2*k-1:2*k));
             EP(k).lum = mean(illuminati(1,2*k-1:2*k));
             EP(k).Tarr = {Tarr{:,k}};
-
             EP(k).tstamp = Tarr{3,k};
             EP(k).qf = qf;
             EP(k).dir = upd(1);
 
-            %Anders LP sweep analysis
-            AP(k)=  an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(k).lum);
+            % Anders LP sweep analysis
+            AP(k) = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(k).lum);
 
             if k>1
-                Vguess=DP(k-1).Vph_knee(1);
+                Vguess = DP(k-1).Vph_knee(1);
             else
-                Vguess=-AP(k).vs;
+                Vguess = -AP(k).vs;
             end
 
             [DP(k),DP_asm(k)] = an_LP_Sweep_v2(Vb, Iarr(:,k),Vguess,EP(k).lum);
 
-            %DP(k)= an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
+            %DP(k) = an_LP_Sweep(Vb, Iarr(:,k),Vguess,EP(k).lum);
             %DP_asm(k) = an_LP_Sweep_with_assmpt(Vb),Iarr(:,k),assmpt,EP(k).lum);
-
-
 
             Te_guess = 5;%eV
             %EP(k).ne_5eV = abs(1e-6*DP(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
             %EP(k).asm_ne_5eV = abs(1e-6*DP_asm(k).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-            EP(k).ne_5eV     = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0); %max out of expression and 0 -> if >0, ne=0;
-            EP(k).asm_ne_5eV = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_asm(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0);%max out of expression and 0 -> if >0, ne=0;
-            EP(k).asm_Vsc_ni_ne =nansum((DP_asm(k).ion_Vb_intersect(1)-(sqrt(DP_asm(k).ion_intersect(1))*DP_asm(k).ne(1)/DP_asm(k).ni_2comp(1)).^2)/DP_asm(k).ion_slope(1));
-            EP(k).Vsc_ni_ne     =nansum((DP(k).ion_Vb_intersect(1)    -(sqrt(DP(k).ion_intersect(1))     *DP(k).ne(1)   /DP(k).ni_2comp(1)).^2)    /DP(k).ion_slope(1));
-
-
-
+            EP(k).ne_5eV        = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0); %max out of expression and 0 -> if >0, ne=0;
+            EP(k).asm_ne_5eV    = max(1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_asm(k).e_slope(1) / (IN.probe_A*CO.e.^1.5),0);%max out of expression and 0 -> if >0, ne=0;
+            EP(k).asm_Vsc_ni_ne = nansum((DP_asm(k).ion_Vb_intersect(1)-(sqrt(DP_asm(k).ion_intersect(1))*DP_asm(k).ne(1)/DP_asm(k).ni_2comp(1)).^2)/DP_asm(k).ion_slope(1));
+            EP(k).Vsc_ni_ne     = nansum((DP(k).ion_Vb_intersect(1)    -(sqrt(DP(k).ion_intersect(1))    *DP(k).ne(1)    /DP(k).ni_2comp(1)).^2)    /DP(k).ion_slope(1));
 
         end % for
-
-
 
         if (split~=0)    % If every sweep/pair is really two sweeps...
 
@@ -427,13 +411,13 @@ try
                 m=k+len;
                 %note Vb =! Vb2, Iarr =! Iarr2, etc.
                 % quality factor check
-                qf= Qfarr(k);
+                qf = Qfarr(k);
 
-                if (abs(SAA(1,2*k-1)-SAA(1,2*k)) >0.05) %rotation of more than 0.01 degrees
+                if (abs(SAA(1, 2*k-1)-SAA(1, 2*k)) >0.05) %rotation of more than 0.01 degrees
                     qf = qf+20; %rotation
                 end
 
-                EP(m).split = split; % 1 for V form, -1 for upsidedownV
+                EP(m).split = split;  % 1 for V form, -1 for upside-down V
                 EP(m).SAA = mean(SAA(1,2*k-1:2*k));
                 EP(m).lum = mean(illuminati(1,2*k-1:2*k));
                 EP(m).Tarr = {Tarr2{:,k}};
@@ -441,32 +425,26 @@ try
                 EP(m).qf = qf;
                 EP(m).dir = upd(2);
 
-                AP(m)     =  an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr2{1,k}),mode(2),EP(m).lum);
+                AP(m) = an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr2{1,k}),mode(2),EP(m).lum);
 
                 if k>1
-                    Vguess=DP(m-1).Vph_knee;
+                    Vguess = DP(m-1).Vph_knee;
                 else
-                    Vguess=AP(m).vs; %use last calculation as a first guess
+                    Vguess = AP(m).vs; %use last calculation as a first guess
                 end
+
+                [DP(m),DP_asm(m)] = an_LP_Sweep_v2(Vb2,Iarr2(:,k),Vguess,EP(m).lum);
 
                 %DP(m) = an_LP_Sweep(Vb2,Iarr2(:,k),Vguess,EP(m).lum);
                 %DP_asm(m) = an_LP_Sweep_with_assmpt(Vb2,Iarr2(:,k),assmpt,EP(m).lum);
 
-               [DP(m),DP_asm(m)] = an_LP_Sweep_v2(Vb2,Iarr2(:,k),Vguess,EP(m).lum);
-
-
-
                 Te_guess = 5;%eV
                 %EP(m).ne_5eV = abs(1e-6*DP(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
                 %EP(m).asm_ne_5eV = abs(1e-6*DP_asm(m).e_intersect(1)/(IN.probe_A*-CO.e*sqrt(CO.e*Te_guess/(2*pi*CO.me))));
-
-                EP(m).ne_5eV= max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0); %max out of expression and 0 -> if >0, n=0;
-                EP(m).asm_ne_5eV = max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_asm(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0);  %max out of expression and 0 -> if >0, ni=0;
-                EP(m).asm_Vsc_ni_ne =nansum((DP_asm(k).ion_Vb_intersect(1)-(sqrt(DP_asm(k).ion_intersect(1))*DP_asm(k).ne(1)/DP_asm(k).ni_2comp(1)).^2)/DP_asm(k).ion_slope(1));
-                EP(m).Vsc_ni_ne =nansum((DP(k).ion_Vb_intersect(1)-(sqrt(DP(k).ion_intersect(1))*DP(k).ne(1)/DP(k).ni_2comp(1)).^2)/DP(k).ion_slope(1));
-
-
-
+                EP(m).ne_5eV        = max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0); %max out of expression and 0 -> if >0, n=0;
+                EP(m).asm_ne_5eV    = max((1e-6*sqrt(2*pi*CO.me*Te_guess) * DP_asm(m).e_slope(1) / (IN.probe_A*CO.e.^1.5)),0);  %max out of expression and 0 -> if >0, ni=0;
+                EP(m).asm_Vsc_ni_ne = nansum((DP_asm(k).ion_Vb_intersect(1)-(sqrt(DP_asm(k).ion_intersect(1))*DP_asm(k).ne(1)/DP_asm(k).ni_2comp(1)).^2)/DP_asm(k).ion_slope(1));
+                EP(m).Vsc_ni_ne     = nansum((DP(k).ion_Vb_intersect(1)    -(sqrt(DP(k).ion_intersect(1))    *DP(k).ne(1)    /DP(k).ni_2comp(1)).^2)    /DP(k).ion_slope(1));
 
             end%for
         end%if split
@@ -484,38 +462,36 @@ try
 
 
 
-                %IF THIS HEADER IS REMOVED (WHICH IT SHOULD BE BEFORE ESA
-                %DELIVERY) NOTIFY TONY ALLEN!
-
-
-            fprintf(awID,strcat('START_TIME(UTC), STOP_TIME(UTC), START_TIME_OBT, STOP_TIME_OBT, Qualityfactor, SAA, Illumination, direction',...
-            ', old.Vsi, old.Vx, Vsg, sigma_Vsg',...
-            ', old.Tph, old.Iph0, Vb_lastnegcurrent, Vb_firstposcurrent',...
-            ', Vbinfl, dIinfl, d2Iinfl',...
-            ', Iph0, Tph, Vsi, Vph_knee, sigma_Vph_knee, Te_linear, sigma_Te_linear, ne_linear, sigma_ne_linear',...
-            ', ion_slope, sigma_ion_slope, ion_intersect, sigma_ion_intersect, e_slope, sigma_e_slope, e_intersect, sigma_e_intersect',...
-            ', ion_Vb_intersect, sigma_ion_Vb_intersect, e_Vb_intersect, sigma_e_Vb_intersect',...
-            ', Tphc, nphc, phc_slope, sigma_phc_slope, phc_intersect, sigma_phc_intersect',...
-            ', ne_5eV, ni_v_dep, ni_v_indep, v_ion, Te_exp, sigma_Te_exp, ne_exp, sigma_ne_exp, Rsquared_linear, Rsquared_exp',...
-            ', Vbar, sigma_Vbar',...
-            ', ASM_Iph0, ASM_Tph, asm_Vsi, asm_Te_linear, asm_sigma_Te_linear, asm_ne_linear, sigma_asm_ne_linear',...
-            ', asm_ion_slope, asm_sigma_ion_slope, asm_ion_intersect, asm_sigma_ion_intersect, asm_e_slope, asm_sigma_e_slope, asm_e_intersect, asm_sigma_e_intersect',...
-            ', asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
-            ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
-            ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...
-            ', ASM_m_ion, ASM_Z_ion, ASM_v_ion, Vsc_ni_ne, asm_Vsc_ni_ne',...
-            ', Vsc_aion, ni_aion, v_aion, asm_Vsc_aion, asm_ni_aion, asm_v_aion',...
-            ', Te_exp_belowVknee, sigma_Te_exp_belowVknee, ne_exp_belowVknee, sigma_ne_exp_belowVknee, asm_Te_exp_belowVknee, asm_sigma_Te_exp_belowVknee, asm_ne_exp_belowVknee, asm_sigma_ne_exp_belowVknee',...
-            ', Vsg_lowAc, sigma_Vsg_lowAc, Vph_knee_lowAc, sigma_Vph_knee_lowAc, Vbar_lowAc, sigma_Vbar_lowAc',...
-            '\r\n'));
+        % IF THIS HEADER IS REMOVED (WHICH IT SHOULD BE BEFORE ESA
+        % DELIVERY) NOTIFY TONY ALLEN!
+        fprintf(awID,strcat('START_TIME(UTC), STOP_TIME(UTC), START_TIME_OBT, STOP_TIME_OBT, Qualityfactor, SAA, Illumination, direction',...
+        ', old.Vsi, old.Vx, Vsg, sigma_Vsg',...
+        ', old.Tph, old.Iph0, Vb_lastnegcurrent, Vb_firstposcurrent',...
+        ', Vbinfl, dIinfl, d2Iinfl',...
+        ', Iph0, Tph, Vsi, Vph_knee, sigma_Vph_knee, Te_linear, sigma_Te_linear, ne_linear, sigma_ne_linear',...
+        ', ion_slope, sigma_ion_slope, ion_intersect, sigma_ion_intersect, e_slope, sigma_e_slope, e_intersect, sigma_e_intersect',...
+        ', ion_Vb_intersect, sigma_ion_Vb_intersect, e_Vb_intersect, sigma_e_Vb_intersect',...
+        ', Tphc, nphc, phc_slope, sigma_phc_slope, phc_intersect, sigma_phc_intersect',...
+        ', ne_5eV, ni_v_dep, ni_v_indep, v_ion, Te_exp, sigma_Te_exp, ne_exp, sigma_ne_exp, Rsquared_linear, Rsquared_exp',...
+        ', Vbar, sigma_Vbar',...
+        ', ASM_Iph0, ASM_Tph, asm_Vsi, asm_Te_linear, asm_sigma_Te_linear, asm_ne_linear, sigma_asm_ne_linear',...
+        ', asm_ion_slope, asm_sigma_ion_slope, asm_ion_intersect, asm_sigma_ion_intersect, asm_e_slope, asm_sigma_e_slope, asm_e_intersect, asm_sigma_e_intersect',...
+        ', asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
+        ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
+        ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...
+        ', ASM_m_ion, ASM_Z_ion, ASM_v_ion, Vsc_ni_ne, asm_Vsc_ni_ne',...
+        ', Vsc_aion, ni_aion, v_aion, asm_Vsc_aion, asm_ni_aion, asm_v_aion',...
+        ', Te_exp_belowVknee, sigma_Te_exp_belowVknee, ne_exp_belowVknee, sigma_ne_exp_belowVknee, asm_Te_exp_belowVknee, asm_sigma_Te_exp_belowVknee, asm_ne_exp_belowVknee, asm_sigma_ne_exp_belowVknee',...
+        ', Vsg_lowAc, sigma_Vsg_lowAc, Vph_knee_lowAc, sigma_Vph_knee_lowAc, Vbar_lowAc, sigma_Vbar_lowAc',...
+        '\r\n'));
 
         % fpformat = '%s, %s, %03i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e  %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
         for k=1:klen
             % print variables to file. separated into substrings.
 
             str1  = sprintf('%s, %s, %16s, %16s, %03i, %07.3f, %04.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
-            str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs, AP(k).vx, DP(k).Vsg);
-            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0,AP(k).lastneg, AP(k).firstpos);
+            str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs,  AP(k).vx,   DP(k).Vsg);
+            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).firstpos);
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
             str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Iph0, DP(k).Tph, DP(k).Vsi, DP(k).Vph_knee, DP(k).Te, DP(k).ne);
             str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
@@ -530,13 +506,8 @@ try
             str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).asm_ne_5eV,DP_asm(k).ni_1comp,DP_asm(k).ni_2comp,DP_asm(k).v_ion,DP_asm(k).Te_exp,DP_asm(k).ne_exp,DP_asm(k).Rsq.linear,DP_asm(k).Rsq.exp);
             str16 = sprintf(' %03i, %02i, %14.7e, %14.7e, %14.7e,',assmpt.ionM,assmpt.ionZ,assmpt.vram,EP(k).Vsc_ni_ne,EP(k).asm_Vsc_ni_ne);
             str17 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Vsc_aion,DP(k).ni_aion,DP(k).v_aion,DP_asm(k).Vsc_aion,DP_asm(k).ni_aion,DP_asm(k).v_aion);
-            str18 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Te_exp_belowVknee, DP(k).ne_exp_belowVknee, DP_asm(k).Te_exp_belowVknee, DP_asm(k).ne_exp_belowVknee);
-
-
+            str18 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Te_exp_belowVknee, DP(k).ne_exp_belowVknee, DP_asm(k).Te_exp_belowVknee, DP_asm(k).ne_exp_belowVknee);            
             str19 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e', DP(k).Vsg_lowAc, DP(k).Vph_knee_lowAc,DP(k).Vbar_lowAc);
-
-
-
 
 
             strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16,str17,str18,str19);
@@ -546,12 +517,9 @@ try
             strtot=strrep(strtot,'Inf','NaN');
             %strtot=strrep(strtot,'NaN','   ');
 
-
             %If you need to change NaN to something (e.g. N/A, as accepted by Rosetta Archiving Guidelines) change it here!
 
-
             row_bytes = fprintf(awID,'%s\r\n',strtot);
-
 
         end
         fclose(awID);
@@ -569,7 +537,8 @@ try
 
         %clear output structs before looping again
         clear AP DP EP
-    end
+        
+    end  % for every sweep file
 
     cspice_kclear;  %unload ALL kernels when exiting function
     %

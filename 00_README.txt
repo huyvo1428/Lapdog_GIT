@@ -1,12 +1,12 @@
 LAPDOG -- LAP Dataset Overview and Geometry
 ===========================================
 
-Matlab code to grind a LAP PDS Calibrated archive, generating a full Derived archive. 
+Matlab code to generate a derived-level data set from a calibrated-level data set for the Rosetta RPCLAP instrument.
 
-two modes of executions: main.m or lapdog.m (for script execution)
+There are two modes of executions: main.m or lapdog.m (for script execution)
 
 
-Outdated info:
+--- Outdated info: ---
 Matlab code to grind a LAP PDS archive, creating a daily geometry file and an overview of all operational blocks (period of continuous operation of a certain macro, breaks at day boundary)
 
 Output:
@@ -19,10 +19,6 @@ Output:
 
 
 
-To add geometry files to an archive, you need:
- (1) a user on vroom.umea.irf.se
- (2) write permission on the archive to which you wish to add geometry files
-
 To run:
 
 1. Edit control.m to define which archive to use by uncommenting/adding the appropriate lines in control.m, and provide some other information.
@@ -32,6 +28,8 @@ To run:
 3. If your ssh is not properly set up (ssh-add not run) you may have to supply your password on vrooom.umea.irf.se twice for each day in the archive.
 
 4. Run PVV on the archive! Otherwise the files created by LAPDOG are not included in the PSA INDEX files.
+
+
 
 Routines used by main:
 

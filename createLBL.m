@@ -113,9 +113,8 @@ if(~isempty(tabindex));
             
             % Special treatment of SPACECRAFT_CLOCK_STOP_COUNT since
             % this value can not be retrieved from the older version of tabindex.
-            % The value calculated through obt2sct is likely incorrect (lacks TCORR?).
-            %SPACECRAFT_CLOCK_STOP_COUNT = sprintf( '%s/%014.3f', index(tabindex{i,3}).sct0str(2), obt2sct(tabindex{i,5})); % Get reset count from above, and calculate obt from sct.                        
-            SPACECRAFT_CLOCK_STOP_COUNT = 'UNK';
+            SPACECRAFT_CLOCK_STOP_COUNT = sprintf( '%s/%sf', index(tabindex{i,3}).sct0str(2), obt2sct(tabindex{i,5})); % Get reset count from above, and calculate obt from sct.
+            %SPACECRAFT_CLOCK_STOP_COUNT = 'UNK';
             
             % Retrieve SPACECRAFT_CLOCK_STOP_COUNT value from new version of tabindex, but only if it is available.
             % This is a way to handle old cached versions of tabindex.

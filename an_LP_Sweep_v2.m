@@ -15,9 +15,8 @@
 %   if sunlit: Vph_knee = Vplasma is the plasma at the probe
 %   potential from finding the knee of the photoelectron current
 %
-%   3. evaluate if the sweep is truly sunlit or not, in the case of
+%   3. Evaluate if the sweep is truly sunlit or not, in the case of
 %   ambiguous illumination input.
-%
 %
 %   4. Fitting an ion current to the part of the sweep below the knee (and
 %   below Vsc). And then subtracting the current contribution from the ions
@@ -30,9 +29,9 @@
 %   6. Fitting a photoelectron current (if sunlit) to the remainding
 %   current.
 %
-%   7. redo step 4, but with a removed static photoelectron current (if
+%   7. Redo step 4, but with a removed static photoelectron current (if
 %   sunlit)
-%   8. repeat step 5 with results from step 7
+%   8. Repeat step 5 with results from step 7
 %
 %   9. Output variables.
 %
@@ -45,7 +44,7 @@
 %     evaluation)
 %
 % Output:
-%	  DP        Physical paramater information structure, dynamic solution
+%	  DP        Physical parameter information structure, dynamic solution
 %     DP_asm    "    " as above with static photoelectron current solution
 % Notes:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -302,7 +301,7 @@ try %try the dynamic solution first, then the static.
 
     %-----------------------------------------------------------------
     %Determine the electron current (above Vsc and positive)
-    [elec]=LP_Electron_curr(V,Itemp,Vsc,Vknee,illuminated);
+    [elec] = LP_Electron_curr(V, Itemp, Vsc, Vknee, illuminated);
 
 
     %if the plasma electron current fail, try the spacecraft photoelectron
@@ -523,26 +522,26 @@ try %try the dynamic solution first, then the static.
 
     DP.ion_Vb_slope      = ion.a;
     DP.ion_Vb_intersect  = ion.b;
-    DP.ion_slope      = ion.Vpa;
-    DP.ion_intersect  = ion.Vpb;
-    DP.ion_Up_slope     = ion.Upa;
-    DP.ion_Up_intersect = ion.Upb;
+    DP.ion_slope         = ion.Vpa;
+    DP.ion_intersect     = ion.Vpb;
+    DP.ion_Up_slope      = ion.Upa;
+    DP.ion_Up_intersect  = ion.Upb;
 
 
     DP.ni_1comp         = ion.ni_1comp;
     DP.ni_2comp         = ion.ni_2comp;
     DP.v_ion            = ion.v_ion;
 
-    DP.ni_aion          =ion.ni_aion;
-    DP.Vsc_aion         =ion.Vsc_aion ;
-    DP.v_aion           =ion.v_aion ;
+    DP.ni_aion          = ion.ni_aion;
+    DP.Vsc_aion         = ion.Vsc_aion ;
+    DP.v_aion           = ion.v_aion ;
 
 
-    DP.e_Vb_slope        = elec.a;
-    DP.e_Vb_intersect    = elec.b;
+    DP.e_Vb_slope     = elec.a;
+    DP.e_Vb_intersect = elec.b;
     DP.e_slope        = elec.Vpa;
     DP.e_intersect    = elec.Vpb;
-    DP.Quality = sum(Q);
+    DP.Quality        = sum(Q);
 
     DP.Rsq.linear       = Rsq_linear;
     DP.Rsq.exp          = Rsq_exp;
@@ -550,10 +549,6 @@ try %try the dynamic solution first, then the static.
 
     if (an_debug>1) %debug plot
         figure(33);
-
-
-
-
 
         subplot(3,2,2)
         plot(V+Vsc,Izero_linear,'og',V+Vsc,Izero_exp,'or',V+Vsc,Izero_exp_belowVknee,'oblack');
@@ -803,17 +798,17 @@ try %try the dynamic solution first, then the static.
     DP_asm.ni_2comp         = asm_ion.ni_2comp;
     DP_asm.v_ion            = asm_ion.v_ion;
 
-    DP_asm.ni_aion          =asm_ion.ni_aion;
-    DP_asm.Vsc_aion         =asm_ion.Vsc_aion ;
-    DP_asm.v_aion           =asm_ion.v_aion ;
+    DP_asm.ni_aion          = asm_ion.ni_aion;
+    DP_asm.Vsc_aion         = asm_ion.Vsc_aion ;
+    DP_asm.v_aion           = asm_ion.v_aion ;
 
 
 
-    DP_asm.e_Vb_slope        = asm_elec.a;
-    DP_asm.e_Vb_intersect    = asm_elec.b;
-    DP_asm.e_slope           = asm_elec.Vpa;
-    DP_asm.e_intersect       = asm_elec.Vpb;
-    DP_asm.Quality           = sum(Q);
+    DP_asm.e_Vb_slope       = asm_elec.a;
+    DP_asm.e_Vb_intersect   = asm_elec.b;
+    DP_asm.e_slope          = asm_elec.Vpa;
+    DP_asm.e_intersect      = asm_elec.Vpb;
+    DP_asm.Quality          = sum(Q);
 
     DP_asm.Rsq.linear       = Rsq_linear;
     DP_asm.Rsq.exp          = Rsq_exp;
@@ -823,11 +818,6 @@ try %try the dynamic solution first, then the static.
 
 
     if (an_debug>1)  %debug plot
-
-
-
-
-
 
         figure(34);
         subplot(3,2,2)

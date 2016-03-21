@@ -1,5 +1,5 @@
 %
-% Writes the first list of variables (key-value pairs) to an LBL file, before the OBJECT TABLE etc.
+% Writes the first list of variables (key-value pairs) to an LBL file, before the OBJECT = TABLE etc.
 %
 % NOTE: Always interprets kvl.value{i} as (matlab) string, not number.
 % NOTE: Always prints exact string, without adding quotes.
@@ -41,12 +41,12 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
         
         %=======================================================
         % Keys which should preferably come in a certain order.
-        % They are not required.
-        %=======================================================        
-        
+        % Not all of them are required to be present.
+        %=======================================================
         % Keywords which are quite independent of type of file.
         general_key_order_list = { ...
-            'PDS_VERSION_ID', ...    % PDS standard requires this to be first, I think.
+            'PDS_VERSION_ID', ...    % The PDS standard requires this to be first, I think.
+            ...
             'RECORD_TYPE', ...
             'RECORD_BYTES', ...
             'FILE_RECORDS', ...
@@ -200,11 +200,6 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
             'SPACECRAFT_CLOCK_STOP_COUNT'};
         
 
-        % Log message
-        LBL_file_path = fopen(fid);   % Find name of file. (Does NOT open the file.)
-        fprintf(1, 'Write LBL header %s\n', LBL_file_path);
-
-        
         
         %===========================================================================
         % Put key-value pairs in certain order.
