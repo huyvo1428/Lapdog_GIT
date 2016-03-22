@@ -57,14 +57,17 @@ end
 rfiles = tempfiles;
 rfiles(logical(delid)) = []; %delete files that are not I*S.TAB files
 
-dynampath = strrep(mfilename('fullpath'),'/an_sweepmain','');
+dynampath = strrep(mfilename('fullpath'),'/ManualSweepanalysis','');
 kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
 paths();
 
 
+setenv MATLABPATH ~/Rosetta/Lapdog_GIT/mice/src/mice/
+addpath('~/Rosetta/Lapdog_GIT/mice/src/mice/')
+addpath('~/Rosetta/Lapdog_GIT/mice/lib/' )
 
 
-%cspice_furnsh(kernelFile);
+cspice_furnsh(kernelFile);
 
 
 k=0; %needed for error output

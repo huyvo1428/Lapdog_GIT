@@ -241,19 +241,18 @@ try
         indcheck = find(diff(check));
         
         avgind =[];
-        for k = 1:length(check) %print checker loop & average some values
+        for k = 1:length(check) %print checker loop & average some values if we're doing burst mode
             
             %    if k~=length(check) && fout{k+1,end} ==  fout{k,end}
             if k~=length(check) && check(k+1) ==  check(k)
                 fout{k+1,1} = fout{k,1};
                 fout{k+1,3} = fout{k,3};
                 fout{k+1,5} = [fout{k+1,5};fout{k,5}];
-                avgind = [avgind;k];
-                fout{k,end} = 0; %print flag
+                avgind = [avgind;k]; %these indices will be averaged
+                fout{k,end} = 0; %print flag, i.e. don' print
             else %print
                 
-                fout{k,end}=1; %print flag
-                %            check(k) = 1;
+                fout{k,end}=1; %print flag  %i.e. print
                 
                 if ~isempty(avgind)
                     avgind=[avgind;k]; %add index
@@ -262,7 +261,9 @@ try
                     fout{k,8} = mean(cell2mat(fout(avgind,8)));
                     fout{k,9} = mean(cell2mat(fout(avgind,9)));
                     fout{k,10} = mean(cell2mat(fout(avgind,10)));
-                    fout{k,11} = mean(cell2mat(fout(avgind,11)),1);
+                    fout{k,11} = mean(cell2mat(fout(avgind,11)),1); %
+                    %fout{k,12} is the same thing, right?
+                    fout{k,end-1}= mean(cell2mat(fout(avgind,end-1)),2); %avg psd values over wavesnapshot block
                 end
                 avgind=[];
             end
