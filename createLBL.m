@@ -464,7 +464,7 @@ if (~isempty(an_tabindex));
             LBL_data.OBJTABLE = [];
             LBL_data.OBJTABLE.DESCRIPTION = 'FREQUENCY LIST OF PSD SPECTRA FILE';
             ocl = {};
-            ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', an_tabindex{i,5}, 'UNIT', 'kHz', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
+            ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', an_tabindex{i,5}, 'UNIT', 'Hz', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
                 'FORMAT', 'E14.7', 'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdname));
             LBL_data.OBJTABLE.OBJCOL_list = ocl; 
             clear   ocl pdsname
