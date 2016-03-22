@@ -35,9 +35,11 @@ fsamp = 18750;
 %fname = sprintf('%sRPCLAP_%s_%s_FRQ_%s.TAB',ffolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),fileflag); %%
 %fpath = strrep(filename,ffolder,'');
 
-
+an_ind=[1,1,1];
 len = length(an_ind);
 
+tabindex = {'hello','shit'};
+fileflag = 'I1H';
 k=0;
 
 try
@@ -47,8 +49,10 @@ try
         
         fout={};  %fout is the array that will be printed.fout{:,end} will be a boolean print check, but is first saved as a
         
+        
         %names, folders
         fname = tabindex{an_ind(i),1};
+        fname ='/Users/frejon/Rosetta/temp/RPCLAP_20150706_000208_817_I1H.TAB';
         fname(end-10:end-8)='FRQ';
         ffolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
         
@@ -56,7 +60,8 @@ try
         
         
         
-        trID = fopen(tabindex{an_ind(i),1},'r');
+        trID = fopen('/Users/frejon/Rosetta/temp/RPCLAP_20150706_000208_817_I1H.TAB','r');
+        %trID = fopen(tabindex{an_ind(i),1},'r');
         
         if trID < 0
             fprintf(1,'Error, cannot open file %s\n', tabindex{an_ind(i),1});
@@ -261,12 +266,16 @@ try
                     fout{k,9} = mean(cell2mat(fout(avgind,9)));
                     fout{k,10} = mean(cell2mat(fout(avgind,10)));
                     fout{k,11} = mean(cell2mat(fout(avgind,11)),1); %
+                    %fout{k,12} is the same thing, right?          
                     %first convert fout(avgind,end-1)) to matlab array, reshape to
-                    %65xavgind size, and average it to a sn array.
+                    %65xavgind size, and average it to a 1x65 array.
                     %also transpose it, so it matches old shape.
                     fout{k,end-1}= mean(reshape(cell2mat(fout(avgind,end-1)),length(avgind),length(freq)),1).'; %avg psd values over wavesnapshot block
+                    
+                    
+                    %fout{k,end-1}= mean(cell2mat(fout(avgind,end-1)),2); %avg psd values over wavesnapshot block
 
-%                    fout{k,end-1}= mean(cell2mat(fout(avgind,end-1)),2); %avg psd values over wavesnapshot block
+                    
                 end
                 avgind=[];
             end
