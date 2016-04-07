@@ -36,16 +36,6 @@ end
 %=======================================================================
 function [kernel_file, EG_files_dir, data_set_path, data_set_info] = CONTROL_PARAMETERS()
     
-    % birra
-    kernel_file = '/home/erjo/work_files/ROSETTA/Lapdog_GIT/metakernel_rosetta.txt';
-    EG_files_dir = '/home/erjo/temp/EO_geometry_files';
-    data_set_path = '/home/erjo/temp/data_set/';
-    
-    % spis:
-    %kernel_file = '/home/erjo/lapdog_squid_copy/metakernel_rosetta.txt';
-    %EG_files_dir = '/homelocal/erjo/rosetta_data_sets/delivery/EO_geometry_files';
-    %data_set_path = '/homelocal/erjo/rosetta_data_sets/delivery/RO-C-RPCLAP-2-ESC2-MTP014-V1.0/';
-    
     di = [];      % di = dataset info
     target_ID = 'C';                   % E.g. "C".
     di.TARGET_TYPE = 'COMET';          % E.g. "COMET".
@@ -54,9 +44,9 @@ function [kernel_file, EG_files_dir, data_set_path, data_set_info] = CONTROL_PAR
     
     data_set_version = '1.0';       % NOTE: Do not include "V" (for "Version").
     di.PROCESSING_LEVEL_ID = '2';   % NOTE: String, not number. 2=EDITED, 3=CALIB, 5=DERIV
-    short_mp = 'ESC2';
-    description_str = 'MTP014';
-    di.MISSION_PHASE_NAME = ['COMET ESCORT 2 ', description_str];   % Long name, e.g. PRELANDING.
+    short_mp = 'ESC3';
+    description_str = 'MTP021';
+    di.MISSION_PHASE_NAME = ['COMET ESCORT 3 ', description_str];   % Long name, e.g. PRELANDING.
     %-------------------------------------------------------------------------------------------
     switch di.PROCESSING_LEVEL_ID
         case '2'
@@ -72,5 +62,16 @@ function [kernel_file, EG_files_dir, data_set_path, data_set_info] = CONTROL_PAR
     di.DATA_SET_ID =   ['RO-',              target_ID,         '-RPCLAP-', di.PROCESSING_LEVEL_ID, '-', short_mp, '-', description_str, '-V', data_set_version];
     di.DATA_SET_NAME = ['ROSETTA-ORBITER ', target_name_short, ' RPCLAP ', di.PROCESSING_LEVEL_ID, ' ', short_mp, ' ', description_str, ' V', data_set_version];
     data_set_info = di;
+    %-------------------------------------------------------------------------------------------
+    
+    % birra
+    %kernel_file = '/home/erjo/work_files/ROSETTA/Lapdog_GIT/metakernel_rosetta.txt';
+    %EG_files_dir = '/home/erjo/temp/EO_geometry_files';
+    %data_set_path = '/home/erjo/temp/data_set/';
+    
+    % spis:
+    kernel_file = '/home/erjo/lapdog_squid_copy/metakernel_rosetta.txt';
+    EG_files_dir = '/homelocal/erjo/rosetta_data_sets/delivery/ESC3/EO_geometry_files';
+    data_set_path = ['/homelocal/erjo/rosetta_data_sets/delivery/', short_mp,'/', di.DATA_SET_ID];
     
 end

@@ -17,6 +17,10 @@ function geometry_addToDatSet(data_set_path, data_set_info, EG_files_dir)
     
     path_list = getDirs(fullfile(data_set_path, 'DATA'), 4);
     
+    % This log message is useful in particular in case no directories are found
+    % (no other log messages; likely configuration error).
+    fprintf(1, 'Adding geometry files to %i directories\n', length(path_list));    
+    
     for i = 1:length(path_list)
         path_parts = regexp(path_list{i}, filesep, 'split');
         

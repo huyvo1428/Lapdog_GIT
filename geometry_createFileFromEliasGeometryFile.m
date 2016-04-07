@@ -11,7 +11,9 @@
 % NOTE: Requires SPICE kernels to be loaded.
 % NOTE: Code contains the naming convention for Elias' geomtry files.
 % EG = Elias geometry
+%
 % QUESTION: Should include (add) the NOTE keyword and a reference to the "Cheops Reference Frame"?
+% PROPOSAL: Warning/error on overwriting existing file(s).
 %
 % Reused code created by: Erik P G Johansson, 2015-08-xx
 % Major rewrite: Erik P G Johansson, 2015-12-15
