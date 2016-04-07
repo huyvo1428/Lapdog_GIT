@@ -2,24 +2,20 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %
 % write_CALIB_MEAS_files
 %	
-%   Given that the path and name of the EDITED archive
-%   example: pearch='/data/LAP_ARCHIVE/RO-E-RPCLAP-2-EAR3-EDITED-V1.0'
+%   This program computes calibration files (*_CALIB_MEAS.TAB/.LBL) 
+%   that can then be used by the PDS software to create the calibrated data sets.
+%   Also, a separate calibration coefficient list file is created for debugging purposes
+%   (for which the output directory is hardcoded).
 %   
-%   The mission phase example: mp='EAR3'
+%   pearch = Path to EDITED data sets, e.g. '/data/LAP_ARCHIVE/RO-E-RPCLAP-2-EAR3-EDITED-V1.0'
+%   mp = (abbreviated) mission phase name, e.g. EAR3
+%   outpath = Output path (directory)
 %
-%   And the output path: outpath
-%
-%   This program computes calibration files and adds them to the 
-%   output folder that can then be used by the PDS software
-%   to create the calibrated archive. Also, a calibration coefficient list 
-%   file is created.
-%   
 %   SYNTAX:
-%       
 %                    write_CALIB_MEAS_files(pearch, missionphasename, outpath)
 %       
 %       offsetData = write_CALIB_MEAS_files(pearch, missionphasename, outpath)
-%       
+%
 %   ----------------------------------------------------------------------------
 %   Usage: However the Swedish Institute of Space Physics sees fit.
 %   Version: 1.2
@@ -47,13 +43,13 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %   Updated to INSTRUMENT_ID = RPCLAP (no quotes).
 %   /Erik P G Johansson 2015-07-08
 %   ----------------------------------------------------------------------------
-%
-%   NOTE: Current implementation (2015-05-08) sets START_TIME to an actual time, but sets SPACECRAFT_CLOCK_START_COUNT = "N/A". Change?
+%   NOTE: The current implementation (2015-05-08) sets START_TIME to an actual time, but sets SPACECRAFT_CLOCK_START_COUNT = "N/A". Change?
+%   NOTE: As of 2016-04-07, this software is desgined for MATLAB R2009A to make it possible to still run on squid.
 %   
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   * Sets the values for the basic parameters.
+    %   * Sets hardcoded values for the basic parameters.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     DATA_SESSION_RESET_TIME = 1;           % Unit: days
     MODE_SESSION_RESET_TIME = 1/(24*2);    % Unit: days
@@ -73,17 +69,29 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     MIN_CORRELATION = 0.99;
     
     CALIB_COEF_files_dir = '/data/LAP_ARCHIVE/CALIB_MEAS_files/';   % Directory path to where to save calibration coefficients files for debugging.
-
+    %CALIB_COEF_files_dir = '~/temp/coeffs';   % Directory path to where to save calibration coefficients files for debugging.
     
     INITIAL_CALIBDATA_NEVER_COLD_AFTER_TIME = datenum('2014-06-01T00:00:00.000', 'yyyy-mm-ddTHH:MM:SS.FFF');   % Unit: days
     
     diag = 0;    % Flag for whether to display debugging plots.
     
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   * Validates the input/output arguments used.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % NOTE: "error" throws no error if the input argument is [].
     error(nargchk(3,3, nargin));
     error(nargoutchk(0, 1, nargout));
+    
+    % NOTE: It is useful to check for existence of directories directly since their non-existence will
+    % otherwise produce an error first after a lot of processing (after delay).
+    if ~exist(outpath, 'dir')
+        error('Can not find directory "%s".', outpath)
+    end
+    if ~exist(CALIB_COEF_files_dir, 'dir')
+        error('Can not find directory "%s".', CALIB_COEF_files_dir)
+    end
    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,7 +124,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-    index = struct;
+    index = struct;     % Contents of INDEX.TAB
 
     filePath = fullfile(ipath,'INDEX.TAB');
     fileID   = fopen(filePath, 'r');
@@ -133,7 +141,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 
     nfiles = length(index{1});
 
-    fprintf(1,'Trimming quotes from index file\n');
+    fprintf(1,'Trimming quotes from index\n');
     for ind=1:nfiles
         index{1}{ind}(1)=' ';
         index{1}{ind}(end)=' ';
@@ -147,7 +155,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     fprintf(1,'\n');
 
     ind=1;
-    fprintf(1,'Removing housekeeping (HK) files from index file\n');
+    fprintf(1,'Removing housekeeping (HK) files from index\n');
     while(ind<nfiles)
       if(index{1}{ind}(end-4)=='H')
         index{1}(ind)=[];
@@ -168,12 +176,11 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     % Extract start and stop time from the data files (no longer in the index file)
 
     fprintf(1,'Opening each file in the index file to get the start, stop time and mode\n');
-
     fprintf(1,'This is probably time consuming (This info was removed from index file itself by ESA)\n');
-
 
     nfiles = length(index{1});
 
+    % Iterate over all non-HK files metioned in INDEX.TAB.
     for ind=1:nfiles
 
         fname=fullfile(pearch,index{1}{ind});
@@ -230,13 +237,13 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     %     returned to the caller (optional; depends on caller).
     %     Each index in the fields refers to an EDITED SCI LBL/TAB file.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    display('Progress: Changing data format.');
+    display('Progress: Changing internal data format.');
     
     data = struct;
     data.mode           = char(index{5});
-    data.startTime      = [index{3}{:}]'; %'
+    data.startTime      = [index{3}{:}]';
 
-    data.stopTime       = [index{4}{:}]'; %'
+    data.stopTime       = [index{4}{:}]';
     data.pathName       = char(index{1});
     data.fileName       = char(index{2});
     
@@ -270,6 +277,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     
     indicesToRemove = zeros(data.count,1);
     
+    % Iterate over all SCI file pairs.
     for dataRow = 1:data.count
         if (dataRow == data.count) || (~strcmp(data.fileName(dataRow,:), data.fileName(dataRow+1,:)))
             
@@ -582,9 +590,9 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     clear indicesToRemove;
     
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   * Writes all the CALIB_MEAS files for each of the base folders.
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %   * Writes all the CALIB_MEAS/_COEF files for each of the base folders.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     for dataWriteCounter = 1:dataWrite.count
         
         startTimeString = datestr(dataWrite.startTime(dataWriteCounter), 'yyyy-mm-ddTHH:MM:SS.FFF');
@@ -703,7 +711,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         
         % Write extra calibration coefficient files (for debugging).
         fileID = fopen(filePath2TAB, 'wt');
-        fprintf(fileID,'#3rd order polynomial fit coefficients (current = aV^3+b*V^2+c*V+d), for Probe 1 and Probe 2 in TM units \r\n');
+        fprintf(fileID,'# 3rd order polynomial fit coefficients (current = aV^3+b*V^2+c*V+d), for Probe 1 and Probe 2 in TM units.\r\n');
         fprintf(fileID,'aP1,bP1,cP1,dP1,aP2,bP2,cP2,dP2\r\n');
         fprintf(fileID,'%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e\r\n', dataWrite.gradient3(dataWriteCounter,1), dataWrite.gradient2(dataWriteCounter,1), dataWrite.gradient1(dataWriteCounter,1),dataWrite.intercepts(dataWriteCounter,1), dataWrite.gradient3(dataWriteCounter,2), dataWrite.gradient2(dataWriteCounter,2), dataWrite.gradient1(dataWriteCounter,2), dataWrite.intercepts(dataWriteCounter,2));
         fclose(fileID);
@@ -751,3 +759,5 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+end
