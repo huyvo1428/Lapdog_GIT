@@ -22,7 +22,7 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %       
 %   ----------------------------------------------------------------------------
 %   Usage: However the Swedish Institute of Space Physics sees fit.
-%   $Revision: 1.0 $  $Date: 2009/05/21 13:28 $ 
+%   Version: 1.2
 %
 %   Author: Martin Ulfvik 
 %   Rewritten by Reine Gill
