@@ -388,7 +388,7 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
     %##########################################################################################################
     
     
-    
+    % PROPOSAL: Remake into general function?!
     function warning_error___LOCAL(msg, policy)
         if strcmp(policy, 'warning')
             %fprintf(1, '%s\n', msg)     % Print since warning is sometimes turned off automatically. Change?
