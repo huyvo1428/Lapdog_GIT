@@ -45,8 +45,8 @@ firstpeak=min(pos(top10ind:end)); % prioritise earlier peaks, because electron s
 end
 
 %get a region around our chosen guesstimate.
-lo= floor(firstpeak-len*0.10 +0.5); %let's try 20% of the whole sweep
-hi= floor(firstpeak+len*0.10 +0.5); %+0.5 pointless but good practise
+lo= floor(firstpeak-len*0.06 +0.5); %let's try 20% of the whole sweep
+hi= floor(firstpeak+len*0.14 +0.5); %+0.5 pointless but good practise
 
 lo = max([lo,1]); %don't move outside 1:len)
 hi = min([hi,len]);

@@ -254,7 +254,7 @@ end
 
     % Calculate ion densities velocities
     %FKJN edit 6Nov 2015
-    % This is terrible, the units are all wrong. What the hell is MQ^-1T^-2L^-1?
+    % This was terrible, the units are all wrong. What the hell is MQ^-1T^-2L^-1?
     %out.ni_1comp     = max((1e-6 * out.Vpa(1) *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
 
     %finally units of L^-3, not allowed to go below 0.

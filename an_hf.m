@@ -39,7 +39,7 @@ fsamp = 18750;
 len = length(an_ind);
 
 k=0;
-
+b=0;
 try
     
     
@@ -396,7 +396,7 @@ try
     
 catch err
     
-    fprintf(1,'Error at loop step %i and fout{}(%i), file %s, outputfile %s',i,k,tabindex{an_ind(i),1},sname);
+    fprintf(1,'Error at loop step %i and fout{}(%i),obs %i, file %s, outputfile %s',i,k,b,tabindex{an_ind(i),1},sname);
     
     err.identifier
     err.message

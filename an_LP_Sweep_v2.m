@@ -155,11 +155,11 @@ try %try the dynamic solution first, then the static.
     %    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
         twinpeaks_low   = an_Vplasma_v2(V,Is);
 
-        if illuminated == 0   %an_Vplasma_highAc doesn't work if shadowed
-            twinpeaks = twinpeaks_low;
-        else
+        if illuminated == 1   %an_Vplasma_highAc doesn't work if shadowed
             twinpeaks_high = an_Vplasma_highAc(V,Is);
-            twinpeaks = twinpeaks_high; %use high activity analysis for the rest, it's better
+            twinpeaks = twinpeaks_high; %this works best for probe 1( and fully lit probe 2?)
+        else
+            twinpeaks = twinpeaks_low;
         end
 
 
@@ -174,9 +174,18 @@ try %try the dynamic solution first, then the static.
     %    Vsc = twinpeaks.Vsc(1);
     %    Vsc_sigma =twinpeaks.Vsc(2);
 
-    Vsc = twinpeaks.Vbar(1);
-    Vsc_sigma =twinpeaks.Vbar(2);
+    
+    
+    
+    %Here is the Vsc defined for use in analysis. Previously Vbar has been
+    %used, but simulations and results suggests Vph_knee är mycket närmare.
+ %   Vsc = twinpeaks.Vbar(1);
+%    Vsc_sigma =twinpeaks.Vbar(2);
 
+    Vsc = twinpeaks.Vph_knee(1);
+    Vsc_sigma =twinpeaks.Vph_knee(2);
+
+    
     if isnan(Vsc)
         Vsc = twinpeaks.Vsc(1);
     end
@@ -209,6 +218,8 @@ try %try the dynamic solution first, then the static.
         twinpeaks.Vsc = twinpeaks.Vph_knee;
         %Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
         Vplasma=NaN;
+        twinpeaks.Vbar = twinpeaks.Vph_knee;
+        
     end
     %---------------------------------------------------
 

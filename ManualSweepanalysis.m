@@ -261,9 +261,20 @@ try
 
         %Edit 31 Aug 2015 added new Iph0 selector, to be used with Norwegian Iph0
         %results.
+        %EDIT 6 April 2016, FKJN modified Iph0 selector, to be used with Niklas results
 
-        assmpt.Iph0 = Iph0selector('iph0.txt',str2double(Tarr{3,1}),str2double(probe));
+        
+        switch str2double(probe)           
 
+            case 1
+                iph0file = 'iph0_probe1.txt';                                
+            case 2
+                iph0file = 'iph0_probe2.txt';                
+        end    
+        
+        assmpt.Iph0 = Iph0selector(iph0file,str2double(Tarr{3,1}));
+        
+        
         %Anders analysed parameters
         AP(len).ts       = [];
         AP(len).vx       = [];
@@ -584,16 +595,16 @@ try
         end
         fclose(awID);
 
-        an_tabindex{end+1,1} = wfile;                   % start new line of an_tabindex, and record file name
-        an_tabindex{end,2} = strrep(wfile,rfolder,'');  % shortfilename
-        an_tabindex{end,3} = tabindex{an_ind(i),3};     % first calib data file index
-        %an_tabindex{end,3} = an_ind(1);                % First calib data file index of first derived file in this set
-        an_tabindex{end,4} = klen; % Number of rows
-        an_tabindex{end,5} = 112;  % Number of columns
-        an_tabindex{end,6} = an_ind(i);
-        an_tabindex{end,7} = 'sweep'; % Type
-        an_tabindex{end,8} = timing;
-        an_tabindex{end,9} = row_bytes;
+%         an_tabindex{end+1,1} = wfile;                   % start new line of an_tabindex, and record file name
+%         an_tabindex{end,2} = strrep(wfile,rfolder,'');  % shortfilename
+%         an_tabindex{end,3} = tabindex{an_ind(i),3};     % first calib data file index
+%         %an_tabindex{end,3} = an_ind(1);                % First calib data file index of first derived file in this set
+%         an_tabindex{end,4} = klen; % Number of rows
+%         an_tabindex{end,5} = 112;  % Number of columns
+%         an_tabindex{end,6} = an_ind(i);
+%         an_tabindex{end,7} = 'sweep'; % Type
+%         an_tabindex{end,8} = timing;
+%         an_tabindex{end,9} = row_bytes;
 
         %clear output structs before looping again
         clear AP DP EP

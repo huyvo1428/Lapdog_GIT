@@ -1,12 +1,11 @@
 % Selects Iph0 to be used in analysis, function takes a filepath and OBT 
 % time and returns the associated Iph0 to be used for that point in time
 % The filepath is most probably Iph0.txt and should be in the lapdog folder
-function [iph0_out] = Iph0selector(filepath, OBT_timeofsweep, probenr)
+%function [iph0_out] = Iph0selector(filepath, OBT_timeofsweep, probenr)
+function [iph0_out] = Iph0selector(filepath, OBT_timeofsweep)
 
 
 iph0_out = -6.647e-09;    % default value; just in case of error.
-
-
 
 trID = fopen(filepath);
 
@@ -16,21 +15,23 @@ if trID < 0
 end % if I/O error
 
 % Continues to read, skips '%' marked lines and input floats into scantemp cell array.
-scantemp = textscan(trID, '%s%f%f%f%*s', 'commentStyle', '%', 'delimiter', ','); 
+scantemp = textscan(trID, '%s%f%f%*s', 'commentStyle', '%', 'delimiter', ','); 
 
-scanmat = cell2mat(scantemp(1,2:4));
-
-switch probenr
-    
-    case 1
-        scanmat = scanmat(~isnan(scanmat(:,2)),:);
-        iph0vec = scanmat(:,2);
-        
-    case 2
-        scanmat = scanmat(~isnan(scanmat(:,3)),:);
-        iph0vec = scanmat(:,3);
-
-end
+scanmat = cell2mat(scantemp(1,2:3));
+scanmat = scanmat(~isnan(scanmat(:,2)),:);
+iph0vec = scanmat(:,2);
+% 
+% switch probenr
+%     
+%     case 1
+%         scanmat = scanmat(~isnan(scanmat(:,2)),:);
+%         iph0vec = scanmat(:,2);
+%         
+%     case 2
+%         scanmat = scanmat(~isnan(scanmat(:,3)),:);
+%         iph0vec = scanmat(:,3);
+% 
+% end
 
 
 
