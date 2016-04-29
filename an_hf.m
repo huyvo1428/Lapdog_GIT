@@ -262,10 +262,10 @@ try
                     fout{k,10} = mean(cell2mat(fout(avgind,10)));
                     fout{k,11} = mean(cell2mat(fout(avgind,11)),1); %
                     %first convert fout(avgind,end-1)) to matlab array, reshape to
-                    %65xavgind size, and average it to a sn array.
+                    %65xavgind size, and average it to a an array.
                     %also transpose it, so it matches old shape.
                     fout{k,end-1}= mean(reshape(cell2mat(fout(avgind,end-1)),length(avgind),length(freq)),1).'; %avg psd values over wavesnapshot block
-
+    
 %                    fout{k,end-1}= mean(cell2mat(fout(avgind,end-1)),2); %avg psd values over wavesnapshot block
                 end
                 avgind=[];
@@ -278,7 +278,7 @@ try
         
         awID= fopen(sname,'w');
         
-        
+        lbl_rows = 0;
         for k=1:length(fout(:,1)) % print loop
             if fout{k,end} %last index should be file checker
                 if strcmp(fileflag(1),'V')
@@ -316,6 +316,7 @@ try
                     
                 end
                 row_byte=b1+b2+b3;
+                lbl_rows = lbl_rows+1;
             end
         end
         
@@ -378,7 +379,7 @@ try
         an_tabindex{end,2} = strrep(sname,ffolder,''); %shortfilename
         an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
         %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
-        an_tabindex{end,4} = len; %number of rows
+        an_tabindex{end,4} = lbl_rows; %number of rows
         an_tabindex{end,5} = 7 + length(freq); %number of columns
         
         
