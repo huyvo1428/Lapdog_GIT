@@ -270,8 +270,9 @@ try
                     %first convert fout(avgind,end-1)) to matlab array, reshape to
                     %65xavgind size, and average it to a 1x65 array.
                     %also transpose it, so it matches old shape.
-                    fout{k,end-1}= mean(reshape(cell2mat(fout(avgind,end-1)),length(avgind),length(freq)),1).'; %avg psd values over wavesnapshot block
+                  %  fout{k,end-1}= mean(reshape(cell2mat(fout(avgind,end-1)),length(avgind),length(freq)),1).'; %avg psd values over wavesnapshot block
                     
+                    fout{k,end-1}= mean(reshape(cell2mat(fout(avgind,end-1)),length(freq),length(avgind)),2).'; %avg psd values over wavesnapshot block
                     
                     %fout{k,end-1}= mean(cell2mat(fout(avgind,end-1)),2); %avg psd values over wavesnapshot block
 
