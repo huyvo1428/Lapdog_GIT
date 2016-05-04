@@ -18,7 +18,8 @@
 % 2015-08-01T00:00:00.0,397007922.439373,-2.4e-8,-2.4e-8,'LAP1 preliminary measurement of Iph0 from 3Aug 2015'
 % 2015-08-31T08:39:48.0,399631109.572591,-2.82e-8,NaN,'LAP1 measurement of Iph0 from 31 Aug 2015'
 
-
+%need to load iph0, starttimes.
+%need OBT time of first measurement
 
 iph0_probe1=iph0;
 iph0_probe2=iph02;
@@ -33,9 +34,9 @@ iph0_probe2(ind2)=NaN;
 %starttime(1) = 09-May 2014 15:23:00  = 358269715.294412.
 
 %starttime_s = seconds(seconds(starttime)); % convert to seconds, convert to double array instead of duration array
-starttime_obt = (starttime_s-(starttime_s(1)))*24*60*60 + 358269715.294412-34;
+starttime_obt = (starttime_s-(starttime_s(1)))*24*60*60 +  213051714.703159-34;
 
-filename='iph0_probe1.txt';
+filename='iph0_probe1_temp.txt';
 
 twID = fopen(filename,'w');
 
@@ -54,13 +55,13 @@ for i = 1:length(starttime)
 end
 fclose(twID);
 
-filename='iph0_probe2.txt';
+filename='iph0_probe2_temp.txt';
 
 twID = fopen(filename,'w');
 %starttime_s2 = seconds(seconds(starttime2)); % convert to seconds, convert to double array instead of duration array
 %starttime_obt2 = starttime_s2-(starttime_s2(1)) + 358269747.294412-1;
 
-starttime_obt2 = (starttime_s2-(starttime_s2(1)))*24*60*60 + 358269747.294412-34;
+starttime_obt2 = (starttime_s2-(starttime_s2(1)))*24*60*60 + 213051746.703145-34;
 
 %starttime(1) = 09-May 2014 15:23:00 358269747.294412
 for i = 1:length(starttime2)

@@ -10,7 +10,15 @@
 % description = Human readable description of the Iph0 value specified
 % first iteration of Iph0.txt should list the photosaturation ampere that should be used from respective point in time.
 % further iterations of this file or the routine that uses this file should incorprate an interpolation routine, preferably as a function of distance to Sun and/or a function of a relevant sunflux estimate, like Mg-II band F10.7
-2005-01-01T00:00:00.000000,63072000.000000,-6.647e-09,LAP1 before first Earth swing by- preliminary
+2005-01-01T00:00:00.000000,63072000.000000,-6.647e-08,LAP1 before first Earth swing by- preliminary
+2009-11-09T20:03:06.109000,213277856.782162,-6.1777997e-08,generated 6 April 2016
+2009-11-11T20:17:30.123000,213531040.858164,-6.6851699e-08,generated 6 April 2016
+2009-11-13T07:13:30.133000,213855872.971162,-5.1371454e-08,generated 6 April 2016
+2009-11-16T19:02:50.165000,213900961.000159,-6.8360710e-08,generated 6 April 2016
+2009-11-16T23:02:18.173000,214302345.127165,-6.8995555e-08,generated 6 April 2016
+2009-11-17T02:03:06.160000,214816233.320164,-6.8677205e-08,generated 6 April 2016
+2009-11-17T06:02:34.168000,214825001.323159,-6.8690163e-08,generated 6 April 2016
+2009-11-17T13:02:18.164000,214952457.368162,-6.8661244e-08,generated 6 April 2016
 2014-06-16T03:03:02.069000,361508482.426413,-6.8215597e-09,generated 6 April 2016
 2014-08-20T00:01:36.018000,367113596.375411,-7.5952921e-09,generated 6 April 2016
 2014-08-27T22:24:00.251000,367798940.608410,-8.7438493e-09,generated 6 April 2016
