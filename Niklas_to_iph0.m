@@ -33,8 +33,9 @@ iph0_probe2(ind2)=NaN;
 
 %starttime(1) = 09-May 2014 15:23:00  = 358269715.294412.
 
-%starttime_s = seconds(seconds(starttime)); % convert to seconds, convert to double array instead of duration array
-starttime_obt = (starttime_s-(starttime_s(1)))*24*60*60 +  213051714.703159-34;
+starttime_s = seconds(seconds(starttime)); % convert to seconds, convert to double array instead of duration array
+%starttime_obt = (starttime_s-(starttime_s(1)))*24*60*60 +  213051714.703159-34;
+starttime_obt = (starttime_s-(starttime_s(1)))*24*60*60 +  358269715.294412-34;
 
 filename='iph0_probe1_temp.txt';
 
@@ -49,7 +50,7 @@ twID = fopen(filename,'w');
 for i = 1:length(starttime)
     
     if ~isnan(iph0_probe1(i))
-        fprintf(twID,'%s,%16.6f,%14.7e,%s\r\n',datestr(starttime(i),'yyyy-mm-ddTHH:MM:SS.fff000'),starttime_obt(i),iph0_probe1(i),'generated 6 April 2016');
+        fprintf(twID,'%s,%16.6f,%14.7e,%s\r\n',datestr(starttime(i),'yyyy-mm-ddTHH:MM:SS.fff000'),starttime_obt(i),iph0_probe1(i),'generated 4 May 2016');
     end
     
 end
@@ -58,17 +59,24 @@ fclose(twID);
 filename='iph0_probe2_temp.txt';
 
 twID = fopen(filename,'w');
-%starttime_s2 = seconds(seconds(starttime2)); % convert to seconds, convert to double array instead of duration array
+starttime_s2 = seconds(seconds(starttime2)); % convert to seconds, convert to double array instead of duration array
 %starttime_obt2 = starttime_s2-(starttime_s2(1)) + 358269747.294412-1;
 
-starttime_obt2 = (starttime_s2-(starttime_s2(1)))*24*60*60 + 213051746.703145-34;
+%starttime_obt2 = (starttime_s2-(starttime_s2(1)))*24*60*60 + 213051746.703145-34;
+starttime_obt2 = (starttime_s2-(starttime_s2(1)))*24*60*60 + 358269747.294412 -34;
+
+
 
 %starttime(1) = 09-May 2014 15:23:00 358269747.294412
 for i = 1:length(starttime2)
     if ~isnan(iph0_probe2(i))
-        fprintf(twID,'%s,%16.6f,%14.7e,%s\r\n',datestr(starttime2(i),'yyyy-mm-ddTHH:MM:SS.fff000'),starttime_obt2(i),iph0_probe2(i),'generated 6 April 2016');
+        fprintf(twID,'%s,%16.6f,%14.7e,%s\r\n',datestr(starttime2(i),'yyyy-mm-ddTHH:MM:SS.fff000'),starttime_obt2(i),iph0_probe2(i),'generated 4 May 2016');
     end
     
 end
 fclose(twID);
+
+figure(67)
+plot(starttime,iph0,'+',starttime2,iph02,'+',starttime,iph0_probe1,'o',starttime2,iph0_probe2,'o')
+datetick('x',21)
 
