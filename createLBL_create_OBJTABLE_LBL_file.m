@@ -246,13 +246,6 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
         % ------------------------------------------------------------
         % Do consistency checks.
         % ------------------------------------------------------------
-        if OBJTABLE_data.ROW_BYTES ~= LBL_data.consistency_check.N_TAB_bytes_per_row
-            msg =       sprintf('LBL_file_path = %s\n', LBL_file_path);
-            msg = [msg, sprintf('OBJTABLE_data.ROW_BYTES (derived)              = %i\n', OBJTABLE_data.ROW_BYTES)];
-            msg = [msg, sprintf('LBL_data.consistency_check.N_TAB_bytes_per_row = %i\n', LBL_data.consistency_check.N_TAB_bytes_per_row)];
-            msg = [msg,         'OBJTABLE_data.ROW_BYTES deviates from the consistency check value.'];
-            warning_error___LOCAL(msg, TAB_LBL_inconsistency_policy)
-        end        
         if (OBJTABLE_data.COLUMNS ~= LBL_data.consistency_check.N_TAB_columns)
             msg =       sprintf('LBL_file_path = %s\n', LBL_file_path);
             msg = [msg, sprintf('OBJTABLE_data.COLUMNS (derived)          = %i\n', OBJTABLE_data.COLUMNS)];
@@ -260,6 +253,14 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
             msg = [msg,         'OBJTABLE_data.COLUMNS deviates from the consistency check value.'];
             warning_error___LOCAL(msg, TAB_LBL_inconsistency_policy)
         end
+        if OBJTABLE_data.ROW_BYTES ~= LBL_data.consistency_check.N_TAB_bytes_per_row
+            msg =       sprintf('LBL_file_path = %s\n', LBL_file_path);
+            msg = [msg, sprintf('OBJTABLE_data.ROW_BYTES (derived)              = %i\n', OBJTABLE_data.ROW_BYTES)];
+            msg = [msg, sprintf('LBL_data.consistency_check.N_TAB_bytes_per_row = %i\n', LBL_data.consistency_check.N_TAB_bytes_per_row)];
+            msg = [msg,         'OBJTABLE_data.ROW_BYTES deviates from the consistency check value.'];
+            
+            warning_error___LOCAL(msg, TAB_LBL_inconsistency_policy)            
+        end        
         
         % Remove quotes, if there are any. Quotes are added later.
         % NOTE: One does not want to give error on finding quotes since the value may have been read from CALIB LBL file.

@@ -38,7 +38,7 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 % and Y= year, M= month, D = day, h =hour, m = minute , s = second
 %
 %
-% 	QUALITYFLAG:
+% QUALITYFLAG:
 % is an 3 digit integer
 % from 000 (best) to 999 (worst quality)
 %

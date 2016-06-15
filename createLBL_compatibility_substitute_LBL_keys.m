@@ -6,6 +6,8 @@
 % code can be modified, disabled or removed.
 %
 % NOTE: Disabled for "probe 3" since the meaning might be ambiguous. Otherwise no problem.
+%    PROPOSAL: Enable the probe 3 error, but only when substitutions have taken place.
+% 
 % NOTE: This code can NOT be moved to createLBL_write_LBL_header.m since it has to be run before
 % the best estimates LBL code merges keywords from two LBL files.
 %
@@ -55,7 +57,7 @@ function   kvl = createLBL_compatibility_substitute_LBL_keys(kvl, probe_nbr)
     
     %=============================================================================================
 
-    % Rename specific old keyword for new keyword if the old keyword can be found.
+    % Rename specific old keyword for new keyword IF the old keyword can be found.
     %
     % NOTE: If kvl.keys contains both the old keyword and the new keyword there is an error.
     % NOTE: Is really a generic library function.
@@ -64,15 +66,17 @@ function   kvl = createLBL_compatibility_substitute_LBL_keys(kvl, probe_nbr)
         
         N_substitutions = 0;
         
+        i_kv_old = find(strcmp(key_name_old, kvl.keys));
         i_kv_new = find(strcmp(key_name_new, kvl.keys));
-        i_kv_old = find(strcmp(key_name_old, kvl.keys));        
         
         % Check whether old keyword exists.
         if length(i_kv_old) > 1
             error('Key-value list has multiple identical keys."')
             
-        %else if length(i_kv_old) == 0
-        %    error(sprintf('Key-value list does not have the specified key_name_old="%s".', key_name_old))
+        elseif length(i_kv_old) == 0
+            % Disabled so that NOT finding the old key does nothing.
+            %error(sprintf('Key-value list does not have the specified key_name_old="%s".', key_name_old))
+            
         elseif length(i_kv_old) == 1
             
             % Check whether the new keyword change results in key collision.

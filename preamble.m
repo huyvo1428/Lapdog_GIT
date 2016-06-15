@@ -1,13 +1,14 @@
 % preamble.m -- set PDS keywords etc
-
+%
 % Should geometry files be exported to the archive?
+%
 
 %export_geometry = input('Export geometry files to archive? (0/1) ');
 
 export_geometry = 0;
 
 
-global CO IN          % Physical &Instrument constants
+global CO IN          % Physical & instrument constants
 CO=[];
 CO.e = 1.60217657E-19;
 CO.me = 9.10938291E-31;

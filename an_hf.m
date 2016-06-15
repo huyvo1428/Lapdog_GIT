@@ -5,6 +5,8 @@
 
 function [] = an_hf(an_ind,tabindex,fileflag)
 
+global an_tabindex;
+            
 diag = 0;
 
 plotpsd=[];
@@ -40,8 +42,7 @@ len = length(an_ind);
 
 k=0;
 b=0;
-try
-    
+try    
     
     for i=1:len
         
@@ -52,7 +53,7 @@ try
         fname(end-10:end-8)='FRQ';
         ffolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
         
-        sname = strrep(fname,'FRQ','PSD');%%
+        sname = strrep(fname,'FRQ','PSD');
         
         
         
@@ -63,12 +64,14 @@ try
             break
         end % if I/O error
         
-        if fileflag(2) =='3' %one more column for probe 3 files
+        if fileflag(2) == '3'    % One additional column for probe 3 files.
             scantemp = textscan(trID,'%s%f%f%f%f%d','delimiter',','); %ts,sct,ib1,ib2,vp1-vp2
             ib1=scantemp{1,3};
             ib2=scantemp{1,4};
+            N_PSD_nonspectrum_cols = 8;
         else
             scantemp = textscan(trID,'%s%f%f%f%d','delimiter',',');
+            N_PSD_nonspectrum_cols = 7;
         end
         
         fclose(trID);
@@ -76,38 +79,35 @@ try
         
         
         
-        %need to split **H.TAB file into separate high frequency snap shots
-        %and remove times when MIP is operating
+        % Need to split **H.TAB file into separate high frequency snap shots
+        % and remove times when MIP is operating.
         
         reltime= scantemp{1,2} - scantemp{1,2}(1);
         dt = reltime(2);
         count = 1;
-        t0=reltime(1);
+        t0   = reltime(1);
         sind = zeros(length(reltime),1);
         
         
-        %loop from n =1 to end-1, checking n+1. (no need to check first entry)
-        %made such that we avoid 'Index exceeds matrix dimensions' errors
+        % Loop from n =1 to end-1, checking n+1. (no need to check first entry)
+        % made such that we avoid 'Index exceeds matrix dimensions' errors.
         for n=1:length(reltime)-1
             
-            
-            
-            
             if reltime(n+1)-t0 >8e-3
-                %%start new timer, but don't increment line counter, results
-                %%will be averaged
+                % Start new timer, but don't increment line counter, results
+                % will be averaged.
                 t0 =reltime(n+1);
             end
             
             
-            if reltime(n+1)-reltime(n)>dt*5000 %large jump, new timer
+            if reltime(n+1)-reltime(n) > dt*5000 %large jump, new timer
                 
                 t0 =reltime(n+1);
                 count = count+1; %each count will generate 1 line of output in file
                 
             end
             
-            %Here's the actual filtering. Ignore the first 2ms every 8ms.
+            % Here's the actual filtering. Ignore the first 2ms every 8ms.
             if reltime(n+1)-t0 >= 2e-3 && reltime(n+1)-t0 <= 8e-3
                 sind(n+1) = count;
                 %         else
@@ -120,14 +120,14 @@ try
         end
         obs = find(diff(sind)>0)+1;
         obe = find(diff(sind)<0);
-        if sind(end)~=0 %%last obe value needs some extra care
+        if sind(end)~=0 % Last obe value needs some extra care.
             obe(end+1)=length(sind);
         end
         
         if isempty(obs)
-     fprintf(1,'Macro with 0 valid poitns for PSD, skipping file %s\n',tabindex{an_ind(i),1});
+            fprintf(1, 'Macro with 0 valid points for PSD, skipping file %s\n', tabindex{an_ind(i),1});
 
-           % fprintf(1,'new strange macro with 0 valid points for PSD, skipping');
+            % fprintf(1,'new strange macro with 0 valid points for PSD, skipping');
         else
             
             timing={scantemp{1,1}{obs(1)},scantemp{1,1}{obe(end)},scantemp{1,2}(obs(1)),scantemp{1,2}(obe(end))};
@@ -181,7 +181,7 @@ try
                         
                         %[psd,freq] = pwelch(ib,[],[],nfft,18750);
                         %    plot(freq,psd)
-                        psd=psd*1e18; %scale to nA for current files
+                        psd=psd*1e18;    % Scale to nA for current files
                         %
                         %
                         %                 if fileflag(2) =='3'
@@ -282,7 +282,7 @@ try
             
             %--------------------- LET'S PRINT!
             
-            awID= fopen(sname,'w');
+            awID = fopen(sname,'w');
             
             lbl_rows = 0;
             for k=1:length(fout(:,1)) % print loop
@@ -304,14 +304,13 @@ try
                         if fileflag(2) =='3'
                             
                             b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
-                            b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
+                            b2= fprintf(awID,', %14.7e',fout{k,end-1}');
                             b3= fprintf(awID,'\r\n');
                             
-                            
-                            %fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
+                            %   fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
                         else
                             b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
-                            b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
+                            b2= fprintf(awID,', %14.7e',fout{k,end-1}');
                             b3= fprintf(awID,'\r\n');
                             
                             %dlmwrite(sname,fout{k,end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
@@ -321,21 +320,19 @@ try
                         end %if
                         
                     end
-                    row_byte=b1+b2+b3;
+                    row_byte = b1+b2+b3;
                     lbl_rows = lbl_rows+1;
                 end
             end
             
             
             fclose(awID);
-            afID = fopen(fname,'w');
-            
+            afID = fopen(fname,'w');            
             
             f1 = fprintf(afID,'%14.7e, ',   freq(1:end-1));
             f2 = fprintf(afID,'%14.7e\r\n', freq(end));
             
             
-            %   dlmwrite(fname,freq,'precision', '%14.7e');
             fclose(afID);
             
             
@@ -368,25 +365,23 @@ try
             
             %dlmwrite(fname,freq,'precision', '%14.7e');
             
-            global an_tabindex;
-            
-            an_tabindex{end+1,1} = fname;%start new line of an_tabindex, and record file name
-            an_tabindex{end,2} = strrep(fname,ffolder,''); %shortfilename
-            an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
+            an_tabindex{end+1,1} = fname;    % Start new line of an_tabindex, and record file name
+            an_tabindex{end,2} = strrep(fname,ffolder,''); % shortfilename
+            an_tabindex{end,3} = tabindex{an_ind(i),3};    % First calib data file index
             %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
-            an_tabindex{end,4} = 1; %number of rows
-            an_tabindex{end,5} = length(freq); %number of columns
+            an_tabindex{end,4} = 1;                        % Number of rows
+            an_tabindex{end,5} = length(freq);             % Number of columns
             %an_tabindex{end,6} = an_ind(i);
-            an_tabindex{end,7} = 'frequency'; %type
+            an_tabindex{end,7} = 'frequency';              % Type
             an_tabindex{end,8} = timing;
             an_tabindex{end,9} = f1+f2;
             
-            an_tabindex{end+1,1} = sname;%start new line of an_tabindex, and record file name
-            an_tabindex{end,2} = strrep(sname,ffolder,''); %shortfilename
-            an_tabindex{end,3} = tabindex{an_ind(i),3}; %first calib data file index
-            %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
-            an_tabindex{end,4} = lbl_rows; %number of rows
-            an_tabindex{end,5} = 7 + length(freq); %number of columns
+            an_tabindex{end+1,1} = sname;   % Start new line of an_tabindex, and record file name
+            an_tabindex{end,2} = strrep(sname,ffolder,'');              % shortfilename
+            an_tabindex{end,3} = tabindex{an_ind(i),3};                 % First calib data file index
+            %an_tabindex{end,3} = an_ind(1); % first calib data file index of first derived file in this set
+            an_tabindex{end,4} = lbl_rows;                              % Number of rows
+            an_tabindex{end,5} = N_PSD_nonspectrum_cols + length(freq); % Number of columns
             
             
             
@@ -395,13 +390,9 @@ try
             an_tabindex{end,8} = timing;
             an_tabindex{end,9} = row_byte;
             
-            
-            
-            
         end
         
-    end
-    
+    end    
     
 catch err
     
