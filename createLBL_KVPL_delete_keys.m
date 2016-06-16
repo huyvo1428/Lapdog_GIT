@@ -1,5 +1,8 @@
 % Delete keys (and corresponding values) from key-value pair list by listing keys.
 %
+% policy == 'require keys'  : key_list MUST             be a subset of kvl.keys.
+% policy == 'may have keys' : key_list DOES NOT HAVE TO be a subset of kvl.keys.
+%
 % function kvl = createLBL_KVPL_delete_keys(kvl, key_list, policy)
   function kvl = createLBL_KVPL_delete_keys(kvl, key_list, policy)
     % NOTE: Current implementation permits key_list having repeating keys in key_list.

@@ -7,7 +7,14 @@
 %
 % function kvl_dest = createLBL_KVPL_merge(kvl_1, kvl_2)
 function   kvl_dest = createLBL_KVPL_merge(kvl_1, kvl_2)
-
+%
+% PROPOSAL: Use different strategies.
+%    PROPOSAL: Accept no duplicate keys.
+%       NOTE: Current implementation.
+%    PROPOSAL: Accept duplicate keys when the values are identical.
+%       PRO: Useful for createLBL_create_EST_LBL_header.
+%    QUESTION: How handle ordering?
+%
     keys_intersect = intersect(kvl_1.keys, kvl_2.keys);
     if ~isempty(keys_intersect)
         error(sprintf('ERROR: kvl_1 and kvl_2 have %i keys in common, e.g. key = "%s".', numel(keys_intersect), keys_intersect{1}));

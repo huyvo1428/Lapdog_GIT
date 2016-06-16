@@ -133,9 +133,9 @@ try
             timing={scantemp{1,1}{obs(1)},scantemp{1,1}{obe(end)},scantemp{1,2}(obs(1)),scantemp{1,2}(obe(end))};
             
             a=[];
-            for b=1:length(obs) %loop each 6ms spectra subsample
+            for b=1:length(obs)   % Loop each 6ms spectra subsample.
                 a= [a;reltime(obe(b))-reltime(obs(b))];
-                if reltime(obe(b))-reltime(obs(b)) >(3e-3-0.1304)%if subsample too small, disregard
+                if reltime(obe(b))-reltime(obs(b)) >(3e-3-0.1304)   % If subsample too small, disregard.
                     
                     ob = obs(b):obe(b);
                     
@@ -156,8 +156,8 @@ try
                     end
                     
                     ib=scantemp{1,3}(ob(1):ob(end));
-                    vp=scantemp{1,end-1}(ob(1):ob(end)); %for probe 3, vp is scantemp{1,5}, otherwise {1,4}
-                    qfarray = scantemp{1,end}(ob(1):ob(end)); %quality factor, always at the end
+                    vp=scantemp{1,end-1}(ob(1):ob(end));       % For probe 3, vp is scantemp{1,5}, otherwise {1,4}.
+                    qfarray = scantemp{1,end}(ob(1):ob(end));  % Quality factor, always at the end.
                     
                     
                     
@@ -398,12 +398,12 @@ catch err
     
     fprintf(1,'Error at loop step %i and fout{}(%i),obs %i, file %s, outputfile %s',i,k,b,tabindex{an_ind(i),1},sname);
     
-    err.identifier
-    err.message
+    disp(err.identifier)
+    disp(err.message)
     len = length(err.stack);
     if (~isempty(len))
         for i=1:len
-            fprintf(1,'%s, %i,',err.stack(i).name,err.stack(i).line);
+            fprintf(1,'%s, %i,\n',err.stack(i).name,err.stack(i).line);
         end
     end
     
