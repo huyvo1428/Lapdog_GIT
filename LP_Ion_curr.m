@@ -143,7 +143,7 @@ clear ind l_ind; % Clearing the previous data, the function clear clears the
 % Ii = Ii(ind);            % of the data points are discarded
 
 % Exclude positive currents.
-ind = find(Ir < 0);   
+ind = find(Ir < 0);
 if(isempty(ind) || length(ind) < 2 )
     return
 end
@@ -253,21 +253,25 @@ end
 
 
     % Calculate ion densities velocities
-    %FKJN edit 6Nov 2015
+    % FKJN edit 6Nov 2015
     % This was terrible, the units are all wrong. What the hell is MQ^-1T^-2L^-1?
+    %
+    % FKJN edit 25 May 2016 ehmm..  This was actually correct all along.  slightly rephrased below.
     %out.ni_1comp     = max((1e-6 * out.Vpa(1) *assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*CO.e^2)),0);
 
-    %finally units of L^-3, not allowed to go below 0.
-
-
     if (out.Vpa(1)>0)
-        out.ni_1comp     = (1e-6 * out.Vpa(1)/(assmpt.vram*2*IN.probe_cA*CO.e));
+
+      % [L-3]           =  [M L T-1 L-2 M-1 L-3 T2 L T-1] = [L-3]
+      out.ni_1comp     = 1e-6*(assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*(CO.e)^2) * out.Vpa(1);
+      %  out.ni_1comp     = (1e-6 * out.Vpa(1)/(assmpt.vram*2*IN.probe_cA*CO.e));
     else
         out.ni_1comp = 0;
     end
 
 
     if (out.Vpb(1) < 0) %unphysical if intersection is above zero!
+
+        % [L-3]        = [  L-2 M-0.5 L-1.5 T  sqrt(M T-2 L ) ] = [ L-3]
         out.ni_2comp    = (1e-6/(IN.probe_cA*CO.e))*sqrt((-assmpt.ionM*CO.mp*(out.Vpb(1)) *out.Vpa(1) /(2*CO.e)));
         out.v_ion       =  out.ni_2comp     *assmpt.vram/out.ni_1comp;
     end

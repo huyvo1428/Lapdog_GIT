@@ -25,8 +25,8 @@ IN.probe_cA = pi*IN.probe_r^2;
 % Set up automatic ssh login on vroom.umea.irf.se (assumes you have generated a
 % public rsa key in your .ssh directory on squid and copied it to the known_hosts
 % file in your .ssh directory on vroom)
-% This will ask you for your ssh password once per session, instead of 
-% twice per day in the archive... 
+% This will ask you for your ssh password once per session, instead of
+% twice per day in the archive...
 if(do_geom & ~exist('ssh_ok'))
   unix('eval `ssh-agent`');
   unix('ssh-add ~/.ssh/id_dsa');
@@ -46,7 +46,7 @@ else
     jj = 0;
     while (jj<1000)
         line = fgetl(fc);
-        
+
         if (line == -1)
             error('Can not identify mission phase in mission calendar.');
         elseif ~(strcmp(line(1),'#') || isempty(line))
@@ -66,7 +66,7 @@ else
 end
 
 % Need to remove double quotes and trailing blanks from strings (strrep, strtrim)
-missionphase   = strtrim(strrep(char(parts{1}), '"', ''));   
+missionphase   = strtrim(strrep(char(parts{1}), '"', ''));
 targetfullname = strtrim(strrep(char(parts{3}), '"', ''));   % Mission calendar: "TARGET_NAME_IN_DATA_SET_ID"
 targetid       = strtrim(strrep(char(parts{4}), '"', ''));   % Mission calendar: "TARGET_ID"
 targettype     = strtrim(strrep(char(parts{5}), '"', ''));   % Mission calendar: "TARGET_TYPE"
@@ -76,7 +76,7 @@ target         = strtrim(strrep(char(parts{6}), '"', ''));   % Mission calendar:
 % Modify "target"
 % Special for solar wind, which is not defined as a target in SPICE:
 % aie 130313
-switch target    
+switch target
     case 'SW'
         target = 'SUN';
     case '67P'
@@ -86,7 +86,7 @@ switch target
     case 'LUTETIA'
         target = '21 LUTETIA';
     otherwise
-        %do nothing      
+        %do nothing
 end
 
 
@@ -99,15 +99,14 @@ end
 % Must be interpreted the same way as index(:).macro, i.e.
 % the macro interpreted as a hexadecimal number.
 global LDLMACROS;
-LDLMACROS = hex2dec({'807','817','827','805','804','803','617','703','704'});    % NOTE: Must cell array with strings for hex2dec ({} not []).
-
+LDLMACROS = hex2dec({'807','816','817','827','805','804','803','617','703','704'});    % NOTE: Must cell array with strings for hex2dec ({} not []).
 
 
 
 
 
 % Read info from DATASET.CAT:
-dname = strcat(archivepath,'/CATALOG/DATASET.CAT'); 
+dname = strcat(archivepath,'/CATALOG/DATASET.CAT');
 dp = fopen(dname,'r');
 if dp == -1
     error('Can not find DATASET.CAT. This usually due to not being able to find the CALIB data set directory.')
@@ -127,4 +126,4 @@ processlevel = tmp{1};
 % archiveid is used internally for keeping track of index files. It is not a PDS thing.
 archiveid = sprintf('%s_%d',shortphase,processlevel);
 
-% End of preamble.m 
+% End of preamble.m
