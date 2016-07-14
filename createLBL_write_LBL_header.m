@@ -268,6 +268,8 @@ function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
         % Require that all key_order_list are a subset of kvl.keys?!!
         % Require that kvl.keys are a subset of key_order_list?
         % Require that kvl.keys and key_order_list are identical (except for order of elements)?!!
+        %
+        % PROPOSAL: Make into general-purpose KVPL function.
         
         if length(unique(key_order_list)) ~= length(key_order_list)
             error('key_order_list contains multiple identical keys.')

@@ -38,7 +38,7 @@
 % agreement with Imperial College/Tony Allen to somehow help them process the files
 % It appears that at least part of the reason was to make it possible to parse the files before
 % we used ITEM_OFFSET+ITEM_BYTES correctly. DELIMITER IS NO LONGER NEEDED AND SHOULD BE PHASED OUT!
-% (E-mail Tony Allen->Erik Johansson 2015-07-03 adn that thread). 
+% (E-mail Tony Allen->Erik Johansson 2015-07-03 and that thread). 
 %
 function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inconsistency_policy)
 %
@@ -75,6 +75,12 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
 %   NOTE: Current usage of "FORMAT" seems wrong. DVAL checks imply that FORMAT can be omitted.
 %
 % PROPOSAL: Change name from "consistency_checks" to "assertions".
+%
+% PROPOSAL: Write to file using general-purpose write_ODL_from_struct function? Only need to build structure to pass on.
+%    NOTE: Actually concerns quite a small part of the code.
+%    NOTE: Need to simultaneously abolish createLBL_write_LBL_header which should not be used by any other code.
+%    PRO: Standardizes LBL "beautification".
+%    PRO: Shortens code.
 % 
 
     %========================================
@@ -304,9 +310,6 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
         ind_print___LOCAL( 0, fid,     'COLUMNS            = %d',   OBJTABLE_data.COLUMNS);
         ind_print___LOCAL( 0, fid,     'ROW_BYTES          = %d',   OBJTABLE_data.ROW_BYTES);
         ind_print___LOCAL( 0, fid,     'DESCRIPTION        = "%s"', OBJTABLE_data.DESCRIPTION);
-        %ind_print___LOCAL( 0, fid,     'DELIMITER          = "%s"', OBJTABLE_DELIMITER);   
-        % "DELIMITER" keyword is not PDS compliant but was previously in
-        % use because of Imperial College's processing. See Tony Allen.
         
         current_row_byte = 1;    % Used for deriving START_BYTE. Starts with one, not zero.
         for i = 1:length(OBJTABLE_data.OBJCOL_list)   % Iterate over list of ODL OBJECT COLUMN

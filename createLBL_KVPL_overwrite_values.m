@@ -26,7 +26,7 @@ function   kvl_dest = createLBL_KVPL_overwrite_values(kvl_dest, kvl_src)
             error(sprintf('ERROR: Found multiple keys with the same value in kvl_dest: (key, value) = (%s, %s)', key_src, value_src));            
         end
             
-        kvl_dest.values{i_kvl_dest, 1} = value_src;      % No error ==> Set value.
+        kvl_dest.values{i_kvl_dest} = value_src;      % No error ==> Set value.
             
     end
     

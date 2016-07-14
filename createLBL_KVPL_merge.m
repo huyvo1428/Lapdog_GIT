@@ -1,4 +1,3 @@
-% Generic utility function.
 % 
 % (1) Assumes that kvl_1 and kvl_2 have no keys in common (error otherwise), and
 % (2) return key-value pair list with the key-value pairs of kvl_1 and kvl_2 combined.
@@ -21,7 +20,7 @@ function   kvl_dest = createLBL_KVPL_merge(kvl_1, kvl_2)
     end
     
     kvl_dest = [];
-    kvl_dest.keys   = [kvl_1.keys;   kvl_2.keys  ];
-    kvl_dest.values = [kvl_1.values; kvl_2.values];
+    kvl_dest.keys   = [kvl_1.keys(:);   kvl_2.keys(:)  ];
+    kvl_dest.values = [kvl_1.values(:); kvl_2.values(:)];
 
 end
