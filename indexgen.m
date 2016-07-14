@@ -1,4 +1,4 @@
-% indexgen.m -- Make useful index 
+% indexgen.m -- Make useful index
 %
 % anders.eriksson@irfu.se 2012-03-29
 % edited by frejon@irfu.se 2014-05-01
@@ -49,16 +49,16 @@ for(i=1:nprel)
         blacklist = [blacklist; i];
     end
     preldate=str2double(lname(end-22:end-17));
-    
-    
+
+
     if preldate < 040101
         blacklist = [blacklist; i];
-        fprintf(1,'index generation found file: %s \n before 2004-01-01(!) ignoring...\n',lname); 
+        fprintf(1,'index generation found file: %s \n before 2004-01-01(!) ignoring...\n',lname);
     end
-    
-        
-        
-        
+
+
+
+
 end
 if(~isempty(blacklist))
     iname(blacklist,:) = [];
@@ -94,20 +94,20 @@ i = 0;
 
 for ii=1:n  % Loop the label files
     %i % Print to see where we are in the processing
-    
+
     if mod(i,5000) ==0
         fprintf(1,'Index generation loop #%i out of %i\r',i,n)
     end
-        
+
     % Path to label file:
     lname = deblank(sprintf('%s/%s',archivepath,iname(ii,:)));
     % 'deblank' strips off some trailing blanks sometimes turning up and causing problems
-    if(isempty(findstr(lname,'H.LBL')) && isempty(findstr(lname,'GEOM')) && ~isempty(lname))  
+    if(isempty(findstr(lname,'H.LBL')) && isempty(findstr(lname,'GEOM')) && ~isempty(lname))
     % Ignore HK and geometry files as well as spurious blank entries
       % Read label file as variable-value pairs:
       [fp,errmess] = fopen(lname,'r');
       if(isempty(errmess)) %if INDEX.TAB does not correspond to an actual file (quick fix of bug)
-            
+
           i = i+1; % Note that we cannot use ii as index, as we want to get rid of blanks etc.
           tname = strrep(lname,'LBL','TAB');
           lbl = textscan(fp,'%s %s','Delimiter','=');
@@ -122,12 +122,12 @@ for ii=1:n  % Loop the label files
               warning('Can not interpret macro number from macro string (INSTRUMENT_MODE_ID).')
           end
 
-              
-          
+
+
           % Find start time:
           ind = find(strcmp('START_TIME',var));
 
-          
+
           t0str = val(ind,:);
           t0 = datenum(strrep(t0str,'T',' '));
           % Find end time:
@@ -142,7 +142,7 @@ for ii=1:n  % Loop the label files
           ind = find(strcmp('SPACECRAFT_CLOCK_STOP_COUNT',var));
 %          ind22 = strcmp('SPACECRAFT_CLOCK_STOP_COUNT',var);
           sct1str = strtrim(val(ind,:));
-          
+
           % Analyze file name for type of data:
           yymmdd = strcat(t0str(3:4),t0str(6:7),t0str(9:10));
           str = sprintf('RPCLAP%s',yymmdd);
@@ -154,31 +154,31 @@ for ii=1:n  % Loop the label files
             lf = 0;
             hf = 1;
           elseif(lname(base+16) == 'T')
-            lf = 1; 
+            lf = 1;
             hf = 0;
           else
             fprintf(1,'  BAD ADC IDENTIFIER FOUND, %s\n',lname);
           end
-          
-          sweep = strcmp(lname(base+20),'S'); 
+
+          sweep = strcmp(lname(base+20),'S');
           % if sweep ==1, then the file is NOT a lf or hf file.
           if (sweep)
               lf = 0; %% should be unnecessary, no sweeps are lf...
               hf = 0;
-              
+
               %update: sweep files have "initial sweep smpls" which is a
               %very useful variable.
-         
-              
+
+
               %update 2. erik changed keyword to be probe specific...
               % ind = find(strcmp('ROSETTA:LAP_INITIAL_SWEEP_SMPLS',var));
-              
-              
+
+
               cstr= sprintf('ROSETTA:LAP_P%1d_INITIAL_SWEEP_SMPLS',probe);
               ind = find(strcmp(cstr,var));
               %          ind22 = strcmp('SPACECRAFT_CLOCK_STOP_COUNT',var);
               if(~isempty(ind))
-                  
+
                   str = strrep(strtrim(val(ind,:)),'"',''); %trim and strip from ""
                   if(~isempty(str))
                       in_smpls = hex2dec(str(end-3:end)); %only need maximum last three, convert from hex to dec.
@@ -190,20 +190,27 @@ for ii=1:n  % Loop the label files
                   %lname
                   in_smpls=0;
               end
-              
+
+              %FKJN edit 28/6 2016
+              if in_smpls >  400 % I hope this is enough of a ridiculous number
+                i = i -1 ; % revert counter
+                fprintf(1,'Error in Index generation, _INITIAL_SWEEP_SMPLS = %i skipping file %s.\r',in_smpls,lname)
+                continue %back to next iteration of nearest for loop (line 95), ignore everythin below
+              end
+
               index(i).pre_sweep_samples =in_smpls; % start collecting index
-              
-              
+
+
           end
-          
+
           % % File assumed to contain LF data if covering more than 16 s:
-          % lf = (t1-t0 > 16/86400) & ~sweep;  
+          % lf = (t1-t0 > 16/86400) & ~sweep;
           % hf = ~(lf | sweep);
 
           % Collect index:
-          
-          
-          
+
+
+
           index(i).lblfile = lname;
           index(i).tabfile = tname;
           index(i).t0str = t0str;
@@ -219,9 +226,9 @@ for ii=1:n  % Loop the label files
           index(i).sweep = sweep;
           index(i).efield = efield;
           index(i).probe = probe;
-         
-          
-          
+
+
+
       end %if I/O error
     end % End of if-not-HK
 end
