@@ -1,9 +1,8 @@
-%hf sweep
-
-%function [] = an_hf(derivedpath,an_ind,index,macrotime,fileflag)
-
-
-function [] = an_hf(an_ind,tabindex,fileflag)
+% HF sweep
+%
+% function [] = an_hf(an_ind, tabindex, fileflag)
+%
+function [] = an_hf(an_ind, tabindex, fileflag)
 
 global an_tabindex;
             
@@ -74,8 +73,7 @@ try
             N_PSD_nonspectrum_cols = 7;
         end
         
-        fclose(trID);
-        
+        fclose(trID);        
         
         
         
@@ -114,8 +112,6 @@ try
                 %             sind(n) = 0;
                 
             end
-            
-            
             
         end
         obs = find(diff(sind)>0)+1;
@@ -214,9 +210,6 @@ try
                     
                     
                     
-                    
-                    
-                    
                     if diag
                         
                         ts = datenum(tstr(1:23),'yyyy-mm-ddTHH:MM:SS.FFF');
@@ -289,27 +282,26 @@ try
                 if fout{k,end} %last index should be file checker
                     if strcmp(fileflag(1),'V')
                         if  fileflag(2) =='3'
-                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7},fout{k,8},fout{k,9});
+                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7}, fout{k,8},fout{k,9});
                             b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                             b3= fprintf(awID,'\r\n');
                         else
-                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
+                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',        fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6}, fout{k,9});
                             b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                             b3= fprintf(awID,'\r\n');
-                            
                         end
                         
                     elseif strcmp(fileflag(1),'I')
                         
                         if fileflag(2) =='3'
                             
-                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
+                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6}, fout{k,10},fout{k,11});
                             b2= fprintf(awID,', %14.7e',fout{k,end-1}');
                             b3= fprintf(awID,'\r\n');
                             
                             %   fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
                         else
-                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
+                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',        fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6}, fout{k,9});
                             b2= fprintf(awID,', %14.7e',fout{k,end-1}');
                             b3= fprintf(awID,'\r\n');
                             
