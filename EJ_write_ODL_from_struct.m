@@ -8,18 +8,39 @@
 % NOTE: Overwrites destination file if pre-existing.
 % NOTE: Multiline values are not indented (except the key itself).
 %
-function EJ_write_ODL_from_struct(file_path, s_str_lists, INDENTATION_LENGTH)
+% end_text_line_list = Cell array of strings, one for every line after the final "END" statement (without CR, LF).
+%
+function EJ_write_ODL_from_struct(file_path, s_str_lists, end_text_line_list, INDENTATION_LENGTH)
+%
+% PROPOSAL: Implement additional empty rows before/after OBJECT/END_OBJECT.
+%    NOTE: Only one row between END_OBJECT and OBJECT. ==> Non-trivial.
+%
+% PROPOSAL: Add assertion check for (dis)allowed characters (superscripted hyphen disallowed in particular).
+% PROPOSAL: Also accept data on the format of non-hierarchical list of key-value pairs?!
+
+    if ~isnumeric(INDENTATION_LENGTH) || (numel(INDENTATION_LENGTH) ~= 1)
+        error('Illegal INDENTATION_LENGTH argument.')
+    end
+
+    LINE_BREAK = sprintf('\r\n');
     
     c.fid = fopen(file_path, 'w');
     c.INDENTATION_LENGTH = INDENTATION_LENGTH;
     
     write_key_values(c, s_str_lists, 0)
+    
     fprintf(c.fid, 'END\r\n');
+    
+    for i=1:length(end_text_line_list)        
+        fwrite(c.fid, [end_text_line_list{i}, LINE_BREAK]);
+    end
     
     fclose(c.fid);    
 end
 
 
+
+% Recursive.
 function write_key_values(c, s, indentation_level)
 
     % ARGUMENT CHECK. Implicitly checks that fields exist.
@@ -27,6 +48,7 @@ function write_key_values(c, s, indentation_level)
         error('.keys, .values, and .objects do not have the same length.')
     end
     
+    LINE_BREAK = sprintf('\r\n');
     keys    = s.keys;
     values  = s.values;
     objects = s.objects;
@@ -36,15 +58,23 @@ function write_key_values(c, s, indentation_level)
 
     indentation_str = repmat(' ', 1, c.INDENTATION_LENGTH*indentation_level);
 
-    for i = 1:length(keys)        
+    for i = 1:length(keys)
         
-        if isempty(objects{i})
+        if ~strcmp(keys{i}, 'OBJECT') && isempty(objects{i})
             % CASE: non-OBJECT key
             
             post_key_padding = repmat(' ', 1, max_nonOBJECT_key_length-length(keys{i}));    % Create string of whitespaces.
-            fprintf(c.fid, sprintf('%s%s%s = %s\r\n',   indentation_str, keys{i}, post_key_padding, values{i}));
             
-        else
+            %str = sprintf('%s%s%s = %s\r\n',   indentation_str, keys{i}, post_key_padding, values{i});
+            %fprintf(c.fid, str);
+            
+            % IMPLEMENTATION NOTE: Put together and write string to file without using fprintf/sprintf since the value string
+            % may contain characters interpreted by fprintf/sprintf. Code has previously generated warnings
+            % when using fprintf/sprintf but this avoids that.
+            str = [indentation_str, keys{i}, post_key_padding, ' = ', values{i}, LINE_BREAK];
+            fwrite(c.fid, str);
+            
+        elseif strcmp(keys{i}, 'OBJECT') && ~isempty(objects{i}) && isstruct(objects{i})
             % CASE: OBJECT key.
             
             % Print OBJECT with different "post-key" whitespace padding.
@@ -52,6 +82,8 @@ function write_key_values(c, s, indentation_level)
             
             write_key_values(c, objects{i}, indentation_level+1);             % RECURSIVE CALL
             fprintf(c.fid, sprintf('%sEND_OBJECT = %s\r\n',   indentation_str, values{i}));
+        else
+            error('Inconsistent combination of key, value and object.')
         end
     end
 end

@@ -262,7 +262,7 @@ end
     if (out.Vpa(1)>0)
 
       % [L-3]           =  [M L T-1 L-2 M-1 L-3 T2 L T-1] = [L-3]
-      out.ni_1comp     = 1e-6*(assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*(CO.e)^2) * out.Vpa(1);
+      out.ni_1comp     = 1e-6*(assmpt.ionM*CO.mp*assmpt.vram/(2*IN.probe_cA*(CO.e)^2)) * out.Vpa(1);
       %  out.ni_1comp     = (1e-6 * out.Vpa(1)/(assmpt.vram*2*IN.probe_cA*CO.e));
     else
         out.ni_1comp = 0;

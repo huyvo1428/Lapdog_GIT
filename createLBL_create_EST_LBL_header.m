@@ -107,7 +107,7 @@ function kvl_EST_header = createLBL_create_EST_LBL_header(EST_TAB_path, CALIB_LB
         end
     end
 
-    kvl_EST_header = createLBL_KVPL_overwrite_values(kvl_EST_header, kvl_set);   % NOTE: Must do this for both N_src_files == 1, AND == 2.
+    kvl_EST_header = createLBL_KVPL_overwrite_values(kvl_EST_header, kvl_set, 'require preexisting keys');   % NOTE: Must do this for both N_src_files == 1, AND == 2.
 
 end
 

@@ -1,9 +1,10 @@
 function [spiceDirectory] = paths()
-%PATHS Gives paths to SPICE kernels directory and sets up MICE paths
-%   spiceDirectory = path() gives the path to the parent directory of the
-%   Rosetta SPICE kernels as a string. It also sets up the paths required 
-%   to use MICE. It retrieves the path from the metakernel file. 
-
+% PATHS Gives paths to SPICE kernels directory and sets up MICE paths.
+%   spiceDirectory = path() returns the path to the parent directory of the
+%   Rosetta SPICE kernels as a string.
+%   
+%   NOTE: It also extracts the paths to MICE and irfu-matlab from the metakernel file (!!)
+%   and adds them to the MATLAB path.
 %--------------------------------------------------------------------------
 % Get SPICE kernels parent directory from metakernel file
 

@@ -1,5 +1,5 @@
 %=========================================================================
-% Derive one pair of TAB/LBL files from one Elias geometry file.
+% Derive ONE pair of TAB/LBL files from one Elias geometry file.
 %
 % dest_dir      : Path to where the TAB/LBL geometry files will be placed.
 % data_set_info : struct with various variables relating to the data set.
@@ -15,7 +15,7 @@
 % QUESTION: Should include (add) the NOTE keyword and a reference to the "Cheops Reference Frame"?
 % PROPOSAL: Warning/error on overwriting existing file(s).
 %
-% Reused code created by: Erik P G Johansson, 2015-08-xx
+% Reused code created by: Erik P G Johansson, 2015-08-xx, IRF Uppsala, Sweden
 % Major rewrite: Erik P G Johansson, 2015-12-15
 %=========================================================================
 function geometry_createFileFromEliasGeometryFile(dest_dir, data_set_info, t, EG_files_dir)
@@ -31,6 +31,7 @@ function geometry_createFileFromEliasGeometryFile(dest_dir, data_set_info, t, EG
     % ASSERTION
     if ~exist(dest_dir, 'dir')      % "exist" returns 7 if argument is a directory.
         fprintf(1, 'Directory does not exist. Skipping %s.\n', dest_dir)
+        %error('Destination directory "%s" does not exist.\n', dest_dir)
         return
     end
     
@@ -73,13 +74,14 @@ function TAB_file_info = create_TAB_file(dest_dir, data_set_info, EG_file_path, 
     % ASSERTION - File contains the right time interval.
     t_date_str = datestr(t, 'yyyy-mm-dd');
     if strcmp(t_date_str, TAB_file_info.UTCstr_first(1:10)) || strcmp(t_date_str, TAB_file_info.UTCstr_last(1:10))
-        error('')
+        error('File does not contain data for the expected time interval.')
     end
     
     TAB_filename = ['RPCLAP', datestr(t, 'yymmdd'), '_', data_set_info.PROCESSING_LEVEL_ID, '_GEOM.TAB'];
     TAB_file_info.path = fullfile(dest_dir, TAB_filename);
     
-    
+
+
     %================
     % WRITE TAB FILE
     %================
@@ -98,7 +100,7 @@ function TAB_file_info = create_TAB_file(dest_dir, data_set_info, EG_file_path, 
             % written to disk so that one can inspect the erroneous file contents.
             fclose(fid);
             
-            fprintf('line_length                  = %e\n', line_length);
+            fprintf('line_length                       = %e\n', line_length);
             fprintf('TAB_file_info.N_TAB_bytes_per_row = %e\n', TAB_file_info.N_TAB_bytes_per_row);
             
             error('Line just written to TAB file had an unexpected line length.');
@@ -186,6 +188,7 @@ function create_LBL_file(data_set_info, TAB_file_info)
     %LBL_data.
     createLBL_create_OBJTABLE_LBL_file(TAB_file_info.path, LBL_data, 'error');
 end
+
 
 
 %===============================================================================================

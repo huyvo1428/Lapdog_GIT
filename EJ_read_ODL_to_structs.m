@@ -47,6 +47,8 @@
 % The former preserves correctly formatted, non-implicit ODL contents (keys/values) "exactly",
 % while the latter does not but is easier to work with instead.
 %
+% NOTE: Designed to fail, give error for non-ODL files so that it can be used when one does not know
+% whether it is an ODL file or not, e.g. iterate over .TXT files (both ODL and non-ODL) in data sets.
 % NOTE: Only handles the ODL formatted content, not content pointed to by it.
 % NOTE: "END" statement is not included in the returned representations.
 % NOTE: Can handle quoted ODL values that span multiple lines (and which ODL does permit).
@@ -58,9 +60,13 @@
 % NOTE: Does not check if there are too many END_OBJECT (only checks the
 % reverse).
 %
-% NOTE: Designed to work under MATLAB2009a (for Lapdog).
+% NOTE: Designed to work under MATLAB2009a (because of Lapdog).
 %
-function [s_str_lists, s_simple] = EJ_read_ODL_to_structs(file_path)
+%
+%
+% end_text_line_list = Cell array of strings, one for every line after the final "END" statement (without CR, LF).
+%
+function [s_str_lists, s_simple, end_text_line_list] = EJ_read_ODL_to_structs(file_path)
     %
     % QUESTION: How handle ODL/PDS distinction?
     % QUESTION: How handle ODL format errors?
@@ -70,13 +76,14 @@ function [s_str_lists, s_simple] = EJ_read_ODL_to_structs(file_path)
     % PROPOSAL: Flag for keeping/removing quotes around string values.
     %
     % PROPOSAL: Somehow keep distinguishing between ODL keys with/without quotes?!!
+    % PROPOSAL: Also return data on the format of non-hierarchical list of key-value pairs?!
     
     % Check if file (not directory) exists.
     % -------------------------------------
     % It is useful for the user to know which ODL file is missing so that he/she can more quickly
     % determine where in pds, lapdog etc. the original error lies (e.g. a ODL file produced by pds,
     % or lapdog code producing or I2L.LBL files, or A?S.LBL files, or EST.LBL files).
-    if (exist(file_path) ~= 2)
+    if (~exist(file_path, 'file'))
         error(sprintf('Can not find file: "%s"', file_path))
     end
     try
@@ -86,17 +93,17 @@ function [s_str_lists, s_simple] = EJ_read_ODL_to_structs(file_path)
         error(sprintf('Can not read file: %s', file_path))
     end
     
-    kv_list = read_keys_values_list_INTERNAL(line_list);
-    [s_str_lists, s_simple, i_last] = construct_structs_INTERNAL(kv_list, 1);
-    
+    [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_list);
+    [s_str_lists, s_simple, junk] = construct_structs_INTERNAL(kv_list, 1);
 end
 
 %###################################################################################################
 
 % Extract assignments VARIABLE_NAME = VALUE from list of lines.
 % Empty lines and "END" are permitted but are not represented in the returned result.
+% Makes not other interpretation.
 %
-function kv_list = read_keys_values_list_INTERNAL(line_list)
+function [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_list)
     
     LINE_BREAK = sprintf('\r\n');   % String that represents line break in value strings.
     
@@ -107,6 +114,7 @@ function kv_list = read_keys_values_list_INTERNAL(line_list)
     i_kv = 0;
     i_line = 0;
     
+    %----------------------------------------------------------------
     function next_line()
         i_line = i_line + 1;
         if i_line > length(line_list)
@@ -114,6 +122,7 @@ function kv_list = read_keys_values_list_INTERNAL(line_list)
         end
         line = line_list{i_line};
     end
+    %----------------------------------------------------------------
     
     state = 'new_statement';    % Value represents "where the algorithm thinks it is", "what it expects".
     line = [];    % Must define to prevent overloading with some MATLAB function.
@@ -135,9 +144,9 @@ function kv_list = read_keys_values_list_INTERNAL(line_list)
                 else
                     i_comment1 = regexp(line, '/\*', 'once');
                     if ~isempty(i_comment1)
-                        i_comment2 = regexp(line(i_comment1+2:end), '\*/', 'once');
+                        i_comment2 = regexp(line(i_comment1+2:end), '\*/', 'once');   % NOTE: Star is escaped with backslash.
                         if isempty(i_comment2)
-                            error('Can not find end of comment.');
+                            error('Row %i: Can not find end of comment.', i_line);
                         end
                         state = 'new_statement';
                     else                    
@@ -150,7 +159,7 @@ function kv_list = read_keys_values_list_INTERNAL(line_list)
                 % CASE: key = value
                 i_eq = regexp(line, '=', 'once');
                 if isempty(i_eq)
-                    error('Can not find the expected equal character on the same row.')
+                    error('Row %i: Can not find the expected equal character on the same row.', i_line)
                 end
                 
                 key = strtrim(line(1:(i_eq-1)));
@@ -203,12 +212,16 @@ function kv_list = read_keys_values_list_INTERNAL(line_list)
                 
             case 'end'
                 
+                end_text_line_list = line_list(i_line+1:end);
                 break   % Break the while loop.
                 
             otherwise
                 
                 error('Unknown state');
         end
+        
+        
+        
     end
 
     % Shorten cell arrays to remove unused entries (since these are preallocated variables).
@@ -246,6 +259,15 @@ function [s_str_lists, s_simple, i_last] = construct_structs_INTERNAL(kv_list, i
     s_str_lists.values  = {};
     s_str_lists.objects = {};
     
+    if length(kv_list.keys) < 1
+        error('Too few (less than one) key-value assignments.')
+    elseif ~strcmp(kv_list.keys{1}, 'PDS_VERSION_ID') || ~strcmp(kv_list.values{1}, 'PDS3')
+        % Extra check for "PDS_VERSION_ID = PDS3".
+        % "Planetary Data System Standards Reference", Version 3.6 specifies that the first key-value
+        % should always be this. This is included to be more sure that the code will fail/error
+        % for a non-ODL file, in case the previous parsing did not fail.
+        error('This is not an ODL file. Does not begin with PDS_VERSION_ID = PDS3.')
+    end
     
     
     i = i_first;     % Current index into kv_list.
@@ -267,8 +289,10 @@ function [s_str_lists, s_simple, i_last] = construct_structs_INTERNAL(kv_list, i
             if ~strcmp(kv_list.keys{i}, 'END_OBJECT')
                 error('Found OBJECT statement without corresponding END_OBJECT statement.')
             end
-            if ~strcmp(kv_list.values{i}, value)
-                error('END_OBJECT value does not match OBJECT value.')
+            OBJECT_value = value;
+            END_OBJECT_value = kv_list.values{i};
+            if ~strcmp(OBJECT_value, END_OBJECT_value)
+                error('"OBJECT = %s" and "END_OBJECT = %s" do not match.', OBJECT_value, END_OBJECT_value)
             end
             
             %-----------------
