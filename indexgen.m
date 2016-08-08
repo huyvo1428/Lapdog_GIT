@@ -188,7 +188,8 @@ for ii=1:n  % Loop the label files
                   end
               else
                   %Edit FKJN 8/8 2016. follow up bug due to INITIAL_SWEEP_SMPLS problem. 
-                  in_smpls=0;                 
+                  in_smpls=0;     
+                  i = i -1 ; % revert counter
                  fprintf(1,'strangeness in sweep file, _INITIAL_SWEEP_SMPLS = not found, skipping file %s.\r',lname)
                  continue %back to next iteration of nearest for loop (line 95), ignore everythin below
               end
