@@ -74,7 +74,7 @@ while(strcmp(char(C{1}{ind}), ')') == 0)
 end
 
 % Identify SPICE and MICE paths (by comparison to path symbols array)
-i_spk = strcmpi(s, 'SPK');
+i_spk  = strcmpi(s, 'SPK');
 i_mice = strcmpi(s, 'MICE');
 i_irfu = strcmpi(s, 'irfu-matlab');
 % 
@@ -83,7 +83,7 @@ i_irfu = strcmpi(s, 'irfu-matlab');
 % p = strrep(p,p{1,1},dynampath);
 
 
-spiceDirectory = cell2mat(cellstr(p(i_spk)));
+spiceDirectory = cell2mat(cellstr(p(i_spk)));    % NOTE: Assigning the function's return value.
 micePath = cell2mat(cellstr(p(i_mice)));
 irfuPath = cell2mat(cellstr(p(i_irfu)));
 

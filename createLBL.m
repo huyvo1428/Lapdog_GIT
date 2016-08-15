@@ -23,6 +23,8 @@
 t_start = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
 previous_warnings_settings = warning('query');
 warning('on', 'all')
+kernel_file = [dynampath, filesep, 'metakernel_rosetta.txt'];
+cspice_furnsh(kernel_file); 
 
 
 
@@ -54,6 +56,7 @@ NO_ODL_UNIT       = [];
 ODL_VALUE_UNKNOWN = [];   %'<Unknown>';  % Unit is unknown.
 delete_header_key_list = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
 MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in best_estimates!!!
+ROSETTA_NAIF_ID = -226;   % Used for SPICE.
 
 
 
@@ -105,7 +108,7 @@ kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_PHASE_NAME',     
 % NOTE: Old code contained a check for whether the tabindex{i,9} (i_last) was empty (the cell array component, not the whole cell array). Why?
 % Could not find any occurences of error message in any of the lap_agaility logs (covering time interval 2014-06-13 -- 2016-06-16). /2016-06-16
 % NOTE: Old code contained precautions for the cases that tabindex and/or an_tabindex were empty. Why? Remove? Assertion?
-% PROPOSAL: Similarily convert blockTAB to struct.
+% PROPOSAL: Similarily convert blockTAB to struct. In all of Lapdog?
 % PROPOSAL: Separate function files?
 %===================================================================================================
 if isempty(tabindex)
@@ -201,11 +204,8 @@ for i=1:length(stabindex)
         SPACECRAFT_CLOCK_STOP_COUNT = index(stabindex(i).i_last).sct1str;
         
         kvl_LBL = kvl_LBL_all;
-        %kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'START_TIME',                   index(tabindex{i,3}).t0str(1:23));   % UTC start time
         kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'START_TIME',                   CALIB_LBL_struct.START_TIME);        % UTC start time
-        %kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'STOP_TIME',                    tabindex{i,4}(1:23));                % UTC stop time
         kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'STOP_TIME',                    stabindex(i).UTC_stop(1:23));        % UTC stop time
-        %kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', index(tabindex{i,3}).sct0str);
         kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', CALIB_LBL_struct.SPACECRAFT_CLOCK_START_COUNT);
         kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
         
@@ -329,15 +329,23 @@ if(~isempty(blockTAB));   % Remove?
 
         
         
-        %=========================================
+        %==============================================
         %
         % LBL file: Create header/key-value pairs
         %
         % NOTE: Does not rely on reading old LBL file.
-        %=========================================
-
-        LBL_data.kvl_header = kvl_LBL_all;
-        
+        %==============================================
+        %START_TIME = datestr(blockTAB{i,4}, 'yyyy-mm-ddTHH:MM:SS.FFF');
+        %STOP_TIME  = datestr(blockTAB{i,5}, 'yyyy-mm-ddTHH:MM:SS.FFF');
+        START_TIME = datestr(blockTAB{i,4},   'yyyy-mm-ddT00:00:00.000');
+        STOP_TIME  = datestr(blockTAB{i,5}+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
+        kvl_LBL = kvl_LBL_all;
+        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'START_TIME',                   START_TIME);       % UTC start time
+        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
+        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
+        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
+        LBL_data.kvl_header = kvl_LBL;
+        clear   kvl_LBL
         
 
         %=======================================
@@ -346,10 +354,10 @@ if(~isempty(blockTAB));   % Remove?
         
         LBL_data.N_TAB_file_rows = blockTAB{i,3};
         LBL_data.OBJTABLE = [];
-        LBL_data.OBJTABLE.DESCRIPTION = 'BLOCKLIST DATA. START & STOP TIME OF MACROBLOCK AND MACROID.';
+        LBL_data.OBJTABLE.DESCRIPTION = 'BLOCKLIST DATA. START & STOP TIME OF MACRO BLOCK AND MACRO ID.';
         ocl = [];
-        ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss');
-        ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',       'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'LAST START TIME OF MACRO BLOCK FILE YYYY-MM-DD HH:MM:SS.sss');
+        ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss');
+        ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'LAST START TIME OF MACRO BLOCK FILE YYYY-MM-DD HH:MM:SS.sss');
         ocl{end+1} = struct('NAME', 'MACRO_ID',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'MACRO IDENTIFICATION NUMBER');
         LBL_data.OBJTABLE.OBJCOL_list = ocl;
         clear   ocl
@@ -787,6 +795,7 @@ end   % for
 
 
 
+cspice_unload(kernel_file);
 warning(previous_warnings_settings)
 fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, t_start));
 

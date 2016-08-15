@@ -29,8 +29,7 @@ nob = length(obe);   % number of ops blocks
 if t0(obs(1)) < datenum(missioncal_starttime)
     obs(1) = [];
     obe(1) = [];
-    nob = nob-1;  
-    
+    nob = nob-1;
 end
 
 
@@ -70,7 +69,8 @@ for j=1:nob    % For every macro block.
         bf = fopen(blockfile,'a');
         fprintf(bf,'%s, %s, %03x\r\n', datestr(tmac0(j), 'yyyy-mm-ddTHH:MM:SS.FFF'), datestr(tmac1(j), 'yyyy-mm-ddTHH:MM:SS.FFF'), mac(j));
         rcount = rcount + 1; %number of rows
-        blockTAB{end,3}=rcount; %change value of rcount of last blockfile
+        blockTAB{end,3} = rcount; %change value of rcount of last blockfile
+        blockTAB{end,5} = tmac1(j);
         
     else % If starting a new block list file.
         
@@ -90,7 +90,8 @@ for j=1:nob    % For every macro block.
         bfshort = strcat('RPCLAP_',datestr(tmac0(j),'yyyymmdd'),'_000000_BLKLIST.TAB');
         blockfile = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/',bfshort);
         
-        blockTAB(end+1,1:3)={blockfile,bfshort,rcount}; %new blockfile, with path, shorthand % row count
+        %blockTAB(end+1,1:3)={blockfile,bfshort,rcount}; %new blockfile, with path, shorthand % row count
+        blockTAB(end+1, 1:5) = {blockfile, bfshort, rcount, tmac0(j), tmac1(j)}; %new blockfile, with path, shorthand % row count
 
         %write file
         bf = fopen(blockfile,'w');
