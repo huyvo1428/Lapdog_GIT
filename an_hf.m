@@ -1,8 +1,9 @@
-% HF sweep
-%
-% function [] = an_hf(an_ind, tabindex, fileflag)
-%
-function [] = an_hf(an_ind, tabindex, fileflag)
+%hf sweep
+
+%function [] = an_hf(derivedpath,an_ind,index,macrotime,fileflag)
+
+
+function [] = an_hf(an_ind,tabindex,fileflag)
 
 global an_tabindex;
             
@@ -31,7 +32,7 @@ vp2 = 0;
 
 qf=0;
 nfft=128;
-fsamp = 18750;
+%fsamp = 18750;
 
 %fname = sprintf('%sRPCLAP_%s_%s_FRQ_%s.TAB',ffolder,datestr(macrotime,'yyyymmdd'),datestr(macrotime,'HHMMSS'),fileflag); %%
 %fpath = strrep(filename,ffolder,'');
@@ -73,7 +74,8 @@ try
             N_PSD_nonspectrum_cols = 7;
         end
         
-        fclose(trID);        
+        fclose(trID);
+        
         
         
         
@@ -83,56 +85,90 @@ try
         reltime= scantemp{1,2} - scantemp{1,2}(1);
         dt = reltime(2);
         count = 1;
-        t0   = reltime(1);
+        t0=reltime(1);
         sind = zeros(length(reltime),1);
+        
+        %-----%edit FKJN 18/7 2016 wait up, are we doing a new macro with a lower(1/8th)freq HF spectra?
+        %%% Also, remove the MIP filter.
+        if 1/dt < 3e+03 %some margins around expected 2.4khz 
+            ffactor=8; %low frequency HF, so we need more points subsampling turn off MIPfilter.
+        %   fsamp =  18750/8;
+            MIPfilter =0; % off
+           
+            
+        else
+            ffactor =1; % unit
+            MIPfilter = 1;% on
+            
+        end
+        fsamp = 18750/ffactor;
+        %if you want to test without MIPfilter on other macros just add MIPfilter =0;
+        %-----%edit  carry on.
+        
+
         
         
         % Loop from n =1 to end-1, checking n+1. (no need to check first entry)
         % made such that we avoid 'Index exceeds matrix dimensions' errors.
         for n=1:length(reltime)-1
-            
-            if reltime(n+1)-t0 >8e-3
+
+            if reltime(n+1)-t0 >(8e-3*ffactor)
                 % Start new timer, but don't increment line counter, results
-                % will be averaged.
+                % will be averaged
                 t0 =reltime(n+1);
             end
             
             
-            if reltime(n+1)-reltime(n) > dt*5000 %large jump, new timer
+            if reltime(n+1)-reltime(n)>dt*5000 %large jump, new timer
                 
                 t0 =reltime(n+1);
                 count = count+1; %each count will generate 1 line of output in file
                 
             end
             
-            % Here's the actual filtering. Ignore the first 2ms every 8ms.
-            if reltime(n+1)-t0 >= 2e-3 && reltime(n+1)-t0 <= 8e-3
+             %Here's the actual filtering. Ignore the first 2ms every 8ms.
+             %EDIT FKJN: unless MIPfilter is off, and we have to increase
+             %range
+             
+             
+            if reltime(n+1)-t0 >= (2e-3*MIPfilter) && reltime(n+1)-t0 <= (8e-3*ffactor)
                 sind(n+1) = count;
                 %         else
                 %             sind(n) = 0;
                 
             end
             
+            
+            
         end
         obs = find(diff(sind)>0)+1;
         obe = find(diff(sind)<0);
-        if sind(end)~=0 % Last obe value needs some extra care.
+        if sind(end)~=0 %%last obe value needs some extra care
             obe(end+1)=length(sind);
         end
-        
+       
+        %%EDIT FKJN 18/7 2016 
+        if ~MIPfilter           
+           obe = obs(2:end) - 1;% no filter, so no need to be fancy. 
+           obe(end+1)=length(sind);
+        end
+        %%
         if isempty(obs)
             fprintf(1, 'Macro with 0 valid points for PSD, skipping file %s\n', tabindex{an_ind(i),1});
-
-            % fprintf(1,'new strange macro with 0 valid points for PSD, skipping');
         else
-            
-            timing={scantemp{1,1}{obs(1)},scantemp{1,1}{obe(end)},scantemp{1,2}(obs(1)),scantemp{1,2}(obe(end))};
-            
-            a=[];
-            for b=1:length(obs)   % Loop each 6ms spectra subsample.
-                a= [a;reltime(obe(b))-reltime(obs(b))];
-                if reltime(obe(b))-reltime(obs(b)) >(3e-3-0.1304)   % If subsample too small, disregard.
-                    
+        
+        
+        timing={scantemp{1,1}{obs(1)},scantemp{1,1}{obe(end)},scantemp{1,2}(obs(1)),scantemp{1,2}(obe(end))};
+        
+        a=[];
+        for b=1:length(obs) %loop each 6ms spectra subsample
+            a= [a;reltime(obe(b))-reltime(obs(b))];
+           if reltime(obe(b))-reltime(obs(b)) >3e-3*ffactor   %edit FKJN 18July2016 
+           %If subsample too small, disregard.
+          % if reltime(obe(b))-reltime(obs(b)) >(3e-3-0.1304)  %old line,
+          % what is the significance of -0.1304?  it seems completely out
+          % of place.     
+                
                     ob = obs(b):obe(b);
                     
                     
@@ -210,6 +246,9 @@ try
                     
                     
                     
+                    
+                    
+                    
                     if diag
                         
                         ts = datenum(tstr(1:23),'yyyy-mm-ddTHH:MM:SS.FFF');
@@ -269,7 +308,7 @@ try
                     end
                     avgind=[];
                 end
-            end
+            end%main loop
             
             
             
@@ -282,26 +321,27 @@ try
                 if fout{k,end} %last index should be file checker
                     if strcmp(fileflag(1),'V')
                         if  fileflag(2) =='3'
-                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7}, fout{k,8},fout{k,9});
+                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7},fout{k,8},fout{k,9});
                             b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                             b3= fprintf(awID,'\r\n');
                         else
-                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',        fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6}, fout{k,9});
+                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
                             b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                             b3= fprintf(awID,'\r\n');
+                            
                         end
                         
                     elseif strcmp(fileflag(1),'I')
                         
                         if fileflag(2) =='3'
                             
-                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6}, fout{k,10},fout{k,11});
+                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
                             b2= fprintf(awID,', %14.7e',fout{k,end-1}');
                             b3= fprintf(awID,'\r\n');
                             
                             %   fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
                         else
-                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',        fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6}, fout{k,9});
+                            b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
                             b2= fprintf(awID,', %14.7e',fout{k,end-1}');
                             b3= fprintf(awID,'\r\n');
                             
@@ -309,13 +349,13 @@ try
                             
                             %       fout = {fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp)};
                             %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
-                        end %if
+                        end %if fileflag
                         
                     end
                     row_byte = b1+b2+b3;
                     lbl_rows = lbl_rows+1;
                 end
-            end
+            end%print loop
             
             
             fclose(awID);
@@ -382,7 +422,7 @@ try
             an_tabindex{end,8} = timing;
             an_tabindex{end,9} = row_byte;
             
-        end
+        end %Invalid Macro
         
     end    
     
