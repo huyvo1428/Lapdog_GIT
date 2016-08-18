@@ -2,15 +2,18 @@
 %
 % Update DATASET.CAT, VOLDESC.CAT associated with a data set.
 % Primarily intended to be used by create_C2D2.
-% Takes a general "standardized" struct with fields with standard names.
+% Takes a general "standardized" struct with fields with standard names which can be obtained from e.g. get_PDS_data.
 %
 % NOTE: It is not entirely unambiguous how much should be set automatically. It is likely that there always some things
 % that should be done manually.
-% NOTE: No field values should be quotes. The function add that itself.
+% NOTE: No submitted field values should be quoted. The function adds that itself.
 % NOTE: The code does derive any values from other values.
+% NOTE: Does not update DATASET.CAT. Relies on old values of START_TIME, STOP_TIME to be correct (should work for
+% MTP-data sets created with pds).
 %
 % IMPLEMENTATION NOTE: Functionality is implemented as a separate code so that it could also (maybe) be used for
-% updating VOLDESC.CAT and DATAET.CAT, any data set, i.e. also EDITED.
+% updating VOLDESC.CAT and DATASET.CAT, any data set, i.e. also EDITED.
+%
 %
 function update_DATASET_VOLDESC(dataset_path, data, indentation_length)
     % PROPOSAL: Set using table of values.
@@ -24,7 +27,7 @@ function update_DATASET_VOLDESC(dataset_path, data, indentation_length)
     for i = 1:length(fn_list)
         fn = fn_list{i};
         if ismember('"', data.(fn));
-            error('Structure field" %s" contais disallowed quotation mark.', fn)
+            error('Structure field" %s" contains disallowed quotation mark.', fn)
         end
     end
 

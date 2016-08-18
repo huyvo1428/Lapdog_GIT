@@ -26,7 +26,8 @@ function geometry_addToDataSet_EG_manual()
     
     % "CSPICE_KCLEAR clears the KEEPER system: unload all kernels, clears
     % the kernel pool, and re-initialize the system."
-    cspice_kclear
+    %cspice_kclear
+    cspice_unload(kernel_file);
 end
 
 

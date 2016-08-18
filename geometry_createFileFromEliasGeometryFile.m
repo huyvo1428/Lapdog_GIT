@@ -2,7 +2,7 @@
 % Derive ONE pair of TAB/LBL files from one Elias geometry file.
 %
 % dest_dir      : Path to where the TAB/LBL geometry files will be placed.
-% data_set_info : struct with various variables relating to the data set.
+% PDS_data      : Struct with various PDS keyword values.
 % t             : The date as a double returned by "datenum". Time of day should be irrelevant.
 % EG_files_dir  : Directory where Elias' geometry files can be located.
 %
@@ -18,7 +18,7 @@
 % Reused code created by: Erik P G Johansson, 2015-08-xx, IRF Uppsala, Sweden
 % Major rewrite: Erik P G Johansson, 2015-12-15
 %=========================================================================
-function geometry_createFileFromEliasGeometryFile(dest_dir, data_set_info, t, EG_files_dir)
+function geometry_createFileFromEliasGeometryFile(dest_dir, PDS_data, t, EG_files_dir)
     %===============================================================================================
     % NOTE: Can not just copy Elias' geometry files to the datasets.
     % Must (1) remove first line, (2) add CR, (3) make every line have the same length.
@@ -38,16 +38,18 @@ function geometry_createFileFromEliasGeometryFile(dest_dir, data_set_info, t, EG
     EG_filename = [upper(datestr(t, 'yyyy-mmm-dd')), 'orb.txt'];
     EG_file_path = fullfile(EG_files_dir, EG_filename);
     
-    TAB_file_info = create_TAB_file(dest_dir, data_set_info, EG_file_path, t);
-    create_LBL_file(data_set_info, TAB_file_info);
+    TAB_file_info = create_TAB_file(dest_dir, PDS_data, EG_file_path, t);
+    create_LBL_file(PDS_data, TAB_file_info);
 end
 
 
 
-function TAB_file_info = create_TAB_file(dest_dir, data_set_info, EG_file_path, t)
+function TAB_file_info = create_TAB_file(dest_dir, PDS_data, EG_file_path, t)
     fc = importdata(EG_file_path);         % fc = file contents.
     
-    % ASSERTION - Basic check on Elias geometry file format.
+    %=======================================================
+    % ASSERTION - Basic check on Elias geometry file format
+    %=======================================================
     if (size(fc.textdata, 2) ~= 11) | (size(fc.data, 2) ~= 10) | (size(fc.data, 1)+1 ~= size(fc.textdata, 1))
         error('Unexpected data in Elias geometry file. Different file format from what is expected.')
     end
@@ -73,11 +75,11 @@ function TAB_file_info = create_TAB_file(dest_dir, data_set_info, EG_file_path, 
     
     % ASSERTION - File contains the right time interval.
     t_date_str = datestr(t, 'yyyy-mm-dd');
-    if strcmp(t_date_str, TAB_file_info.UTCstr_first(1:10)) || strcmp(t_date_str, TAB_file_info.UTCstr_last(1:10))
+    if ~strcmp(t_date_str, TAB_file_info.UTCstr_first(1:10)) || ~strcmp(t_date_str, TAB_file_info.UTCstr_last(1:10))
         error('File does not contain data for the expected time interval.')
     end
     
-    TAB_filename = ['RPCLAP', datestr(t, 'yymmdd'), '_', data_set_info.PROCESSING_LEVEL_ID, '_GEOM.TAB'];
+    TAB_filename = ['RPCLAP', datestr(t, 'yymmdd'), '_', PDS_data.PROCESSING_LEVEL_ID, '_GEOM.TAB'];
     TAB_file_info.path = fullfile(dest_dir, TAB_filename);
     
 
@@ -115,7 +117,7 @@ end
 % NOTE: Should accept the _TAB_ file path, NOT the LBL file path beacuse of the function that
 % writes the LBL file.
 %===============================================================================================
-function create_LBL_file(data_set_info, TAB_file_info)
+function create_LBL_file(PDS_data, TAB_file_info)
     
     %================
     % WRITE LBL FILE
@@ -155,19 +157,19 @@ function create_LBL_file(data_set_info, TAB_file_info)
     kvl_header.keys = {};
     kvl_header.values = {};
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'PDS_VERSION_ID',               'PDS3');
-    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'DATA_SET_ID',                  ['"', data_set_info.DATA_SET_ID, '"']);
-    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'DATA_SET_NAME',                ['"', data_set_info.DATA_SET_NAME, '"']);
+    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'DATA_SET_ID',                  ['"', PDS_data.DATA_SET_ID, '"']);
+    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'DATA_SET_NAME',                ['"', PDS_data.DATA_SET_NAME, '"']);
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'INSTRUMENT_NAME',              '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'INSTRUMENT_ID',                'RPCLAP');
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'INSTRUMENT_HOST_NAME',         '"ROSETTA-ORBITER"');
-    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'MISSION_PHASE_NAME',           ['"', data_set_info.MISSION_PHASE_NAME, '"']);
-    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'PROCESSING_LEVEL_ID',          ['"', data_set_info.PROCESSING_LEVEL_ID, '"']);
+    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'MISSION_PHASE_NAME',           ['"', PDS_data.MISSION_PHASE_NAME, '"']);
+    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'PROCESSING_LEVEL_ID',          ['"', PDS_data.PROCESSING_LEVEL_ID, '"']);
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'PRODUCT_CREATION_TIME',        datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
-    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'PRODUCT_TYPE',                 ['"', data_set_info.PRODUCT_TYPE, '"']);
+    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'PRODUCT_TYPE',                 ['"', PDS_data.PRODUCT_TYPE, '"']);
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'PRODUCER_ID',                  'EJ');
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'PRODUCER_FULL_NAME',           '"ERIK P G JOHANSSON"');
-    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'TARGET_NAME',                  ['"', data_set_info.TARGET_NAME, '"']);
-    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'TARGET_TYPE',                  ['"', data_set_info.TARGET_TYPE, '"']);
+    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'TARGET_NAME',                  ['"', PDS_data.TARGET_NAME, '"']);
+    kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'TARGET_TYPE',                  ['"', PDS_data.TARGET_TYPE, '"']);
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'START_TIME',                   TAB_file_info.UTCstr_first);
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'STOP_TIME',                    TAB_file_info.UTCstr_last);
     kvl_header = createLBL_KVPL_add_kv_pair(kvl_header, 'SPACECRAFT_CLOCK_START_COUNT', ['"', TAB_file_info.SCS_first, '"']);
@@ -197,9 +199,8 @@ end
 %    Ex: "1/0397007763.15407"
 %===============================================================================================
 function scs = convert_Rosetta_UTC_string_to_SCS( UTCstring )
-    
-    Rosetta_NAIF_ID = -226;
-    scs = cspice_sce2s(Rosetta_NAIF_ID, cspice_str2et(UTCstring));
-    
+    % PROPOSAL: Separate function.
+    % PROPOSAL: Abolish?
+    ROSETTA_NAIF_ID = -226;
+    scs = cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(UTCstring));
 end
-
