@@ -212,7 +212,7 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
         disallowed_chars = setdiff(cd.NAME, PDS_IDENTIFIER_PERMITTED_CHARS);
         if ~isempty(disallowed_chars)
             % NOTE 2016-07-22: The NAME value that triggers this error may come from a CALIB LBL file produced by pds, NAME = P1-P2_CURRENT/VOLTAGE.
-            % pds should no longer produce this kind of LBL files but they may still occur in old data sets.
+            % pds should no longer produce this kind of LBL files since they violate the PDS standard but they may still occur in old data sets.
             % Therefore, there is also value in printing the file name since the user can then (maybe) determine if that is true.
             warning_error___LOCAL(sprintf('Found disallowed character(s) "%s" in NAME. NAME="%s". (Replacing dash with underscore.)\n   File: %s', disallowed_chars, cd.NAME, LBL_file_path), TAB_LBL_inconsistency_policy)
             

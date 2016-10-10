@@ -55,7 +55,14 @@ tmac1 = t0(obe);  % Start time of last  file in ops block.
 
 % Prepare archive with blocklist files
 
-blockTAB = {};
+%blockTAB = {};
+% Create empty array of struct with the right fields.
+blockTAB = struct(...
+    'blockfile', {}, ...
+    'bfshort',   {}, ...
+    'rcount',    {}, ...
+    'tmac0',     {}, ...
+    'tmac1',     {});   
 rcount = 0;
 cmpdate='';
 
@@ -63,19 +70,22 @@ cmpdate='';
 for j=1:nob    % For every macro block.
     
     
-    if(strcmp(datestr(tmac0(j),'yyyymmdd'),cmpdate)) % if adding to an existing block list file (same day).
+    if(strcmp(datestr(tmac0(j),'yyyymmdd'),cmpdate))   % If adding to an existing block list file (same day).
         
         %append to file
         bf = fopen(blockfile,'a');
         fprintf(bf,'%s, %s, %03x\r\n', datestr(tmac0(j), 'yyyy-mm-ddTHH:MM:SS.FFF'), datestr(tmac1(j), 'yyyy-mm-ddTHH:MM:SS.FFF'), mac(j));
         rcount = rcount + 1; %number of rows
-        blockTAB{end,3} = rcount; %change value of rcount of last blockfile
-        blockTAB{end,5} = tmac1(j);
+        
+        %blockTAB{end,3} = rcount; % Change value of rcount of last blockfile
+        %blockTAB{end,5} = tmac1(j);
+        blockTAB(end).rcount = rcount;     % Change value of rcount of last blockfile.
+        blockTAB(end).tmac1  = tmac1(j);
         
     else % If starting a new block list file.
         
         rcount = 1; %first row of new file
-        %create filepath
+        % Create file path
         dirY = datestr(tmac0(j),'YYYY');
         dirM = upper(datestr(tmac0(j),'mmm'));
         dirD = strcat('D',datestr(tmac0(j),'dd'));
@@ -90,8 +100,9 @@ for j=1:nob    % For every macro block.
         bfshort = strcat('RPCLAP_',datestr(tmac0(j),'yyyymmdd'),'_000000_BLKLIST.TAB');
         blockfile = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/',bfshort);
         
-        %blockTAB(end+1,1:3)={blockfile,bfshort,rcount}; %new blockfile, with path, shorthand % row count
-        blockTAB(end+1, 1:5) = {blockfile, bfshort, rcount, tmac0(j), tmac1(j)}; %new blockfile, with path, shorthand % row count
+        %blockTAB(end+1, 1:3) = {blockfile, bfshort, rcount}; %new blockfile, with path, shorthand % row count
+        %blockTAB(end+1, 1:5) = {blockfile, bfshort, rcount, tmac0(j), tmac1(j)}; %new blockfile, with path, shorthand % row count
+        blockTAB(end+1) = struct('blockfile', blockfile, 'bfshort', bfshort, 'rcount', rcount, 'tmac0', tmac0(j), 'tmac1', tmac1(j));
 
         %write file
         bf = fopen(blockfile,'w');

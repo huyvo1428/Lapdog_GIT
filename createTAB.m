@@ -44,17 +44,17 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 %
 % any of the following events will add to the qualityflag accordingly:
 %
-% sweep during measurement  = +100
-% bug during measurement    = +200
 % Rotation "  "    "        = +10
 % Bias change " "           = +20
 % LDL Macro                 = +40
+% Sweep during measurement  = +100
+% Bug during measurement    = +200
 %
 % low sample size(for avgs) = +2
-% zeropadding(for psd)	  = +2
-% poor analysis fit	  = +1
+% zeropadding(for psd)	    = +2
+% poor analysis fit	        = +1
 % e.g. QF = 320 -> Sweep during measurement, bug during measurement, bias change during measurement
-%  QF =000 ALL OK.
+%      QF = 000 -> ALL OK.
 
 
 macroNo = index(tabind(1)).macro;
@@ -135,7 +135,7 @@ global LDLMACROS; %global constant list
 
 %tabindex has format:
 %{ ,1} filename
-%{ ,2} shortfilename
+%{ ,2} short filename
 %{ ,3} first index number
 %{ ,4} end time(UTC)
 %{ ,5} end time (S/C clock)
@@ -294,8 +294,8 @@ try
 
 
 
-
-        for(i=1:len); % read&write loop iterate over all files, create B*S.TAB and I*S.TAB
+        % Read & write loop. Iterate over all files, create B*S.TAB and I*S.TAB
+        for(i=1:len);   
             qualityF = 0;     % qualityfactor initialised!
             trID = fopen(index(tabind(i)).tabfile);
 

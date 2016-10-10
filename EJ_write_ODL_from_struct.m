@@ -24,8 +24,11 @@ function EJ_write_ODL_from_struct(file_path, s_str_lists, end_text_line_list, IN
 
     LINE_BREAK = sprintf('\r\n');
     
-    c.fid = fopen(file_path, 'w');
+    [c.fid, error_msg] = fopen(file_path, 'w');
     c.INDENTATION_LENGTH = INDENTATION_LENGTH;
+    if c.fid == -1
+        error('Failed to open file "%s": "%s"', file_path, error_msg)
+    end
     
     write_key_values(c, s_str_lists, 0)
     

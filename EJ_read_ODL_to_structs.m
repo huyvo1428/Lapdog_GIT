@@ -54,6 +54,8 @@
 % NOTE: Can handle quoted ODL values that span multiple lines (and which ODL does permit).
 %       Line breaks in multiline value strings are stored as CR+LF.
 % NOTE: Can handle (ignore) comments /*...*/ on one line. I think the PDS standard forces them to be on one line.
+%    NOTE: Can still confuse the code since it then can not handle values like
+%             INDEX.LBL: INDEXED_FILE_NAME = {"DATA/*.LBL"}
 % NOTE: Can handle indentation (ignored).
 %
 % NOTE: Does not check if keys occur multiple times, except OBJECT for which cell arrays are used.
@@ -93,8 +95,14 @@ function [s_str_lists, s_simple, end_text_line_list] = EJ_read_ODL_to_structs(fi
         error(sprintf('Can not read file: %s', file_path))
     end
     
-    [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_list);
-    [s_str_lists, s_simple, junk] = construct_structs_INTERNAL(kv_list, 1);
+    %try
+        [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_list);
+        [s_str_lists, s_simple, junk] = construct_structs_INTERNAL(kv_list, 1);
+    %catch e
+        %error([e.message, sprintf(' File "%s"', file_path)])
+        %e.message = [e.message, sprintf(' File "%s"', file_path)];
+        %rethrow(e)
+    %end
 end
 
 %###################################################################################################
@@ -102,7 +110,6 @@ end
 % Extract assignments VARIABLE_NAME = VALUE from list of lines.
 % Empty lines and "END" are permitted but are not represented in the returned result.
 % Makes not other interpretation.
-%
 function [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_list)
     
     LINE_BREAK = sprintf('\r\n');   % String that represents line break in value strings.
@@ -159,7 +166,7 @@ function [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_lis
                 % CASE: key = value
                 i_eq = regexp(line, '=', 'once');
                 if isempty(i_eq)
-                    error('Row %i: Can not find the expected equal character on the same row.', i_line)
+                    error('Row %i: Can not find the expected equals ("=") character on the same row.', i_line)
                 end
                 
                 key = strtrim(line(1:(i_eq-1)));

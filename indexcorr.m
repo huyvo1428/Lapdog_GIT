@@ -137,7 +137,7 @@ for i=1:length(index)
             flag =1;   %doesn't need this, flag is set to 1 a few steps later.
             
             count = count +1;
-            fprintf(1,'%i split files\r ',count);
+            fprintf(1,'%i split files\n',count);
             %        i
             index(end).t1 = datenum(strrep(scantemp{1,1}{j,1},'T',' '));
             index(end).t1str= scantemp{1,1}{j,1}(1:23);
