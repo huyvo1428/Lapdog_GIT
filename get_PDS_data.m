@@ -6,7 +6,7 @@
 % INPUT ARGUMENTS:
 % ----------------
 % base_data: Structure with fields describing a specific data set to which fields will be added.
-%    This field must have a certain set of struct fields. Either
+%    The argument must have a certain set of struct fields. Either
 %    (1) .VOLUME_ID_nbr_str
 %        .DATA_SET_ID,
 %    or the same information expressed as separate PDS "keywords", i.e.
@@ -15,7 +15,8 @@
 %        .mission_phase_abbrev
 %        .DATA_SET_ID_descr
 %        .version_str.
-% all_data: Structure with fields from base_data plus other derived ones.
+%    The return variable will have all the fields above, both (1) and (2).
+% all_data: Structure to which (1) the fields of base_data, and (2) other derived fields will be added.
 %
 %
 % Variable (field) naming convention:
@@ -146,12 +147,12 @@ function [all_data, base_data] = get_PDS_data(all_data, base_data, mission_calen
     % Values only used in VOLDESC.CAT
     %=================================
     
-    % VOLUME_NAME = "RPCLAP CALIBRATED DATA FOR EARTH SWING-BY 1"
+    % Ex: VOLUME_NAME = "RPCLAP CALIBRATED DATA FOR EARTH SWING-BY 1"
     all_data.VOLUME_NAME = sprintf('RPCLAP %s DATA FOR %s', all_data.DATA_subdir, all_data.MISSION_PHASE_NAME);
     
-    % VOLUME_ID = ROLAP_1099
-    if length(all_data.VOLUME_ID_nbr_str) ~= 4
-        error('all_data.VOLUME_ID_nbr_str is not exactly four characters long.')
+    % Ex: VOLUME_ID = ROLAP_1099
+    if ~ischar(all_data.VOLUME_ID_nbr_str) || length(all_data.VOLUME_ID_nbr_str) ~= 4
+        error('all_data.VOLUME_ID_nbr_str is not a string, exactly four characters long.')
     end
     all_data.VOLUME_ID         = sprintf('ROLAP_%s',   all_data.VOLUME_ID_nbr_str);
     all_data.VOLUME_VERSION_ID = sprintf('VERSION %s', all_data.version_str);
