@@ -23,6 +23,13 @@ end % if I/O error
 
 
 tmp=textscan(ilp,'%s %*s %*s %*s %*s %*s','Delimiter',',');
+
+if isempty(tmp{1})
+	fprintf(1,'Error- Empty file  %s\n', str);
+	break
+end
+
+
 iname = strtrim(char(tmp{1}));  % Clean away leading/trailing blanks
 % clear tmp;
 if iname(1,1) == '"'

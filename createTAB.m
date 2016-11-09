@@ -44,19 +44,19 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 %
 % any of the following events will add to the qualityflag accordingly:
 %
+% sweep during measurement  = +100
+% bug during measurement    = +200
 % Rotation "  "    "        = +10
 % Bias change " "           = +20
 % LDL Macro                 = +40
-% Sweep during measurement  = +100
-% Bug during measurement    = +200
 %
 % low sample size(for avgs) = +2
-% zeropadding(for psd)	    = +2
-% poor analysis fit	        = +1
+% zeropadding(for psd)	  = +2
+% poor analysis fit	  = +1
 % e.g. QF = 320 -> Sweep during measurement, bug during measurement, bias change during measurement
-%      QF = 000 -> ALL OK.
+%  QF =000 ALL OK.
 
-
+try
 macroNo = index(tabind(1)).macro;
 diag = 0;
 diag2 = 0;
@@ -71,39 +71,87 @@ tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 % current during calibration which is not present during measurements)
 Offset = [];
 Offset.I1L = 0;   % The old value -23E-9 is now part of pds ADC20 calibration ("Delta").
-Offset.B1S = +1E-9;
+%Offset.B1S = +1E-9;
 %Offset.I2L = -23E-9;
 Offset.I2L = 0;   % The old value -23E-9 is now part of pds ADC20 calibration ("Delta").
-Offset.B2S = +6.5E-9;
+%Offset.B2S = +6.5E-9; These values are from  an incorrectly applied old 4kHZ calibration of
+%8kHZ sweeps. They should also be applied to HF data.
 Offset.I3L = 0;
 Offset.V1L = 0;
 Offset.V2L = 0;
 Offset.V3L = 0;
+%Edit FKJN 26e Sept 2016 4/8 khz filter offset calibration. should be moved to pds soon.
+%global of8khzfilterMacros;
+of4khzfilterMacros = hex2dec({'410','411','412','415','416','417','612','613','615','616','710','910'});    % NOTE: Must be cell array with strings for hex2dec ({} not []).
+if any(ismember(macroNo,of4khzfilterMacros)) %if macro is any of the LDL macros
+   Offset.B1S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
+   Offset.B2S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
+   fprintf(1,'NO 4khz correction macro was %X',macroNo);
 
+else
+   Offset.B1S = 1.4*1E-9*20000/65535; %0.43 nA
+   Offset.B2S = 25.35*1E-9*20000/65535;%7.74 nA
+   %note that old calibration was -1E-9 and -6.5E-9. Maybe due to inexactness of determination, or a temporal thing. 
+   fprintf(1,'YES 4khz correction macro was %X',macroNo);
 
+end
+
+Offset.I1H = Offset.B1S;
+Offset.I2H = Offset.B2S; %these offsets are due to a 4/8khz filter calibration.
+    
 % NOTE: fileflag = B1S/B2S really refers to BxS + IxS.
 % For that case, CURRENTOFFSET refers to the IxS files (not the BxS files which only contain voltages).
+
+    
+
+
+
+ %   case 'I2L'
+       % corr_factor_710= 13/16;
+%        corr_factor_710= 4/5;
+%        CURRENTOFFSET = Offset.I2L;
+        %Edit  FKJN 26e Sept 2016, well in time for EOM
+        % We have some problem with downsampling on flight S/W, only noticable when
+        % downsampling is low (especially on macro 710, 910). This old macro 604 offset calibration should
+        % probably have been taken care of with a 2/3 factor or
+        % something of the like. we'll see
+%         if macroNo == hex2dec('604')
+%             CURRENTOFFSET = -12E-9 +23E-9; % Approximate new calibration offset due to moving ADC20 delta calibration to pds (all macros).
+%         else
+%             CURRENTOFFSET = Offset.I2L;
+%         end
+
+
+ma_corr_factor= 4/5;
+
 switch fileflag     %we have detected different offset on different modes
-    case 'I1L'
-        if macroNo == hex2dec('604')
-            CURRENTOFFSET = -12E-9 +23E-9; % Approximate new calibration offset due to moving ADC20 delta calibration to pds (all macros).
-        else
-            CURRENTOFFSET = Offset.I1L;
-        end
+    case 'I1H'        
+        CURRENTOFFSET = Offset.I1H; %...=Offset.B1S
+        ma_corr_factor= 1;
+    case 'I2H'        
+        CURRENTOFFSET = Offset.I2H;%...=Offset.B2S
+        ma_corr_factor= 1;
     case 'B1S'
         CURRENTOFFSET = Offset.B1S;
-    case 'I2L'
-        if macroNo == hex2dec('604')
-            CURRENTOFFSET = -12E-9 +23E-9; % Approximate new calibration offset due to moving ADC20 delta calibration to pds (all macros).
-        else
-            CURRENTOFFSET = Offset.I2L;
-        end
+
     case 'B2S'
-        CURRENTOFFSET = Offset.B2S;
-    otherwise
+        CURRENTOFFSET = Offset.B2S;        
+
+    otherwise %I3H,V1L,V2L,V3L
+              
+        %FKJN test implementation
+%          if macroNo == hex2dec('604')
+%              ma_corr_factor = 2/3; %test
+%          end
+            
         CURRENTOFFSET = 0;
+        
 end
-%
+
+
+   fprintf(1,'CURRENTOFFSET = %e \n',CURRENTOFFSET);
+
+
 %
 % CURRENTOFFSET = 0;
 % CURRENTO1 = 0;
@@ -135,7 +183,7 @@ global LDLMACROS; %global constant list
 
 %tabindex has format:
 %{ ,1} filename
-%{ ,2} short filename
+%{ ,2} shortfilename
 %{ ,3} first index number
 %{ ,4} end time(UTC)
 %{ ,5} end time (S/C clock)
@@ -154,7 +202,7 @@ len = length(tabind);
 counttemp = 0;
 delfile = 1;
 
-try
+%try
     %tot_bytes = 0;
     if(~index(tabind(1)).sweep); %% if not a sweep, do:
 
@@ -230,9 +278,21 @@ try
 
                     end%if
                 end
-
-
-            end%  sweep window deletions
+                end%  sweep window deletions
+                
+                
+                if macroNo == hex2dec('710') || macroNo == hex2dec('910')                 
+                    trigg_dt = 1;
+                    %fprintf(1,'710 correction trigger');
+                    
+                    dt_710 =scantemp{1,2}(2) - scantemp{1,2}(1);
+                    if dt_710< trigg_dt
+                        %fprintf(1,'710 correction applied');
+                        
+                        scantemp(:,4)=cellfun(@(x) x*ma_corr_factor,scantemp(:,4),'un',0);
+                    end
+                    
+                end%if 710/910 
 
 
 
@@ -294,8 +354,8 @@ try
 
 
 
-        % Read & write loop. Iterate over all files, create B*S.TAB and I*S.TAB
-        for(i=1:len);   
+
+        for(i=1:len); % read&write loop iterate over all files, create B*S.TAB and I*S.TAB
             qualityF = 0;     % qualityfactor initialised!
             trID = fopen(index(tabind(i)).tabfile);
 

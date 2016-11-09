@@ -132,6 +132,8 @@ try %try the dynamic solution first, then the static.
     %PREPROCESSING
     %---------------------------------------------------
     %---------------------------------------------------
+    probe     = str2double(diag_info{1,2}(end-5));
+    %fprintf(1,'method 1: %d, method 2: %d',probe,str2double(diag_info{1,1}(end)));
 
     % Sort the data
     [V,I] = LP_Sort_Sweep(V',I');
@@ -155,7 +157,7 @@ try %try the dynamic solution first, then the static.
     %    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
         twinpeaks_low   = an_Vplasma_v2(V,Is);
 
-        if illuminated == 1   %an_Vplasma_highAc doesn't work if shadowed
+        if illuminated == 1  &&  probe == 1 %an_Vplasma_highAc does not work if shadowed
             twinpeaks_high = an_Vplasma_highAc(V,Is);
             twinpeaks = twinpeaks_high; %this works best for probe 1( and fully lit probe 2?)
         else
@@ -174,18 +176,18 @@ try %try the dynamic solution first, then the static.
     %    Vsc = twinpeaks.Vsc(1);
     %    Vsc_sigma =twinpeaks.Vsc(2);
 
-    
-    
-    
+
+
+
     %Here is the Vsc defined for use in analysis. Previously Vbar has been
-    %used, but simulations and results suggests Vph_knee är mycket närmare.
+    %used, but simulations and results suggests Vph_knee ï¿½r mycket nï¿½rmare.
  %   Vsc = twinpeaks.Vbar(1);
 %    Vsc_sigma =twinpeaks.Vbar(2);
 
     Vsc = twinpeaks.Vph_knee(1);
     Vsc_sigma =twinpeaks.Vph_knee(2);
 
-    
+
     if isnan(Vsc)
         Vsc = twinpeaks.Vsc(1);
     end
@@ -219,7 +221,7 @@ try %try the dynamic solution first, then the static.
         %Vsc=Vknee; %no photoelectrons, so current only function of Vp (absolute)
         Vplasma=NaN;
         twinpeaks.Vbar = twinpeaks.Vph_knee;
-        
+
     end
     %---------------------------------------------------
 
