@@ -1,22 +1,27 @@
 %=========================================================================
 % Derive ONE pair of TAB/LBL files from one Elias geometry file.
 %
-% dest_dir      : Path to where the TAB/LBL geometry files will be placed.
-% PDS_data      : Struct with various PDS keyword values.
-% t             : The date as a double returned by "datenum". Time of day should be irrelevant.
-% EG_files_dir  : Directory where Elias' geometry files can be located.
-%
 % NOTE: The function is chosen such that it could be relatively easily be replaced by a function that
 % produces a geometry file from scratch (from SPICE; without Elias' geometry files).
-% NOTE: Requires SPICE kernels to be loaded.
+% NOTE: Requires SPICE kernels to have already been loaded.
 % NOTE: Code contains the naming convention for Elias' geomtry files.
 % EG = Elias geometry
 %
 % QUESTION: Should include (add) the NOTE keyword and a reference to the "Cheops Reference Frame"?
 % PROPOSAL: Warning/error on overwriting existing file(s).
 %
+% 
+%
 % Reused code created by: Erik P G Johansson, 2015-08-xx, IRF Uppsala, Sweden
 % Major rewrite: Erik P G Johansson, 2015-12-15
+%
+% ARGUMENTS
+% =========
+% dest_dir      : Path to where the TAB/LBL geometry files will be placed.
+% PDS_data      : Struct with various PDS keyword values.
+% t             : The date as a double returned by "datenum". Time of day should be irrelevant.
+% EG_files_dir  : Directory where Elias' geometry files can be located.
+%
 %=========================================================================
 function geometry_createFileFromEliasGeometryFile(dest_dir, PDS_data, t, EG_files_dir)
     %===============================================================================================
@@ -28,7 +33,7 @@ function geometry_createFileFromEliasGeometryFile(dest_dir, PDS_data, t, EG_file
     %===============================================================================================
     % PROPOSAL: Change year-month-day to one time number.
     
-    % ASSERTION
+    % CHECK
     if ~exist(dest_dir, 'dir')      % "exist" returns 7 if argument is a directory.
         fprintf(1, 'Directory does not exist. Skipping %s.\n', dest_dir)
         %error('Destination directory "%s" does not exist.\n', dest_dir)
@@ -37,6 +42,11 @@ function geometry_createFileFromEliasGeometryFile(dest_dir, PDS_data, t, EG_file
     
     EG_filename = [upper(datestr(t, 'yyyy-mmm-dd')), 'orb.txt'];
     EG_file_path = fullfile(EG_files_dir, EG_filename);
+    
+    % ASSERTION
+    if ~exist(EG_file_path, 'file')
+        error('Can not find EO geometry file "%s".\n', EG_file_path)
+    end
     
     TAB_file_info = create_TAB_file(dest_dir, PDS_data, EG_file_path, t);
     create_LBL_file(PDS_data, TAB_file_info);

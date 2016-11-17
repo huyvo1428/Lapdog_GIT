@@ -1,10 +1,6 @@
 %
 % Add geometry files to an existing data set for delivery.
 %
-% data_set_path : Path to the (PDS ~compliant) data set. Will place the geometry files in the DATA/*/*/*/*/ subdirectories.
-% data_set_info : struct with various variables relating to the data set.
-% EG_files_dir  : Directory where Elias' geometry files can be located.
-%
 % NOTE: For any type of EDITED, CALIB, DERIV data set.
 % NOTE: The code is written so that it could some day be turned into code that is run together (is called by) Lapdog
 % by exchanging the call to geometry_createFileFromEliasGeometryFile with another function that creates
@@ -12,6 +8,12 @@
 % NOTE: The code does NOT update any INDEX.TAB/LBL files.
 %
 % Created by: Erik P G Johansson, 2015-12-15, IRF Uppsala, Sweden
+%
+% ARGUMENTS
+% =========
+% data_set_path : Path to the (PDS ~compliant) data set. Will place the geometry files in the DATA/*/*/*/*/ subdirectories.
+% data_set_info : struct with various variables relating to the data set.
+% EG_files_dir  : Directory where Elias' geometry files can be located.
 %
 function geometry_addToDataSet(data_set_path, data_set_info, EG_files_dir)
     
@@ -34,6 +36,7 @@ function geometry_addToDataSet(data_set_path, data_set_info, EG_files_dir)
     end
     
 end
+
 
 
 %===============================================================================================

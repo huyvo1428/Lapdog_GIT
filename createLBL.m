@@ -18,8 +18,19 @@
 t_start = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
 previous_warnings_settings = warning('query');
 warning('on', 'all')
+
+
+%=========================================================
+% Read kernel file - Use default file in Lapdog directory
+%=========================================================
 %kernel_file = [dynampath, filesep, 'metakernel_rosetta.txt'];   % dynampath is no longer set for unknown reason.
-kernel_file = 'metakernel_rosetta.txt';
+current_m_file = mfilename('fullpath');
+[Lapdog_directory, basename, ext] = fileparts(current_m_file);
+kernel_file = fullfile(Lapdog_directory, 'metakernel_rosetta.txt');
+if ~exist(kernel_file, 'file')
+    fprintf(1, 'Can not find kernel file "%s" (pwd="%s")', kernel_file, pwd)
+    % Call error too?
+end
 cspice_furnsh(kernel_file); 
 
 

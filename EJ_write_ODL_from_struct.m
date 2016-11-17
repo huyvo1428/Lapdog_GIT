@@ -17,7 +17,10 @@ function EJ_write_ODL_from_struct(file_path, s_str_lists, end_text_line_list, IN
 %
 % PROPOSAL: Add assertion check for (dis)allowed characters (superscripted hyphen disallowed in particular).
 % PROPOSAL: Also accept data on the format of non-hierarchical list of key-value pairs?!
-
+% PROPOSAL: Insert line-breaks (CR+LF) to limit row length.
+%   NOTE: DVAL indicates that row length (including CR+LF) should be max 72 for .CAT files and 80 for .LBL files.
+%   PROPOSAL: Line-break (qutoed) string values.
+%       CON: Could potentially mess up, long manually line-broken string values.
     if ~isnumeric(INDENTATION_LENGTH) || (numel(INDENTATION_LENGTH) ~= 1)
         error('Illegal INDENTATION_LENGTH argument.')
     end

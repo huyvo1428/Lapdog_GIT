@@ -1,18 +1,10 @@
 %===================================================================================================
 % Initially created by Erik P G Johansson, IRF Uppsala, 2016-07-xx.
 %
-% Code that uses a CALIB1 and a DERIV1 data set to create
-% corresponding CALIB2 and DERIV2 data set for delivery.
+% Code that uses an existing CALIB1 dataset and an existing DERIV1 data set to create
+% the corresponding CALIB2 (and in the future DERIV2) data set for delivery.
 % This code is meant to be run independently of the Rosetta RPCLAP pipeline.
-%
-% DEFINITIONS OF TERMS
-% CALIB1, DERIV1 = The historical formats of data sets that are used internally at IRF-U.
-%                  CALIB1 is produced by the pds software. DERIV1 is produced by Lapdog.
-% CALIB2, DERIV2 = The formats of data sets that are used for official delivery to PSA at ESA.
-%                  In practise DERIV1 data split up in two.
-%
-% EG_files_dir : Path to directory with Elias' geometry files. The directory must contain at least the required files
-%                but may also contain other files.
+% The script is intended for automating the process of creating datasets for delivery.
 %
 % NOTE: Does NOT create the INDEX/ directory. dvalng and pvv can do that.
 %
@@ -26,22 +18,32 @@
 % and thus not do anything to save time. This way the code can be interrupted (deliberately or because of crash/bug) and
 % the user can then re-run without the code redoing a lot of work. In particular, copying a lot of TAB files takes a lot
 % of time which can then be avoided if running a second time.
+%
+% DEFINITIONS OF TERMS
+% ====================
+% CALIB1, DERIV1 = The historical formats of data sets that are used internally at IRF-U.
+%                  CALIB1 is produced by the pds software. DERIV1 is produced by Lapdog.
+% CALIB2, DERIV2 = The formats of data sets that are used for official delivery to PSA at ESA.
+%                  In practise DERIV1 data split up in two.
+%
+% ARGUMENTS
+% =========
+% EG_files_dir : Path to directory with Elias' geometry files. The directory must contain at least the required files
+%                but may also contain other files.
+% CALIB1_path, DERIV1_path : Paths to existing datasets.
 %===================================================================================================
-function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path, kernel_file, mission_calendar_path)
+function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path, kernel_file, pds_mission_calendar_path, C2_VOLUME_ID_nbr_str)
     %===================================================================================================    
     % PROPOSAL: Better name?
     %    create, derive, extract, convert
     %    create_CALIB2DERIV2
-    %    create_C2D2
+    %    create_C2D2_from_CALIB1_DERIV1
     %    delivery data sets = dds, delDS
     %    create Delivery
     %
     % PROPOSAL: Catch exceptions and allow execution to continue (sometimes at least).
     %    Ex: Updating ODL files (in particular .CAT files) fails.
     %    NOTE: Make work with time keeping.
-    %
-    % PROPOSAL: update_DATASET_VOLDESC: Separate code that updates ODL structs from read & write ODL file, analogous to
-    %           how ODL file modification is done in this file.
     %
     % PROPOSAL: Modify file classification function to apply to all files.
     %   PRO: Can identify ODL files.
@@ -75,11 +77,11 @@ function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path,
     
     PDS_base_data_C1.DATA_SET_ID = C1_DATA_SET_ID;
     PDS_base_data_C1.VOLUME_ID_nbr_str = 'xxxx';
-    [junk, PDS_base_data_C1] = get_PDS_data([], PDS_base_data_C1, mission_calendar_path);
+    [junk, PDS_base_data_C1] = get_PDS_data([], PDS_base_data_C1, pds_mission_calendar_path);
     
     PDS_base_data_D1.DATA_SET_ID = D1_DATA_SET_ID;
     PDS_base_data_D1.VOLUME_ID_nbr_str = 'xxxx';
-    [junk, PDS_base_data_D1] = get_PDS_data([], PDS_base_data_D1, mission_calendar_path);
+    [junk, PDS_base_data_D1] = get_PDS_data([], PDS_base_data_D1, pds_mission_calendar_path);
     
     %=========================================================================
     % Check that the DPLs are correct and that the data sets
@@ -124,7 +126,8 @@ function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path,
     PDS_base_data = rmfield(PDS_base_data_C1, 'DATA_SET_ID');
     PDS_base_data.PROCESSING_LEVEL_ID = '3';
     PDS_base_data.DATA_SET_ID_descr   = 'CALIB2';
-    [C2.PDS_data, junk] = get_PDS_data(CD2.PDS_data, PDS_base_data, mission_calendar_path);
+    PDS_base_data.VOLUME_ID_nbr_str   = C2_VOLUME_ID_nbr_str;
+    [C2.PDS_data, junk] = get_PDS_data(CD2.PDS_data, PDS_base_data, pds_mission_calendar_path);
     C2.data_file_selection_func = @select_CALIB2_DATA_files;
     
     fprintf('-------- Creating CALIB2 data set --------\n');
@@ -359,7 +362,7 @@ function CATALOG_DOCUMENT_file_processing_func(...
         [s_str_lists]                      = generic_modify_ODL_contents(s_str_lists, s_simple, kvl_updates);
         create_parent_dir(dest_path)
         EJ_write_ODL_from_struct(dest_path, s_str_lists, end_lines, ODL_indentation_length);
-    else    
+    else
         copy_file(src_path, dest_path, 'always overwrite')
     end
 end
@@ -576,13 +579,15 @@ end
 % Determine whether a file is an ODL file that should (possibly) be updated.
 %
 % NOTE: Can not just use file extension since (1) some .TXT files are ODL, and some are not, and (2) some .CAT files
-% don't need to be updated, but reading & writing them would unnecessarily remove their comments.
+% don't need to be updated, but reading & writing them would unnecessarily remove their comments. DVAL might also react.
 function should_update = is_ODL_file_to_update(filename)
     % PROPOSAL: Move constants out of file.
     
     % Regular expressions for files which have the right file extension, but which should not be updated.
-    NON_ODL_FILES_REGEX = {'RPCLAP030101_CALIB_FRQ_[DE]_P[12]\.TXT', 'ROSETTA_INSTHOST\.CAT', 'ROSETTA_MSN\.CAT'};
-    
+    % NOTE: All CATALOG/ files except DATASET.CAT and CATINFO.TXT.
+    NON_ODL_FILES_REGEX = {'RPCLAP030101_CALIB_FRQ_[DE]_P[12]\.TXT', 'ROSETTA_INSTHOST\.CAT', 'ROSETTA_MSN\.CAT', ...
+        'RPCLAP_INST\.CAT', 'RPCLAP_PERS\.CAT', 'RPCLAP_REF\.CAT', 'RPCLAP_SOFTWARE\.CAT'};
+
     [relative_parent_path, filebasename, suffix] = fileparts(filename);
     
     if contains_any_regexp(filename, NON_ODL_FILES_REGEX)
@@ -750,15 +755,19 @@ end
 
 
 
-%======================================================================
+%===================================================================================================================
 % Author: Erik P G Johansson, IRF-U, Uppsala, Sweden
 % First created 2016-06-09
 %
 % Convert (relative/absolute) path to an absolute (canonical) path.
 %
 % NOTE: Will also convert ~ (home directory).
+% NOTE: Only works for existing paths.
+% NOTE: The resulting path will NOT end with slash/backslash unless it is the system root directory on Linux ("/").
 % (MATLAB does indeed seem to NOT have a function for doing this(!).)
-%======================================================================
+%
+% NOTE: Originally copied from Lapdog's create_C2D2.m (internal function).
+%===================================================================================================================
 function path = get_abs_path(path)
 % PROPOSAL: Rethrow exception via errorp with amended message somehow?
 % PROPOSAL: Separate out as a separate function file?

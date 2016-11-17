@@ -2,7 +2,7 @@
 %
 % Update DATASET.CAT, VOLDESC.CAT associated with a data set.
 % Primarily intended to be used by create_C2D2.
-
+%
 % Takes a general "standardized" struct with fields with standard names which can be obtained from e.g. get_PDS_data plus some fields that have to be added separately.
 %
 % NOTE: It is not entirely unambiguous how much should be set automatically. It is likely that there always some things
@@ -12,28 +12,35 @@
 % NOTE: Does not update DATASET.CAT:START_TIME, STOP_TIME. Relies on old values of these to be correct (should work for
 % MTP-data sets created with pds).
 %
+% NOTE: The current implementation overwrites the ROLAP number (VOLUME_ID_nbr_str) which might be underdesirable for
+% EDITED where it might have been set correctly.
+%
 % IMPLEMENTATION NOTE: Functionality is implemented as a separate code so that it could also (maybe) be used for
-% updating VOLDESC.CAT and DATASET.CAT, any data set, i.e. also EDITED.
+% updating VOLDESC.CAT and DATASET.CAT, in any data set.
 %
 % ARGUMENTS
-%     data               : Struct with "standardized" fields for PDS keys or parts thereof.
-%                          Accepts the struct returned from get_PDS with the fields VOLDESC___PUBLICATION_DATE and
-%                          DATA_SET_RELEASE_DATE added to it.
-%     indentation_length : Struct with PDS data, e.g. as returned by get_PDS_data.
+% =========
+% PDS_data           : Struct with "standardized" fields for PDS keys or parts thereof.
+%                      Accepts the struct returned from get_PDS with the fields VOLDESC___PUBLICATION_DATE and
+%                      DATA_SET_RELEASE_DATE added to it.
+% indentation_length : Indendation length used when writing the ODL files.
 %
-function update_DATASET_VOLDESC(dataset_path, data, indentation_length)
+function update_DATASET_VOLDESC(dataset_path, PDS_data, indentation_length)
+    %
     % PROPOSAL: Add functionality for MTP split data sets. Add that data was acquired during MTPxxx of the xxx phase.
     % QUESTION: Uncertain which fields should be updated when updating data set version and one may have old versions
     % that should be (manually) amended to rather than set.
+    %
+    % PROPOSAL: Add support for the type of target (comet, asteroid, planet).
     %
     
     %================================================
     % ASSERTION: Check that fields contain no quotes
     %================================================
-    fn_list = fieldnames(data);
+    fn_list = fieldnames(PDS_data);
     for i = 1:length(fn_list)
         fn = fn_list{i};
-        if ismember('"', data.(fn));
+        if ismember('"', PDS_data.(fn));
             error('Structure field" %s" contains disallowed quotation mark.', fn)
         end
     end
@@ -49,7 +56,7 @@ function update_DATASET_VOLDESC(dataset_path, data, indentation_length)
         };
     for i = 1:length(QUOTED_FIELDS)
         fn = QUOTED_FIELDS{i};
-        data.(fn) = ['"', data.(fn), '"'];
+        PDS_data.(fn) = ['"', PDS_data.(fn), '"'];
     end
 
     policy = 'replace';
@@ -61,12 +68,12 @@ function update_DATASET_VOLDESC(dataset_path, data, indentation_length)
     
     [s_str_lists, junk, end_lines] = EJ_read_ODL_to_structs(VOLDESC_path);
     
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'VOLUME_NAME',       data.VOLUME_NAME);                  % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'VOLUME_ID',         data.VOLUME_ID);                    % NOT quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'VOLUME_VERSION_ID', data.VOLUME_VERSION_ID);            % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'DESCRIPTION',       data.VOLDESC___DESCRIPTION);        % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'PUBLICATION_DATE',  data.VOLDESC___PUBLICATION_DATE);   % Not quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'DATA_SET_ID',       data.DATA_SET_ID);                  % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'VOLUME_NAME',       PDS_data.VOLUME_NAME);                  % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'VOLUME_ID',         PDS_data.VOLUME_ID);                    % NOT quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'VOLUME_VERSION_ID', PDS_data.VOLUME_VERSION_ID);            % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'DESCRIPTION',       PDS_data.VOLDESC___DESCRIPTION);        % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'PUBLICATION_DATE',  PDS_data.VOLDESC___PUBLICATION_DATE);   % Not quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'DATA_SET_ID',       PDS_data.DATA_SET_ID);                  % Quoted
     
     EJ_write_ODL_from_struct(VOLDESC_path, s_str_lists, end_lines, indentation_length);
     clear s_str_lists end_lines
@@ -75,14 +82,14 @@ function update_DATASET_VOLDESC(dataset_path, data, indentation_length)
     
     [s_str_lists, junk, end_lines] = EJ_read_ODL_to_structs(DATASET_path);
     
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'DATA_SET_ID', data.DATA_SET_ID);    % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_NAME',         data.DATA_SET_NAME);           % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_RELEASE_DATE', data.DATA_SET_RELEASE_DATE);   % Not quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'ABSTRACT_DESC',         data.ABSTRACT_DESC);           % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'CONFIDENCE_LEVEL_NOTE', data.CONFIDENCE_LEVEL_NOTE);   % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'CITATION_DESC',         data.CITATION_DESC);           % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_TERSE_DESC',   data.DATA_SET_TERSE_DESC);     % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_TARGET',      'TARGET_NAME',           data.TARGET_NAME);   % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'DATA_SET_ID', PDS_data.DATA_SET_ID);    % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_NAME',         PDS_data.DATA_SET_NAME);           % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_RELEASE_DATE', PDS_data.DATA_SET_RELEASE_DATE);   % Not quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'ABSTRACT_DESC',         PDS_data.ABSTRACT_DESC);           % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'CONFIDENCE_LEVEL_NOTE', PDS_data.CONFIDENCE_LEVEL_NOTE);   % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'CITATION_DESC',         PDS_data.CITATION_DESC);           % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_TERSE_DESC',   PDS_data.DATA_SET_TERSE_DESC);     % Quoted
+    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_TARGET',      'TARGET_NAME',           PDS_data.TARGET_NAME);   % Quoted
     
     EJ_write_ODL_from_struct(DATASET_path, s_str_lists, end_lines, indentation_length);
 end

@@ -20,16 +20,12 @@ fix_geom_bug = 1;  % To change signs of position and velocity coordinates
 % =============
 
 % Info for labels
-lbltime = '2015-02-27T12:00:00';  % label revision time
+lbltime = '2016-08-18';  % Label revision time
 lbleditor = 'EJ';
-lblrev = '4th draft';
+lblrev = 'Initial release';
 
 % 4. Dataset selection and description
 % ====================================
-
-% RVM2 calibrated:
-%shortphase = 'RVM2';
-%archivepath = '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/RO-SS-RPCLAP-3-RVM2-CALIB-V1.0';
 
 archivepath = archpath;
 shortphase = archID;
