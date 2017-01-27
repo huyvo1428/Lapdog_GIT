@@ -1,4 +1,3 @@
-function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %
 % write_CALIB_MEAS_files
 %	
@@ -8,16 +7,16 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %   (and for which the output directory is hardcoded).
 %   
 %   ARGUMENTS
-%   ---------
-%   pearch  = Path to EDITED data set, e.g. '/data/LAP_ARCHIVE/RO-E-RPCLAP-2-EAR3-EDITED-V1.0'
-%   mp      = ("Long") mission phase name, e.g. "COMET ESCORT 3". (Needed for LBL file keyword MISSION_PHASE_NAME.)
-%   outpath = Output path (directory)
+%   =========
+%   editedDatasetPath = Path to EDITED data set, e.g. '/data/LAP_ARCHIVE/RO-E-RPCLAP-2-EAR3-EDITED-V1.0'
+%   missionPhaseName  = ("Long") mission phase name, e.g. "COMET ESCORT 3". (Needed for LBL file keyword MISSION_PHASE_NAME.)
+%   outDirPath        = Output path (directory)
 %
 %   SYNTAX
-%   ------
-%                    write_CALIB_MEAS_files(pearch, missionphasename, outpath)
+%   ======
+%                    write_CALIB_MEAS_files(editedDatasetPath, missionphasename, outDirPath)
 %       
-%       offsetData = write_CALIB_MEAS_files(pearch, missionphasename, outpath)
+%       offsetData = write_CALIB_MEAS_files(editedDatasetPath, missionphasename, outDirPath)
 %
 %   ----------------------------------------------------------------------------
 %   Usage: However the Swedish Institute of Space Physics sees fit.
@@ -45,17 +44,26 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %
 %   - Updated to INSTRUMENT_ID = RPCLAP (no quotes).
 %     /Erik P G Johansson 2015-07-08
+%
+%   - Bug fix: Added time sorting of INDEX.TAB files. Should not produce erroneous additional calibration files.
+%     Now generates calibration files for every block of macro 104 (including cold calibrations).
+%     Sped up the reading of files. Clean-up and rewriting of much code. Renamed many variables.
+%     Updated the LBL file: Set SPACECRAFT_CLOCK_START_COUNT, added stop times. Misc. hardcoded updates.
+%     /Erik P G Johansson 2017-01-26/27
 %   ----------------------------------------------------------------------------
 %   NOTE: The current implementation (2015-05-08) sets START_TIME to an actual time, but sets SPACECRAFT_CLOCK_START_COUNT = "N/A". Change?
 %   NOTE: As of 2016-04-07, this software is designed for MATLAB R2009A to make it possible to still run on squid.
 %   NOTE: As of 2017-01-26, it appears that the part of the execution that takes the most time is the reading of LBL
 %   files.
+%   NOTE: As of 2017-01-27: If there are multiple mode sessions for the same day, then only one of them will be chosen.
+%         This means that calibration files for a given day may differ depending on how this date is chosen.
 %   BUG: As of 2017-01-23, appears to yield error if both the dataset contains no calibrations, and the return value is
 %   requested.
-%   BUG: As of 2017-01-23, sometimes produces CALIB_MEAS files for non-existing runs of the calibration macro.
-%   
+function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseName, outDirPath)
+%
+%   PROPOSAL: Print estimated time left (for reading LBL files).
 
-    t_start = clock;    % Script start time. NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
+    scriptStartTimeVector = clock;    % Script start time. NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   * Sets hardcoded values for the basic parameters.
@@ -78,8 +86,10 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     
     MIN_CORRELATION = 0.99;
     
+    FILES_PER_PROGRESS_STEP = 500;   % Number of files to process before updating the progress percentage (log message).
+        
     % Directory path to where to save calibration COEFFICIENTS files for debugging (i.e. not LBL+TAB).
-    CALIB_COEF_files_dir = '/data/LAP_ARCHIVE/CALIB_MEAS_files/';   % Default value on squid.
+    CALIB_COEF_files_dir = '/data/LAP_ARCHIVE/CALIB_MEAS_files/';    % Default value on squid.
     %CALIB_COEF_files_dir = '~/temp/coeffs';   % For debugging.
     
     diag = 0;    % Flag for whether to display debugging plots.
@@ -95,8 +105,8 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     
     % NOTE: It is useful to check for existence of directories directly since their non-existence will
     %       otherwise produce an error first after a lot of processing, i.e. after a potentially long delay.
-    if ~exist(outpath, 'dir')
-        error('Can not find directory "%s".', outpath)
+    if ~exist(outDirPath, 'dir')
+        error('Can not find directory "%s".', outDirPath)
     end
     if ~exist(CALIB_COEF_files_dir, 'dir')
         error('Can not find directory "%s".', CALIB_COEF_files_dir)
@@ -109,20 +119,16 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 
     disp('Paths');
     disp('----------------------------------------------------------------');
-    epath = fullfile(pearch);        % Full Edited archive path
+    fprintf(1,'Edited Archive and path: %s\r\n',editedDatasetPath);
+    fprintf(1,'Mission phase: %s\r\n',missionPhaseName);
+    fprintf(1,'Output calibration file path: %s\r\n\r\n',outDirPath);
 
-    fprintf(1,'Edited Archive and path: %s\r\n',epath);
-    fprintf(1,'Mission phase: %s\r\n',mp);
-    fprintf(1,'Output calibration file path: %s\r\n\r\n',outpath);
+    %indexDirPath = fullfile(editedDatasetPath,'INDEX'); % Full index file path
 
-    ipath = fullfile(epath,'INDEX'); % Full index file path
-
-    dpath = fullfile(epath,'DATA');  % Full data file path
-
-    if pearch(end) == filesep        
-        pearch(end) = [];    % Remove trailing file separator (slash).
+    if editedDatasetPath(end) == filesep        
+        editedDatasetPath(end) = [];    % Remove trailing file separator (slash).
     end
-    [dummy, earch] = fileparts(pearch);    % Split to get DATA_SET_ID. NOTE: Sensitive to whether path ends with slash or not.
+    [junk, datasetDirName] = fileparts(editedDatasetPath);    % Split to get DATA_SET_ID. IMPORTANT NOTE: Only works for string NOT ending with slash.
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -137,11 +143,11 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-    filePath = fullfile(ipath,'INDEX.TAB');
-    fileID   = fopen(filePath, 'r');
+    indexFilePath = fullfile(editedDatasetPath,'INDEX', 'INDEX.TAB');
+    fileId = fopen(indexFilePath, 'r');
 
-    if(fileID<=0)
-        error('Could not open file: %s', filePath);
+    if(fileId<=0)
+        error('Could not open file: %s', indexFilePath);
         return;
     end
 
@@ -151,34 +157,34 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     % "DATA/EDITED/2007/SEP/D16/RPCLAP070916_00FT_REB18NS.LBL","RPCLAP070916_00FT_REB18NS",2016-04-07T07:50:48,"RO-E-RPCLAP-2-EAR2-EDITED-V0.5"
     % "DATA/EDITED/2007/SEP/D16/RPCLAP070916_001_H.LBL       ","RPCLAP070916_001_H       ",2016-04-07T07:50:48,"RO-E-RPCLAP-2-EAR2-EDITED-V0.5"
     % "DATA/EDITED/2007/SEP/D16/RPCLAP070916_00NT_REB18NS.LBL","RPCLAP070916_00NT_REB18NS",2016-04-07T07:50:48,"RO-E-RPCLAP-2-EAR2-EDITED-V0.5"
-    index = textscan(fileID,'%s%s%*s%*s%*s%*s','Delimiter',','); 
-    fclose(fileID);
+    index = textscan(fileId,'%s%s%*s%*s%*s%*s','Delimiter',','); 
+    fclose(fileId);
     
     
-    filePathList  = strtrim(strrep(index{1}, '"', ''));
+    relativeFilePathList  = strtrim(strrep(index{1}, '"', ''));
     productIdList = strtrim(strrep(index{2}, '"', ''));
     clear index
-    indexData = struct('filePath', filePathList, 'productId', productIdList);
+    inFilesData = struct('relativeFilePath', relativeFilePathList, 'productId', productIdList);
     
     
     
-    for iFile = 1:length(indexData)
-        isHk(iFile) = (indexData(iFile).filePath(end-4) == 'H');
+    for iFile = 1:length(inFilesData)
+        isHk(iFile) = (inFilesData(iFile).relativeFilePath(end-4) == 'H');
     end
-    indexData(isHk) = [];
+    inFilesData(isHk) = [];
 
-    fprintf(1,'Opening each LBL file in the index file to get the start, stop time and mode (macro)\n');
+    fprintf(1,'Reading LBL files in INDEX.TAB: start time, stop time and mode (macro)\n');
 
     % Iterate over all non-HK files mentioned in INDEX.TAB.
-    nfiles = length(indexData);
-    for ind=1:nfiles
+    nFiles = length(inFilesData);
+    for iFile=1:nFiles
 
         % Read LBL file
         % -------------
         % IMPLEMENTATION NOTE: Does not use textscan to split up (parse) PDS keyword assignments since
         %   (1) I am guessing that it is faster this way (this is the slowest part of the code)
         %   (2) to be able to reuse old code.
-        fname  = fullfile(pearch, indexData(ind).filePath);
+        fname  = fullfile(editedDatasetPath, inFilesData(iFile).relativeFilePath);
         fileId = fopen(fname,'r');
         if ~(fileId>0)
             warning('write_MEAS_CALIB_file:CanNotReadFile', 'Can not open file %s', fname)
@@ -188,27 +194,31 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         linesList = temp{1};
         fclose(fileId);
 
-        start_time     = linesList{strncmpi(linesList, 'START_TIME',                  10)};
-        start_time_SCC = linesList{strncmpi(linesList, 'SPACECRAFT_CLOCK_START_COUNT',28)};
-        stop_time      = linesList{strncmpi(linesList, 'STOP_TIME',                    9)};
-        mode           = linesList{strncmpi(linesList, 'INSTRUMENT_MODE_ID',          18)};
+        startTime   = linesList{strncmpi(linesList, 'START_TIME',                  10)};
+        startTimeSc = linesList{strncmpi(linesList, 'SPACECRAFT_CLOCK_START_COUNT',28)};
+        stopTime    = linesList{strncmpi(linesList, 'STOP_TIME',                    9)};
+        stopTimeSc  = linesList{strncmpi(linesList, 'SPACECRAFT_CLOCK_STOP_COUNT', 27)};
+        mode        = linesList{strncmpi(linesList, 'INSTRUMENT_MODE_ID',          18)};
 
-        [tmp,str]=strread(start_time,'%s%s','delimiter','=');
-        value=datenum(str,'yyyy-mm-ddTHH:MM:SS.FFF');     % NOTE: "str" is a cell containing a string, but datenum can handle that.
-        indexData(ind).startTime = value;
+        [tmp,str] = strread(startTime,'%s%s','delimiter','=');
+        value     = datenum(str,'yyyy-mm-ddTHH:MM:SS.FFF');     % NOTE: "str" is a cell containing a string, but datenum can handle that.
+        inFilesData(iFile).startTime = value;
 
-        [tmp,value]=strread(start_time_SCC,'%s%s','delimiter','=');
-        indexData(ind).startTimeSsc = value{1};          % Stores quoted value, whitespace trimmed (outside of quotes). Example: "1/0149643274.1600"
+        [tmp,str] = strread(stopTime,'%s%s','delimiter','=');
+        value     = datenum(str,'yyyy-mm-ddTHH:MM:SS.FFF');
+        inFilesData(iFile).stopTime = value;
+
+        [tmp,value] = strread(startTimeSc,'%s%s','delimiter','=');
+        inFilesData(iFile).startTimeSc = value{1};          % Stores quoted value, whitespace trimmed (outside of quotes). Example: "1/0149643274.1600"
         
-        [tmp,str]=strread(stop_time,'%s%s','delimiter','=');
-        value=datenum(str,'yyyy-mm-ddTHH:MM:SS.FFF');
-        indexData(ind).stopTime = value;
+        [tmp,value] = strread(stopTimeSc,'%s%s','delimiter','=');
+        inFilesData(iFile).stopTimeSc = value{1};           % Stores quoted value, whitespace trimmed (outside of quotes). Example: "1/0149643274.1600"
+        
+        [tmp,value] = strread(mode,'%s%s','delimiter','=');
+        inFilesData(iFile).instrumentModeId = char(value);     % char(value) converts (cell containing string) --> string.
 
-        [tmp,value]=strread(mode,'%s%s','delimiter','=');
-        indexData(ind).instrumentModeId = char(value);     % char(value) converts (cell containing string) --> string.
-
-        if(mod(ind,100)==0)
-            fprintf(1,'\rProgress % 04.1f %%',100*ind/nfiles);
+        if(mod(iFile,FILES_PER_PROGRESS_STEP)==0)
+            fprintf(1,'    Completed %4.1f %% of LBL files.\n', 100*iFile/nFiles);
         end
     end   % for
     
@@ -220,8 +230,8 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     % -------------------------------
     % From experience, INDEX.TAB is only sorted in time in a very approximate way. The code does not seem to handle
     % files not being sorted in a waterproof way.  /Erik P G Johansson 2017-01-26
-    [junk, sortingIndices] = sort([indexData.startTime]);
-    indexData = indexData(sortingIndices);
+    [junk, sortingIndices] = sort([inFilesData.startTime]);
+    inFilesData = inFilesData(sortingIndices);
     
     
 
@@ -235,16 +245,16 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     display('Progress: Changing internal data format.');
     
-    data = struct;
+    %data = struct;
     
     
-    data.pathName       = char(indexData.filePath);
-    data.fileName       = char(indexData.productId);
-    data.startTime      = [indexData.startTime];
-    %data.startTimeSsc   = [indexData.startTimeSsc];  % Unreliable since requires that strings have same length. Rest of code has not been adapted to make use of startTimeSsc yet.
-    data.stopTime       = [indexData.stopTime]';
-    data.mode           = char(indexData.instrumentModeId);
-    data.count = length(data.startTime);
+    %data.pathName       = char(inFilesData.relativeFilePath);
+    %data.fileName       = char(inFilesData.productId);
+    %data.startTime      = [inFilesData.startTime];
+    %data.startTimeSc    = [inFilesData.startTimeSc];  % Unreliable since requires that strings have same length. Rest of code has not been adapted to make use of startTimeSc yet.
+    %data.stopTime       = [inFilesData.stopTime]';
+    %data.mode           = char(inFilesData.instrumentModeId);
+    %data.count = length(data.startTime);
     
 
   
@@ -393,22 +403,28 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     
     %===================================================================================================================
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Find macro 104 calibration files and group them into "sessions" (continuous runs)
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Find macro 104 calibration files and group them into "sessions" (continuous runs) - new algorithm
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ASSUMPTION: Sorting of files by time (e.g. start time) does not split up continuous runs of the same macro.
     % Assumption could in principle be violated if multiple files have the same time but different macros.
     clear dataRow
-    data.modeSession = zeros(data.count,1);    % Components will (eventually) be assigned to the value of modeSession.
-    removeIndex = zeros(data.count,1);         % Indices to remove, in the form of one true/false flag for every index.
-    previousMode = '';    % Default value represent a non-existing macro which is different from any existing macro.
+    %data.modeSession = zeros(data.count,1);    % Components will (eventually) be assigned to the value of modeSession.
+    removeIndex = zeros(length(inFilesData), 1);         % Indices to remove, in the form of one true/false flag for every index.
+    previousModeSessionId = '';    % Default value represent a non-existing macro which is different from any existing macro.
     modeSessionId = 0;    % Identifies the session that the current file should belong to (not relevant for non-macro 104 files).
     
-    for iFile = 1:data.count
-        mode = data.mode(iFile,:);
-        if strcmpi(mode, 'MCID0X0104')
+    for iFile = 1:length(inFilesData)
+        %mode = data.mode(iFile,:);
+        modeId = inFilesData(iFile).instrumentModeId;
+        if strcmpi(modeId, 'MCID0X0104')
             % CASE: Found EDITED SCI file that is macro/mode 104.
-            if ~strcmp(previousMode, mode)
+            
+            fprintf(1, 'Found CALIBRATION data (LBL file) %s -- %s\n', ...
+                datestr(inFilesData(iFile).startTime, 'yyyy-mm-ddTHH:MM:SS.FFF'), ...
+                datestr(inFilesData(iFile).stopTime,  'yyyy-mm-ddTHH:MM:SS.FFF'));   % DEBUG
+
+            if ~strcmp(previousModeSessionId, modeId)
                 % CASE: Found macro 104 file that was NOT preceeded by a macro 104 file.
                 modeSessionId = modeSessionId + 1;
             end
@@ -416,38 +432,44 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
         else
             removeIndex(iFile) = true;
         end
-        data.modeSession(iFile) = modeSessionId;
+        %data.modeSession(iFile) = modeSessionId;
+        inFilesData(iFile).modeSessionId = modeSessionId;
         
-        previousMode = mode;
+        previousModeSessionId = modeId;
     end
     %===================================================================================================================
   
     %dataSessionStartTime(dataSession+1:data.count) = [];    % Remove unused indices at the end of vector.
     
     % Remove indices previously (above) selected for removal (data for selected EDITED SCI files).
-    indr = find(removeIndex);
-    data.mode(indr,:)         = [];
-    data.startTime(indr)      = [];
-    data.stopTime(indr)       = [];
-    data.pathName(indr,:)     = [];
-    data.fileName(indr,:)     = [];
-    %data.dataSession(indr)    = [];
-    data.modeSession(indr)    = [];
-    %data.cold(indr)           = [];
+%     indr = find(removeIndex);
+%     data.mode(indr,:)         = [];
+%     data.startTime(indr)      = [];
+%     data.stopTime(indr)       = [];
+%     data.pathName(indr,:)     = [];
+%     data.fileName(indr,:)     = [];
+%     %data.dataSession(indr)    = [];
+%     data.modeSession(indr)    = [];
+%     %data.cold(indr)           = [];
+    inFilesData(find(removeIndex)) = [];    % Using "find" seems necessary despite MATLAB telling me I don't need it.
     
-    data.count = length(data.startTime);
+    %data.count = length(data.startTime);
     
     clear removeIndex;
     
-    if (data.count==0)
+    if (length(inFilesData)==0)
            disp('No calibration macros found. - Produces no calibration files.')
            return;    % EXIT
     end
     
     % Derive probe number from "filename" (really PRODUCT_ID)
-    temp = char(data.fileName);
-    data.probe = str2num(temp(:,22));
-    clear temp;
+    %temp = char(data.fileName);
+    %data.probe = str2num(temp(:,22));
+    %clear temp;
+    for iFile = 1:length(inFilesData)
+        inFilesData(iFile).probeNbr = str2double(inFilesData(iFile).relativeFilePath(end-7));
+    end
+
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -460,77 +482,95 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     display('Progress: Working the offset data.');
     
-    data.gradient    = zeros(data.count,1);
-    data.intercept   = zeros(data.count,1);
-    data.correlation = zeros(data.count,1);
-    data.anomaly     = zeros(data.count,1);
-    data.cubeg  	 = zeros(data.count,1);
-    data.sqrg        = zeros(data.count,1);
-    
-    for dataRow = 1:data.count
-        filePath = fullfile(pearch,strcat(data.pathName(dataRow,1:end-4),'.TAB'));
+%     data.gradient    = zeros(data.count,1);
+%     data.intercept   = zeros(data.count,1);
+%     data.correlation = zeros(data.count,1);
+%     data.anomaly     = zeros(data.count,1);
+%     data.cubeg  	 = zeros(data.count,1);
+%     data.sqrg        = zeros(daxta.count,1);    
+
+    for iFile = 1:length(inFilesData)
+        %tabFilePath = fullfile(editedDatasetPath,strcat(data.pathName(iFile,1:end-4),'.TAB'));
+        tabFilePath = fullfile(editedDatasetPath, strcat(inFilesData(iFile).relativeFilePath(1:end-4),'.TAB'));   % Exchange .LBL for .TAB.
 
 
 
-        fileID = fopen(filePath, 'r');
+        fileId = fopen(tabFilePath, 'r');
+        
+        inFilesData(iFile).intercept   = 0;       % Default value.
+        inFilesData(iFile).gradient    = 0;       % Default value.
+        inFilesData(iFile).sqrg        = 0;       % Default value.
+        inFilesData(iFile).cubeg       = 0;       % Default value.
+        inFilesData(iFile).correlation = 0;       % Default value.
+        inFilesData(iFile).anomaly     = false;   % Default value.
 
-        if(fileID>0)
-            scan = textscan(fileID, '%*s %*f %f %f', 'Delimiter', ',');
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %   scan{1}: Units of current
-            %   scan{2}: Units of voltage
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if ~(fileId>0)
+            warning('write_MEAS_CALIB_file:CanNotReadFile', 'Can not open file %s', fname)
+            continue
+        end
+        
+        scan = textscan(fileId, '%*s %*f %f %f', 'Delimiter', ',');
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %   scan{1}: Units of current
+        %   scan{2}: Units of voltage
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        fclose(fileId);
+        
+        voltage = scan{2};
+        current = scan{1};
+        
+        clear scan;   % Effectively tell reader of code that this variable is not used later.
+        
+        firstVoltageValue = voltage(1);
+        
+        starterValueCounter = 1;
+        
+        while voltage(starterValueCounter+1) == firstVoltageValue
             
-            fclose(fileID);
+            starterValueCounter = starterValueCounter + 1;
+        end
+        
+        voltage(1:starterValueCounter) = [];
+        current(1:starterValueCounter) = [];
+        
+        if isempty(voltage)
+            %data.anomaly(iFile) = true;
+            inFilesData(iFile).anomaly = true;
+        else
+            % polyCoeffs = polyfit(voltage, current, 1);
+            polyCoeffs = polyfit(voltage, current, 3);
+            % FKJN edit 28/8 2014
             
-            voltage = scan{2};
-            current = scan{1};
             
-            clear scan;   % Effectively tell reader of code that this variable is not used later.
-            
-            firstVoltageValue = voltage(1);
-            
-            starterValueCounter = 1;
-            
-            while voltage(starterValueCounter+1) == firstVoltageValue
+            if diag
+                polyCoeffs2 = polyfit(voltage, current, 1);
+                figure(22);
+                plot(voltage,current,'b',voltage,(polyCoeffs(1)*voltage.^3+polyCoeffs(2)*voltage.^2+polyCoeffs(3)*voltage+polyCoeffs(4)),'g',voltage,(polyCoeffs2(1)*voltage+polyCoeffs2(2)),'r')
                 
-                starterValueCounter = starterValueCounter + 1;
+                figure(23);
+                plot(voltage,current-(polyCoeffs(1)*voltage.^3+polyCoeffs(2)*voltage.^2+polyCoeffs(3)*voltage+polyCoeffs(4)),'g',voltage,current-(polyCoeffs2(1)*voltage+polyCoeffs2(2)),'r')
             end
             
-            voltage(1:starterValueCounter) = [];
-            current(1:starterValueCounter) = [];
+            %data.cubeg(iFile)     = polyCoeffs(1);
+            %data.sqrg(iFile)      = polyCoeffs(2);
+            %data.gradient(iFile)  = polyCoeffs(3);
+            %data.intercept(iFile) = polyCoeffs(4);
+            inFilesData(iFile).cubeg     = polyCoeffs(1);
+            inFilesData(iFile).sqrg      = polyCoeffs(2);
+            inFilesData(iFile).gradient  = polyCoeffs(3);
+            inFilesData(iFile).intercept = polyCoeffs(4);
             
-            if isempty(voltage)
-                data.anomaly(dataRow) = true;
-            else
-                % polyCoeffs = polyfit(voltage, current, 1);
-                polyCoeffs = polyfit(voltage, current, 3);
-                % FKJN edit 28/8 2014
-                
-                
-                if diag
-                    polyCoeffs2 = polyfit(voltage, current, 1);
-                    figure(22);
-                    plot(voltage,current,'b',voltage,(polyCoeffs(1)*voltage.^3+polyCoeffs(2)*voltage.^2+polyCoeffs(3)*voltage+polyCoeffs(4)),'g',voltage,(polyCoeffs2(1)*voltage+polyCoeffs2(2)),'r')
-                    
-                    figure(23);
-                    plot(voltage,current-(polyCoeffs(1)*voltage.^3+polyCoeffs(2)*voltage.^2+polyCoeffs(3)*voltage+polyCoeffs(4)),'g',voltage,current-(polyCoeffs2(1)*voltage+polyCoeffs2(2)),'r')
-                end
-                
-                data.cubeg(dataRow)     = polyCoeffs(1);
-                data.sqrg(dataRow)      = polyCoeffs(2);
-                data.gradient(dataRow)  = polyCoeffs(3);
-                data.intercept(dataRow) = polyCoeffs(4);
-                
-                n = length(voltage);
-                
-                numerator = n*sum(voltage.*current) - sum(voltage)*sum(current);
-                
-                denominator = sqrt(n*sum(voltage.^2)-(sum(voltage))^2) * sqrt(n*sum(current.^2)-(sum(current))^2);
-                
-                data.correlation(dataRow) = abs(numerator / denominator);
-            end
-        end   % if
+            n = length(voltage);
+            
+            numerator = n*sum(voltage.*current) - sum(voltage)*sum(current);
+            
+            denominator = sqrt(n*sum(voltage.^2)-(sum(voltage))^2) * sqrt(n*sum(current.^2)-(sum(current))^2);
+            
+            %data.correlation(iFile) = abs(numerator / denominator);
+            inFilesData(iFile).correlation = abs(numerator / denominator);
+        end
+
     end   % for
 
 
@@ -538,14 +578,23 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   * Second check for anomaly classification.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     anomalyIndices = find( ...
+%         ( ...
+%             (data.gradient < MIN_GRADIENT_1 | data.gradient > MAX_GRADIENT_1 | data.intercept < MIN_INTERCEPT_1 | data.intercept > MAX_INTERCEPT_1) ...
+%           & (data.gradient < MIN_GRADIENT_2 | data.gradient > MAX_GRADIENT_2 | data.intercept < MIN_INTERCEPT_2 | data.intercept > MAX_INTERCEPT_2) ...
+%         ) ...
+%         | data.correlation < MIN_CORRELATION);
     anomalyIndices = find( ...
         ( ...
-            (data.gradient < MIN_GRADIENT_1 | data.gradient > MAX_GRADIENT_1 | data.intercept < MIN_INTERCEPT_1 | data.intercept > MAX_INTERCEPT_1) ...
-          & (data.gradient < MIN_GRADIENT_2 | data.gradient > MAX_GRADIENT_2 | data.intercept < MIN_INTERCEPT_2 | data.intercept > MAX_INTERCEPT_2) ...
+            ([inFilesData.gradient] < MIN_GRADIENT_1 | [inFilesData.gradient] > MAX_GRADIENT_1 | [inFilesData.intercept] < MIN_INTERCEPT_1 | [inFilesData.intercept] > MAX_INTERCEPT_1) ...
+          & ([inFilesData.gradient] < MIN_GRADIENT_2 | [inFilesData.gradient] > MAX_GRADIENT_2 | [inFilesData.intercept] < MIN_INTERCEPT_2 | [inFilesData.intercept] > MAX_INTERCEPT_2) ...
         ) ...
-        | data.correlation < MIN_CORRELATION);
+        | [inFilesData.correlation] < MIN_CORRELATION);
 
-    data.anomaly(anomalyIndices) = true;
+    %data.anomaly(anomalyIndices) = true;
+    for iFile = anomalyIndices(:)'    % NOTE: MUST use ROW VECTOR for values to iterate over.
+        inFilesData(iFile).anomaly = true;
+    end
 
 
 
@@ -558,27 +607,32 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     %     eventually be trimmed down.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %dataWriteMaxLength = length(dataSessionStartTime) + max(data.modeSession);
-    dataWriteMaxLength = max(data.modeSession);
+    %dataWriteMaxLength = max(data.modeSession);
+%     dataWriteMaxLength = max([inFilesData.modeSessionId]);
+%     
+%     dataWrite = struct;
+%     dataWrite.count      = 0;
+%     dataWrite.startTime  = zeros(dataWriteMaxLength,1);
+%     dataWrite.gradient1  = zeros(dataWriteMaxLength,2);   % 2 = 2 probes.
+%     dataWrite.gradient2  = zeros(dataWriteMaxLength,2);
+%     dataWrite.gradient3  = zeros(dataWriteMaxLength,2);
+%     dataWrite.intercepts = zeros(dataWriteMaxLength,2);
+    outFilesData = [];
     
-    dataWrite = struct;
-    dataWrite.count      = 0;
-    dataWrite.startTime  = zeros(dataWriteMaxLength,1);
-    dataWrite.gradient1  = zeros(dataWriteMaxLength,2);   % 2 = 2 probes.
-    dataWrite.gradient2  = zeros(dataWriteMaxLength,2);
-    dataWrite.gradient3  = zeros(dataWriteMaxLength,2);
-    dataWrite.intercepts = zeros(dataWriteMaxLength,2);
-    
-    for modeSession = 1:max(data.modeSession)
+%    for modeSession = 1:max(data.modeSession)
+    for modeSessionId = 1:max([inFilesData.modeSessionId])
         
         % Find all indices with data for (1) the current modeSession, and (2) each probe separately.
         %p1 = find(data.modeSession == modeSession & data.probe == 1 & data.cold == 0 & data.anomaly == 0);
         %p2 = find(data.modeSession == modeSession & data.probe == 2 & data.cold == 0 & data.anomaly == 0);
-        p1 = find(data.modeSession == modeSession & data.probe == 1 & data.anomaly == 0);
-        p2 = find(data.modeSession == modeSession & data.probe == 2 & data.anomaly == 0);
+%         p1 = find(data.modeSession == modeSession & data.probe == 1 & data.anomaly == 0);
+%         p2 = find(data.modeSession == modeSession & data.probe == 2 & data.anomaly == 0);
+        p1 = find([inFilesData.modeSessionId] == modeSessionId & [inFilesData.probeNbr] == 1 & [inFilesData.anomaly] == 0);
+        p2 = find([inFilesData.modeSessionId] == modeSessionId & [inFilesData.probeNbr] == 2 & [inFilesData.anomaly] == 0);
         
         if ~(isempty(p1) || isempty(p2))
             
-            dataWrite.count = dataWrite.count + 1;
+            %dataWrite.count = dataWrite.count + 1;
             
             % Condenses multiple calibration sweeps into one by averaging fitting coefficients (for each probe)
             % -------------------------------------------------------------------------------------------------
@@ -586,25 +640,44 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
             %             sweeps before fitting.
             % 2017-01-26: Anders Eriksson thinks it is acceptable to average fitting coefficients (although possibly
             %             slightly wrong).
-            minStartTime = min(min(data.startTime(p1)), min(data.startTime(p2)));
-            maxStartTime = max(max(data.startTime(p1)), max(data.startTime(p2)));
-            middleStartTime = (minStartTime + maxStartTime) / 2;   % Middle point of first and last mode session start times.
+            %minStartTime = min(min(data.startTime(p1)), min(data.startTime(p2)));
+            %maxStartTime = max(max(data.startTime(p1)), max(data.startTime(p2)));
+            %minStartTime = min(min([inFilesData(p1).startTime]), min([inFilesData(p2).startTime]));
+            %maxStopTime  = max(max([inFilesData(p1).startTime]), max([inFilesData(p2).startTime]));
+            
+            % NOTE: Expanding struct array (e.g. inFilesData) fields (e.g. startTime) to array always yields a row
+            % array.
+            [minStartTime, iMin] = min([inFilesData(p1).startTime, inFilesData(p2).startTime]);
+            [maxStopTime,  iMax] = max([inFilesData(p1).stopTime , inFilesData(p2).stopTime ]);
+            
+            % Time to use for the filename. This is chosen here since it is needed in two different locations later:
+            % (1) for handling (eliminating) doubles, (2) for writing the file.
+            fileNameTime = (minStartTime + maxStopTime) / 2; 
             
             %dataWrite.startTime (dataWrite.count)   = min(min(data.startTime(p1)), min(data.startTime(p2)));
-            dataWrite.startTime (dataWrite.count)   = middleStartTime;
-            dataWrite.gradient1 (dataWrite.count,:) = [mean(data.gradient (p1)) mean(data.gradient (p2))];
-            dataWrite.gradient2 (dataWrite.count,:) = [mean(data.sqrg     (p1)) mean(data.sqrg     (p2))];
-            dataWrite.gradient3 (dataWrite.count,:) = [mean(data.cubeg    (p1)) mean(data.cubeg    (p2))];
-            dataWrite.intercepts(dataWrite.count,:) = [mean(data.intercept(p1)) mean(data.intercept(p2))];
+            %outFilesData(end+1).startTime   = middleStartTime;                                             % NOTE: Expand size of struct: Add another calibration file.
+            outFilesData(end+1).fileNameTime = fileNameTime;                                                % NOTE: Expands size of struct: Add another calibration file.
+            outFilesData(end  ).startTime    = minStartTime;
+            outFilesData(end  ).stopTime     = maxStopTime;
+            outFilesData(end  ).startTimeSc  = inFilesData(iMin).startTimeSc;
+            outFilesData(end  ).stopTimeSc   = inFilesData(iMax).stopTimeSc;
+%             dataWrite.gradient1 (dataWrite.count,:) = [mean(data.gradient (p1)) mean(data.gradient (p2))];
+%             dataWrite.gradient2 (dataWrite.count,:) = [mean(data.sqrg     (p1)) mean(data.sqrg     (p2))];
+%             dataWrite.gradient3 (dataWrite.count,:) = [mean(data.cubeg    (p1)) mean(data.cubeg    (p2))];
+%             dataWrite.intercepts(dataWrite.count,:) = [mean(data.intercept(p1)) mean(data.intercept(p2))];
+            outFilesData(end).gradient1  = [mean([inFilesData(p1).gradient ]), mean([inFilesData(p2).gradient ])];
+            outFilesData(end).gradient2  = [mean([inFilesData(p1).sqrg     ]), mean([inFilesData(p2).sqrg     ])];
+            outFilesData(end).gradient3  = [mean([inFilesData(p1).cubeg    ]), mean([inFilesData(p2).cubeg    ])];
+            outFilesData(end).intercepts = [mean([inFilesData(p1).intercept]), mean([inFilesData(p2).intercept])];
         end
     end
 
     % Delete indices which have never been used for data.
-    dataWrite.startTime (dataWrite.count+1:dataWriteMaxLength)   = [];
-    dataWrite.gradient1 (dataWrite.count+1:dataWriteMaxLength,:) = [];
-    dataWrite.gradient2 (dataWrite.count+1:dataWriteMaxLength,:) = [];
-    dataWrite.gradient3 (dataWrite.count+1:dataWriteMaxLength,:) = [];
-    dataWrite.intercepts(dataWrite.count+1:dataWriteMaxLength,:) = [];
+%     dataWrite.startTime (dataWrite.count+1:dataWriteMaxLength)   = [];
+%     dataWrite.gradient1 (dataWrite.count+1:dataWriteMaxLength,:) = [];
+%     dataWrite.gradient2 (dataWrite.count+1:dataWriteMaxLength,:) = [];
+%     dataWrite.gradient3 (dataWrite.count+1:dataWriteMaxLength,:) = [];
+%     dataWrite.intercepts(dataWrite.count+1:dataWriteMaxLength,:) = [];
     % NOTE: dataWrite.count is already correct.
 
     % NOTE: At this point the "data" variable is basically never used again. Can not clear it though, since
@@ -685,33 +758,39 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
 %     dataWrite.gradient3 (dataWrite.count+1:dataWriteMaxLength,:) = [];
 %     dataWrite.intercepts(dataWrite.count+1:dataWriteMaxLength,:) = [];
 
-    actualData = dataWrite.count;   % Make old code compatible with new code without renaming old variable.
+%    actualData = dataWrite.count;   % Make old code compatible with new code without renaming old variable.
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   * In case of multiple calibration data for the same day, remove all but the last one during that day.
+    %   * In case of multiple calibration data for the same day, remove all but the FIRST one during that day.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    removeIndex = zeros(actualData,1);
+    removeIndex = zeros(length(outFilesData),1);
     
-    if(actualData>1)
+%    if(actualData>1)
         
-        for actualDataCounter = 1:(actualData-1)
+        %for iFile = 1:(actualData-1)
+        for iFile = 1:(length(outFilesData)-1)
             
-            if floor(dataWrite.startTime(actualDataCounter)) == floor(dataWrite.startTime(actualDataCounter+1))
+            %if floor(dataWrite.startTime(iFile)) == floor(dataWrite.startTime(iFile+1))
                 % CASE: Same start time as the calibration data after it.
                 
-                removeIndex(actualDataCounter+1) = true;
-            end
+                %removeIndex(iFile+1) = floor(outFilesData(iFile).startTime) == floor(outFilesData(iFile+1).startTime);
+            %end
+            
+            % CASE: True iff same time as the calibration data after it.
+            %removeIndex(iFile+1) = floor(outFilesData(iFile).startTime) == floor(outFilesData(iFile+1).startTime);
+            removeIndex(iFile+1) = floor(outFilesData(iFile).fileNameTime) == floor(outFilesData(iFile+1).fileNameTime);
         end
         
-        dataWrite.startTime( find(removeIndex))   = [];
-        dataWrite.gradient1( find(removeIndex),:) = [];
-        dataWrite.gradient2( find(removeIndex),:) = [];
-        dataWrite.gradient3( find(removeIndex),:) = [];
-        dataWrite.intercepts(find(removeIndex),:) = [];
+%         dataWrite.startTime( find(removeIndex))   = [];
+%         dataWrite.gradient1( find(removeIndex),:) = [];
+%         dataWrite.gradient2( find(removeIndex),:) = [];
+%         dataWrite.gradient3( find(removeIndex),:) = [];
+%         dataWrite.intercepts(find(removeIndex),:) = [];
+        outFilesData(find(removeIndex)) = [];    % Using "find" seems necessary despite MATLAB telling me I don't need it.
 
-    end
+%    end
     
-    dataWrite.count = length(dataWrite.startTime);
+    %dataWrite.count = length(dataWrite.startTime);
     
     clear removeIndex;
     
@@ -719,170 +798,187 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   * Writes all the CALIB_MEAS/_COEF files for each of the base folders.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    for dataWriteCounter = 1:dataWrite.count
-        
-        startTimeString = datestr(dataWrite.startTime(dataWriteCounter), 'yyyy-mm-ddTHH:MM:SS.FFF');
-        
-        fileName  = strcat('RPCLAP', datestr(dataWrite.startTime(dataWriteCounter), 'yymmdd'), '_CALIB_MEAS');
-        fileName2 = strcat('RPCLAP', datestr(dataWrite.startTime(dataWriteCounter), 'yymmdd'), '_CALIB_COEF');
+    %for dataWriteCounter = 1:dataWrite.count
+    for iFile = 1:length(outFilesData)
+  
+        %fileName  = strcat('RPCLAP', datestr(dataWrite.startTime(dataWriteCounter), 'yymmdd'), '_CALIB_MEAS');
+        %coeffFileNameBase = strcat('RPCLAP', datestr(dataWrite.startTime(dataWriteCounter), 'yymmdd'), '_CALIB_COEF');        
+        outFileNameDateStr = datestr(outFilesData(iFile).fileNameTime, 'yymmdd');
+        outFileNameBase   = strcat('RPCLAP', outFileNameDateStr, '_CALIB_MEAS');
+        coeffFileNameBase = strcat('RPCLAP', outFileNameDateStr, '_CALIB_COEF');
         
         voltage = 0:1:255;
         
-        currentP1 = dataWrite.intercepts(dataWriteCounter,1) + dataWrite.gradient1(dataWriteCounter,1)*voltage +dataWrite.gradient2(dataWriteCounter,1)*voltage.^2 +dataWrite.gradient3(dataWriteCounter,1)*voltage.^3;
-        currentP2 = dataWrite.intercepts(dataWriteCounter,2) + dataWrite.gradient1(dataWriteCounter,2)*voltage +dataWrite.gradient2(dataWriteCounter,2)*voltage.^2 +dataWrite.gradient3(dataWriteCounter,2)*voltage.^3;
+        %currentP1 = dataWrite.intercepts(dataWriteCounter,1) + dataWrite.gradient1(dataWriteCounter,1)*voltage +dataWrite.gradient2(dataWriteCounter,1)*voltage.^2 +dataWrite.gradient3(dataWriteCounter,1)*voltage.^3;
+        %currentP2 = dataWrite.intercepts(dataWriteCounter,2) + dataWrite.gradient1(dataWriteCounter,2)*voltage +dataWrite.gradient2(dataWriteCounter,2)*voltage.^2 +dataWrite.gradient3(dataWriteCounter,2)*voltage.^3;
+        currentP1 = outFilesData(iFile).intercepts(1) + outFilesData(iFile).gradient1(1)*voltage + outFilesData(iFile).gradient2(1)*voltage.^2 + outFilesData(iFile).gradient3(1)*voltage.^3;
+        currentP2 = outFilesData(iFile).intercepts(2) + outFilesData(iFile).gradient1(2)*voltage + outFilesData(iFile).gradient2(2)*voltage.^2 + outFilesData(iFile).gradient3(2)*voltage.^3;
         currentP1 = floor(currentP1*1E6+0.5) / 1E6;  % Rounding after six decimals. fprintf will try to round this later, but does so incorrectly.
         currentP2 = floor(currentP2*1E6+0.5) / 1E6;
         
         
-        filePathLBL = fullfile(outpath, strcat(fileName, '.LBL'));
-        filePathTAB = fullfile(outpath, strcat(fileName, '.TAB'));
+        lblFilePath = fullfile(outDirPath, strcat(outFileNameBase, '.LBL'));
+        tabFilePath = fullfile(outDirPath, strcat(outFileNameBase, '.TAB'));
         
-        filePath2TAB = fullfile(CALIB_COEF_files_dir, strcat(fileName2, '.TXT'));
+        coeffFilePath = fullfile(CALIB_COEF_files_dir, strcat(coeffFileNameBase, '.TXT'));
         
         
         %%%%%%%%%%%%%%%%%%
         % Create LBL file
         %%%%%%%%%%%%%%%%%%
-        fileID = fopen(filePathLBL, 'wt');
+        fileId = fopen(lblFilePath, 'wt');
         
-        fprintf(fileID, 'PDS_VERSION_ID = PDS3\r\n');
-        fprintf(fileID, 'LABEL_REVISION_NOTE = "2015-06-03, EJ: Updated LAP_*_CAL_20B* calibration factors"\r\n');
-        %fprintf(fileID, 'LABEL_REVISION_NOTE = "2015-07-07, EJ: RECORD_BYTES=31"\r\n');   % Use??
-        fprintf(fileID, 'RECORD_TYPE = FIXED_LENGTH\r\n');
-        fprintf(fileID, 'RECORD_BYTES = 31\r\n');
-        fprintf(fileID, 'FILE_RECORDS = 256\r\n');
-        fprintf(fileID, strcat('FILE_NAME = "', fileName, '.LBL"\r\n'));
-        fprintf(fileID, strcat('^TABLE = "', fileName, '.TAB"\r\n'));
-        fprintf(fileID, 'DATA_SET_ID = "%s"\r\n', earch);
+        fprintf(fileId, 'PDS_VERSION_ID = PDS3\r\n');
+        %fprintf(fileId, 'LABEL_REVISION_NOTE = "2015-06-03, EJ: Updated LAP_*_CAL_20B* calibration factors"\r\n');
+        %fprintf(fileId, 'LABEL_REVISION_NOTE = "2015-07-07, EJ: RECORD_BYTES=31"\r\n');   % Use??
+        fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-01-27, EJ: Updated metadata; start/stop times, DESCRIPTION, UNIT"\r\n');
+        fprintf(fileId, 'RECORD_TYPE = FIXED_LENGTH\r\n');
+        fprintf(fileId, 'RECORD_BYTES = 31\r\n');
+        fprintf(fileId, 'FILE_RECORDS = 256\r\n');
+        fprintf(fileId, strcat('FILE_NAME = "', outFileNameBase, '.LBL"\r\n'));
+        fprintf(fileId, strcat('^TABLE = "',    outFileNameBase, '.TAB"\r\n'));
+        fprintf(fileId, 'DATA_SET_ID = "%s"\r\n', datasetDirName);
         
         % DATA_SET_NAME is optional, RO-EST-TN-3372, "ROSETTA Archiving Conventions", Issue 7, Rev. 8
-        %fprintf(fileID, 'DATA_SET_NAME = "ROSETTA-ORBITER EARTH RPCLAP 3 MARS CALIB V1.0"\r\n');    % Incorrect value.
+        %fprintf(fileId, 'DATA_SET_NAME = "ROSETTA-ORBITER EARTH RPCLAP 3 MARS CALIB V1.0"\r\n');    % Incorrect value.
         
-        fprintf(fileID, 'MISSION_ID = ROSETTA\r\n');
-        fprintf(fileID, 'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\r\n');
-        fprintf(fileID, 'MISSION_PHASE_NAME = %s\r\n', mp);
-        fprintf(fileID, 'PRODUCER_INSTITUTION_NAME = "SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"\r\n');
-        fprintf(fileID, 'PRODUCER_ID = EJ\r\n');
-        fprintf(fileID, 'PRODUCER_FULL_NAME = "ERIK P G JOHANSSON"\r\n');
-        fprintf(fileID, strcat('PRODUCT_ID = "', fileName, '"\r\n'));
-        fprintf(fileID, horzcat('PRODUCT_CREATION_TIME = ', datestr(now, 'yyyy-mm-ddTHH:MM:SS'), '\r\n'));
-        fprintf(fileID, 'INSTRUMENT_HOST_ID = RO\r\n');
-        fprintf(fileID, 'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\r\n');
-        fprintf(fileID, 'INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\r\n');
-        fprintf(fileID, 'INSTRUMENT_ID = RPCLAP\r\n');
-        fprintf(fileID, 'INSTRUMENT_TYPE = "PLASMA INSTRUMENT"\r\n');
-        fprintf(fileID, horzcat('START_TIME = ', startTimeString, '\r\n'));
-        fprintf(fileID, 'SPACECRAFT_CLOCK_START_COUNT = "N/A"\r\n');                   % NOTE: No spacecraft clock time.
-        fprintf(fileID, 'DESCRIPTION = "CONVERSION FROM TM UNITS TO AMPERES AND VOLTS"\r\n');
+        fprintf(fileId, 'MISSION_ID = ROSETTA\r\n');
+        fprintf(fileId, 'MISSION_NAME = "INTERNATIONAL ROSETTA MISSION"\r\n');
+        fprintf(fileId, 'MISSION_PHASE_NAME = "%s"\r\n', missionPhaseName);
+        fprintf(fileId, 'PRODUCER_INSTITUTION_NAME = "SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"\r\n');
+        fprintf(fileId, 'PRODUCER_ID = EJ\r\n');
+        fprintf(fileId, 'PRODUCER_FULL_NAME = "ERIK P G JOHANSSON"\r\n');
+        fprintf(fileId, strcat('PRODUCT_ID = "', outFileNameBase, '"\r\n'));
+        fprintf(fileId, horzcat('PRODUCT_CREATION_TIME = ', datestr(now, 'yyyy-mm-ddTHH:MM:SS'), '\r\n'));
+        fprintf(fileId, 'INSTRUMENT_HOST_ID = RO\r\n');
+        fprintf(fileId, 'INSTRUMENT_HOST_NAME = "ROSETTA-ORBITER"\r\n');
+        fprintf(fileId, 'INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\r\n');
+        fprintf(fileId, 'INSTRUMENT_ID = RPCLAP\r\n');
+        fprintf(fileId, 'INSTRUMENT_TYPE = "PLASMA INSTRUMENT"\r\n');
+        fprintf(fileId, 'START_TIME = %s\r\n',                   datestr(outFilesData(iFile).startTime, 'yyyy-mm-ddTHH:MM:SS.FFF'));
+        fprintf(fileId, 'SPACECRAFT_CLOCK_START_COUNT = %s\r\n', outFilesData(iFile).startTimeSc);                 % NOTE: Spacecraft clock time is quoted. Field value is already quoted.
+        fprintf(fileId, 'STOP_TIME = %s\r\n',                    datestr(outFilesData(iFile).stopTime, 'yyyy-mm-ddTHH:MM:SS.FFF'));
+        fprintf(fileId, 'SPACECRAFT_CLOCK_STOP_COUNT = %s\r\n',  outFilesData(iFile).stopTimeSc);                  % NOTE: Spacecraft clock time is quoted. Field value is already quoted.
+        %fprintf(fileId, 'DESCRIPTION = "CONVERSION FROM TM UNITS TO AMPERES AND VOLTS"\r\n');
+        fprintf(fileId, 'DESCRIPTION = "ADC16 CURRENT OFFSETS. CONVERSION FROM TM UNITS TO AMPERES AND VOLTS."\r\n');
         
         %----------------------------------------------------------------------------------------
-        fprintf(fileID, 'ROSETTA:LAP_VOLTAGE_CAL_16B = "1.22072175E-3"\r\n');
+        fprintf(fileId, 'ROSETTA:LAP_VOLTAGE_CAL_16B = "1.22072175E-3"\r\n');
         %--------
-        %fprintf(fileID, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.62940181E-5"\r\n');   % Original value used up until ca 2015-06-11.
-        fprintf(fileID, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.534142050781250E-05"\r\n');   %  1.22072175E-3 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
+        %fprintf(fileId, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.62940181E-5"\r\n');   % Original value used up until ca 2015-06-11.
+        fprintf(fileId, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.534142050781250E-05"\r\n');   %  1.22072175E-3 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
         %--------    
-        fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_16B_G1 = "3.05180438E-10"\r\n');
+        fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_16B_G1 = "3.05180438E-10"\r\n');
         %--------        
-        %fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.90735045E-11"\r\n');   % Original value used up until ca 2015-06-11.
-        fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.883535515781250E-11"\r\n');   % 3.05180438E-10 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
+        %fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.90735045E-11"\r\n');   % Original value used up until ca 2015-06-11.
+        fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.883535515781250E-11"\r\n');   % 3.05180438E-10 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
         %--------        
-        fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_16B_G0_05 = "6.10360876E-9"\r\n');
+        fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_16B_G0_05 = "6.10360876E-9"\r\n');
         %--------        
-        %fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.81470090E-10"\r\n');   % Original value used up until ca 2015-06-11.
-        fprintf(fileID, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.767071031562500E-10"\r\n');     % 6.10360876E-9 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
+        %fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.81470090E-10"\r\n');   % Original value used up until ca 2015-06-11.
+        fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.767071031562500E-10"\r\n');     % 6.10360876E-9 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
         %----------------------------------------------------------------------------------------
         
-        fprintf(fileID, 'OBJECT = TABLE\r\n');
-        fprintf(fileID, 'INTERCHANGE_FORMAT = ASCII\r\n');
-        fprintf(fileID, 'ROWS = 256\r\n');
-        fprintf(fileID, 'COLUMNS = 3\r\n');
-        fprintf(fileID, 'ROW_BYTES = 31\r\n');
-        fprintf(fileID, 'DESCRIPTION = "THIRD DEGREE POLYNOMIAL OFFSET CORRECTION FOR 16 BIT DENSITY DATA"\r\n');
+        fprintf(fileId, 'OBJECT = TABLE\r\n');
+        fprintf(fileId, 'INTERCHANGE_FORMAT = ASCII\r\n');
+        fprintf(fileId, 'ROWS = 256\r\n');
+        fprintf(fileId, 'COLUMNS = 3\r\n');
+        fprintf(fileId, 'ROW_BYTES = 31\r\n');
+        fprintf(fileId, 'DESCRIPTION = "THIRD DEGREE POLYNOMIAL OFFSET CORRECTION FOR ADC16 DENSITY DATA"\r\n');
         
-        fprintf(fileID, 'OBJECT = COLUMN\r\n');
-        fprintf(fileID, 'NAME = P1P2_VOLTAGE\r\n');
-        fprintf(fileID, 'DATA_TYPE = ASCII_INTEGER\r\n');
-        fprintf(fileID, 'START_BYTE = 1\r\n');
-        fprintf(fileID, 'BYTES = 3\r\n');
-        fprintf(fileID, 'DESCRIPTION = "APPLIED VOLTAGE BIAS P1 AND P2 [TM UNITS]"\r\n');
-        fprintf(fileID, 'END_OBJECT = COLUMN\r\n');
+        fprintf(fileId, 'OBJECT = COLUMN\r\n');
+        fprintf(fileId, 'NAME = P1P2_VOLTAGE\r\n');
+        fprintf(fileId, 'DATA_TYPE = ASCII_INTEGER\r\n');
+        fprintf(fileId, 'UNIT = "TM UNITS"\r\n');
+        fprintf(fileId, 'START_BYTE = 1\r\n');
+        fprintf(fileId, 'BYTES = 3\r\n');
+        fprintf(fileId, 'DESCRIPTION = "VOLTAGE APPLIED TO BIAS P1 AND P2"\r\n');
+        fprintf(fileId, 'END_OBJECT = COLUMN\r\n');
         
-        fprintf(fileID, 'OBJECT = COLUMN\r\n');
-        fprintf(fileID, 'NAME = P1_CURRENT\r\n');
-        fprintf(fileID, 'DATA_TYPE = ASCII_REAL\r\n');
-        fprintf(fileID, 'START_BYTE = 5\r\n');
-        fprintf(fileID, 'BYTES = 12\r\n');
-        fprintf(fileID, 'DESCRIPTION = "INSTRUMENT OFFSET [TM UNITS]"\r\n');
-        fprintf(fileID, 'END_OBJECT = COLUMN\r\n');
+        fprintf(fileId, 'OBJECT = COLUMN\r\n');
+        fprintf(fileId, 'NAME = P1_CURRENT\r\n');
+        fprintf(fileId, 'DATA_TYPE = ASCII_REAL\r\n');
+        fprintf(fileId, 'UNIT = "TM UNITS"\r\n');
+        fprintf(fileId, 'START_BYTE = 5\r\n');
+        fprintf(fileId, 'BYTES = 12\r\n');
+        fprintf(fileId, 'DESCRIPTION = "INSTRUMENT OFFSET"\r\n');
+        fprintf(fileId, 'END_OBJECT = COLUMN\r\n');
         
-        fprintf(fileID, 'OBJECT = COLUMN\r\n');        
-        fprintf(fileID, 'NAME = P2_CURRENT\r\n');
-        fprintf(fileID, 'DATA_TYPE = ASCII_REAL\r\n');
-        fprintf(fileID, 'START_BYTE = 18\r\n');
-        fprintf(fileID, 'BYTES = 12\r\n');
-        fprintf(fileID, 'DESCRIPTION = "INSTRUMENT OFFSET [TM UNITS]"\r\n');
-        fprintf(fileID, 'END_OBJECT = COLUMN\r\n');
+        fprintf(fileId, 'OBJECT = COLUMN\r\n');        
+        fprintf(fileId, 'NAME = P2_CURRENT\r\n');
+        fprintf(fileId, 'DATA_TYPE = ASCII_REAL\r\n');
+        fprintf(fileId, 'UNIT = "TM UNITS"\r\n');
+        fprintf(fileId, 'START_BYTE = 18\r\n');
+        fprintf(fileId, 'BYTES = 12\r\n');
+        fprintf(fileId, 'DESCRIPTION = "INSTRUMENT OFFSET"\r\n');
+        fprintf(fileId, 'END_OBJECT = COLUMN\r\n');
         
-        fprintf(fileID, 'END_OBJECT = TABLE\r\n');
+        fprintf(fileId, 'END_OBJECT = TABLE\r\n');
         
-        fprintf(fileID, 'END\r\n');
+        fprintf(fileId, 'END\r\n');
         
-        fclose(fileID);
+        fclose(fileId);
         
         
         
         %%%%%%%%%%%%%%%%%%
         % Create TAB file
         %%%%%%%%%%%%%%%%%%
-        fileID = fopen(filePathTAB, 'wt');
-        fprintf(1, 'Writing %s\n', filePathTAB);
-        for row = 1:256            
-            fprintf(fileID, horzcat(sprintf('%03.0f', voltage(row)), ',', sprintf('%12.6f', currentP1(row)), ',', sprintf('%12.6f', currentP2(row)), '\r\n'));
+        fileId = fopen(tabFilePath, 'wt');
+        fprintf(1, 'Writing %s\n', tabFilePath);
+        for iRow = 1:256            
+            fprintf(fileId, horzcat(sprintf('%03.0f', voltage(iRow)), ',', sprintf('%12.6f', currentP1(iRow)), ',', sprintf('%12.6f', currentP2(iRow)), '\r\n'));
         end
-        fclose(fileID);
+        fclose(fileId);
+        
         
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Write CEOFF file - Extra calibration coefficient files (for debugging)
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        fileID = fopen(filePath2TAB, 'wt');
-        fprintf(fileID,'# 3rd order polynomial fit coefficients (current = aV^3+b*V^2+c*V+d), for Probe 1 and Probe 2 in TM units.\r\n');
-        fprintf(fileID,'aP1,bP1,cP1,dP1,aP2,bP2,cP2,dP2\r\n');
-        fprintf(fileID,'%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e\r\n', dataWrite.gradient3(dataWriteCounter,1), dataWrite.gradient2(dataWriteCounter,1), dataWrite.gradient1(dataWriteCounter,1),dataWrite.intercepts(dataWriteCounter,1), dataWrite.gradient3(dataWriteCounter,2), dataWrite.gradient2(dataWriteCounter,2), dataWrite.gradient1(dataWriteCounter,2), dataWrite.intercepts(dataWriteCounter,2));
-        fclose(fileID);
+        fileId = fopen(coeffFilePath, 'wt');
+        fprintf(fileId,'# 3rd order polynomial fit coefficients (current = aV^3+b*V^2+c*V+d), for Probe 1 and Probe 2 in TM units.\r\n');
+        fprintf(fileId,'aP1,bP1,cP1,dP1,aP2,bP2,cP2,dP2\r\n');
+%         fprintf(fileId,'%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e\r\n', ...
+%             dataWrite.gradient3(dataWriteCounter,1), dataWrite.gradient2(dataWriteCounter,1), dataWrite.gradient1(dataWriteCounter,1), dataWrite.intercepts(dataWriteCounter,1), ...
+%             dataWrite.gradient3(dataWriteCounter,2), dataWrite.gradient2(dataWriteCounter,2), dataWrite.gradient1(dataWriteCounter,2), dataWrite.intercepts(dataWriteCounter,2));
+        fprintf(fileId,'%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e\r\n', ...
+            outFilesData(iFile).gradient3(1), outFilesData(iFile).gradient2(1), outFilesData(iFile).gradient1(1), outFilesData(iFile).intercepts(1), ...
+            outFilesData(iFile).gradient3(2), outFilesData(iFile).gradient2(2), outFilesData(iFile).gradient1(2), outFilesData(iFile).intercepts(2));
+        fclose(fileId);
     end
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   * Displays the output summary.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    numberCalibration = dataWrite.count;
-    numberOffset      = data.count;
-    numberAnomaly     = length(find(data.anomaly));
+    %nOutCalibrationFiles = dataWrite.count;
+    nOutCalibrationFiles = length(outFilesData);
+    nInFiles      = length(inFilesData);
+    %nInFileAnomalies     = length(find(data.anomaly));
+    nInFileAnomalies     = length(find([inFilesData.anomaly]));
     %numberCold        = length(find(data.cold));
-    %numberGood        = numberOffset - numberCold - numberAnomaly;
-    numberGood        = numberOffset - numberAnomaly;
+    %nInFilesGood        = nInFiles - numberCold - nInFileAnomalies;
+    nInFilesGood        = nInFiles - nInFileAnomalies;
 
     display('Progress: Work complete.   ');
     display('                           ');
-    display('===========================');
-    display('         SUMMARY           ');
-    display('===========================');
+    display('=============================================');
+    display('                   SUMMARY                   ');
+    display('=============================================');
     display('                           ');
-    display([' Calibration Files:', sprintf('%7.0f', numberCalibration)]);
+    display([' Output calibration files:             ', sprintf('%3.0f', nOutCalibrationFiles)]);
     display('                           ');
     display('                           ');
-    display([' Offset Files:     ', sprintf('%7.0f', numberOffset)]);
+    display([' Input offset files:                   ', sprintf('%3.0f', nInFiles)]);
     display('                           ');
-    display(['    Anomalies:     ', sprintf('%7.0f', numberAnomaly)]);
+    display(['    Input offset files with anomalies: ', sprintf('%3.0f', nInFileAnomalies)]);
     display('                           ');
-    %display(['         Cold:     ', sprintf('%7.0f', numberCold)]);
-    %display('                           ');
-    display(['         Good:     ', sprintf('%7.0f', numberGood)]);
+    display(['    Good input offset files:           ', sprintf('%3.0f', nInFilesGood)]);
     display('                           ');
-    display(sprintf(' Elapsed wall time: %6.0f s', etime(clock, t_start)));
+    display(sprintf(' Elapsed wall time: %6.0f s', etime(clock, scriptStartTimeVector)));
     display('                           ');
-    display('===========================');
+    display('=============================================');
     display('                           ');
 
 
@@ -891,7 +987,8 @@ function [varargout] = write_CALIB_MEAS_files(pearch,mp,outpath)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if nargout == 1
         
-        varargout(1) = {data};
+        %varargout(1) = {data};
+        varargout(1) = {inFilesData};
     end
     
     
