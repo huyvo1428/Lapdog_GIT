@@ -6,6 +6,7 @@
 %   Also, a separate calibration coefficient list file is created for debugging purposes
 %   (and for which the output directory is hardcoded).
 %   
+%
 %   ARGUMENTS
 %   =========
 %   editedDatasetPath = Path to EDITED data set, e.g. '/data/LAP_ARCHIVE/RO-E-RPCLAP-2-EAR3-EDITED-V1.0'
@@ -65,12 +66,11 @@
 %     ADDED ARGUMENT coeffsDirPath.
 %     /Erik P G Johansson 2017-01-30
 %   ----------------------------------------------------------------------------
-%   NOTE: The current implementation (2015-05-08) sets START_TIME to an actual time, but sets SPACECRAFT_CLOCK_START_COUNT = "N/A". Change?
 %   NOTE: As of 2016-04-07, this software is designed for MATLAB R2009A to make it possible to still run on squid.
 %   NOTE: As of 2017-01-26, it appears that the part of the execution that takes the most time is the reading of LBL
 %   files.
-%   NOTE: As of 2017-01-30: If there are multiple mode(macro) sessions for the same day, then only one of them will be chosen.
-%         This means that calibration files for a given day may differ depending on how this date is chosen.
+%   NOTE: As of 2017-01-30: If there are multiple mode (macro) sessions for the same day, then only one of them will be chosen.
+%         This means that calibration files for a given day may differ depending on how this (input) calibration is chosen.
 %   NOTE: The code assumes that the EDITED dataset uses the DATA_SET_ID as a directory name.
 %   NOTE: The code uses PRODUCT_ID to derive the probe number.
 %
@@ -84,10 +84,20 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
 %       NOTE: According to commands (pds.bias), all instances of multiple macro 104 commands occurred years <=2010.
 %       PROPOSAL: Select base filename instead of time directly for each mode session. Create one file for all
 %                 input calibrations with the same base filename.
-%   PROPOSAL: Divide code into functions.
-%   PROPOSAL: Some way of saving the information on read LBL files), then reading it to speed up test runs.
+%   PROPOSAL: Divide source code into functions.
+%   PROPOSAL: Some way of saving the information on read LBL files, then reading it to speed up test runs.
 %       NOTE: Would need it to work for multiple datasets to work with scripts calling multiple times.
-%   PROPOSAL: Change "mode" to something else.
+%   PROPOSAL: Divide algorithm into two steps.
+%             STEP 1: Identify and copy ALL macro 104 input calibration files (TAB+LBL, incl. anomalous, incl. ones
+%                     with missing probes etc.) to temporary directory.
+%             STEP 2: Read the copied files and continue.
+%       PRO: Can modify step 2-code and run it without running step 1. ==> Speeds up debugging & development.
+%       CON: Algorithm is unaware of the surrounding non-macro 104 runs.
+%           PRO: Algorithm can not strictly group input calibrations into continous macro 104 runs.
+%           PRO: Can not even in principle detect cold input calibrations.
+%   PROPOSAL: Change term "mode" to something else.
+%   PROPOSAL: Some kind of optional (informal?) detection of cold input calibrations. Detection results as separate
+%             list?!
 
     scriptStartTimeVector = clock;    % Script start time. NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
 
@@ -116,11 +126,11 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
     MIN_GRADIENT_1 = -4.2;
     MAX_GRADIENT_1 = -3.3;
 
-    MIN_INTERCEPT_1 = 410;
-    MAX_INTERCEPT_1 = 600;
-
     MIN_GRADIENT_2 = -2.5;
     MAX_GRADIENT_2 = -1.7;
+
+    MIN_INTERCEPT_1 = 410;
+    MAX_INTERCEPT_1 = 600;
 
     MIN_INTERCEPT_2 = 200;
     MAX_INTERCEPT_2 = 390;
@@ -455,13 +465,22 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   * In case of multiple calibration data for the same day, remove all but the FIRST one during that day.
+    %   * Handle the case of multiple output calibration data within the same day.
+    %     ACTION: Remove all but the LAST one during that day.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     removeIndex = zeros(length(outFilesData),1);
     
     for iFile = 1:(length(outFilesData)-1)
-        % CASE: True iff same time as the calibration data after it.
-        removeIndex(iFile+1) = floor(outFilesData(iFile).fileNameTime) == floor(outFilesData(iFile+1).fileNameTime);
+        
+        % ALGORITHM: Remove the NEXT calibration iff the CURRENT and the NEXT calibration have the same (filename) time label.
+        %removeIndex(iFile+1) = floor(outFilesData(iFile).fileNameTime) == floor(outFilesData(iFile+1).fileNameTime);
+        
+        % ALGORITHM: Remove the CURRENT calibration iff the CURRENT and the NEXT calibration have the same (filename) time label
+        % -----------------------------------------------------------------------------------------------------------
+        % Anders Eriksson 2017-01-31 suggests using this default since multiple macro 104 runs during the same day could
+        % imply that it was a test to compare the difference between a cold and warm instrument, and that the later
+        % calibration is therefore "warm" and therefore more reliable.
+        removeIndex(iFile  ) = floor(outFilesData(iFile).fileNameTime) == floor(outFilesData(iFile+1).fileNameTime);
     end
     
     outFilesData(find(removeIndex)) = [];    % Using "find" seems necessary despite the MATLAB R2009a editor telling us we do not need it.
