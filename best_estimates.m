@@ -52,13 +52,13 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % NOTE/BUG: It is perfectly possible for there to legitimately be no IxL/IxH file for short time
 % intervals within a UTC day, e.g. a macro that starts just before midnight.
 % ==> There might not have been any IxL/H measurements at all.
-% ==> Absense of IxL/H TAB file is not an indication of error.
+% ==> Absence of IxL/H TAB file is not an indication of error.
 % The current implementation of code does not appear to take this possibility into account and gives error when there should be none.
 % NOTE/BUG: !!! Tentatively, it appears that tabindex may contain references to IxLH files that do not exist. If that is fixed,
 % the bug is fixed.
 % Example: 2015/MAY/D01/RPCLAP_20150501_235959_807*
 %    PROPOSAL: try-catch for every particular EST file, not for all EST files together.
-%    PROPOSAL: try-catch for reading IxL/H files and permit absense of file.
+%    PROPOSAL: try-catch for reading IxL/H files and permit absence of file.
 %-------------------------------------------------------------------------------------------
 % MEMORY PROBLEM:
 % ---------------
@@ -796,7 +796,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             if fid < 0
                 error(sprintf('Can not read file: %s', file_path))
             end
-            fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
+            %fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
             
             % IMPLEMENTATION NOTE: Letting textscan parse numbers is much faster (about ~7 times)
             % than doing so manually with str2double after having read file into strings.

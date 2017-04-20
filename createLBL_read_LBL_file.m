@@ -17,7 +17,7 @@ function [kvl_header, CALIB_LBL_struct] = createLBL_read_LBL_file(file_path, del
 % PROPOSAL: Remove all quotes from values.
 %    CON: createLBL_write_LBL_header must determine which keys should have quotes. ==> Another long list which might not capture all keywords.
 
-    [CALIB_LBL_str, CALIB_LBL_struct] = EJ_read_ODL_to_structs(file_path);   % Read CALIB LBL file.
+    [CALIB_LBL_str, CALIB_LBL_struct] = lib_shared_EJ.read_ODL_to_structs(file_path);   % Read CALIB LBL file.
     kvl_header = [];
     kvl_header.keys   = CALIB_LBL_str.keys  (1:end-1);    % NOTE: CALIB_LBL_str includes OBJECT = TABLE as last key-value pair.
     kvl_header.values = CALIB_LBL_str.values(1:end-1);

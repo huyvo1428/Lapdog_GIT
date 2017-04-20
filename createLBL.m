@@ -11,7 +11,7 @@
 % PROPOSAL: Different LABEL_REVISION_NOTE för CALIB2, DERIV2. Multiple rows?
 % PROPOSAL: Use get_PDS.m.
 % PROPOSAL: Set MISSING_CONSTANT also for IxS (VxS?) files, despite that NaN is only exchanged for MISSING_CONSTANT in
-% create_C2D2.
+% create_C2D2_from_CALIB1_DERIV1.
 %    CON: TAB and LBL files are inconsistent in DERIV1.
 %===================================================================================================
 
@@ -261,7 +261,7 @@ for i=1:length(stabindex)
                 %    'MISSING_CONSTANT', MISSING_CONSTANT};
                 ocl{end+1} = struct('NAME', sprintf('P%i_SWEEP_CURRENT', Pnum), 'DATA_TYPE', 'ASCII_REAL', 'ITEM_BYTES', 14, 'UNIT', 'AMPERE', ...
                     'ITEMS', stabindex(i).N_columns-5, 'FORMAT', 'E14.7', DESC_MISS{:});
-                % Adding MISSING_CONSTANT since create_C2D2 replaces NaN to fit with this.
+                % Adding MISSING_CONSTANT since create_C2D2_from_CALIB1_DERIV1 replaces NaN to fit with this.
                 
                 LBL_data.OBJTABLE.OBJCOL_list = ocl;
                 clear ocl

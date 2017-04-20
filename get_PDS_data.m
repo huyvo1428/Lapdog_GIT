@@ -4,20 +4,14 @@
 % This code is supposed to centralize that type of functionality.
 %
 %
-% ARGUMENTS AND RETURN VALUES
-% ===========================
-% base_data: Structure with fields describing a specific data set to which fields will be added.
-%    The argument must have a certain set of struct fields. Either
-%    (1) .VOLUME_ID_nbr_str
-%        .DATA_SET_ID,
-%    or the same information expressed as separate PDS "keywords", i.e.
-%    (2) .DATA_SET_NAME_target
-%        .PROCESSING_LEVEL_ID
-%        .mission_phase_abbrev
-%        .DATA_SET_ID_descr
-%        .version_str.
-%    The return variable will have all the fields above, both (1) and (2).
-% all_data: Structure to which (1) the fields of base_data, and (2) other derived fields will be added.
+% ARGUMENTS
+% =========
+% base_data : Same struct as returned by get_PDS_base_data.
+%
+%
+% RETURN VALUES
+% =============
+% all_data  : Struct with (1) the fields of "base_data", plus (2) all other derived fields.
 %
 %
 % Variable (field) naming convention
@@ -35,7 +29,7 @@
 % NOTE: ".version_str" refers to the version number (string) in e.g. DATA_SET_ID, DATA_SET_NAME and possibly VOLDESC.CAT:VOLUME_VERSION_ID.
 %       ".version_str" should contain no "V".
 %
-function [all_data, base_data] = get_PDS_data(all_data, base_data, pds_mission_calendar_path)
+function all_data = get_PDS_data(base_data, pds_mission_calendar_path)
     %
     % PROPOSAL: Include information on whether to quote or not?!
     %    PROPOSAL: Includes list of fields (field names) which should be quoted.
@@ -58,40 +52,27 @@ function [all_data, base_data] = get_PDS_data(all_data, base_data, pds_mission_c
     %
     % PROPOSAL: Check that manually hard-coded strings here do not lead to DATASET.CAT & VOLDESC.CAT files with line
     % widths greater than 70 characters (excl. CR+LF).
+    %
+    % PROPOSAL: Use datasets_data.DAT, or mission_phases_data.DAT instead of pds mission calendar.
+    %   CON: Requires EJ_generic.read_delimiter_headers_table_file.m
     
+    BASE_DATA_FIELDS = {...
+        'VOLUME_ID_nbr_str', 'DATA_SET_ID', 'DATA_SET_ID_target_ID', 'PROCESSING_LEVEL_ID', ...
+        'mission_phase_abbrev', 'DATA_SET_ID_descr', 'version_str'};
     
-    
-    %===================================================================
-    % Derive the fields the function does not have from the ones it has
-    %===================================================================
-    base_fields1 = {'DATA_SET_ID_target_ID', 'PROCESSING_LEVEL_ID', 'mission_phase_abbrev', 'DATA_SET_ID_descr', 'version_str', 'VOLUME_ID_nbr_str'};
-    base_fields2 = {'DATA_SET_ID', 'VOLUME_ID_nbr_str'};
-    %base_fields_present = isfield(base_data, base_fields1);
-    if isempty(setdiff(fieldnames(base_data), base_fields1))
-        base_data.DATA_SET_ID = sprintf('RO-%s-RPCLAP-%s-%s-%s-V%s', ...
-            base_data.DATA_SET_ID_target_ID, ...
-            base_data.PROCESSING_LEVEL_ID, ...
-            base_data.mission_phase_abbrev, ...
-            base_data.DATA_SET_ID_descr, ...
-            base_data.version_str);
-    elseif isempty(setdiff(fieldnames(base_data), base_fields2))
-        [   base_data.DATA_SET_ID_target_ID, ...
-            base_data.PROCESSING_LEVEL_ID, ...
-            base_data.mission_phase_abbrev, ...
-            base_data.DATA_SET_ID_descr, ...
-            base_data.version_str] ...
-            = ...
-            strread(base_data.DATA_SET_ID, 'RO-%[^-]-RPCLAP-%[^-]-%[^-]-%[^-]-V%[^-]');
-        for f = {'DATA_SET_ID_target_ID', 'PROCESSING_LEVEL_ID', 'mission_phase_abbrev', 'DATA_SET_ID_descr', 'version_str'}
-            base_data.(f{1}) = base_data.(f{1}){1};
-        end
-    else
-        error('The input data variable has a disallowed set of fields.')
+    % ASSERTION: Assume that argument "base_data" has exactly the right set of fields. Not fwere, not more.
+    if ~isempty(setxor(BASE_DATA_FIELDS, fieldnames(base_data)))        
+        error('Argument base_data does not have the correct list of field names.')
     end
+    
+    
+    
+    all_data = [];
+    
     for fn = fieldnames(base_data)'
         all_data.(fn{1}) = base_data.(fn{1});
     end
-    
+
     all_data = read_mission_calendar(all_data, pds_mission_calendar_path, 'mission_phase_abbrev', all_data.mission_phase_abbrev);
 
     % PRODUCT_TYPE based on "ROSETTA Archive Conventions", RO-EST-TN-3372, iss9rev0, Table 3.
@@ -147,9 +128,9 @@ function [all_data, base_data] = get_PDS_data(all_data, base_data, pds_mission_c
     
 
 
-    %=================================
-    % Values only used in VOLDESC.CAT
-    %=================================
+    %=====================================
+    % Set values only used in VOLDESC.CAT
+    %=====================================
     
     % Ex: VOLUME_NAME = "RPCLAP CALIBRATED DATA FOR EARTH SWING-BY 1"
     all_data.VOLUME_NAME = sprintf('RPCLAP %s DATA FOR %s', all_data.DATA_subdir, all_data.MISSION_PHASE_NAME);
@@ -176,9 +157,9 @@ function [all_data, base_data] = get_PDS_data(all_data, base_data, pds_mission_c
 
 
 
-    %=================================
-    % Values only used in DATASET.CAT
-    %=================================
+    %=====================================
+    % Set values only used in DATASET.CAT
+    %=====================================
     
     all_data.CITATION_DESC_year_str = datestr(now, 'yyyy');              % Publication year = CURRENT YEAR
     all_data.CITATION_DESC = sprintf(['A. I. Eriksson, \r\n', ...
@@ -226,19 +207,21 @@ end
 
 
 
-% data = structure to which fields are added.
-% field_name = That struct column which is to be read. In practice either MISSION_PHASE_NAME or mission_phase_abbrev.
+% ARGUMENTS AND RETURN VALUE
+% ==========================
+% data       : Structure to which fields are added.
+% field_name : That struct column which is to be read. In practice either MISSION_PHASE_NAME or mission_phase_abbrev.
 %
 % NOTE: Removes all leading and trailing whitespace, and all quotes from mission calendar values.
 %
 % NOTE: Time values in the pds mission calendar apply to the official mission phase, not for MTP phase,
 % not for the current data set per se.
 function data = read_mission_calendar(data, file_path, field_name, field_value)
-    % PROPOSAL: Separate as general function?
+    % PROPOSAL: Make into a separate, general function?
     
     fid = fopen(file_path);
     if fid == -1
-        error('Can not read mission calendar file "%s".', file_path)
+        error('Can not read pds mission calendar file "%s".', file_path)
     end
     fc  = textscan(fid, '%s%s%s%s%s%s%s%s', 'Delimiter', ':', 'Commentstyle', '#');  % fc = file contents. fc{i} = Column i
     fclose(fid);
@@ -265,6 +248,8 @@ function data = read_mission_calendar(data, file_path, field_name, field_value)
     for j = 1:length(fn_list)
         data.(fn_list{j}) = cal.(fn_list{j}){i};
     end
+    
+    % Add field.
     data.mp_last_day = datestr(datenum(data.mp_first_day) + data.mp_duration-1, 29);   % 29 = Format (ISO 8601) 'yyyy-mm-dd'
 end
 

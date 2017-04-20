@@ -1,12 +1,12 @@
 % Initially created by Erik P G Johansson, IRF Uppsala, 2016-07-29.
 %
-% Update DATASET.CAT, VOLDESC.CAT associated with a data set.
-% Primarily intended to be used by create_C2D2.
+% Update DATASET.CAT and VOLDESC.CAT with default values associated with a data set.
 %
-% Takes a general "standardized" struct with fields with standard names which can be obtained from e.g. get_PDS_data plus some fields that have to be added separately.
+% Takes a general "standardized" struct with fields with standard names which can be obtained from e.g. get_PDS_data
+% plus some fields that have to be added separately. Not intended to be used for updating the main text.
 %
-% NOTE: It is not entirely unambiguous how much should be set automatically. It is likely that there always some things
-% that should be done manually.
+% NOTE: It is not entirely unambiguous how much should be set automatically. It is likely that there are always some
+% things that should be done manually.
 % NOTE: No submitted field values should be quoted. The function adds that itself.
 % NOTE: The code does derive any values from other values.
 % NOTE: Does not update DATASET.CAT:START_TIME, STOP_TIME. Relies on old values of these to be correct (should work for
@@ -17,6 +17,7 @@
 %
 % IMPLEMENTATION NOTE: Functionality is implemented as a separate code so that it could also (maybe) be used for
 % updating VOLDESC.CAT and DATASET.CAT, in any data set.
+%
 %
 % ARGUMENTS
 % =========
@@ -66,86 +67,93 @@ function update_DATASET_VOLDESC(dataset_path, PDS_data, indentation_length)
     
     %-------------------------------------------------------------------------------------------------------------------
     
-    [s_str_lists, junk, end_lines] = EJ_read_ODL_to_structs(VOLDESC_path);
+    [s_str_lists, junk, end_lines] = lib_shared_EJ.read_ODL_to_structs(VOLDESC_path);
     
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'VOLUME_NAME',       PDS_data.VOLUME_NAME);                  % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'VOLUME_ID',         PDS_data.VOLUME_ID);                    % NOT quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'VOLUME_VERSION_ID', PDS_data.VOLUME_VERSION_ID);            % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'DESCRIPTION',       PDS_data.VOLDESC___DESCRIPTION);        % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'PUBLICATION_DATE',  PDS_data.VOLDESC___PUBLICATION_DATE);   % Not quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'VOLUME', 'DATA_SET_ID',       PDS_data.DATA_SET_ID);                  % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'VOLUME', 'VOLUME_NAME'      }, PDS_data.VOLUME_NAME);                  % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'VOLUME', 'VOLUME_ID'        }, PDS_data.VOLUME_ID);                    % NOT quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'VOLUME', 'VOLUME_VERSION_ID'}, PDS_data.VOLUME_VERSION_ID);            % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'VOLUME', 'DESCRIPTION'      }, PDS_data.VOLDESC___DESCRIPTION);        % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'VOLUME', 'PUBLICATION_DATE' }, PDS_data.VOLDESC___PUBLICATION_DATE);   % Not quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'VOLUME', 'DATA_SET_ID'      }, PDS_data.DATA_SET_ID);                  % Quoted
     
-    EJ_write_ODL_from_struct(VOLDESC_path, s_str_lists, end_lines, indentation_length);
+    lib_shared_EJ.write_ODL_from_struct(VOLDESC_path, s_str_lists, end_lines, indentation_length);
     clear s_str_lists end_lines
     
     %-------------------------------------------------------------------------------------------------------------------
     
-    [s_str_lists, junk, end_lines] = EJ_read_ODL_to_structs(DATASET_path);
+    [s_str_lists, junk, end_lines] = lib_shared_EJ.read_ODL_to_structs(DATASET_path);
     
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'DATA_SET_ID', PDS_data.DATA_SET_ID);    % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_NAME',         PDS_data.DATA_SET_NAME);           % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_RELEASE_DATE', PDS_data.DATA_SET_RELEASE_DATE);   % Not quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'ABSTRACT_DESC',         PDS_data.ABSTRACT_DESC);           % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'CONFIDENCE_LEVEL_NOTE', PDS_data.CONFIDENCE_LEVEL_NOTE);   % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'CITATION_DESC',         PDS_data.CITATION_DESC);           % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_TERSE_DESC',   PDS_data.DATA_SET_TERSE_DESC);     % Quoted
-    s_str_lists = set_value(policy, s_str_lists, 'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_TARGET',      'TARGET_NAME',           PDS_data.TARGET_NAME);   % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'DATA_SET', 'DATA_SET_ID'}, PDS_data.DATA_SET_ID);    % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_NAME'        }, PDS_data.DATA_SET_NAME);           % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_RELEASE_DATE'}, PDS_data.DATA_SET_RELEASE_DATE);   % Not quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'ABSTRACT_DESC'        }, PDS_data.ABSTRACT_DESC);           % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'CONFIDENCE_LEVEL_NOTE'}, PDS_data.CONFIDENCE_LEVEL_NOTE);   % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'CITATION_DESC'        }, PDS_data.CITATION_DESC);           % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_INFORMATION', 'DATA_SET_TERSE_DESC'  }, PDS_data.DATA_SET_TERSE_DESC);     % Quoted
+    s_str_lists = set_value(s_str_lists, {'OBJECT', 'DATA_SET', 'OBJECT', 'DATA_SET_TARGET',      'TARGET_NAME'          }, PDS_data.TARGET_NAME);             % Quoted
     
-    EJ_write_ODL_from_struct(DATASET_path, s_str_lists, end_lines, indentation_length);
+    lib_shared_EJ.write_ODL_from_struct(DATASET_path, s_str_lists, end_lines, indentation_length);
 end
 
 
 
-
+% Wrapper around the actual function call. Shorter calling this function.
+function s_str_lists = set_value(s_str_lists, location, value)
+    s_str_lists = lib_shared_EJ.set_s_str_lists_value('replace', s_str_lists, location, value, []);
+end
 %==========================================================================================================
 % Set a specific value an arbitrary number of levels into a ODL tree structure.
 %
-% policy
+% ARGUMENTS
+% =========
+% policy : String with set to one of two values.
 %    'replace' : Replace the value of preexisting key. Error if does not already exist.
 %    'new key' : Add new key. "new key" refers to a "leaf", i.e. not OBJECTS. Error if key already exists.
 % varargin : object_key_1, object_value_1, ..., object_key_N, object_value_N, key, value
 %
 % NOTE: Can not handle multiple OBJECT with the same value, e.g. OBJECT=COLUMN within OBJECT=TABLE.
+%
+% NOTE: This (implementation of) function is supposed to have been replaced by libr_shared_EJ.set_s_str_lists.
 %==========================================================================================================
-function s_str_lists = set_value(policy, s_str_lists, varargin)
-    % PROPOSAL: Separate out as generic function?
-    % PROPOSAL: Omit "OBJECT" in calls, since multiple arguments implies OBJECT anyway.
-    
-    if length(varargin) == 2
-        key   = varargin{1};
-        value = varargin{2};
-        
-        i = find(strcmp(s_str_lists.keys, key));
-        
-        if strcmp(policy, 'replace')
-            if length(i) ~= 1 
-                error('Did not find exactly one matching key for "%s".', key)
-            end
-            s_str_lists.values{i} = value;
-        elseif strcmp(policy, 'new key')
-            if length(i) ~= 0
-                error('Found pre-existing key for "%s".', key)
-            end
-            s_str_lists.keys{end+1}    = key;
-            s_str_lists.value{end+1}   = value;
-            s_str_lists.objects{end+1} = [];
-        else
-            error('Illegal policy.')
-        end
-        
-    elseif length(varargin) >= 4
-        
-        object_key   = varargin{1};
-        object_value = varargin{2};
-        
-        i = find(and(strcmp(s_str_lists.keys, object_key), strcmp(s_str_lists.values, object_value)));
-        if length(i) ~= 1
-            error('Did not find exactly one matching key-value pair for "%s"-"%s".', object_key, object_value)
-        end
-        s_str_lists.objects{i} = set_value(policy, s_str_lists.objects{i}, varargin{3:end});   % NOTE: RECURSIVE CALL.
-        
-    else
-        error('Not same number of keys and values.')
-    end
-    
-end
+% function s_str_lists = set_value(policy, s_str_lists, varargin)
+%     % PROPOSAL: Separate out as generic function?
+%     % PROPOSAL: Omit "OBJECT" in calls, since multiple arguments implies OBJECT anyway.
+%     
+%     if length(varargin) == 2
+%         key   = varargin{1};
+%         value = varargin{2};
+%         
+%         i = find(strcmp(s_str_lists.keys, key));
+%         
+%         if strcmp(policy, 'replace')
+%             if length(i) ~= 1 
+%                 error('Did not find exactly one matching key for "%s".', key)
+%             end
+%             s_str_lists.values{i} = value;
+%         elseif strcmp(policy, 'new key')
+%             if ~isempty(i)
+%                 error('Found pre-existing key for "%s".', key)
+%             end
+%             s_str_lists.keys{end+1}    = key;
+%             s_str_lists.value{end+1}   = value;
+%             s_str_lists.objects{end+1} = [];
+%         else
+%             error('Illegal policy.')
+%         end
+% 
+%     elseif length(varargin) >= 4
+% 
+%         object_key   = varargin{1};
+%         object_value = varargin{2};
+%         
+%         i = find(and(strcmp(s_str_lists.keys, object_key), strcmp(s_str_lists.values, object_value)));
+%         if length(i) ~= 1
+%             error('Did not find exactly one matching key-value pair for "%s"-"%s".', object_key, object_value)
+%         end
+%         s_str_lists.objects{i} = set_value(policy, s_str_lists.objects{i}, varargin{3:end});   % NOTE: RECURSIVE CALL.
+%         
+%     else
+%         error('Not same number of keys and values.')
+%     end
+%     
+% end

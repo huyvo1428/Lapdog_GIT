@@ -1,21 +1,22 @@
 %
-% Initially created by Erik P G Johansson, IRF Uppsala, 2014-11-18.
-% NOTE: General-purpose tool for reading ODL (LBL/CAT) files by Erik P G Johansson, IRF Uppsala.
-% May therefore be somewhat overkill for the purposes of Lapdog.
+% General-purpose tool for reading ODL (LBL/CAT) files. Read ODL/LBL file and return contents in the form of two
+% recursive structs, each of them separately representing the contents of the ODL file.
 %
 %
-% Read ODL/LBL file and return contents in the form of two recursive structs, each of them
-% separately representing the contents of the ODL file.
-%
-% 1) "string-lists struct": Struct with ODL keys/values as arrays of strings, ODL OBJECT statements
+% RETURN VALUES
+% =============
+% NOTE: s_str_lists preserves correctly formatted, non-implicit ODL contents (keys/values) "exactly", while s_simple
+% does not but is easier to work with when retrieving specific values (with hard-coded "logical locations") instead.
+% s_str_lists : 
+%    "string-lists struct": Struct with ODL keys/values as arrays of strings, ODL OBJECT statements
 %    recursively in list of such objects.
 %    - Preserves exact order of everything.
 %    - "OBJECT = ...", but not "END_OBJECT = ...", are represented as key-value pairs.
 %       s_str.keys    : Cell vector of key names as strings
 %       s_str.values  : Cell vector of key values as strings, including any surrounding quotes
 %       s_str.objects : Cell vector of (1) empty components, and (2) the same type of structure, recursively.
-%
-% 2) "simple struct": Struct with fields corresponding to ODL keys and values corresponding
+% s_simple : 
+%    "simple struct": Struct with fields corresponding to ODL keys and values corresponding
 %    to ODL values, converted to matlab numbers and strings without quotes.
 %    ODL OBJECTS segments are stored as similar structs (recursively).
 %    - Quotes values are kept as strings without quotes.
@@ -25,7 +26,7 @@
 %    - Preserves order of OBJECT for same type (COLUMN, TABLE etc) on the same recursive level
 %      ("branch") but not their location in any other way, e.g. if switching between OBJECT types.
 %    - NOTE: Always puts "substructures" (OBJECT...END_OBJECT) in cell arrays,
-%      whether there is only one or several substructures (of same type) for consistency
+%      whether there is only one or several substructures (of same type, e.g. COLUMN) for consistency
 %      (good for loops with arbitrary number of iterations).
 %      Therefore one has to always use one index to break out of the cell, even
 %      if there is only one "substructure", e.g. "s.OBJECT___TABLE{1}.OBJECT___COLUMN{5}".
@@ -43,32 +44,36 @@
 %      s_sim.OBJECT___TABLE{1}.OBJECT___COLUMN{2}.NAME
 %      s_sim.OBJECT___TABLE{1}.OBJECT___COLUMN{2}.START_BYTE
 %      ...
+% end_text_line_list : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
 %
-% The former preserves correctly formatted, non-implicit ODL contents (keys/values) "exactly",
-% while the latter does not but is easier to work with instead.
 %
+% ODL FORMAT HANDLING
+% ===================
+% Can handle:
+% (1) Can handle quoted ODL values that span multiple lines (and which ODL does permit).
+%       Line breaks in multiline value strings are stored as CR+LF.
+% (2) Can handle (ignore) comments /*...*/ on one line. I think the PDS standard forces them to be on one line.
+% (3) Can handle indentation (ignored).
+% Can NOT handle:
+% (1) Can still NOT handle values like INDEX.LBL: INDEXED_FILE_NAME = {"DATA/*.LBL"}
+% ODL syntax error not checked for:
+% (1) Does not check if keys occur multiple times, except OBJECT for which cell arrays are used.
+% (2) Does not check if there are too many END_OBJECT (only checks the reverse).
+%
+%
+% NOTES
+% =====
 % NOTE: Designed to fail, give error for non-ODL files so that it can be used when one does not know
 % whether it is an ODL file or not, e.g. iterate over .TXT files (both ODL and non-ODL) in data sets.
 % NOTE: Only handles the ODL formatted content, not content pointed to by it.
-% NOTE: "END" statement is not included in the returned representations.
-% NOTE: Can handle quoted ODL values that span multiple lines (and which ODL does permit).
-%       Line breaks in multiline value strings are stored as CR+LF.
-% NOTE: Can handle (ignore) comments /*...*/ on one line. I think the PDS standard forces them to be on one line.
-%    NOTE: Can still confuse the code since it then can not handle values like
-%             INDEX.LBL: INDEXED_FILE_NAME = {"DATA/*.LBL"}
-% NOTE: Can handle indentation (ignored).
-%
-% NOTE: Does not check if keys occur multiple times, except OBJECT for which cell arrays are used.
-% NOTE: Does not check if there are too many END_OBJECT (only checks the
-% reverse).
-%
+% NOTE: "END" statement is not included in the returned representations, but implied.
 % NOTE: Designed to work under MATLAB2009a (because of Lapdog).
 %
 %
 %
-% end_text_line_list = Cell array of strings, one for every line after the final "END" statement (without CR, LF).
+% Initially created by Erik P G Johansson, IRF Uppsala, 2014-11-18.
 %
-function [s_str_lists, s_simple, end_text_line_list] = EJ_read_ODL_to_structs(file_path)
+function [s_str_lists, s_simple, end_text_line_list] = read_ODL_to_structs(file_path)
     %
     % QUESTION: How handle ODL/PDS distinction?
     % QUESTION: How handle ODL format errors?
@@ -238,7 +243,7 @@ end
 
 %###################################################################################################
 
-%----------------------------------------------------------------------
+%-------------------------------------------------------------------------------------------------
 % Convert lists of key-value assignments (only strings; kv_list.keys, kv_list.values)
 % from an ODL file into two structs, each representing the entire file contents.
 %
@@ -256,7 +261,7 @@ end
 % 
 % i_last = The last index into kv_list fields which was analyzed.
 %          Excludes any ENB_OBJECT which triggered ending the function.
-%----------------------------------------------------------------------
+%-------------------------------------------------------------------------------------------------
 function [s_str_lists, s_simple, i_last] = construct_structs_INTERNAL(kv_list, i_first)
 
     s_simple = [];

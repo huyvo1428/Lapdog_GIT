@@ -28,12 +28,12 @@
 %
 % ARGUMENTS
 % =========
-% EG_files_dir : Path to directory with Elias' geometry files. The directory must contain at least the required files
+% EOG_files_dir : Path to directory with Elias' geometry files. The directory must contain at least the required files
 %                but may also contain other files.
 % CALIB1_path, DERIV1_path : Paths to existing datasets.
 %===================================================================================================
-function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path, kernel_file, pds_mission_calendar_path, C2_VOLUME_ID_nbr_str)
-    %===================================================================================================    
+function create_C2D2_from_CALIB1_DERIV1(CALIB1_path, DERIV1_path, EOG_files_dir, result_parent_path, kernel_file, pds_mission_calendar_path, C2_VOLUME_ID_nbr_str)
+    %===================================================================================================
     % PROPOSAL: Better name?
     %    create, derive, extract, convert
     %    create_CALIB2DERIV2
@@ -47,6 +47,8 @@ function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path,
     %
     % PROPOSAL: Modify file classification function to apply to all files.
     %   PRO: Can identify ODL files.
+    %
+    % PROPOSAL: Rewrite into using generic function instead of process_dir_files_recursively?
     %===================================================================================================
     % Variable naming convention:
     % ---------------------------
@@ -69,7 +71,7 @@ function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path,
     % Extract data set information from CALIB1, DERIV1
     %==================================================
     C1_VOLDESC_path = fullfile(C1_path, 'VOLDESC.CAT');
-    [junk, C1_VOLDESC] = EJ_read_ODL_to_structs(C1_VOLDESC_path);
+    [junk, C1_VOLDESC] = lib_shared_EJ.read_ODL_to_structs(C1_VOLDESC_path);
     C1_DATA_SET_ID   = C1_VOLDESC.OBJECT___VOLUME{1}.DATA_SET_ID;
     
     [junk, part1, part2] = fileparts(D1_path);   % NOTE: "fileparts" interprets the period in the version number as the beginning of a file suffix.
@@ -77,11 +79,13 @@ function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path,
     
     PDS_base_data_C1.DATA_SET_ID = C1_DATA_SET_ID;
     PDS_base_data_C1.VOLUME_ID_nbr_str = 'xxxx';
-    [junk, PDS_base_data_C1] = get_PDS_data([], PDS_base_data_C1, pds_mission_calendar_path);
+    %[junk, PDS_base_data_C1] = get_PDS_data([], PDS_base_data_C1, pds_mission_calendar_path);
+    PDS_base_data_C1 = get_PDS_base_data(PDS_base_data_C1);
     
     PDS_base_data_D1.DATA_SET_ID = D1_DATA_SET_ID;
     PDS_base_data_D1.VOLUME_ID_nbr_str = 'xxxx';
-    [junk, PDS_base_data_D1] = get_PDS_data([], PDS_base_data_D1, pds_mission_calendar_path);
+    %[junk, PDS_base_data_D1] = get_PDS_data([], PDS_base_data_D1, pds_mission_calendar_path);
+    PDS_base_data_D1 = get_PDS_base_data(PDS_base_data_D1);
     
     %=========================================================================
     % Check that the DPLs are correct and that the data sets
@@ -107,14 +111,14 @@ function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path,
     %=================================================================================================
     CD2.CALIB1_path        = C1_path;
     CD2.DERIV1_path        = D1_path;
-    CD2.EG_files_dir       = EG_files_dir;
+    CD2.EOG_files_dir       = EOG_files_dir;
     CD2.result_parent_path = get_abs_path(result_parent_path);
     CD2.no_update_ODL_filenames_regex = {};
     %CD2.no_update_ODL_filenames_regex{end+1} = 'RPCLAP030101_CALIB_FRQ_[DE]_P[12]\.TXT';
     %CD2.no_update_ODL_filenames_regex{end+1} = 'ROSETTA_INSTHOST\.CAT';
     %CD2.no_update_ODL_filenames_regex{end+1} = 'ROSETTA_MSN\.CAT';
     CD2.kernel_file        = kernel_file;
-    CD2.EG_files_dir       = EG_files_dir;
+    CD2.EOG_files_dir       = EOG_files_dir;
     CD2.indentation_length = ODL_INDENTATION_LENGTH;
     CD2.PDS_data.DATA_SET_RELEASE_DATE      = datestr(now, 'YYYY-mm-dd');
     CD2.PDS_data.VOLDESC___PUBLICATION_DATE = datestr(now, 'yyyy-mm-dd');
@@ -127,7 +131,14 @@ function create_C2D2(CALIB1_path, DERIV1_path, EG_files_dir, result_parent_path,
     PDS_base_data.PROCESSING_LEVEL_ID = '3';
     PDS_base_data.DATA_SET_ID_descr   = 'CALIB2';
     PDS_base_data.VOLUME_ID_nbr_str   = C2_VOLUME_ID_nbr_str;
-    [C2.PDS_data, junk] = get_PDS_data(CD2.PDS_data, PDS_base_data, pds_mission_calendar_path);
+    PDS_base_data = get_PDS_base_data(PDS_base_data);
+    %[C2.PDS_data, junk] = get_PDS_data(CD2.PDS_data, PDS_base_data, pds_mission_calendar_path);
+    %C2.PDS_data = get_PDS_data(CD2.PDS_data, PDS_base_data, pds_mission_calendar_path);
+    C2.PDS_data = get_PDS_data(PDS_base_data, pds_mission_calendar_path);
+    for fn = fieldnames(CD2.PDS_data)'
+        C2.PDS_data.(fn{1}) = CD2.PDS_data.(fn{1});   % Copy fields from struct to struct (grow/add).
+    end
+    
     C2.data_file_selection_func = @select_CALIB2_DATA_files;
     
     fprintf('-------- Creating CALIB2 data set --------\n');
@@ -168,10 +179,10 @@ function E2_path = create_data_set(E2, E2_parent_path)
 
 
     kvl_updates = struct('keys', {{}}, 'values', {{}});
-    kvl_updates = createLBL_KVPL_add_kv_pair(kvl_updates, 'DATA_SET_ID',         ['"', E2.PDS_data.DATA_SET_ID,   '"']);
-    kvl_updates = createLBL_KVPL_add_kv_pair(kvl_updates, 'DATA_SET_NAME',       ['"', E2.PDS_data.DATA_SET_NAME, '"']);
-    kvl_updates = createLBL_KVPL_add_kv_pair(kvl_updates, 'PROCESSING_LEVEL_ID', ['"', E2.PDS_data.PROCESSING_LEVEL_ID,   '"']);
-    kvl_updates = createLBL_KVPL_add_kv_pair(kvl_updates, 'PRODUCT_TYPE',        ['"', E2.PDS_data.PRODUCT_TYPE, '"']);
+    kvl_updates = createLBL_KVPL_add_kv_pair(kvl_updates, 'DATA_SET_ID',         ['"', E2.PDS_data.DATA_SET_ID,         '"']);
+    kvl_updates = createLBL_KVPL_add_kv_pair(kvl_updates, 'DATA_SET_NAME',       ['"', E2.PDS_data.DATA_SET_NAME,       '"']);
+    kvl_updates = createLBL_KVPL_add_kv_pair(kvl_updates, 'PROCESSING_LEVEL_ID', ['"', E2.PDS_data.PROCESSING_LEVEL_ID, '"']);
+    kvl_updates = createLBL_KVPL_add_kv_pair(kvl_updates, 'PRODUCT_TYPE',        ['"', E2.PDS_data.PRODUCT_TYPE,        '"']);
 
 
 
@@ -239,7 +250,7 @@ function E2_path = create_data_set(E2, E2_parent_path)
     %====================
     fprintf('Add geometry files\n')
     cspice_furnsh(get_abs_path(E2.kernel_file));     % For some reason cspice_furnsh does not appear to understand ~ in a path.
-    geometry_addToDataSet(E2_path, E2.PDS_data, E2.EG_files_dir);
+    geometry_addToPDSDataSet(E2_path, E2.PDS_data, E2.EOG_files_dir);
     % "CSPICE_KCLEAR clears the KEEPER system: unload all kernels, clears
     % the kernel pool, and re-initialize the system."
     %cspice_kclear
@@ -358,10 +369,10 @@ function CATALOG_DOCUMENT_file_processing_func(...
     
     if is_ODL_file_to_update(src_filename)
         fprintf('Copying & modifying "%s" to "%s"\n', src_path, dest_path)
-        [s_str_lists, s_simple, end_lines] = EJ_read_ODL_to_structs(src_path);
+        [s_str_lists, s_simple, end_lines] = lib_shared_EJ.read_ODL_to_structs(src_path);
         [s_str_lists]                      = generic_modify_ODL_contents(s_str_lists, s_simple, kvl_updates);
         create_parent_dir(dest_path)
-        EJ_write_ODL_from_struct(dest_path, s_str_lists, end_lines, ODL_indentation_length);
+        lib_shared_EJ.write_ODL_from_struct(dest_path, s_str_lists, end_lines, ODL_indentation_length);
     else
         copy_file(src_path, dest_path, 'always overwrite')
     end
@@ -409,14 +420,14 @@ function CALIB_DATA_file_processing_func(...
         if is_ODL_file_to_update(src_filename)
             % CASE: LBL file
             
-            [s_str_lists, s_simple, end_lines] = EJ_read_ODL_to_structs(src_file_path);
+            [s_str_lists, s_simple, end_lines] = lib_shared_EJ.read_ODL_to_structs(src_file_path);
             [s_str_lists]                      = generic_modify_ODL_contents(s_str_lists, s_simple, ODL_kvl_updates);
             % Add MISSING_CONSTANT to ODL file.
             if is_IxS
                 s_str_lists = IxS_LBL_add_MISSING_CONSTANT(s_str_lists, MISSING_CONSTANT_str);
             end
             create_parent_dir(dest_file_path)
-            EJ_write_ODL_from_struct(dest_file_path, s_str_lists, end_lines, ODL_indentation_length);
+            lib_shared_EJ.write_ODL_from_struct(dest_file_path, s_str_lists, end_lines, ODL_indentation_length);
         
         else
             % CASE: TAB file
@@ -766,7 +777,7 @@ end
 % NOTE: The resulting path will NOT end with slash/backslash unless it is the system root directory on Linux ("/").
 % (MATLAB does indeed seem to NOT have a function for doing this(!).)
 %
-% NOTE: Originally copied from Lapdog's create_C2D2.m (internal function).
+% NOTE: Originally copied from Lapdog's create_C2D2_from_CALIB1_DERIV1.m (internal function).
 %===================================================================================================================
 function path = get_abs_path(path)
 % PROPOSAL: Rethrow exception via errorp with amended message somehow?

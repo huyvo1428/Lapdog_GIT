@@ -8,9 +8,12 @@
 % NOTE: Overwrites destination file if pre-existing.
 % NOTE: Multiline values are not indented (except the key itself).
 %
-% end_text_line_list = Cell array of strings, one for every line after the final "END" statement (without CR, LF).
+% ARGUMENTS
+% =========
+% s_str_lists : See lib_shared_EJ.read_ODL_to_structs.
+% endRowsList : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
 %
-function EJ_write_ODL_from_struct(file_path, s_str_lists, end_text_line_list, INDENTATION_LENGTH)
+function write_ODL_from_struct(file_path, s_str_lists, endRowsList, INDENTATION_LENGTH)
 %
 % PROPOSAL: Implement additional empty rows before/after OBJECT/END_OBJECT.
 %    NOTE: Only one row between END_OBJECT and OBJECT. ==> Non-trivial.
@@ -37,8 +40,8 @@ function EJ_write_ODL_from_struct(file_path, s_str_lists, end_text_line_list, IN
     
     fprintf(c.fid, 'END\r\n');
     
-    for i=1:length(end_text_line_list)        
-        fwrite(c.fid, [end_text_line_list{i}, LINE_BREAK]);
+    for i=1:length(endRowsList)        
+        fwrite(c.fid, [endRowsList{i}, LINE_BREAK]);
     end
     
     fclose(c.fid);    
@@ -65,29 +68,32 @@ function write_key_values(c, s, indentation_level)
     indentation_str = repmat(' ', 1, c.INDENTATION_LENGTH*indentation_level);
 
     for i = 1:length(keys)
+        key    = keys{i};
+        value  = values{i};
+        object = objects{i};
         
-        if ~strcmp(keys{i}, 'OBJECT') && isempty(objects{i})
+        if ~strcmp(key, 'OBJECT') && isempty(object)
             % CASE: non-OBJECT key
             
-            post_key_padding = repmat(' ', 1, max_nonOBJECT_key_length-length(keys{i}));    % Create string of whitespaces.
+            post_key_padding = repmat(' ', 1, max_nonOBJECT_key_length-length(key));    % Create string of whitespaces.
             
-            %str = sprintf('%s%s%s = %s\r\n',   indentation_str, keys{i}, post_key_padding, values{i});
+            %str = sprintf('%s%s%s = %s\r\n',   indentation_str, key, post_key_padding, value);
             %fprintf(c.fid, str);
             
-            % IMPLEMENTATION NOTE: Put together and write string to file without using fprintf/sprintf since the value string
-            % may contain characters interpreted by fprintf/sprintf. Code has previously generated warnings
+            % IMPLEMENTATION NOTE: Put together and write string to file without using fprintf/sprintf since the value
+            % string may contain characters interpreted by fprintf/sprintf. Code has previously generated warnings
             % when using fprintf/sprintf but this avoids that.
-            str = [indentation_str, keys{i}, post_key_padding, ' = ', values{i}, LINE_BREAK];
+            str = [indentation_str, key, post_key_padding, ' = ', value, LINE_BREAK];
             fwrite(c.fid, str);
             
-        elseif strcmp(keys{i}, 'OBJECT') && ~isempty(objects{i}) && isstruct(objects{i})
+        elseif strcmp(key, 'OBJECT') && ~isempty(value) && ~isempty(object) && isstruct(object)
             % CASE: OBJECT key.
             
             % Print OBJECT with different "post-key" whitespace padding.
-            fprintf(c.fid, sprintf('%s%s = %s\r\n',   indentation_str, keys{i}, values{i}));
+            fprintf(c.fid, sprintf('%s%s = %s\r\n',   indentation_str, key, value));
             
-            write_key_values(c, objects{i}, indentation_level+1);             % RECURSIVE CALL
-            fprintf(c.fid, sprintf('%sEND_OBJECT = %s\r\n',   indentation_str, values{i}));
+            write_key_values(c, object, indentation_level+1);             % RECURSIVE CALL
+            fprintf(c.fid, sprintf('%sEND_OBJECT = %s\r\n',   indentation_str, value));
         else
             error('Inconsistent combination of key, value and object.')
         end
