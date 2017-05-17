@@ -80,21 +80,27 @@ Offset.I3L = 0;
 Offset.V1L = 0;
 Offset.V2L = 0;
 Offset.V3L = 0;
+
+
 %Edit FKJN 26e Sept 2016 4/8 khz filter offset calibration. should be moved to pds soon.
 %global of8khzfilterMacros;
-of4khzfilterMacros = hex2dec({'410','411','412','415','416','417','612','613','615','616','710','910'});    % NOTE: Must be cell array with strings for hex2dec ({} not []).
-if any(ismember(macroNo,of4khzfilterMacros)) %if macro is any of the LDL macros
-   Offset.B1S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
-   Offset.B2S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
-   fprintf(1,'NO 4khz correction macro was %X',macroNo);
-
-else
-   Offset.B1S = 1.4*1E-9*20000/65535; %0.43 nA
-   Offset.B2S = 25.35*1E-9*20000/65535;%7.74 nA
-   %note that old calibration was -1E-9 and -6.5E-9. Maybe due to inexactness of determination, or a temporal thing. 
-   fprintf(1,'YES 4khz correction macro was %X',macroNo);
-
-end
+% of4khzfilterMacros = hex2dec({'410','411','412','415','416','417','612','613','615','616','710','910'});    % NOTE: Must be cell array with strings for hex2dec ({} not []).
+% if any(ismember(macroNo,of4khzfilterMacros)) %if macro is any of the LDL macros
+%    Offset.B1S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
+%    Offset.B2S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
+%    fprintf(1,'NO 4khz correction macro was %X',macroNo);
+% 
+% else
+%    Offset.B1S = 1.4*1E-9*20000/65535; %0.43 nA
+%    Offset.B2S = 25.35*1E-9*20000/65535;%7.74 nA
+%    %note that old calibration was -1E-9 and -6.5E-9. Maybe due to inexactness of determination, or a temporal thing. 
+%    fprintf(1,'YES 4khz correction macro was %X',macroNo);
+% 
+% end
+% 8 kHz-filter calibration offsets are hereafter handled by pds (takes high-gain/low-gain, density/E field mode, ADC16/ADC20) into account.
+% They should therefore be zero here. /Erik P G Johansson 2017-05-17
+Offset.B1S = 0;
+Offset.B2S = 0;
 
 Offset.I1H = Offset.B1S;
 Offset.I2H = Offset.B2S; %these offsets are due to a 4/8khz filter calibration.
