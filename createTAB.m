@@ -287,18 +287,18 @@ delfile = 1;
                 end%  sweep window deletions
                 
                 
-                if macroNo == hex2dec('710') || macroNo == hex2dec('910')                 
-                    trigg_dt = 1;
+                %if macroNo == hex2dec('710') || macroNo == hex2dec('910')                 
+                   % trigg_dt = 1;
                     %fprintf(1,'710 correction trigger');
                     
-                    dt_710 =scantemp{1,2}(2) - scantemp{1,2}(1);
-                    if dt_710< trigg_dt
+                   % dt_710 =scantemp{1,2}(2) - scantemp{1,2}(1);
+                   % if dt_710< trigg_dt
                         %fprintf(1,'710 correction applied');
                         
-                        scantemp(:,4)=cellfun(@(x) x*ma_corr_factor,scantemp(:,4),'un',0);
-                    end
+                   %     scantemp(:,4)=cellfun(@(x) x*ma_corr_factor,scantemp(:,4),'un',0);
+                   % end
                     
-                end%if 710/910 
+               % end%if 710/910 bugfix 23/5 2017, no longer needed // FKJN 
 
 
 
