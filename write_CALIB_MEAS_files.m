@@ -9,10 +9,10 @@
 %
 %   ARGUMENTS
 %   =========
-%   editedDatasetPath = Path to EDITED data set, e.g. '/data/LAP_ARCHIVE/RO-E-RPCLAP-2-EAR3-EDITED-V1.0'
-%   missionPhaseName  = ("Long") mission phase name, e.g. "COMET ESCORT 3". (Needed for LBL file keyword MISSION_PHASE_NAME.)
-%   outDirPath        = Output path (directory)
-%   coeffsDirPath     = COEF files directory path (fitting coefficients for debugging)
+%   editedDatasetPath : Path to EDITED data set, e.g. '/data/LAP_ARCHIVE/RO-E-RPCLAP-2-EAR3-EDITED-V1.0'
+%   missionPhaseName  : "Long" mission phase name, e.g. "COMET ESCORT 3". (Needed for LBL file keyword MISSION_PHASE_NAME.)
+%   outDirPath        : Output path (directory)
+%   coeffsDirPath     : COEF files directory path (fitting coefficients for debugging)
 %
 %
 %   SYNTAX
@@ -44,7 +44,7 @@
 %   - Primarily added check for finding calibration data which are not useful.
 %     /Erik P G Johansson, 2015-02-04
 %   
-%   - Updated ADC20 TM-to-physical-units conversion factors in the LBL files according to calibration of
+%   - Updated ADC20 TM-to-engineering-units conversion factors in the LBL files according to calibration of
 %     ADC20 relative ADC16 based on data for 2015-05-28. New values are multiples of ADC16 values
 %     and are used retroactively.
 %     /Erik P G Johansson 2015-06-11
@@ -65,6 +65,10 @@
 %   - Added SPACECRAFT_CLOCK_STOP_COUNT+STOP_TIME. Removed commented code. Clean-up.
 %     ADDED ARGUMENT coeffsDirPath.
 %     /Erik P G Johansson 2017-01-30
+%
+%   - Added new constant ADC16_EDITED_NONNEGATIVE_OFFSET_ADC16TM to be able to remove offset from nonnegative ADC16
+%     values and to be able to handle pds EDITED datasets without the corresponding modification.
+%     /Erik P G Johansson 2017-05-31
 %   ----------------------------------------------------------------------------
 %   NOTE: As of 2016-04-07, this software is designed for MATLAB R2009A to make it possible to still run on squid.
 %   NOTE: As of 2017-01-26, it appears that the part of the execution that takes the most time is the reading of LBL
@@ -99,20 +103,27 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
 %   PROPOSAL: Some kind of optional (informal?) detection of cold input calibrations. Detection results as separate
 %             list?!
 
-    scriptStartTimeVector = clock;    % Script start time. NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
+    scriptStartTimeVector = clock;    % Script start time. NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute second].
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Set miscellaneous constants
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    FILES_PER_PROGRESS_STEP = 1000;   % Number of files to process before updating the progress percentage (log message).
+    FILES_PER_PROGRESS_STEP = 3000;   % Number of files to process before updating the progress percentage (log message).
+    
+    % Value to SUBTRACT from all non-negative measured ADC16 values in ADC16 TM units.
+    % NOTE: The pds s/w contains a similar constants which affects the EDITED values. That constant must be compatible
+    % (but not automatically identical!) with the value here.
+    ADC16_EDITED_NONNEGATIVE_OFFSET_ADC16TM = -2.5;
+    %ADC16_EDITED_NONNEGATIVE_OFFSET_ADC16TM = -0.5;
+    %ADC16_EDITED_NONNEGATIVE_OFFSET_ADC16TM = 0;
+
+    diag = 0;    % Flag for whether to display debugging plots.
 
     % Directory path to where to save calibration COEFFICIENTS files for debugging (i.e. not LBL+TAB).
     %coeffsDirPath = '/data/LAP_ARCHIVE/CALIB_MEAS_files/';    % Default value on squid.
     %coeffsDirPath = '~/temp/coeffs';   % For debugging.
-
-    diag = 0;    % Flag for whether to display debugging plots.
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -139,7 +150,7 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
 
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   * Validates the input/output arguments used.
+    %   * ASSERTIONS: Validates the input/output arguments used.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % NOTE: "error" throws no error if the input argument (to "error") is [].
@@ -157,14 +168,14 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   * Checks relevant folders
+    %   * Log and adjust relevant folders
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     disp('Paths');
     disp('----------------------------------------------------------------');
-    fprintf(1,'Edited Archive and path: %s\r\n',editedDatasetPath);
-    fprintf(1,'Mission phase: %s\r\n',missionPhaseName);
-    fprintf(1,'Output calibration file path: %s\r\n\r\n',outDirPath);
+    fprintf(1,'Edited Archive and path:      %s\r\n',     editedDatasetPath);
+    fprintf(1,'Mission phase:                %s\r\n',     missionPhaseName);
+    fprintf(1,'Output calibration file path: %s\r\n\r\n', outDirPath);
 
     if editedDatasetPath(end) == filesep        
         editedDatasetPath(end) = [];    % Remove trailing file separator (slash).
@@ -205,48 +216,51 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
         isHk(iFile) = (inFilesData(iFile).relativeFilePath(end-4) == 'H');
     end
     inFilesData(isHk) = [];
-    
-    
 
-    fprintf(1,'Reading (non-HK) LBL files in INDEX.TAB: start time, stop time and mode (macro)\n');
 
+
+    fprintf(1,'Reading (non-HK) LBL files in INDEX.TAB: start time, stop time, and mode (macro)\n');
+
+    %=======================================================
     % Iterate over all non-HK files mentioned in INDEX.TAB.
+    %=======================================================
     nFiles = length(inFilesData);
     for iFile=1:nFiles
 
         % Read LBL file
         % -------------
-        % IMPLEMENTATION NOTE: Does not use textscan to split up (parse) PDS keyword assignments since
-        %   (1) I am guessing that it is faster this way (this is the slowest part of the code)
+        % IMPLEMENTATION NOTE: Reads list of rows with textscan, but does NOT use textscan to split up (parse)
+        % PDS keyword assignments
+        %   (1) since I am guessing that it is faster this way (this is the slowest part of the code)
         %   (2) to be able to reuse old code.
-        fname  = fullfile(editedDatasetPath, inFilesData(iFile).relativeFilePath);
-        fileId = fopen(fname,'r');
+        lblFilePath  = fullfile(editedDatasetPath, inFilesData(iFile).relativeFilePath);
+        fileId = fopen(lblFilePath,'r');
         if ~(fileId>0)
-            warning('write_MEAS_CALIB_file:CanNotReadFile', 'Can not open file %s', fname)
+            warning('write_MEAS_CALIB_file:CanNotReadFile', 'Can not open file %s', lblFilePath)
             continue
         end
         temp = textscan(fileId, '%s', 'delimiter', '\n', 'whitespace', '');
         linesList = temp{1};
         fclose(fileId);
 
-        startTime    = linesList{strncmpi(linesList, 'START_TIME',                  10)};
-        startTimeScc = linesList{strncmpi(linesList, 'SPACECRAFT_CLOCK_START_COUNT',28)};
-        stopTime     = linesList{strncmpi(linesList, 'STOP_TIME',                    9)};
-        stopTimeScc  = linesList{strncmpi(linesList, 'SPACECRAFT_CLOCK_STOP_COUNT', 27)};
-        mode         = linesList{strncmpi(linesList, 'INSTRUMENT_MODE_ID',          18)};
+        startTime    = linesList{strncmpi(linesList, 'START_TIME',                   10)};
+        startTimeScc = linesList{strncmpi(linesList, 'SPACECRAFT_CLOCK_START_COUNT', 28)};
+        stopTime     = linesList{strncmpi(linesList, 'STOP_TIME',                     9)};
+        stopTimeScc  = linesList{strncmpi(linesList, 'SPACECRAFT_CLOCK_STOP_COUNT',  27)};
+        mode         = linesList{strncmpi(linesList, 'INSTRUMENT_MODE_ID',           18)};
 
         [tmp,str] = strread(startTime,'%s%s','delimiter','=');
         value     = datenum(str,'yyyy-mm-ddTHH:MM:SS.FFF');     % NOTE: "str" is a cell containing a string, but datenum can handle that.
         inFilesData(iFile).startTime = value;
 
-        [tmp,str] = strread(stopTime,'%s%s','delimiter','=');
+        [tmp,str] = strread(stopTime, '%s%s','delimiter','=');
         value     = datenum(str,'yyyy-mm-ddTHH:MM:SS.FFF');
         inFilesData(iFile).stopTime = value;
 
         [tmp,value] = strread(startTimeScc,'%s%s','delimiter','=');
         inFilesData(iFile).startTimeScc = value{1};          % Stores quoted value, whitespace trimmed (outside of quotes). Example: "1/0149643274.1600"
         
-        [tmp,value] = strread(stopTimeScc,'%s%s','delimiter','=');
+        [tmp,value] = strread(stopTimeScc, '%s%s','delimiter','=');
         inFilesData(iFile).stopTimeScc = value{1};           % Stores quoted value, whitespace trimmed (outside of quotes). Example: "1/0149643274.1600"
         
         [tmp,value] = strread(mode,'%s%s','delimiter','=');
@@ -281,15 +295,15 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
     modeSessionId = 0;    % Identifies the session that the current file should belong to (not relevant for non-macro 104 files).
     
     for iFile = 1:length(inFilesData)
-        modeId = inFilesData(iFile).instrumentModeId;
-        if strcmpi(modeId, 'MCID0X0104')
+        instrumentModeId = inFilesData(iFile).instrumentModeId;
+        if strcmpi(instrumentModeId, 'MCID0X0104')
             % CASE: Found EDITED SCI file that is macro/mode 104.
             
             fprintf(1, 'Found CALIBRATION data (LBL file) %s -- %s\n', ...
                 datestr(inFilesData(iFile).startTime, 'yyyy-mm-ddTHH:MM:SS.FFF'), ...
                 datestr(inFilesData(iFile).stopTime,  'yyyy-mm-ddTHH:MM:SS.FFF'));   % DEBUG
 
-            if ~strcmp(previousModeSessionId, modeId)
+            if ~strcmp(previousModeSessionId, instrumentModeId)
                 % CASE: Found macro 104 file that was NOT preceeded by a macro 104 file.
                 modeSessionId = modeSessionId + 1;
             end
@@ -299,7 +313,7 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
         end
         inFilesData(iFile).modeSessionId = modeSessionId;
         
-        previousModeSessionId = modeId;
+        previousModeSessionId = instrumentModeId;
     end
 
 
@@ -339,45 +353,42 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
         tabFilePath = fullfile(editedDatasetPath, strcat(inFilesData(iFile).relativeFilePath(1:end-4),'.TAB'));   % Exchange .LBL for .TAB.
         fileId = fopen(tabFilePath, 'r');
         if ~(fileId>0)
-            warning('write_MEAS_CALIB_file:CanNotReadFile', 'Can not open file %s', fname)
+            warning('write_MEAS_CALIB_file:CanNotReadFile', 'Can not open file %s', tabFilePath)
             continue
         end
         
-        % inputCalibrationFileData{1}: Units of current
-        % inputCalibrationFileData{2}: Units of voltage
         inputCalibrationFileData = textscan(fileId, '%*s %*f %f %f', 'Delimiter', ',');
         fclose(fileId);
+        currentTm = inputCalibrationFileData{1};
+        voltageTm = inputCalibrationFileData{2};
         
-        voltage = inputCalibrationFileData{2};
-        current = inputCalibrationFileData{1};
-        
-        firstVoltageValue = voltage(1);
-        
+        % If there are multiple identical initial voltage bias values, keep only the last one.
+        % (Removes samples which are not part of the sweep.)
+        firstVoltageValue = voltageTm(1);
         starterValueCounter = 1;
-        
-        while voltage(starterValueCounter+1) == firstVoltageValue
-            
+        while voltageTm(starterValueCounter+1) == firstVoltageValue
             starterValueCounter = starterValueCounter + 1;
         end
+        voltageTm(1:starterValueCounter) = [];
+        currentTm(1:starterValueCounter) = [];
         
-        voltage(1:starterValueCounter) = [];
-        current(1:starterValueCounter) = [];
-        
-        if isempty(voltage)
+        % Subtract offset for non-negative values.
+        % See definition of ADC16_EDITED_NONNEGATIVE_OFFSET_ADC16TM.
+        currentTm(currentTm >= 0) = currentTm(currentTm >= 0) - ADC16_EDITED_NONNEGATIVE_OFFSET_ADC16TM;
+
+        if isempty(voltageTm)
             inFilesData(iFile).anomaly = true;
         else
-            % polyCoeffs = polyfit(voltage, current, 1);
-            polyCoeffs = polyfit(voltage, current, 3);
-            % FKJN edit 28/8 2014
-            
+            % polyCoeffs = polyfit(voltageTm, currentTm, 1);     % Use first-order polynomial fit.
+            polyCoeffs = polyfit(voltageTm, currentTm, 3);     % Use third-order polynomial fit. FKJN edit 28/8 2014
             
             if diag
-                polyCoeffs2 = polyfit(voltage, current, 1);
+                polyCoeffs2 = polyfit(voltageTm, currentTm, 1);
                 figure(22);
-                plot(voltage,current,'b',voltage,(polyCoeffs(1)*voltage.^3+polyCoeffs(2)*voltage.^2+polyCoeffs(3)*voltage+polyCoeffs(4)),'g',voltage,(polyCoeffs2(1)*voltage+polyCoeffs2(2)),'r')
+                plot(voltageTm,currentTm,'b',voltageTm,(polyCoeffs(1)*voltageTm.^3+polyCoeffs(2)*voltageTm.^2+polyCoeffs(3)*voltageTm+polyCoeffs(4)),'g',voltageTm,(polyCoeffs2(1)*voltageTm+polyCoeffs2(2)),'r')
                 
                 figure(23);
-                plot(voltage,current-(polyCoeffs(1)*voltage.^3+polyCoeffs(2)*voltage.^2+polyCoeffs(3)*voltage+polyCoeffs(4)),'g',voltage,current-(polyCoeffs2(1)*voltage+polyCoeffs2(2)),'r')
+                plot(voltageTm,currentTm-(polyCoeffs(1)*voltageTm.^3+polyCoeffs(2)*voltageTm.^2+polyCoeffs(3)*voltageTm+polyCoeffs(4)),'g',voltageTm,currentTm-(polyCoeffs2(1)*voltageTm+polyCoeffs2(2)),'r')
             end
             
             inFilesData(iFile).cubeg     = polyCoeffs(1);
@@ -385,11 +396,11 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
             inFilesData(iFile).gradient  = polyCoeffs(3);
             inFilesData(iFile).intercept = polyCoeffs(4);
             
-            n = length(voltage);
+            n = length(voltageTm);
             
-            numerator = n*sum(voltage.*current) - sum(voltage)*sum(current);
+            numerator = n*sum(voltageTm.*currentTm) - sum(voltageTm)*sum(currentTm);
             
-            denominator = sqrt(n*sum(voltage.^2)-(sum(voltage))^2) * sqrt(n*sum(current.^2)-(sum(current))^2);
+            denominator = sqrt(n*sum(voltageTm.^2)-(sum(voltageTm))^2) * sqrt(n*sum(currentTm.^2)-(sum(currentTm))^2);
             
             inFilesData(iFile).correlation = abs(numerator / denominator);
         end
@@ -423,7 +434,7 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
     %     eventually be trimmed down.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     outFilesData = [];
-    
+
     for modeSessionId = 1:max([inFilesData.modeSessionId])
         
         % Find all indices with data for (1) the current modeSession, and (2) each probe separately.
@@ -462,8 +473,8 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
         end
     end
 
-    
-    
+
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   * Handle the case of multiple output calibration data within the same day.
     %     ACTION: Remove all but the LAST one during that day.
@@ -490,6 +501,7 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %   * Write LBL+TAB file pairs
     %   * Writes all the CALIB_MEAS/_COEF files for each of the base folders.
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     for iFile = 1:length(outFilesData)
@@ -505,12 +517,83 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
         currentP1 = floor(currentP1*1E6+0.5) / 1E6;  % Rounding after six decimals. fprintf will try to round this later, but does so incorrectly.
         currentP2 = floor(currentP2*1E6+0.5) / 1E6;
         
+        lblFilePath   = fullfile(outDirPath,    strcat(outFileNameBase,   '.LBL'));
+        tabFilePath   = fullfile(outDirPath,    strcat(outFileNameBase,   '.TAB'));
+        coeffFilePath = fullfile(coeffsDirPath, strcat(coeffFileNameBase, '.TXT'));
         
-        lblFilePath   = fullfile(outDirPath, strcat(outFileNameBase,   '.LBL'));
-        tabFilePath   = fullfile(outDirPath, strcat(outFileNameBase,   '.TAB'));
-        coeffFilePath = fullfile(coeffsDirPath,  strcat(coeffFileNameBase, '.TXT'));
-        
-        
+        write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, editedDatasetDirName, missionPhaseName, outFilesData(iFile), voltage, currentP1, currentP2);
+
+
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Write CEOFF file - Extra calibration coefficient files (for debugging)
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        fileId = fopen(coeffFilePath, 'wt');
+        fprintf(fileId,'# 3rd order polynomial fit coefficients (current = aV^3+b*V^2+c*V+d), for Probe 1 and Probe 2 in TM units.\r\n');
+        fprintf(fileId,'aP1,bP1,cP1,dP1,aP2,bP2,cP2,dP2\r\n');
+        fprintf(fileId,'%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e\r\n', ...
+            outFilesData(iFile).gradient3(1), outFilesData(iFile).gradient2(1), outFilesData(iFile).gradient1(1), outFilesData(iFile).intercepts(1), ...
+            outFilesData(iFile).gradient3(2), outFilesData(iFile).gradient2(2), outFilesData(iFile).gradient1(2), outFilesData(iFile).intercepts(2));
+        fclose(fileId);
+    end
+    
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %   * Displays the output summary.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    nOutCalibrationFiles = length(outFilesData);
+    nInFiles      = length(inFilesData);
+    nInFileAnomalies     = length(find([inFilesData.anomaly]));
+    nInFilesGood        = nInFiles - nInFileAnomalies;
+
+    fprintf(1, 'Progress: Work complete.\n');
+    fprintf(1, '\n');
+    fprintf(1, '=============================================\n');
+    fprintf(1, '                   SUMMARY                   \n');
+    fprintf(1, '=============================================\n');
+    fprintf(1, '\n');
+    % Printing the EDITED directory is useful when using a script to automatically call write_CALIB_MEAS_files multiple
+    % times, since it is then difficult to distinguish the results of separate runs.
+    fprintf(1, ' Input EDITED directory:               %s\n', editedDatasetPath);   
+    fprintf(1, '\n');
+    fprintf(1, ' Input offset files:                   %3.0f\n', nInFiles);
+    fprintf(1, '\n');
+    fprintf(1, '    Input offset files with anomalies: %3.0f\n', nInFileAnomalies);
+    fprintf(1, '\n');
+    fprintf(1, '    Good input offset files:           %3.0f\n', nInFilesGood);
+    fprintf(1, '\n');
+    fprintf(1, ' Output calibration files:             %3.0f\n', nOutCalibrationFiles);
+    fprintf(1, '\n');
+    fprintf(1, '\n');
+    fprintf(1, ' Elapsed wall time:                 %6.0f s\n', etime(clock, scriptStartTimeVector));
+    fprintf(1, '\n');
+    fprintf(1, '=============================================\n');
+    fprintf(1, '\n');
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %   * Determines whether to supply the offset data as output argument.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if nargout == 1
+        varargout(1) = {inFilesData};
+    end
+    
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+end
+
+
+
+% Write one pair of TAB and LBL files.
+%
+% outFileData : struct with fields
+%   .startTime
+%   .startTimeScc : Must be quoted string.
+%   .stopTime
+%   .stopTimeScc  : Must be quoted string.
+function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, editedDatasetDirName, missionPhaseName, outFileData, voltage, currentP1, currentP2)
         %%%%%%%%%%%%%%%%%%
         % Create LBL file
         %%%%%%%%%%%%%%%%%%
@@ -543,10 +626,10 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
         fprintf(fileId, 'INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"\r\n');
         fprintf(fileId, 'INSTRUMENT_ID = RPCLAP\r\n');
         fprintf(fileId, 'INSTRUMENT_TYPE = "PLASMA INSTRUMENT"\r\n');
-        fprintf(fileId, 'START_TIME = %s\r\n',                   datestr(outFilesData(iFile).startTime, 'yyyy-mm-ddTHH:MM:SS.FFF'));
-        fprintf(fileId, 'SPACECRAFT_CLOCK_START_COUNT = %s\r\n', outFilesData(iFile).startTimeScc);                 % NOTE: Spacecraft clock time is quoted. Field value is already quoted.
-        fprintf(fileId, 'STOP_TIME = %s\r\n',                    datestr(outFilesData(iFile).stopTime,  'yyyy-mm-ddTHH:MM:SS.FFF'));
-        fprintf(fileId, 'SPACECRAFT_CLOCK_STOP_COUNT = %s\r\n',  outFilesData(iFile).stopTimeScc);                  % NOTE: Spacecraft clock time is quoted. Field value is already quoted.
+        fprintf(fileId, 'START_TIME = %s\r\n',                   datestr(outFileData.startTime, 'yyyy-mm-ddTHH:MM:SS.FFF'));
+        fprintf(fileId, 'SPACECRAFT_CLOCK_START_COUNT = %s\r\n',         outFileData.startTimeScc);                 % NOTE: Spacecraft clock time is quoted. Field value is already quoted.
+        fprintf(fileId, 'STOP_TIME = %s\r\n',                    datestr(outFileData.stopTime,  'yyyy-mm-ddTHH:MM:SS.FFF'));
+        fprintf(fileId, 'SPACECRAFT_CLOCK_STOP_COUNT = %s\r\n',          outFileData.stopTimeScc);                  % NOTE: Spacecraft clock time is quoted. Field value is already quoted.
         %fprintf(fileId, 'DESCRIPTION = "CONVERSION FROM TM UNITS TO AMPERES AND VOLTS"\r\n');
         fprintf(fileId, 'DESCRIPTION = "ADC16 CURRENT OFFSETS. CONVERSION FROM TM UNITS TO AMPERES AND VOLTS."\r\n');
         
@@ -618,64 +701,5 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
             fprintf(fileId, horzcat(sprintf('%03.0f', voltage(iRow)), ',', sprintf('%12.6f', currentP1(iRow)), ',', sprintf('%12.6f', currentP2(iRow)), '\r\n'));
         end
         fclose(fileId);
-        
-        
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % Write CEOFF file - Extra calibration coefficient files (for debugging)
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        fileId = fopen(coeffFilePath, 'wt');
-        fprintf(fileId,'# 3rd order polynomial fit coefficients (current = aV^3+b*V^2+c*V+d), for Probe 1 and Probe 2 in TM units.\r\n');
-        fprintf(fileId,'aP1,bP1,cP1,dP1,aP2,bP2,cP2,dP2\r\n');
-        fprintf(fileId,'%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e,%14.7e\r\n', ...
-            outFilesData(iFile).gradient3(1), outFilesData(iFile).gradient2(1), outFilesData(iFile).gradient1(1), outFilesData(iFile).intercepts(1), ...
-            outFilesData(iFile).gradient3(2), outFilesData(iFile).gradient2(2), outFilesData(iFile).gradient1(2), outFilesData(iFile).intercepts(2));
-        fclose(fileId);
-    end
-    
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   * Displays the output summary.
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    nOutCalibrationFiles = length(outFilesData);
-    nInFiles      = length(inFilesData);
-    nInFileAnomalies     = length(find([inFilesData.anomaly]));
-    nInFilesGood        = nInFiles - nInFileAnomalies;
-
-    fprintf(1, 'Progress: Work complete.\n');
-    fprintf(1, '\n');
-    fprintf(1, '=============================================\n');
-    fprintf(1, '                   SUMMARY                   \n');
-    fprintf(1, '=============================================\n');
-    fprintf(1, '\n');
-    % Printing the EDITED directory is useful when using a script to automatically call write_CALIB_MEAS_files multiple
-    % times, since it is then difficult to distinguish the results of separate runs.
-    fprintf(1, ' Input EDITED directory:               %s\n', editedDatasetPath);   
-    fprintf(1, '\n');
-    fprintf(1, ' Input offset files:                   %3.0f\n', nInFiles);
-    fprintf(1, '\n');
-    fprintf(1, '    Input offset files with anomalies: %3.0f\n', nInFileAnomalies);
-    fprintf(1, '\n');
-    fprintf(1, '    Good input offset files:           %3.0f\n', nInFilesGood);
-    fprintf(1, '\n');
-    fprintf(1, ' Output calibration files:             %3.0f\n', nOutCalibrationFiles);
-    fprintf(1, '\n');
-    fprintf(1, '\n');
-    fprintf(1, ' Elapsed wall time:                 %6.0f s\n', etime(clock, scriptStartTimeVector));
-    fprintf(1, '\n');
-    fprintf(1, '=============================================\n');
-    fprintf(1, '\n');
-
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %   * Determines whether to supply the offset data as output argument.
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if nargout == 1
-        varargout(1) = {inFilesData};
-    end
-    
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 end
+
