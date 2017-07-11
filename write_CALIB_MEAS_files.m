@@ -69,6 +69,15 @@
 %   - Added new constant ADC16_EDITED_NONNEGATIVE_OFFSET_ADC16TM to be able to remove offset from nonnegative ADC16
 %     values and to be able to handle pds EDITED datasets without the corresponding modification.
 %     /Erik P G Johansson 2017-05-31
+%
+%   - Removed PDS keywords for ADC20 calibration factors, i.e.
+%        ROSETTA:LAP_VOLTAGE_CAL_20B
+%        ROSETTA:LAP_CURRENT_CAL_20B_G1
+%        ROSETTA:LAP_CURRENT_CAL_20B_G0_05
+%     since their values are hereafter (1) different for P1 and P2, and (2) derived from the respective ADC16 values.
+%     The old values also did not account for the moving average bug (factor) in the calibration data for 2015-05-28.
+%     /Erik P G Johansson 2017-07-11
+%
 %   ----------------------------------------------------------------------------
 %   NOTE: As of 2016-04-07, this software is designed for MATLAB R2009A to make it possible to still run on squid.
 %   NOTE: As of 2017-01-26, it appears that the part of the execution that takes the most time is the reading of LBL
@@ -112,7 +121,7 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
 
     FILES_PER_PROGRESS_STEP = 3000;   % Number of files to process before updating the progress percentage (log message).
     
-    % Value to SUBTRACT from all non-negative measured ADC16 values in ADC16 TM units.
+    % Value which is SUBTRACTED from all non-negative measured ADC16 values in ADC16 TM units.
     % NOTE: The pds s/w contains a similar constants which affects the EDITED values. That constant must be compatible
     % (but not automatically identical!) with the value here.
     ADC16_EDITED_NONNEGATIVE_OFFSET_ADC16TM = -2.5;
@@ -602,7 +611,8 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         fprintf(fileId, 'PDS_VERSION_ID = PDS3\r\n');
         %fprintf(fileId, 'LABEL_REVISION_NOTE = "2015-06-03, EJ: Updated LAP_*_CAL_20B* calibration factors"\r\n');
         %fprintf(fileId, 'LABEL_REVISION_NOTE = "2015-07-07, EJ: RECORD_BYTES=31"\r\n');   % Use??
-        fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-01-27, EJ: Updated metadata; start/stop times, DESCRIPTION, UNIT"\r\n');
+        %fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-01-27, EJ: Updated metadata; start/stop times, DESCRIPTION, UNIT"\r\n');
+        fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-07-11, EJ: Removed ADC20 calibration factors ROSETTA:LAP_*_CAL_20B*"\r\n');
         fprintf(fileId, 'RECORD_TYPE = FIXED_LENGTH\r\n');
         fprintf(fileId, 'RECORD_BYTES = 31\r\n');
         fprintf(fileId, 'FILE_RECORDS = 256\r\n');
@@ -637,17 +647,18 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         fprintf(fileId, 'ROSETTA:LAP_VOLTAGE_CAL_16B = "1.22072175E-3"\r\n');
         %--------
         %fprintf(fileId, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.62940181E-5"\r\n');   % Original value used up until ca 2015-06-11.
-        fprintf(fileId, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.534142050781250E-05"\r\n');   %  1.22072175E-3 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
+        %fprintf(fileId, 'ROSETTA:LAP_VOLTAGE_CAL_20B = "7.534142050781250E-05"\r\n');   %  1.22072175E-3 * 1/16 *
+        %0.9875; ADC20 calibration from data for 2015-05-28. Disabled 2017-07-11.
         %--------    
         fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_16B_G1 = "3.05180438E-10"\r\n');
         %--------        
         %fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.90735045E-11"\r\n');   % Original value used up until ca 2015-06-11.
-        fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.883535515781250E-11"\r\n');   % 3.05180438E-10 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
+        %fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.883535515781250E-11"\r\n');   % 3.05180438E-10 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28. Disabled 2017-07-11.
         %--------        
         fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_16B_G0_05 = "6.10360876E-9"\r\n');
         %--------        
         %fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.81470090E-10"\r\n');   % Original value used up until ca 2015-06-11.
-        fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.767071031562500E-10"\r\n');     % 6.10360876E-9 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28.
+        %fprintf(fileId, 'ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.767071031562500E-10"\r\n');     % 6.10360876E-9 * 1/16 * 0.9875; ADC20 calibration from data for 2015-05-28. Disabled 2017-07-11.
         %----------------------------------------------------------------------------------------
         
         fprintf(fileId, 'OBJECT = TABLE\r\n');
