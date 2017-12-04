@@ -119,6 +119,9 @@ function [varargout] = write_CALIB_MEAS_files(editedDatasetPath, missionPhaseNam
 %   PROPOSAL: Change term "mode" to something else.
 %   PROPOSAL: Some kind of optional (informal?) detection of cold input calibrations. Detection results as separate
 %             list?!
+%   PROPOSAL: Separate code for generating LBL files.
+%       PRO: Useful for regenerating (modifying) LBL files without processing TAB files.
+%       PRO: Useful for regenerating LBL file RPCLAP030101_CALIB_MEAS.LBL which TAB file is not generated like other CALIB_MEAS files.
 
     scriptStartTimeVector = clock;    % Script start time. NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute second].
 
@@ -620,7 +623,8 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         %fprintf(fileId, 'LABEL_REVISION_NOTE = "2015-06-03, EJ: Updated LAP_*_CAL_20B* calibration factors"\r\n');
         %fprintf(fileId, 'LABEL_REVISION_NOTE = "2015-07-07, EJ: RECORD_BYTES=31"\r\n');   % Use??
         %fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-01-27, EJ: Updated metadata; start/stop times, DESCRIPTION, UNIT"\r\n');
-        fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-07-11, EJ: Removed ADC20 calibration factors ROSETTA:LAP_*_CAL_20B*"\r\n');
+        %fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-07-11, EJ: Removed ADC20 calibration factors ROSETTA:LAP_*_CAL_20B*"\r\n');
+        fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-07-11?, EJ: Removed ADC16 calibration factors ROSETTA:LAP_*_CAL_16B*"\r\n');
         fprintf(fileId, 'RECORD_TYPE = FIXED_LENGTH\r\n');
         fprintf(fileId, 'RECORD_BYTES = 31\r\n');
         fprintf(fileId, 'FILE_RECORDS = 256\r\n');
