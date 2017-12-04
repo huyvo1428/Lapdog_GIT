@@ -497,7 +497,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         % Modify specific fields: Change from strings to numeric values.
         data.direction      = str2double(data.direction);
         data.Illumination   = str2double(data.Illumination);
-        data.asm_ni_v_indep = str2double(data.asm_ni_v_indep);
+        %data.asm_ni_v_indep = str2double(data.asm_ni_v_indep);
+        data.asm_ne_5eV     = str2double(data.asm_ne_5eV);
         data.asm_Te_exp     = str2double(data.asm_Te_exp);
         %data.asm_Vsg        = str2double(data.asm_Vsg);
         data.Vph_knee       = str2double(data.Vph_knee);
@@ -573,7 +574,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         
         % Set plasma density: data.npl_est(i)
         for i = i_npl_priority_list'   % Must be row vector.
-            npl = data.asm_ni_v_indep(i);
+            %npl = data.asm_ni_v_indep(i);
+            npl = data.asm_ne_5eV(i);
             
             if ~isempty(npl)
                 if ~isnan(npl) &&  (npl > 0)
