@@ -3,7 +3,10 @@
 %
 % Return value: String, e.g. 386207924.64832 where decimals are "fake".
 %
-% NOTE: Input is a double, not a string.
+% ARGUMENTS
+% =========
+% Value : OBT as a double (true decimals).
+%
 % NOTE: Here SCT = SCS = "Spacecraft clock string" (SPICE uses that terminology.)
 % ===================== OLD COMMENTS BELOW ==========================
 %

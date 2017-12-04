@@ -41,6 +41,13 @@
 % we used ITEM_OFFSET+ITEM_BYTES correctly. DELIMITER IS NO LONGER NEEDED AND SHOULD BE PHASED OUT!
 % (E-mail Tony Allen->Erik Johansson 2015-07-03 and that thread).
 %
+% NOTE: Not full general-purpose function.
+%       (1) Calls createLBL_write_LBL_header to write initial top-level PDS keywords.
+%       (2) Also does not use general-purpose ODL writing function (like EJ's write_ODL_from_struct).
+%       (3) OBJTABLE_DELIMITER
+%       (4) hardcoded indentation length
+%       NOTE: Uses createLBL_KVPL_add_kv_pair, createLBL_KVPL_merge.
+%
 function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inconsistency_policy)
     %
     % CONCEIVABLE LBL FILE SPECIAL CASES that may have different requirements:
@@ -392,6 +399,7 @@ end
 
 
 %##########################################################################################################
+
 
 
 % PROPOSAL: Remake into general function?!

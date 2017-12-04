@@ -1,5 +1,6 @@
 % Create TAB files containing the current best estimates of plasma parameters.
 % 
+%
 % NOTE: Very preliminary best estimates (physics).
 % NOTE: Presently only based on probe 1 sweeps, one estimate per (probe 1) sweep.
 %
@@ -23,7 +24,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % ==> Matrices of numbers (not strings) from some AxS files have
 % fewer columns ==> Nbr of column names and nbr of columns don't match.
 %
-% Footnote: Have not found any hard source code which specifies the
+% FOOTNOTE: Have not found any hard source code which specifies the
 % exact length of UTC-time strings. ==> One has to "measure" the
 % length manually for now.
 % Ex: "2014-08-31T22:14:24.369327" ==> 10 + 1 + 8 + 1 + 6 = 26 bytes
@@ -45,8 +46,14 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % PROPOSAL: Remove Vsc values equal or lower/higher than lowest/highest sweep bias.
 %   NOTE: Sweep bias values can be read from B?S.TAB files.
 %
-% TODO: Check whether to expect low-freq bias potential using macro, instead of checking file existence?
+% PROPOSAL: Convert "an_tabindex", "tabindex" to structs.
+%   NOTE: "index" already is a struct.
+%   NOTE: "an_tabindex" is returned to the caller. "Must" be able to convert back.
+%   PROPOSAL: Reuse code for conversion of "an_tabindex" and "tabindex".
 %
+% PROPOSAL: Reorganize into having separate internal functions outside of main functions (no shared namespace).
+%
+% TODO: Check whether to expect low-freq bias potential using macro, instead of checking file existence?
 % TODO: Remove references to "et" times. Use OBT.
 %
 % NOTE/BUG: It is perfectly possible for there to legitimately be no IxL/IxH file for short time
@@ -110,15 +117,16 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         
         
         
-        %------------------------------------------------------------------------------
-        % Create table of data from resp. probes. Table has indicies (<ops block>, <probe number>).
+        %------------------------------------------------------------------------------------------
+        % Create table of data from resp. probes. Table has indices (<ops block>, <probe number>).
+        %
         % NOTE: Not all entries will necessarily be assigned.
         % Some ops blocks may not contain sweeps, some may sweep on only one probe, or none.
         % NOTE: ant = "an_tabindex"
-        %------------------------------------------------------------------------------
+        %------------------------------------------------------------------------------------------
         i_ant_list = find(strcmp(an_tabindex(:,7), 'sweep'));   % ant = "an_tabindex"
         PO_table = cell(nob, 2);               % PO = probe-operations block. Data for one probe during one ops block.
-        O_list = cell(nob, 1);                 % O  = operations block. Data for one operations block (in practice EST, if contains sweeps).
+        O_list   = cell(nob, 1);               % O  = operations block. Data for one operations block (in practice EST, if contains sweeps).
         for i_ant = i_ant_list(:)'      % for every 'sweep' file ...   (List of values must be row vector for iteration to work.)
             PO = [];
             PO.i_ant = i_ant;
@@ -145,15 +153,15 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 
             [PO.data, N_sw] = read_AxS_file_INTERNAL(AxS_file_path, i_probe);
             
-            %---------------------------------------------------------------------------------------
-            % Add most recent low frequency bias potential before every individual sweep.
-            % ---------------------------------------------------------------------------
+            %-----------------------------------------------------------------------------------------------------------
+            % Add most recent low frequency bias potential before every individual sweep
+            % --------------------------------------------------------------------------
             % (Might not be relevant if sweep is preceeded by other sweep but that is not decided here in the code.)
             % NOTE: Special case: First sweep might not have a preceeding low freq. bias potential in the same ops block.            
             % NOTE: Special case: It takes time to change/set bias and the immediately following value(s) may be faulty.
             % 
             % IMPORTANT NOTE: Code uses tabindex to check for existence of pre-sweep LF/HF data. TODO: Change?
-            %---------------------------------------------------------------------------------------
+            %-----------------------------------------------------------------------------------------------------------
             IxLH_data = [];
             if     sum(strcmp({tabindex{:,1}}, IxL_file_path))
                 IxLH_data = read_IxLH_file_bias_voltage_INTERNAL(IxL_file_path, i_probe);
@@ -332,7 +340,6 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     
     
     %------------------------------------------------------------------------------------------------
-    % TASK TO BE SOLVED BY THIS FUNCTION:
     % Given a set of sweeps, return groups of approximately simultaneous sweeps for
     % "select_best_estimates_INTERNAL" to work on (one group at a time), i.e. what is relevant for.
     %
@@ -341,28 +348,38 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     % This depends on the exact implementation of "select_best_estimates_INTERNAL".
     %
     % sim = simultaneous; sw = sweep
+    %
+    % ARGUMENTS
+    % =========
+    % sw_data : 1x1 struct with fields which are same-sized 1D arrays.
     %------------------------------------------------------------------------------------------------
     function [sim_sweep_data_grps_list] = group_simultaneous_sweeps_INTERNAL(sw_data)
     % QUESTION: How handle situation if number of sweeps is not an even multiple of natural "groups"? How handle such an ending?
     % QUESTION: Expect time-sorted data or sort oneself?    
     %
-        
+
         N_sw = length(sw_data.MIDDLE_TIME_OBT);
-                
+
         %--------------------
         % Sort data by time.
         %--------------------
         [junk, i_sort] = sort(sw_data.MIDDLE_TIME_OBT);
         sw_data = select_structs_arrays_INTERNAL(sw_data, i_sort);
-        
-        
 
-        % Determine (1) which probes for which there is data, and (2) which probes for which there are pairs of sweeps.        
-        has_Pi       = [];
-        has_Pi_pairs = [];
+
+
+        %---------------------------------------------------------------------------------------------------------------
+        % Assigns variables:
+        % has_Pi             : [i] = Number of sweeps on probe i (in practice only used for distinction zero, non-zero). Size 1x2.
+        % has_Pi_pairs       : [i] = True iff there is (at least one) sweep pair on probe i. 
+        % sw_data.pair_first : [i] = True iff sweep i is the first in a sweep pair.
+        %                      New field which is added to sw_data.
+        %---------------------------------------------------------------------------------------------------------------
+        has_Pi             = [];
+        has_Pi_pairs       = [];
         sw_data.pair_first = zeros(N_sw, 1);      % Index to next sweep in pair, if there is any.
         for i_P = 1:2
-            i_Pi = find(sw_data.probe_nbr == i_P);
+            i_Pi        = find(sw_data.probe_nbr == i_P);
             has_Pi(i_P) = length(i_Pi);
             
             if has_Pi(i_P)
@@ -444,16 +461,26 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     %==================================================================================
     % IMPLEMENTATION OF FUNCTION: Version 2.0
     % 
-    % TASK TO BE SOLVED BY THIS FUNCTION:
-    % Given a set of sweeps sim_sweep_data which are to be regarded as "approximately simultaneous",
+    % Given a set of sweeps "sim_sweep_data" which are to be regarded as "approximately simultaneous",
     % return a set of best estimates based upon them.
     % Exact assumptions for the set of sweeps in the argument depends on "group_simultaneous_sweeps_INTERNAL".
     %
-    % NOTE: In principle, this function does a lot of work that is redone for every sweep group that
+    %
+    % ARGUMENTS
+    % =========
+    % sim_sweep_data : "Simultaneous sweeps data". 1x1 struct where fields are same-sized 1D arrays.
+    %                   Struct containing the same set of values and parameters for each
+    %                   sweep in a group of "approximately simultaneous" sweeps. 
+    %
+    %
+    % IMPLEMENTATION NOTE
+    % ===================
+    % In principle, this function does a lot of work that is redone for every sweep group that
     % could probably be done for every operations block.
     % However, the "architecture" is chosen (1) to produce clear and unambiguous (and safe) code
     % for lots of cases (number of available probes, number of available sweeps, and order of
     % up/down sweeps), and (2) to be easily modified (safely).
+    %
     %
     % CURRENT IMPLEMENTATION: Assumes 0-2 sweeps from each probe.
     % NOTE: If there are two sweeps on same probe, then they are assumed to be a "pair" (immediately adjacent in time).
@@ -466,8 +493,9 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 
         Vsc_BIAS_EXCLUSION_MARGIN_FRACTION = 0.01;
         
-        data = sim_sweep_data;
-        data.direction      = str2double(data.direction);        
+        data = sim_sweep_data;    % Change name of variable.
+        % Modify specific fields: Change from strings to numeric values.
+        data.direction      = str2double(data.direction);
         data.Illumination   = str2double(data.Illumination);
         data.asm_ni_v_indep = str2double(data.asm_ni_v_indep);
         data.asm_Te_exp     = str2double(data.asm_Te_exp);
@@ -490,12 +518,19 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         end
         has_P2_updn_pair = ~isempty(i_P2_1st) && (data.direction(i_P2_1st) == 1) && ~isempty(i_P2_2nd) && (data.direction(i_P2_2nd) == 0);   % NOTE: Uses && so not to require i_P2_1st.
         
+        %=========================================================================================
+        % Derive arrays (possibly empty) of indices into struct data's fields for sweeps which satisfy certain criteria.
+        %
+        % Variable naming convention:
+        % ---------------------------
+        % P1/P2 = Probe 1/2
         % up/dn = Up/down sweep.
+        % updn = There is an up-down pair of sweeps (on this probe; in this sweep group).
         % pb = "Positive bias", i.e. V_LF_HF_before_sweep > 0.
         % nb = "Negative bias", i.e. V_LF_HF_before_sweep <= 0.
-        % updn = There is an up-down pair of sweeps (on this probe; in this sweep group).
         % sh = Shade. NOTE: Illumination can take on values 0, 0.4 (illumination unknown), and 1.
         % il = Illuminated.
+        %=========================================================================================
         i_P1_up            = find((data.probe_nbr == 1) & (data.direction == 1));
         i_P1_dn            = find((data.probe_nbr == 1) & (data.direction == 0));
         
@@ -523,9 +558,9 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         % These can/should not be concatenated horisontally since they have different height,
         % but vertically since they have the same width.
         %=====================================================================================
-        i_npl_priority_list = [i_P2_dn_pb_updn;      i_P2_up_sh;   i_P1_up;   i_P1_dn];
-        i_Te_priority_list  = [i_P2_dn_pb_updn_sh;   i_P2_up_sh;   i_P1_up;   i_P1_dn];
-        i_Vsc_priority_list = [i_P1_up_il; i_P1_dn_il;   i_P2_up_il_nb; i_P2_dn_il_pb;   i_P2_up_il; i_P2_dn_il];    %  NEW
+        i_npl_priority_list = [i_P2_dn_pb_updn;          i_P2_up_sh;      i_P1_up;         i_P1_dn];
+        i_Te_priority_list  = [i_P2_dn_pb_updn_sh;       i_P2_up_sh;      i_P1_up;         i_P1_dn];
+        i_Vsc_priority_list = [i_P1_up_il; i_P1_dn_il;   i_P2_up_il_nb;   i_P2_dn_il_pb;   i_P2_up_il; i_P2_dn_il];    %  NEW
 
 
         %===============================================================================
@@ -535,6 +570,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         % i.e. illumination, V_bias_before_sweep, 
         % but NOT NaN or out-of-(realistic)-range.
         %===============================================================================
+        
+        % Set plasma density: data.npl_est(i)
         for i = i_npl_priority_list'   % Must be row vector.
             npl = data.asm_ni_v_indep(i);
             
@@ -547,6 +584,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             clear npl     % Erase variable to prevent accidentally reusing it when e.g. copy-pasting.
         end
 
+        % Set electron temperature: data.Te_est(i)
         for i = i_Te_priority_list'   % Must be row vector.
             Te = data.asm_Te_exp(i);
             
@@ -560,6 +598,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             clear Te     % Erase variable to prevent accidentally reusing it when e.g. copy-pasting.
         end
 
+        % Set spacecraft potential: data.Vsc_est(i)
         for i = i_Vsc_priority_list'   % Must be row vector.
             Vsc = data.Vph_knee(i);
             
@@ -592,6 +631,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     
     
     
+    % Writes EST TAB file.
+    %
     % NOTE: Can/should handle handle empty values in the form of [].
     %       str2double([]) = NaN,
     %       str2num([]) ==> Syntax error
@@ -650,7 +691,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
     % Reads AxS file 
     % --------------
     % IMPORTANT NOTE: Uses the non-PDS compliant first row
-    % of column headers in AxS to label variables (struct fields).
+    % of column headers in AxS to label variables (names of struct fields).
     % When that becomes PDS compliant, this code WILL NOT WORK!
     % ---------------------------------------------------------
     % NOTE: Returns only strings, except for added fields.
@@ -708,9 +749,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             end
             data.(skey) = strtrim(file_data(1:end, i));     % NOTE: Trimming and copying strings. No conversion strings-to-numbers.
         end
- 
-        
-        
+
+        %---------------------------------------------------------------------------------------
         % Add extra fields that may be needed by algorithms that choose information from
         % the different probes at only approximately the same time.
         %---------------------------------------------------------------------------------------
@@ -813,8 +853,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
             fclose(fid);
         
             %data.UTC_TIME = file_contents{1};    % For debugging. Can disable to reduce memory use.
-            data.TIME_OBT = file_contents{1};
-            data.V_bias   = file_contents{2};
+            data.TIME_OBT = file_contents{1};    % HARDCODED COLUMN NUMBER
+            data.V_bias   = file_contents{2};    % HARDCODED COLUMN NUMBER
 
             % Add extra fields that may be needed by algorithms.
             data.probe_nbr = zeros(N_rows, 1) + probe_nbr;
@@ -861,7 +901,7 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
         end
         %fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
         file_contents = textscan(fid, '%f%f', 'delimiter', ',');        
-        V_bias = file_contents{2};
+        V_bias = file_contents{2};    % HARDCODED COLUMN NUMBER
         fclose(fid);
         
         V_bias_min = min(V_bias);
@@ -901,7 +941,8 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 
     % #############################################################################################
     
-    % Generic utility function
+    % Generic utility function.
+    % NOTE: Can be used for reordering struct fields.
     function s = select_structs_arrays_INTERNAL(s, i)
         for fn = fieldnames(s)'
             s.(fn{1}) = s.(fn{1})(i, 1);
