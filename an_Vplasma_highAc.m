@@ -157,7 +157,7 @@ if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if thi
     out.Vph_knee = [Vph_knee,Vph_knee_sigma];
 
     
-    if an_debug > 1 %debug plot
+    if an_debug > 2 %debug plot
     
         figure(444);
         %just for diagnostics
@@ -168,6 +168,7 @@ if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if thi
         plot(x,y*max(d2i/mean(abs(d2i))),'og',Vb,d2i/mean(abs(d2i)),'--b',Vb,4*Ib/mean(abs(Ib)),'black')
         title('anVplasma');
         grid on;
+        legend('gaussfit','d^{2}i/dV^{2}','IV sweep')
         
         subplot(1,2,2)
         %plot(Vb,  posd2i/trapz(Vb,posd2i)-gaussian_reduction/trapz(Vb,gaussian_reduction),'b',Vb, 0.01*(posd2i/mean(abs(posd2i))-gaussian_reduction*max(posd2i/mean(abs(posd2i)))),'r')
@@ -175,7 +176,8 @@ if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if thi
         %   z=z*200;
         plot(Vb,di/mean(abs(di)),'b',Vb,d2i/mean(abs(d2i)),'r',Vb,reduced_posd2i*max(d2i/mean(abs(d2i))),'g');
         grid on;
-        
+       legend('di/dV','2nd deriv','reduced 2nd deriv')
+     
     end
     
     
@@ -206,7 +208,7 @@ ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative
 
 %-------- Time for more logic ---------------------------------------------
 
-
+VPOS_TRESHOLD=19; %this is extremely rare during the mission
 %if nan or vbKnee2 and vbKnee1 peaks overlap
 %if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1+sigma2  sigma 2 is often
 %very small...
@@ -214,12 +216,22 @@ ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative
 
     vbKnee2=vbKnee1;
     sigma2= sigma1;
-end
+    end
 
 
-if sign(vbKnee1)~= sign(vbKnee2) %if peaks on different sides of Vb = 0, ignore second peak
-%maybe have a check if secondpeak>firstpeak. if so, pos(end) == pos2(end). This will be bad if Vsc>>1
-    Vsc = -vbKnee1;
+
+if sign(vbKnee1)~= sign(vbKnee2)
+    
+    if -vbKnee1>VPOS_TRESHOLD % i.e. Vph_knee> +19V ? this is extremely rare during the entire mission...
+        vbKnee1=vbKnee2; %ignore first peak
+        sigma1= sigma2;               
+    elseif -vbKnee2>VPOS_TRESHOLD       
+        vbKnee2=vbKnee1;%ignore second peak
+        sigma2= sigma1;
+    end
+    %if peaks on different sides of Vb = 0, ignore second pe        ak
+    %maybe have a check if secondpeak>firstpeak. ifso, pos(end) == pos2(end). This will be bad if Vsc>>1
+    Vsc = -vbKnee1; %I don't know what this will do.
     Sgsigma = abs(sigma1/vbKnee1);
     Vph_knee = Vsc;
     Vph_knee_sigma = Sgsigma;
@@ -267,7 +279,7 @@ out.Vsc = [Vsc,Sgsigma];
 out.Vph_knee = [Vph_knee,Vph_knee_sigma];
 
 
-if an_debug > 1
+if an_debug > 2
     
     figure(444);
 %just for diagnostics
@@ -278,12 +290,14 @@ if an_debug > 1
     plot(x,y*max(d2i/mean(abs(d2i))),'og',x,y2*max(d2i/mean(abs(d2i))),'--r',Vb,d2i/mean(abs(d2i)),'--b',Vb,4*Ib/mean(abs(Ib)),'black')
     title('anVplasma');
     grid on;
+    legend('gaussfit','fit nr 2','di/dV','IV sweep')
 
     subplot(1,2,2)
  %   z=posd2i/trapz(Vb,posd2i)-gaussian_reduction/trapz(Vb,gaussian_reduction);
  %   z=z*200;
     plot(Vb,di/mean(abs(di)),'b',Vb,d2i/mean(abs(d2i)),'g',Vb,reduced_posd2i*max(d2i/mean(abs(d2i)))/10,'r');
     grid on;
+    legend('di/dV','2nd deriv','reduced 2nd deriv')
 
     
     %    Ib5 = smooth(Ib,0.14,'sgolay');

@@ -24,7 +24,10 @@ function [out] = LP_expfit_Te(V_unfilt,I_unfilt,Vknee,filter_ind)
 
 global an_debug IN CO
 
-
+I_unfilt=I_unfilt-(min(I_unfilt)); 
+%Use values that are below zero. If there are any, it that just means that 
+%our ion detection routine was off by a little(or a lot), we should still 
+%be able to find Te
 
 
 %init outputs
@@ -71,13 +74,12 @@ try
 
     ind= find(Vp+eps < 0); %this could be empty (not likely)
     
-    bot=find(I(ind)<0,1,'last')+1; %this could be empty (possible)
+    bot=find(le(I(ind),0),1,'last')+1; %this could be empty (possible)
     if isempty(bot)
         bot = 1;
     end
     
-    rind = ind(bot):ind(end); %this could be even more empty
-
+    rind = ind(bot):ind(end); %this could be even more empty if everything is below zero (not good)
     
 catch err    
     return

@@ -146,8 +146,21 @@ try %try the dynamic solution first, then the static.
     % Is = LP_MA(I); %Terrible for knees in end-4:end
     %dv = S.step_height*IN.VpTM_DAC; % Step height in volt.
     dv = V(2)-V(1);
-    Is = sweepFilterChooser_test(I,dv);
+    
+ %   Is = Blackmansmoothing(V',I',0.3);%(V',I',0.1);%
+    [Is,smooth_flag] = sweepFilterChooser_test(I,dv,V); %this will return flag=1 if the smoothing goes bad, in which case we only use it for Vph_knee determination
+    if (an_debug>1)%debug plot
 
+        figure(30)
+        plot(V,Is*1e9,V,I*1e9);grid on;
+        title('smoothening performance')
+        legend('I_{smooth}','I_{raw}')
+        ax=gca;
+        ax.XLim=[0 30];
+
+    end
+    
+    
     % Find Photoelectron & electron knees!
     %---------------------------------------------------
 
@@ -170,17 +183,22 @@ try %try the dynamic solution first, then the static.
         DP.Vbar_lowAc             = twinpeaks_low.Vbar;
 
 
-    Vknee       = twinpeaks.Vph_knee(1);
+    Vknee       = twinpeaks.Vph_knee(1);% for bad smoothing, this doesn't make a lot of sense
     Vknee_sigma = twinpeaks.Vph_knee(2);
     %    [Vsc, Vsc_sigma] =twinpeaks.Vsc;
     %    Vsc = twinpeaks.Vsc(1);
     %    Vsc_sigma =twinpeaks.Vsc(2);
 
 
+    %
+    if smooth_flag
+    Is= I; % if the smoothing is bad, the rest of the algorithm survives on a raw sweep... hopefully
+    Q(2)=2;
+    end
 
 
     %Here is the Vsc defined for use in analysis. Previously Vbar has been
-    %used, but simulations and results suggests Vph_knee �r mycket n�rmare.
+    %used, but simulations and results suggests Vph_knee is much closer to truth.
  %   Vsc = twinpeaks.Vbar(1);
 %    Vsc_sigma =twinpeaks.Vbar(2);
 
@@ -248,7 +266,7 @@ try %try the dynamic solution first, then the static.
     [ion] = LP_Ion_curr(V,Is,Vsc,Vknee); % The ion current is denoted ion.I,
 
 
-    if (an_debug>1)%debug plot
+    if (an_debug>3)%debug plot
 
         figure(33)
         subplot(3,2,3);plot(V+Vsc,Is,'b',V+Vsc,ion.I,'g');grid on;
@@ -301,7 +319,7 @@ try %try the dynamic solution first, then the static.
     Itemp = Is - ion.I;   %the resultant current should be electrons & photoelectrons
 
 
-    if (an_debug>1) %debug plot
+    if (an_debug>3) %debug plot
         figure(33);
 
         subplot(3,2,6),plot(V,Is,'b',V,Itemp,'g');grid on;
@@ -332,7 +350,7 @@ try %try the dynamic solution first, then the static.
     end
 
 
-    if (an_debug>1) %debug plot
+    if (an_debug>3) %debug plot
         figure(33);
         subplot(3,2,1),plot(V,Is,'b',V,Itemp- elec.I,'g',V,Itemp-expfit.I,'r',V,Itemp-asm_expfit_belowVknee.I,'black');grid on;
         title([sprintf('I, I-Ii-Ie linear, I-Ii-Ie exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
@@ -421,7 +439,7 @@ try %try the dynamic solution first, then the static.
 
         if(isempty(idx))
             DP.Vsi = NaN;
-            Q(4) = 1;
+            Q(4) = 4;
             DP.Iph0 = Iph0_limit;
 
             Iph(:)=0;
@@ -560,7 +578,7 @@ try %try the dynamic solution first, then the static.
     DP.Rsq.exp          = Rsq_exp;
 
 
-    if (an_debug>1) %debug plot
+    if (an_debug>3) %debug plot
         figure(33);
 
         subplot(3,2,2)
@@ -622,7 +640,7 @@ try %try the dynamic solution first, then the static.
         %[Vsc, Vsigma2] = an_Vsc(V,Itemp);
 
 
-        if (an_debug>1) %debug plot
+        if (an_debug>3) %debug plot
             figure(34);
 
             subplot(3,2,4),plot(V,I,'b',V,asm_Itemp,'g');grid on;
@@ -647,7 +665,7 @@ try %try the dynamic solution first, then the static.
     % the linear fit  are also returned and estimates of the ion density.
     [asm_ion] = LP_Ion_curr(V,asm_Itemp,Vsc,Vknee); % The ion current is denoted Ii,
 
-    if (an_debug>1)  %debug plot
+    if (an_debug>3)  %debug plot
         figure(34);
 
         subplot(3,2,3),plot(V+Vsc,I,'b',V+Vsc,asm_ion.I,'g');grid on;
@@ -663,7 +681,7 @@ try %try the dynamic solution first, then the static.
     asm_Itemp = asm_Itemp - asm_ion.I;
 
 
-    if (an_debug>1)  %debug plot
+    if (an_debug>3)  %debug plot
 
         subplot(3,2,6),plot(V,Is,'b',V,asm_Itemp,'g');grid on;
 
@@ -733,7 +751,7 @@ try %try the dynamic solution first, then the static.
 
 
     %
-    if (an_debug>1)  %debug plot
+    if (an_debug>3)  %debug plot
         figure(34);
         subplot(3,2,1),plot(V,Is,'b',V,asm_Itemp - asm_elec.I,'g',V,asm_Itemp -asm_expfit.I,'r');grid on;
         title([sprintf('I, I-all_linear, I-all_exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
@@ -754,7 +772,7 @@ try %try the dynamic solution first, then the static.
     %find minimum
     idx1 = find(diph==min(diph),1);
 
-    % add 1E5 accuracy on min, and try it again for ?1 V.
+    % add 1E5 accuracy on min, and try it again for +-1 V.
     tempV = V(idx1)-1:1E-5:(V(idx1)+1);
     diph = abs(asm_ion.a(1)*tempV + asm_ion.b(1) -Iftmp*exp(-(tempV+Vsc-Vplasma)/Tph));
     eps = abs(Iftmp)/1000;  %good order estimate of minimum accuracy
@@ -830,7 +848,7 @@ try %try the dynamic solution first, then the static.
 
 
 
-    if (an_debug>1)  %debug plot
+    if (an_debug>3)  %debug plot
 
         figure(34);
         subplot(3,2,2)

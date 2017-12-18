@@ -36,7 +36,7 @@ fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n');
 
 
 
-fprintf(1,'rerunlapdog(%s,%s,%s,%s) activated ...\n',archpath, archID, missioncalendar,rerun_mode);
+ fprintf(1,'rerunlapdog(%s,%s,%s,%s) activated ...\n',archpath, archID, missioncalendar,rerun_mode);
 
 
 rerun_mode = str2double(rerun_mode);
@@ -97,7 +97,7 @@ switch rerun_mode
     case 5
         remake_index = 0;
         remake_tabindex = 0;
-        remake_sweepsonly = 1;
+	remake_sweepsonly = 1;
 %        remake_analysis = 1;
 %        remake_bestestimates = 1;
 %        remake_LBL =1;
@@ -111,9 +111,9 @@ switch rerun_mode
         remake_index = 0;
         remake_tabindex = 0;
         remake_BLKLISTONLY = 1;
+
  
-    otherwise
-        error('Can not intepret parameter rerun_mode=%f.', rerun_mode)
+        
 end
 
 
@@ -151,8 +151,8 @@ if ge(remake_index,0) %remake index ~=-1
         
         load(indexfile);
         
-        
-        substring = '/data/LAP_ARCHIVE/cronworkfolder/';
+        substring = '/mnt/localhd/cron_script_temp/'; 
+       % substring = '/data/LAP_ARCHIVE/cronworkfolder/';
         newstring= '/data/LAP_ARCHIVE/';
         fprintf(1,'replacing substrings...\n');
         
@@ -228,17 +228,26 @@ if (exist(tabindexfile) == 2 && remake_tabindex == 0)
     
     substring = '/data/LAP_ARCHIVE/cronworkfolder/';
     newstring= '/data/LAP_ARCHIVE/';
-    %	substring = strrep(tabindex(1,1),tabindex(1,2),'');
+    
+	%substring = strrep(tabindex(1,1),tabindex(1,2),'');
     %	tabindexsubstring= substring{1,1}(1:end-42);
     %	newstring= '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/';
-    fprintf(1,'replacing substrings in tabindex...\n');
+	fprintf(1,'replacing substrings in tabindex...\n');
     tabindex(:,1) = cellfun(@(x) strrep(x,substring,newstring),tabindex(:,1),'un',0);
     
     substring = '/usr/local/src/cronworkfolder/';
+
     %newstring= '/data/LAP_ARCHIVE/';
     fprintf(1,'replacing substrings type 2 in tabindex...\n');
     tabindex(:,1) = cellfun(@(x) strrep(x,substring,newstring),tabindex(:,1),'un',0);
+
+    substring = '/mnt/localhd/cron_script_temp/'
+
+    %newstring= '/data/LAP_ARCHIVE/';
+    fprintf(1,'replacing substrings type 3 in tabindex...\n');
+    tabindex(:,1) = cellfun(@(x) strrep(x,substring,newstring),tabindex(:,1),'un',0);
     fprintf(1,'lapdog: succesfully loaded tabfiles...\n');
+
 
 
 

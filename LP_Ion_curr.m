@@ -185,6 +185,7 @@ P_Up = P_Vb;
 P_Up(2) = P_Vb(2) - P_Vb(1)*Vknee; %same slope, but intersect if ions are function of Up, where Up = V-Vknee)
 
 
+out.a = a;
 
 
 if (a(2) > 1) || (a(1) < 0)   % if error is large (!) or slope is in the wrong direction (unphysical)
@@ -242,7 +243,7 @@ end
     % IiUp = (IiUp-abs(IiUp))/2;
 
     out.I = Ii;
-    out.a = a;
+%    out.a = a;
     out.b = b;
     out.Vpa = [P_Vp(1) a(2)];
     out.Vpb = [P_Vp(2) b(2)];

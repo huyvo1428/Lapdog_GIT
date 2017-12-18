@@ -8,8 +8,12 @@ global diag_info
 global CO IN     % Physical & instrumental constants
 
 control;
-
 target = 'CHURYUMOV-GERASIMENKO';
+
+try 
+    preamble;% preamble will exit with errors, but who cares
+catch err
+end
 
 
 
@@ -18,6 +22,7 @@ global assmpt;
         assmpt =[];
         assmpt.Vknee = 0; %dummy
         assmpt.Tph = 2; %eV
+        assmpt.Iph0 = -3.0e-09; 
         assmpt.Iph0 = -6.6473e-09;   % from median of M06 & SPIS simulation
         %    assmpt.Iph0 = -8.55e-09; % from mean of M08, probably too high.
         assmpt.vram = 4E5; % Solar wind assumption
@@ -29,8 +34,14 @@ global assmpt;
 %rsync -rzth --progress --include '*/' --include '*B*S.TAB' --exclude '*' frejon@squid.irfu.se:/data/LAP_ARCHIVE/Daily*/2016/MAR/D15/ ~/Rosetta/temp/
 %rsync -rzth --progress --include '*/' --include '*I*S.TAB' --exclude '*' frejon@squid.irfu.se:/data/LAP_ARCHIVE/Daily*/2016/MAR/D15/ ~/Rosetta/temp/
 
-    
-rfolder = '~/Rosetta/temp/';
+rfolder = '/mnt/squid/RO-C-RPCLAP-5-1508-DERIV-V0.7/2015/AUG/D19/';
+
+
+
+
+  
+%rfolder = '/Users/frejon/Rosetta/RO-C-RPCLAP-5-1609-DERIV-V0.5/2016/SEP/D30/';
+
 tempfiles = dir(rfolder);
 
 len1= length(tempfiles);
@@ -72,21 +83,23 @@ cspice_furnsh(kernelFile);
 
 k=0; %needed for error output
 
+
+
 try
 
     
     len = length(rfiles);
-    for i=1:len     % iterate over sweep files.., skip first two.
-
+    for i=1:len     % iterate over sweep files.., skip first
         
         
+        %rfolder=rfiles{i,1}(1:54);
         
         % get file, read variables etc
         
         
         %rfile =tabindex{an_ind(i),1};                  % Sweep file
         rfile =[rfolder rfiles(i).name];                  % Sweep file
-
+        %rfile=rfiles{i,1};
         
 %        rfolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
         %tabindex{an_ind(i),1}(end-10:end-8)
@@ -431,12 +444,15 @@ try
         end
 
 
-        % analyse!
+        % analyse! %comment the following next lines if you want FKJN
+%         assmpt.Iph0 = -3.0e-9;
+%         assmpt.vram = 1E3;
 
 
         for k=1:len    % Iterate over first sweep in every potential sweep pair (one/two sweeps)
             %  a= cspice_str2et(timing{1,k});
 
+            k
             % quality factor check
             qf = Qfarr(k);
 
@@ -527,10 +543,17 @@ try
         DP=DP(ind);
         DP_asm=DP_asm(ind);
         EP=EP(ind);
-        wfile= rfile;
+               
+        bfolder=strcat('~/Rosetta/to_elias/',rfolder(12:end));        
+        if exist(bfolder,'dir')~=7
+            mkdir(bfolder);    % NOTE: Will create parent directories as needed.
+        end
+        
+        wfile= strcat(bfolder,'/',rfile(end-33:end));
         wfile(end-6)='A';
         awID= fopen(wfile,'w');
-
+      
+        
 
 
         % IF THIS HEADER IS REMOVED (WHICH IT SHOULD BE BEFORE ESA
@@ -594,17 +617,64 @@ try
 
         end
         fclose(awID);
-
+        
 %         an_tabindex{end+1,1} = wfile;                   % start new line of an_tabindex, and record file name
 %         an_tabindex{end,2} = strrep(wfile,rfolder,'');  % shortfilename
-%         an_tabindex{end,3} = tabindex{an_ind(i),3};     % first calib data file index
+%         an_tabindex{end,3} = 1;     % first calib data file index
 %         %an_tabindex{end,3} = an_ind(1);                % First calib data file index of first derived file in this set
 %         an_tabindex{end,4} = klen; % Number of rows
 %         an_tabindex{end,5} = 112;  % Number of columns
-%         an_tabindex{end,6} = an_ind(i);
+%         an_tabindex{end,6} = 2;
 %         an_tabindex{end,7} = 'sweep'; % Type
 %         an_tabindex{end,8} = timing;
 %         an_tabindex{end,9} = row_bytes;
+
+
+        if str2double(probe)==1
+            dfile= wfile;
+            dfile(end-6:end-4)='A1P';
+            awID= fopen(dfile,'w');
+            if i==1
+                 der_struct=[];
+                 der_struct.file={};                 
+                 der_struct.shortname={};
+                 der_struct.firstind=[];
+                 der_struct.rows=[];
+                 der_struct.cols=[];
+                 der_struct.an_ind_id=[];
+                 der_struct.timing={};
+                 der_struct.bytes=[];
+            end
+            
+            
+            for k=1:klen
+                
+                dstr1  = sprintf('%s, %s, %16s, %16s, %03i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf);
+                dstr2 = sprintf(' %14.7e, %14.7e', DP(k).Vph_knee(1),DP(k).Te_exp_belowVknee(1));
+                
+                dstrtot=strcat(dstr1,dstr2);
+                dstrtot=strrep(dstrtot,'  0.0000000e+00','          -1000'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
+                dstrtot=strrep(dstrtot,'  NaN','-1000'); %
+                %                         dstrtot=strrep(dstrtot,'-Inf','-1000');
+                %                         dstrtot=strrep(dstrtot,'Inf','-1000');
+                drow_bytes = fprintf(awID,'%s\r\n',dstrtot);
+                
+            end
+            fclose(awID);
+                                
+            %der_struct=[];
+            der_struct.file{i}      = dfile;
+            der_struct.shortname{i} =strrep(dfile,rfolder,'');
+        %    der_struct.firstind(i)  =tabindex{an_ind(i),3};
+            der_struct.firstind(i)  =1;
+            der_struct.rows(i)      =klen;
+            der_struct.cols(i)      =7;
+            %der_struct.an_ind_id(i) =an_ind(i);
+            der_struct.an_ind_id(i) =1;
+            der_struct.timing(i,1:4)=timing;
+            der_struct.bytes=drow_bytes;
+                      
+        end
 
         %clear output structs before looping again
         clear AP DP EP

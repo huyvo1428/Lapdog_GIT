@@ -3,7 +3,7 @@
 %function [] = an_hf(derivedpath,an_ind,index,macrotime,fileflag)
 
 
-function [] = an_hf(an_ind,tabindex,fileflag)
+%(an_ind,tabindex,fileflag)
 
 diag = 1;
 
@@ -52,7 +52,11 @@ try
         %names, folders
         %fname = tabindex{an_ind(i),1};
          %fname ='/Users/frejon/Rosetta/temp/710/RPCLAP_20160921_000001_710_V1H.TAB';
-         fname= '/mnt/squid/RO-C-RPCLAP-5-1609-DERIV-V0.5/2016/SEP/D20/RPCLAP_20160920_172156_710_V1H.TAB';
+        % fname= '/mnt/squid/RO-C-RPCLAP-5-1609-DERIV-V0.5/2016/SEP/D30/RPCLAP_20160930_000052_710_V1L.TAB';
+         %fname= '/Users/frejon/Rosetta/EOM/RPCLAP_20160930_000052_710_V1L.TAB';
+
+         fname= '/mnt/squid/RO-C-RPCLAP-5-1609-DERIV-V0.5/2016/SEP/D20/RPCLAP_20160920_172156_710_V1L.TAB';
+
          %fname ='/Users/frejon/Rosetta/temp/RPCLAP_20160715_011458_610_I1H.TAB';    
          %fname ='/mnt/squid/RO-C-RPCLAP-5-1609-DERIV-V0.5/2016/SEP/D23/RPCLAP_20160923_000020_710_V2H.TAB';    
          
@@ -89,31 +93,45 @@ try
         fclose(trID);
         
         
-        
                
-        % Need to split **H.TAB file into separate high frequency snap shots
-        % and remove times when MIP is operating.
         
+        dt_array=diff(scantemp{1,2});%time intervals between two measurements
+
+        notmf_ind=dt_array>1; % check if it's  more than 1 sec.
+        if ~isempty(notmf_ind)  % delete non medium frequency measurements
+        
+            scantemp{1,1}(notmf_ind)    = [];
+            scantemp{1,2}(notmf_ind)    = [];
+            scantemp{1,3}(notmf_ind)    = [];
+            scantemp{1,4}(notmf_ind)    = [];
+            scantemp{1,5}(notmf_ind)    = [];
+
+            if fileflag(2) =='3'
+                scantemp{1,6}(notmf_ind)    = [];
+            end
+        end
+        
+        
+        scantemp{1,end-1}= scantemp{1,end-1} - scan2{1,end-1}; %line
+        %only for V3L, if we have saved scantemp2 somewhere
+
         reltime= scantemp{1,2} - scantemp{1,2}(1);
+
         dt = reltime(2);
-        count = 1;
+        counter = 1;
         t0=reltime(1);
         sind = zeros(length(reltime),1);
         
         %-----%edit FKJN 18/7 2016 wait up, are we doing a new macro with a lower(1/8th)freq HF spectra?
         %%% Also, remove the MIP filter.
-        if 1/dt < 3e+03 %some margins around expected 2.4khz 
+ %       if 1/dt < 3e+03 %some margins around expected 2.4khz 
             ffactor=8; %low frequency HF, so we need more points subsampling turn off MIPfilter.
         %   fsamp =  18750/8;
             MIPfilter =0; % off
-           
-            
-        else
-            ffactor =1; % unit
-            MIPfilter = 1;% on
-            
-        end
-        fsamp = 18750/ffactor;
+  
+            fsamp= 1/dt;
+                    
+%        fsamp = 18750/ffactor;
         %if you want to test without MIPfilter on other macros just add MIPfilter =0;
         %-----%edit  carry on.
         
@@ -122,21 +140,22 @@ try
 
         %loop from n =1 to end-1, checking n+1. (no need to check first entry)
         %made such that we avoid 'Index exceeds matrix dimensions' errors
+        sind(1) = counter;
         for n=1:length(reltime)-1
             
            % reltime(n+1)-t0-(8e-3*ffactor)
 
-            if reltime(n+1)-t0 >(8e-3*ffactor)
-                %%start new timer, but don't increment line counter, results
-                %%will be averaged
-                t0 =reltime(n+1);
-            end
+%             if reltime(n+1)-t0 >(8e-3*ffactor)
+%                 %%start new timer, but don't increment line counter, results
+%                 %%will be averaged
+%                 t0 =reltime(n+1);
+%             end
             
             
-            if reltime(n+1)-reltime(n)>dt*5000 %large jump, new timer
+            if reltime(n+1)-reltime(n)>dt*1000 %large jump, new timer
                 
                 t0 =reltime(n+1);
-                count = count+1; %each count will generate 1 line of output in file
+                counter = counter+1; %each count will generate 1 line of output in file
                 
             end
             
@@ -145,27 +164,22 @@ try
              %range
              
              
-            if reltime(n+1)-t0 >= (2e-3*MIPfilter) && reltime(n+1)-t0 <= (8e-3*ffactor)
-                sind(n+1) = count;
+             
+             
+            %if reltime(n+1)-t0 >= (2e-3*MIPfilter) && reltime(n+1)-t0 <= (8e-3*ffactor)
+            sind(n+1) = counter;
                 %         else
                 %             sind(n) = 0;
                 
-            end
+            %end
             
             
             
         end
-        obs = find(diff(sind)>0)+1;
-        obe = find(diff(sind)<0);
-        if sind(end)~=0 %%last obe value needs some extra care
-            obe(end+1)=length(sind);
-        end
-       
-        %%EDIT FKJN 18/7 2016 
-        if ~MIPfilter           
-           obe = obs(2:end) - 1;% no filter, so no need to be fancy. 
-           obe(end+1)=length(sind);
-        end
+        obs = find(diff(sind)>0)+1; % most start indexes, but not all
+        obe = obs-1; % most stop indexes, but not all.
+        obe(end+1) = length(sind); % last
+        obs= [1;obs];%first
         %%
         
         if isempty(obs)
@@ -204,7 +218,9 @@ try
                 end
                 
                 ib=scantemp{1,3}(ob(1):ob(end));
+                %scantemp{1,end-1}= scantemp{1,end-1} - scantemp2{1,end-1};
                 vp=scantemp{1,end-1}(ob(1):ob(end)); %for probe 3, vp is scantemp{1,5}, otherwise {1,4}
+                
                 qfarray = scantemp{1,end}(ob(1):ob(end)); %quality factor, always at the end
                 
                 
@@ -215,11 +231,11 @@ try
                     
                     
                     
-                    vpred = vp - mean(vp);
-                    %vpred = vp - smooth(vp);
-                    
-                    %P= polyfit(1:length(vp),vp.',1);
-                    %vpred = vp - polyval(P,1:length(vp)).';
+                   % vpred = vp - mean(vp);
+                    %vpred= vp-smooth(vp);
+                    %vpred = irf_filt(vp,1,0,1/dt,3);
+                    P= polyfit(1:length(vp),vp.',1);
+                    vpred = vp - polyval(P,1:length(vp)).';
                     %       lens = length(vp);
                     [psd,freq] = pwelch(vpred,hanning(lens),[], nfft, fsamp);
                     
@@ -417,16 +433,16 @@ try
             %         drawnow;
             
             figure(2);
-            imagesc( plotT,plotF/1e3,10*log10(plotpsd));
+            imagesc( plotT,plotF,10*log10(plotpsd));
             ax=gca;
-
             set(gca,'YDir', 'normal'); % flip the Y Axis so lower frequencies are at the bottom
             colorbar('Location','EastOutside');
             datetick('x',13);
             xlabel('HH:MM:SS (UT)');
-            ylabel('Frequency [kHz]');
+            ylabel('Frequency [Hz]');
             titstr = sprintf('LAP %s spectrogram %s',fileflag,datestr(ts(1),29));
             title(titstr);
+            ax.CLim=[-50 7];
             drawnow;
         end%if diag
         
@@ -478,7 +494,5 @@ catch err
         end
     end
     
-end
-
 end
 

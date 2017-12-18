@@ -3,37 +3,30 @@
 %Vplasma and its sigma (suggested sigma 3 V), outputs an estimate for the
 %plasma potential and it's confidence level (std)
 %function [Vsg,Sgsigma,Vph_knee,Vph_knee_sigma] = an_VsgVphknee(Vb,Ib,vGuess,sigmaGuess)
-function [out] = an_Vplasma_v2(Vb,Ib,vGuess,sigmaGuess)
+function [out] = an_Vsc_v2(Vb,Ib,vGuess,sigmaGuess)
 
 
 out = [];
-out.Vsc      = nan(1,2);
-out.Vph_knee = nan(1,2);
-out.Vbar     = nan(1,2);
+out.bullshit    = nan(1,2);
+out.Vsc         = nan(1,2);
+out.Vbar        = nan(1,2);
 
 
 global an_debug ;
 
 
 len= length(Vb);
-len_rem=len;
 
 [di,d2i]= centralDD(Ib,Vb,0.28);
 
 [Vb,ind]=sort(Vb);
-d2i=d2i(ind);
+%d2i=d2i(ind);
 di=di(ind);
-
-%del=[1  len];%destructive, but I don't need these points anymore
-% del=[1 2 len-1 len];%destructive, but I don't need these points anymore
-% Vb(del) = [];
-% di(del) = [];
-% d2i(del) = [];
-% Ib(del) = [];
-len=length(Vb); 
+d2i=di;
 
 
-posd2i =(abs(d2i)+d2i)/2;
+
+posdi =(abs(di)+di)/2;
 
 %sort absolute values of derivative
 
@@ -47,17 +40,17 @@ if nargin>2   %if a guess is given
 
 [junk,firstpeak] =min(abs(Vb-vbGuess));
 else
-[junk,pos]= sort(abs(posd2i));
-top10ind= floor(len*0.95+0.5); %get top 5 percent of peaks
+[junk,pos]= sort(abs(posdi));
+top10ind= floor(len*0.9+0.5); %get top 10 percent of peaks
 firstpeak=min(pos(top10ind:end)); % prioritise earlier peaks, because electron side (end) can be noisy
 end
 
 %get a region around our chosen guesstimate.
-lo= floor(firstpeak-len*0.06 +0.5); %let's try 20% of the whole sweep
-hi= floor(firstpeak+len*0.14 +0.5); %+0.5 pointless but good practise
+%lo= floor(firstpeak-len*0.06 +0.5); %let's try 20% of the whole sweep
+%hi= floor(firstpeak+len*0.14 +0.5); %+0.5 pointless but good practise
+lo= floor(firstpeak-len*0.5 +0.5); %let's try 20% of the whole sweep
+hi= floor(firstpeak+len*0.5 +0.5); %+0.5 pointless but good practise
 
-lo= floor(firstpeak-len*0.3 +0.5); %let's try 20% of the whole sweep
-hi= floor(firstpeak+len*0.4 +0.5); %+0.5 pointless but good practise
 
 
 lo = max([lo,1]); %don't move outside 1:len)
@@ -66,17 +59,15 @@ hi = min([hi,len]);
 ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative) peaks
               %or a region around our Vguess
 
-ind=1:len; %new blackman smoothing, let's let this shit loose.              
-              
 if nargin>2
 
     %[sigma,Vplasma] =gaussfit(Vb(ind0:ind1),d2i(ind0:ind1),sigmaGuess,vGuess);
     %these vGuesses are never agood!
-    [sigma1,vbKnee1] =gaussfit(Vb(ind),posd2i(ind),sigmaGuess,Vb(firstpeak));
+    [sigma1,vbKnee1] =gaussfit(Vb(ind),posdi(ind),sigmaGuess,Vb(firstpeak));
 
 
 else
-    [sigma1,vbKnee1] =gaussfit(Vb(ind),posd2i(ind));
+    [sigma1,vbKnee1] =gaussfit(Vb(ind),posdi(ind));
 
 
 end
@@ -84,26 +75,26 @@ end
 
 if isnan(vbKnee1)
     %if it's NaN, try the whole spectrum, no fancy guesswork.
-    [sigma1,vbKnee1] =gaussfit(Vb,posd2i);
+    [sigma1,vbKnee1] =gaussfit(Vb,posdi);
 end
 
 
 gaussian_reduction = gaussmf(Vb,[sigma1 vbKnee1]).';
-reduced_posd2i = posd2i/mean(abs(posd2i))-gaussian_reduction*max(posd2i/mean(abs(posd2i)));
+reduced_posdi = posdi/mean(abs(posdi))-gaussian_reduction*max(posdi/mean(abs(posdi)));
 
-reduced_posd2i =(abs(reduced_posd2i)+reduced_posd2i)/2; %set negative values to 0
+reduced_posdi =(abs(reduced_posdi)+reduced_posdi)/2; %set negative values to 0
 
-[junk,pos]= sort(abs(reduced_posd2i)); %sort by absolute value)
+[junk,pos]= sort(abs(reduced_posdi)); %sort by absolute value)
 %top10ind= floor(len*0.9+0.5); %get top 10 percent of peaks
 %secondpeak=min(pos(top10ind:end)); % prioritise earlier peaks, because electron side (end) can be noisy
 secondpeak=pos(end); %maximum point
 
-epsilon = 1; %the last (and first) two points on the second derivative have larger errors
+epsilon = 2; %the last (and first) two points on the second derivative have larger errors
 
 %-------- Time for logic ---------------------------------------------
 
 %-------- Get out early? ------------------------
-if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if this position is on the max or min Vb(step),then
+if ge(epsilon,length(reduced_posdi)-secondpeak)||ge(epsilon,secondpeak) %if this position is on the max or min Vb(step),then
     Vsc=-Vb(end);
     Sgsigma = NaN;
         %plot(Vb,posdi,'b',Vb,posd2i*6,'r',Vb,Ib/10,'g',Vb,ad2i*10,'black')
@@ -111,8 +102,8 @@ if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if thi
     Vph_knee = -vbKnee1;
     Vph_knee_sigma = abs(sigma1/vbKnee1);
 
-    out.Vsc = [Vsc,Sgsigma];
-    out.Vph_knee = [Vph_knee,Vph_knee_sigma];
+    out.bullshit = [Vsc,Sgsigma];
+    out.Vsc = [Vph_knee,Vph_knee_sigma];
 
 
     if an_debug > 1
@@ -131,7 +122,7 @@ if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if thi
         %plot(Vb,  posd2i/trapz(Vb,posd2i)-gaussian_reduction/trapz(Vb,gaussian_reduction),'b',Vb, 0.01*(posd2i/mean(abs(posd2i))-gaussian_reduction*max(posd2i/mean(abs(posd2i)))),'r')
         %   z=posd2i/trapz(Vb,posd2i)-gaussian_reduction/trapz(Vb,gaussian_reduction);
         %   z=z*200;
-        plot(Vb,di/mean(abs(di)),'b',Vb,d2i/mean(abs(d2i)),'r',Vb,reduced_posd2i*max(d2i/mean(abs(d2i))),'g');
+        plot(Vb,di/mean(abs(di)),'b',Vb,d2i/mean(abs(d2i)),'r',Vb,reduced_posdi*max(d2i/mean(abs(d2i))),'g');
         grid on;
 
     end
@@ -157,7 +148,7 @@ hi = min([hi,len]);
 ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative) peak
 
 
-[sigma2,vbKnee2] =gaussfit(Vb(ind),reduced_posd2i(ind)); %second knee in sweep!
+[sigma2,vbKnee2] =gaussfit(Vb(ind),reduced_posdi(ind)); %second knee in sweep!
 
 
 %vbKnee2 may be NaN
@@ -168,7 +159,6 @@ ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative
 
 %-------- Time for more logic ---------------------------------------------
 
-VPOS_TRESHOLD=19; %this is extremely rare during the mission
 
 %if nan or vbKnee2 and vbKnee1 peaks overlap
 %if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1+sigma2  sigma 2 is often
@@ -188,19 +178,6 @@ end
 %    Vph_knee_sigma = Sgsigma;
 %
 %else
-
-
-if sign(vbKnee1)~= sign(vbKnee2)
-    
-    if -vbKnee1>VPOS_TRESHOLD % i.e. Vph_knee> +19V ? this is extremely rare during the entire mission...
-        vbKnee1=vbKnee2; %ignore first peak
-        sigma1= sigma2;               
-    elseif -vbKnee2>VPOS_TRESHOLD       
-        vbKnee2=vbKnee1;%ignore second peak
-        sigma2= sigma1;
-    end;
-end
-
 
 
 
@@ -258,13 +235,13 @@ end
 
 
 
-out.Vsc = [Vsc,Sgsigma];
-out.Vph_knee = [Vph_knee,Vph_knee_sigma];
+out.bullshit = [Vsc,Sgsigma];
+out.Vsc = [Vph_knee,Vph_knee_sigma];
 
 
-if an_debug > 2
+if an_debug > 1
 
-    figure(44);
+    figure(441);
 %just for diagnostics
     subplot(1,2,1)
     x = Vb(1):0.2:Vb(end);
@@ -277,7 +254,7 @@ if an_debug > 2
     subplot(1,2,2)
  %   z=posd2i/trapz(Vb,posd2i)-gaussian_reduction/trapz(Vb,gaussian_reduction);
  %   z=z*200;
-    plot(Vb,di/mean(abs(di)),'b',Vb,d2i/mean(abs(d2i)),'g',Vb,reduced_posd2i*max(d2i/mean(abs(d2i))),'r');
+    plot(Vb,di/mean(abs(di)),'b',Vb,4*Ib/mean(abs(Ib)),'black',Vb,reduced_posdi*max(d2i/mean(abs(d2i))),'r');
     grid on;
 
 
