@@ -174,6 +174,11 @@ a(2) = abs(S.sigma(1)/P_Vb(1));   % Fractional error
 b(2) = abs(S.sigma(2)/P_Vb(2));   % Fractional error
 
 
+%finding the Ii0 from the exponential, because why not.
+%ind2= find(V>-Vsc &~ge(I,0))
+%[P_log,S]=polyfit(Vp(ind2),log10(abs(I(ind2))),1)
+%a1=10^(P_log(2))
+%hah = -(a1-P_Vb(2))/Vsc
 
 
 %[PVp,junk] = polyfit(Vpr,Ir,1); %this is slow, we need only a simple
@@ -183,7 +188,6 @@ P_Vp(2) = P_Vb(2) - P_Vb(1)*Vsc; %fit as function of Vp= V-Vsc.
 
 P_Up = P_Vb;
 P_Up(2) = P_Vb(2) - P_Vb(1)*Vknee; %same slope, but intersect if ions are function of Up, where Up = V-Vknee)
-
 
 out.a = a;
 
@@ -268,8 +272,7 @@ end
     else
         out.ni_1comp = 0;
     end
-
-
+      
     if (out.Vpb(1) < 0) %unphysical if intersection is above zero!
 
         % [L-3]        = [  L-2 M-0.5 L-1.5 T  sqrt(M T-2 L ) ] = [ L-3]
