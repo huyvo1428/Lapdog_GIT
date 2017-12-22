@@ -11,10 +11,10 @@ function [I_filtered, badextrapflag] = Blackmansmoothing(V,I,CUT_RATIO)
 
 badextrapflag =0;
 I_filtered=[];
-if abs(V(1)) <1e-4
-fprintf(1,'check input, Blackmansmoothing(V,I,CUT_RATIO))');
-return;
-end
+% if abs(V(1)) <1e-4
+% fprintf(1,'check input, Blackmansmoothing(V,I,CUT_RATIO))');
+% return;
+% end
 
     
     
@@ -38,12 +38,13 @@ if ~isempty(nanind) %
         for i=1:length(nanind)
             ind=nanind(i);
             if ind<5
-                extrapind=ind+1:ind+5; %extrapolate backwards
+                extrapind=ind+1:ind+10; %extrapolate backwards
             else
-                extrapind=ind-5:ind-1; %extrapolate forwards.
+                extrapind=ind-8:ind-1; %extrapolate forwards.
             end
             %extrapolate from already extrapolated values...
-            I_z(ind)=interp1(V(extrapind), I_z(extrapind),V(ind),'linear','extrap'); 
+            skipnanindz = extrapind(~isnan(I_z(extrapind)));
+            I_z(ind)=interp1(V(skipnanindz), I_z(skipnanindz),V(ind),'linear','extrap'); 
         end
     end
 end
@@ -64,8 +65,8 @@ pad_samples=2*floor(samples/4 +0.5);%# Samples to pad
 %new padding
 V_temphi= (V(end)+dV:dV:V(end)+15).';
 V_templo= (V(1)-15:dV:V(1)-dV).';
-I_temphi= polyval(polyfit(V(end-5:end), I(end-5:end),1),V_temphi);
-I_templo= polyval(polyfit(V(1:8),       I(1:8),      1), V_templo);
+I_temphi= polyval(polyfit(V(end-5:end), I_z(end-5:end),1),V_temphi);
+I_templo= polyval(polyfit(V(1:8),       I_z(1:8),      1), V_templo);
 %padlength= length(I_templo) +length(I_temphi);
 temp = [I_templo;I_z;I_temphi];
 % figure(551)

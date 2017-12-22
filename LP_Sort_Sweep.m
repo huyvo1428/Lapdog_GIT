@@ -30,8 +30,6 @@
 
 function [Vsorted,Isorted] = LP_Sort_Sweep(V,I)
 
-global IN;
-
 
 [Vsorted,ind] = sort(V); % The function sort, sorts the elements of V
 	                     % in ascending order

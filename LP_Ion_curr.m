@@ -84,6 +84,7 @@ out.ni_aion  = NaN;
 out.Vsc_aion = NaN;
 out.v_aion   = NaN;
 
+upper_comparison_bool = true;
 %global ALG;
 
 if nargin < 5     % if SM_Below_Vs is not specified, default to 0.3
@@ -106,8 +107,8 @@ if isempty(ind)
     out.Q = 2;
     return
 end
-% Remove first point. It's not very trustworthy due to smoothing.
-ind =ind(2:end);
+% Remove first point. It could be untrustworthy due to smoothing.
+ind =ind(2:end); 
 
 
 % Use the lowest ALG.SM_Below_Vs*100% of the bias voltage, below the spacecraft potential
@@ -118,6 +119,11 @@ l_ind = length(ind); % Need the number of data points of the vector ind
 
 
 top = floor(l_ind*SM_Below_Vs +0.5);
+
+top_upper = floor(l_ind*0.75 +0.5); %  
+ind_upper = ind(floor(l_ind*0.4 +0.5):top_upper);  %Doesn't depend on SM_Below_Vs
+Vr_upper = V(ind_upper);
+Ir_upper = I(ind_upper);
 %top = floor(l_ind*ALG.SM_Below_Vs); % The point closest to, but below, ALG.SM_Below_Vs*100% of the
                          % spacecraft potential. The function floor rounds
                          % the calling parameter to the nearest integer
@@ -133,8 +139,6 @@ Ir  = I(ind);     % The "ion-voltage" and "ion-current" are set. Note that this
                   % have a one-to-one dependence on their elements, so they
                   % can, and must, be changed identically.
 
-clear ind l_ind; % Clearing the previous data, the function clear clears the
-                 % function specified
 
 % Now we make sure that we do not go closer than ALG.SM_Bias_Limit V to -Vsc and that no
 % positive current values are included in our data set vector
@@ -152,9 +156,22 @@ Vr = Vr(ind);       % Negative current values in our vector are kept, the
 Ir = Ir(ind);       % rest of the data points are, again, discarded.
 
 
+
 if (size(Vr) ~= size(Ir))
   Vr = Vr';
+  Vr_upper= Vr_upper';
 end
+
+%% extra comparison after elias findings
+% Exclude positive currents.
+ind_upper = find(Ir_upper < 0);
+if(isempty(ind_upper) || length(ind_upper) < 2 )
+    upper_comparison_bool=false;
+end
+Vr_upper = Vr(ind_upper);
+Ir_upper = Ir(ind_upper);
+%%
+
 
 
 % 'This part of our data is now linearly fitted, in a least square sense
@@ -164,6 +181,33 @@ end
 % 2 containing the polynomial coefficients in descending
 % powers, P(1)*Vi+P(2)
 [P_Vb,S] = polyfit(Vr,Ir,1);
+
+%% upper ion current comparison
+[P_Vb_upper,S_upper] = polyfit(Vr_upper,Ir_upper,1);
+if upper_comparison_bool && P_Vb_upper(1) > P_Vb(1)
+    % Do comparison Y/N? & is the upper ion current slope more positive than the
+    % other?
+    %Okay, apparently the ion current in the low part of the sweep is
+    %funky, or the "upper ion current" of the sweep is contaminated by
+    %electron retarding current. Let's compute R^2 and see which fit was
+    %objectively better.
+    
+    q_ind = 1:l_ind;
+    I_diff_low   = I(q_ind) - polyval(P_Vb,V(q_ind)); %
+    I_diff_upper = I(q_ind) - polyval(P_Vb_upper,V(q_ind));
+
+
+    Rsq_low   = 1 - nansum((I_diff_low.^2))  /nansum(((I(q_ind)-nanmean(I(q_ind))).^2));
+    Rsq_upper = 1 - nansum((I_diff_upper.^2))/nansum(((I(q_ind)-nanmean(I(q_ind))).^2));
+
+    if Rsq_low < Rsq_upper  % Upper fit was much better, so let's pretend that's what we did all along.
+        P_Vb= P_Vb_upper;
+        S = S_upper;
+    end %% Otherwise, this comparison has no impact below this line
+    
+end
+%%
+
 
 a(1) = P_Vb(1); % This is accordingly the slope of the line...
 b(1) = P_Vb(2); % ...and this is the crossing on the y-axis of the line
@@ -221,6 +265,7 @@ end
 % potential sweep, is a good approximation to the ion current, and that is
 % what is returned from this function
 
+    
     Ii(1:len) = a(1)*V+b(1);% overall ion current fit
     % IiVp = V_Vp(1)*(V-Vsc) + b(1);
     % IiUp = V_Up(1)*(V-Vknee) + b(1);
@@ -254,7 +299,10 @@ end
     out.mean = [mean(Ir) std(Ir)]; % offset
     out.Upa = [P_Up(1) a(2)];
     out.Upb = [P_Up(2) b(2)];
-
+    
+    out.Vs(1) = (b(1)-assmpt.Iph0)/a(1);
+    out.Vs(2) = out.Vs(1)-(b(1)-assmpt.Iph0+3e-9)/a(1);
+    
 
 
     % Calculate ion densities velocities

@@ -28,10 +28,10 @@ len= length(Vb);
 %[di,d2i]= centralDD(Ib,Vb); %get central difference of Derivative and 2nd Deriv. Smoothed
 
 %[xdi,xd2i]= centralDD(Ib,Vb);
-
-[Vb,ind]=sort(Vb); %maybe not needed
-d2i=d2i(ind);
-di=di(ind);
+% 
+% [Vb,ind]=sort(Vb); %maybe not needed
+% d2i=d2i(ind);
+% di=di(ind);
 
 
 

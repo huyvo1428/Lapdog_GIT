@@ -156,7 +156,7 @@ try %try the dynamic solution first, then the static.
         title('smoothening performance')
         legend('I_{smooth}','I_{raw}')
         ax=gca;
-        ax.XLim=[0 30];
+        ax.XLim=[-30 30];
 
     end
     
@@ -170,7 +170,7 @@ try %try the dynamic solution first, then the static.
     %    [Vsc, Vsc_sigma] = an_Vsc(V,Is);
         twinpeaks_low   = an_Vplasma_v2(V,Is);
 
-        if illuminated == 1  &&  probe == 1 %an_Vplasma_highAc does not work if shadowed
+        if illuminated == 1  &  probe == 1 %an_Vplasma_highAc does not work if shadowed
             twinpeaks_high = an_Vplasma_highAc(V,Is);
             twinpeaks = twinpeaks_high; %this works best for probe 1( and fully lit probe 2?)
         else
@@ -214,7 +214,7 @@ try %try the dynamic solution first, then the static.
     end
     %---------------------------------------------------
     %test the partial shadow conditions!!!
-    if illuminated > 0 && illuminated < 1
+    if illuminated > 0 & illuminated < 1
         Q(1)=1;
         test= find(abs(V +Vknee)<1.5,1,'first');
         if Is(test) > 0 %if current is positive, then it's not sunlit
@@ -263,13 +263,13 @@ try %try the dynamic solution first, then the static.
     % the linear fit  are also returned
     % [Ii,ia,ib] = LP_Ion_curr(V,LP_MA(I),Vsc);
 
-    [ion] = LP_Ion_curr(V,Is,Vsc,Vknee); % The ion current is denoted ion.I,
+    [ion] = LP_Ion_curr(V,I,Vsc,Vknee); % The ion current is denoted ion.I,
 
 
     if (an_debug>3)%debug plot
 
         figure(33)
-        subplot(3,2,3);plot(V+Vsc,Is,'b',V+Vsc,ion.I,'g');grid on;
+        subplot(3,2,3);plot(V+Vsc,I,'b',V+Vsc,ion.I,'g');grid on;
         title([sprintf('Ion current vs Vp, out.Q(1)=%d',ion.Q(1))])
         legend('I','I_i_o_n')
 
@@ -291,13 +291,13 @@ try %try the dynamic solution first, then the static.
     %this is all we need to get a good estimate of Te from an
     %exponential fit
 
-    expfit= LP_expfit_Te(V,Is-ion.I,Vsc,filter_ind);
+    expfit= LP_expfit_Te(V,I-ion.I,Vsc,filter_ind);
     DP.Te_exp           = expfit.Te; %contains both value and sigma frac.
     DP.Ie0_exp          = expfit.Ie0;
     DP.ne_exp           = expfit.ne;
 
 
-    asm_expfit_belowVknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
+    asm_expfit_belowVknee = LP_expfit_Te(V,I-ion.I,Vsc,filter_max);
     DP.Te_exp_belowVknee            = asm_expfit_belowVknee.Te; %contains both value and sigma frac.
     DP.Ie0_exp_belowVknee           = asm_expfit_belowVknee.Ie0;
     DP.ne_exp_belowVknee            = asm_expfit_belowVknee.ne;
@@ -308,7 +308,7 @@ try %try the dynamic solution first, then the static.
     % current will leave the collected plasma electron current & photoelectron current
 
 
-    if(illuminated &&~isnan(ion.b(1)))
+    if(illuminated &~isnan(ion.b(1)))
         % if we want to determine Iph0 seperately, we need to remove the
         % ion.b component of the ion current before we accidentally remove
         % it everywhere. ion.b is otherwise a good guess for Iph0;
@@ -316,13 +316,13 @@ try %try the dynamic solution first, then the static.
     end
 
 
-    Itemp = Is - ion.I;   %the resultant current should be electrons & photoelectrons
+    Itemp = I - ion.I;   %the resultant current should be electrons & photoelectrons
 
 
     if (an_debug>3) %debug plot
         figure(33);
 
-        subplot(3,2,6),plot(V,Is,'b',V,Itemp,'g');grid on;
+        subplot(3,2,6),plot(V,I,'b',V,Itemp,'g');grid on;
 
         title([sprintf('Vb vs I %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
 
@@ -631,7 +631,7 @@ try %try the dynamic solution first, then the static.
     %% Let's do everything again, but let's try with an assumed photoelectron
     % current instead!
 
-    asm_Itemp = Is;
+    asm_Itemp = I;
 
     if illuminated
         asm_Iph = gen_ph_current(V,-Vplasma,assmpt.Iph0,assmpt.Tph,2); %model two works better for massive electron bullshit.
@@ -719,14 +719,17 @@ try %try the dynamic solution first, then the static.
     DP_asm.ne_exp           = asm_expfit.ne;
 
 
+    asm_expfit_belowVknee = asm_expfit;
 
 
-    asm_expfit_belowVknee = LP_expfit_Te(V,Is-ion.I,Vsc,filter_max);
+
+
+    %asm_expfit_belowVknee = LP_expfit_Te(V,I-ion.I,Vsc,filter_max);
     DP_asm.Te_exp_belowVknee            = asm_expfit_belowVknee.Te; %contains both value and sigma frac.
     DP_asm.Ie0_exp_belowVknee           = asm_expfit_belowVknee.Ie0;
     DP_asm.ne_exp_belowVknee            = asm_expfit_belowVknee.ne;
 
-
+   % DP_asm.Te_exp_belowVknee            = DP.Te_exp_belowVknee; 
 
 
 

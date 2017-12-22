@@ -19,10 +19,10 @@ len= length(Vb);
 len_rem=len;
 
 [di,d2i]= centralDD(Ib,Vb,0.28);
-
-[Vb,ind]=sort(Vb);
-d2i=d2i(ind);
-di=di(ind);
+% 
+% [Vb,ind]=sort(Vb);
+% d2i=d2i(ind);
+% di=di(ind);
 
 %del=[1  len];%destructive, but I don't need these points anymore
 % del=[1 2 len-1 len];%destructive, but I don't need these points anymore
@@ -173,7 +173,7 @@ VPOS_TRESHOLD=19; %this is extremely rare during the mission
 %if nan or vbKnee2 and vbKnee1 peaks overlap
 %if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1+sigma2  sigma 2 is often
 %very small...
-    if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1*2
+if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1*2
 
     vbKnee2=vbKnee1;
     sigma2= sigma1;
@@ -198,7 +198,7 @@ if sign(vbKnee1)~= sign(vbKnee2)
     elseif -vbKnee2>VPOS_TRESHOLD       
         vbKnee2=vbKnee1;%ignore second peak
         sigma2= sigma1;
-    end;
+    end
 end
 
 
