@@ -6,7 +6,7 @@
 % 2. ops blocks are defined (opsblock.m)
 
 global tabindex;
-tabindex = {};
+tabindex = {};    % Set by createTAB.m. Must be cleared first e.g. in case of manual reruns.
 
 sctconv=@sct2obt;
 
@@ -14,10 +14,7 @@ sctconv=@sct2obt;
 
 for b = 1:nob   % Loop through all ops blocks
     
-
-    
-    
-    
+        
  %   day = datestr(index(obs(b)).t0,'yyyymmdd');  % convert block start time index to time string, convert to yyyymmdd format
     
     ob = obs(b):obe(b); %ob goes from start time index to end time index
@@ -26,12 +23,8 @@ for b = 1:nob   % Loop through all ops blocks
     % Find sweeps:
     p1s = find([index(ob).sweep] & ([index(ob).probe] == 1)); %%returns indices of all sweeps for probe 1 for macro operation block
     p2s = find([index(ob).sweep] & ([index(ob).probe] == 2));
-    
-    
-    
-    % Find E data:
-    
-    
+       
+    % Find E data: 
     p1el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 1));
     p2el = find([index(ob).lf] & [index(ob).efield] & ([index(ob).probe] == 2));
     p1eh = find([index(ob).hf] & [index(ob).efield] & ([index(ob).probe] == 1));
@@ -94,12 +87,11 @@ for b = 1:nob   % Loop through all ops blocks
     %     %%%% Start TAB genesis
     %
     %
-%     %
+    %
     
     %Generate sweep files
     %
     if(~isempty(p2s)) edder_createTAB(derivedpath,ob(p2s),index,index(obs(b)).t0,'B2S',sweept1); end
-
     if(~isempty(p1s)) edder_createTAB(derivedpath,ob(p1s),index,index(obs(b)).t0,'B1S',sweept1); end
     
     %Generate E data files
@@ -119,10 +111,7 @@ for b = 1:nob   % Loop through all ops blocks
     
     if(~isempty(p3nl)) edder_createTAB(derivedpath,ob(p3nl),index,index(obs(b)).t0,'I3L',sweept3); end
     if(~isempty(p3nh)) edder_createTAB(derivedpath,ob(p3nh),index,index(obs(b)).t0,'I3H',sweept3); end
-
-
     
-    
- fprintf(1,'Macroblock %i out of  %i.\n Latest file created from %s\n ',b,nob,index(obe(b)).t1str);
+    fprintf(1,'Macroblock %i out of  %i.\n Latest file created from %s\n ',b,nob,index(obe(b)).t1str);
     
 end %observation block for loop

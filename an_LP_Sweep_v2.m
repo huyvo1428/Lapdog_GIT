@@ -61,7 +61,7 @@ VSC_TO_VKNEE = 1;
 
 %warning off; % For unnecessary warnings (often when taking log of zero, these values are not used anyways)
 Q    = [0 0 0 0];   % Quality vector
-
+Is = [];
 % Initialize DP to ensure a return value:
 DP = [];
 
@@ -190,6 +190,7 @@ try %try the dynamic solution first, then the static.
     %    Vsc_sigma =twinpeaks.Vsc(2);
 
 
+    
     %
     if smooth_flag
     Is= I; % if the smoothing is bad, the rest of the algorithm survives on a raw sweep... hopefully
