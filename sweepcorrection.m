@@ -1,11 +1,11 @@
-%sweepcorrection takes an array of currents with nSteps measurements at every
-%potential step potBias, and removes noisy values compared at each step,
-%disregarding and removing extremely noisy values for standard deviation comparisons
-%using largeK and smallK
-%suggested values for largeK = 3, and smallK = 1.
-%curArray must have nSteps current measurements at each potential step
-%except the last entries.
-%note: potBias is no longer in use, remove?
+% sweepcorrection takes an array of currents with nSteps measurements at every
+% potential step potBias, and removes noisy values compared at each step,
+% disregarding and removing extremely noisy values for standard deviation comparisons
+% using largeK and smallK
+% suggested values for largeK = 3, and smallK = 1.
+% curArray must have nSteps current measurements at each potential step
+% except the last entries.
+% note: potBias is no longer in use, remove?
 function [curOut] = sweepcorrection(curArray,nSteps,largeK,smallK)
 
 
