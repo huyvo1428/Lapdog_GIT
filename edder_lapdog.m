@@ -93,7 +93,7 @@ tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);
 %     if(fp > 0)
 %         fclose(fp);
 %         load(tabindexfile);
-%         fprintf(1,'lapdog: succesfully loaded tabfiles...\n')
+%         fprintf(1,'lapdog: successfully loaded tabfiles...\n')
 %     else
 
 fprintf(1,'lapdog: calling process...\n')

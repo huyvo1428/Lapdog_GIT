@@ -1,24 +1,17 @@
-
 % analysis
+% analyses:
+% sweeps
+% hf spectra -> power spectral density
+% downsamples files
 
 
-
-
-global an_tabindex;
+global an_tabindex an_debug;
 an_tabindex = zeros(0, 9);
-
-%for i=1:length(tabindex);
+an_debug = 0; %debugging on or off!;
 
 %andate = tabindex{:,1}(end-47:end-35);
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 andate = str2double(cellfun(@(x) x(8:15),tabindex(:,2),'un',0));
-
-%end
-%tab_I1H =find(strfind(antype,'I1H'));%strfind(antype,'I2H'));
-
-%ind_I1H= find(strcmp('I1H', antype)|strcmp('I2H', antype));
-
-
 
 %find datasets of different modes
 ind_I1L= find(strcmp('I1L', antype));
@@ -41,10 +34,6 @@ ind_I3H= find(strcmp('I3H', antype));
 
 ind_I1S= find(strcmp('I1S', antype));
 ind_I2S= find(strcmp('I2S', antype));
-
-
-
-
 
 
 % 
@@ -73,11 +62,7 @@ ind_I2S= find(strcmp('I2S', antype));
 
 
 
-
 fprintf(1,'Downsample Low frequency measurements \n')
-
-   
-
 %send mode datatasets to downsampler function
 if(~isempty(ind_I1L))
     %an_downsample(ind_I1L,tabindex,8)
@@ -85,19 +70,17 @@ if(~isempty(ind_I1L))
 end
 
 if(~isempty(ind_I2L))
-
    % an_downsample(ind_I2L,tabindex,8)
     an_downsample(ind_I2L,tabindex,32)
 end
 
-if(~isempty(ind_V1L))
 
+if(~isempty(ind_V1L))
    % an_downsample(ind_V1L,tabindex,8)
     an_downsample(ind_V1L,tabindex,32)
 end
 
 if(~isempty(ind_V2L))
-
   %  an_downsample(ind_V2L,tabindex,8)
     an_downsample(ind_V2L,tabindex,32)
 end
