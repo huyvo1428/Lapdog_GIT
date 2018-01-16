@@ -2,7 +2,7 @@
 %takes an sweep potential array and current array, and optionally a guess for the
 %Vplasma and its sigma (suggested sigma 3 V), outputs an estimate for the
 %plasma potential, Vsc and Vbar and it's confidence level (std)
-function [out] = an_Vplasma_highAc(Vb,Ib,vGuess,sigmaGuess)
+function [out] = an_Vplasma_v2(Vb,Ib,vGuess,sigmaGuess)
 
 
 out = [];
@@ -13,7 +13,7 @@ out.Vsc      = nan(1,2); %value & relative std
 out.Vph_knee = nan(1,2); 
 out.Vbar     = nan(1,2); 
 
-%|Vph_knee|???|Vsc| and sign(Vph_knee) = sign(Vph_knee
+%|Vph_knee|���|Vsc| and sign(Vph_knee) = sign(Vph_knee
 
 %Vbar = Vsc unless max(di)==di(end).(hot electrons,maybe Vsc <-30V). 
 %we have reasons to distrust results where max(di)==di(end).
@@ -24,14 +24,11 @@ global an_debug ; %debug plot variable
 
 len= length(Vb);
 
-[di,d2i]= centralDD(Ib,Vb,0.28); %get central difference of Derivative and 2nd Deriv. Smoothed
-%[di,d2i]= centralDD(Ib,Vb); %get central difference of Derivative and 2nd Deriv. Smoothed
+[di,d2i]= centralDD(Ib,Vb,0.1); %get central difference of Derivative and 2nd Deriv. Smoothed
 
-%[xdi,xd2i]= centralDD(Ib,Vb);
-% 
-% [Vb,ind]=sort(Vb); %maybe not needed
-% d2i=d2i(ind);
-% di=di(ind);
+[Vb,ind]=sort(Vb); %maybe not needed
+d2i=d2i(ind);
+di=di(ind);
 
 
 
@@ -40,7 +37,7 @@ posd2i =(abs(d2i)+d2i)/2;  %ignore negative values
 posd2i_filt= posd2i;
 
 
-posd2i_filt(Ib>0) = 0; %Vph_Knee is at negative currents
+posd2i_filt(Ib>0) = 0;
 
 
 %sort absolute values of derivative
@@ -57,11 +54,9 @@ else
 [junk,pos]= sort(abs(posd2i_filt));
 
 top10ind= floor(len*0.95+0.5); %get top 10 percent of potential peak positions
-%firstpeak=min(pos(top10ind:end)); % prioritise earlier left peaks, because electron side (end) can be noisy    
-firstpeak= pos(end); % We could also run into giant current derivatives
+firstpeak=min(pos(top10ind:end)); % prioritise earlier left peaks, because electron side (end) can be noisy    
+%firstpeak= pos(end); % We could also run into giant current derivatives
 %after Vph_knee, so let's keep this at early peaks Ib>0;
-
-
 
 
 end
@@ -72,21 +67,6 @@ hi= floor(firstpeak+len*0.1 +0.5); %+0.5 pointless but good practise
 
 lo = max([lo,1]); %don't move outside 1:len)
 hi = min([hi,len]);
-d1v= floor(1/(Vb(2)-Vb(1)));
-
-pox = diff(d2i);
-pox(end +1) = 0; %makes sure length(pox) = len
-
-if hi>firstpeak+1 %careful
-    for i = firstpeak+d1v:hi % check 1 V to the right
-        if ge(pox(i),0)    %if slope is not negative, then we found a local minimum and should stop here
-            hi = i;
-            break; % let's stop the region here, we don't want unwanted peaks to the right of the first peak
-        end
-    end
-end
-
-
 
 ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative) peaks
               %or a region around our Vguess
@@ -131,7 +111,7 @@ end
 %-------- second peak? ---------------------------------------------
 % take first fit, normalize it to 2nd derivative and subtract.
 
-gaussian_reduction = 1*gaussmf(Vb,[sigma1 vbKnee1]).'; %get gaussian from fit.
+gaussian_reduction = 1.5*gaussmf(Vb,[sigma1 vbKnee1]).'; %get gaussian from fit.
 reduced_posd2i = posd2i/mean(abs(posd2i))-gaussian_reduction*max(posd2i/mean(abs(posd2i)));
 
 reduced_posd2i =(abs(reduced_posd2i)+reduced_posd2i)/2; %set negative values to 0
@@ -157,7 +137,7 @@ if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if thi
     out.Vph_knee = [Vph_knee,Vph_knee_sigma];
 
     
-    if an_debug > 2 %debug plot
+    if an_debug > 1 %debug plot
     
         figure(444);
         %just for diagnostics
@@ -168,7 +148,6 @@ if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if thi
         plot(x,y*max(d2i/mean(abs(d2i))),'og',Vb,d2i/mean(abs(d2i)),'--b',Vb,4*Ib/mean(abs(Ib)),'black')
         title('anVplasma');
         grid on;
-        legend('gaussfit','d^{2}i/dV^{2}','IV sweep')
         
         subplot(1,2,2)
         %plot(Vb,  posd2i/trapz(Vb,posd2i)-gaussian_reduction/trapz(Vb,gaussian_reduction),'b',Vb, 0.01*(posd2i/mean(abs(posd2i))-gaussian_reduction*max(posd2i/mean(abs(posd2i)))),'r')
@@ -176,8 +155,7 @@ if ge(epsilon,length(reduced_posd2i)-secondpeak)||ge(epsilon,secondpeak) %if thi
         %   z=z*200;
         plot(Vb,di/mean(abs(di)),'b',Vb,d2i/mean(abs(d2i)),'r',Vb,reduced_posd2i*max(d2i/mean(abs(d2i))),'g');
         grid on;
-       legend('di/dV','2nd deriv','reduced 2nd deriv')
-     
+        
     end
     
     
@@ -208,7 +186,7 @@ ind = lo:hi; %ind is now a region around the earliest of the high abs(derivative
 
 %-------- Time for more logic ---------------------------------------------
 
-VPOS_TRESHOLD=19; %this is extremely rare during the mission
+
 %if nan or vbKnee2 and vbKnee1 peaks overlap
 %if isnan(vbKnee2) || abs(vbKnee2-vbKnee1) < sigma1+sigma2  sigma 2 is often
 %very small...
@@ -216,22 +194,12 @@ VPOS_TRESHOLD=19; %this is extremely rare during the mission
 
     vbKnee2=vbKnee1;
     sigma2= sigma1;
-    end
+end
 
 
-
-if sign(vbKnee1)~= sign(vbKnee2)
-    
-    if -vbKnee1>VPOS_TRESHOLD % i.e. Vph_knee> +19V ? this is extremely rare during the entire mission...
-        vbKnee1=vbKnee2; %ignore first peak
-        sigma1= sigma2;               
-    elseif -vbKnee2>VPOS_TRESHOLD       
-        vbKnee2=vbKnee1;%ignore second peak
-        sigma2= sigma1;
-    end
-    %if peaks on different sides of Vb = 0, ignore second pe        ak
-    %maybe have a check if secondpeak>firstpeak. ifso, pos(end) == pos2(end). This will be bad if Vsc>>1
-    Vsc = -vbKnee1; %I don't know what this will do.
+if sign(vbKnee1)~= sign(vbKnee2) %if peaks on different sides of Vb = 0, ignore second peak
+%maybe have a check if secondpeak>firstpeak. if so, pos(end) == pos2(end). This will be bad if Vsc>>1
+    Vsc = -vbKnee1;
     Sgsigma = abs(sigma1/vbKnee1);
     Vph_knee = Vsc;
     Vph_knee_sigma = Sgsigma;
@@ -279,7 +247,7 @@ out.Vsc = [Vsc,Sgsigma];
 out.Vph_knee = [Vph_knee,Vph_knee_sigma];
 
 
-if an_debug > 2
+if an_debug > 1
     
     figure(444);
 %just for diagnostics
@@ -290,14 +258,12 @@ if an_debug > 2
     plot(x,y*max(d2i/mean(abs(d2i))),'og',x,y2*max(d2i/mean(abs(d2i))),'--r',Vb,d2i/mean(abs(d2i)),'--b',Vb,4*Ib/mean(abs(Ib)),'black')
     title('anVplasma');
     grid on;
-    legend('gaussfit','fit nr 2','di/dV','IV sweep')
 
     subplot(1,2,2)
  %   z=posd2i/trapz(Vb,posd2i)-gaussian_reduction/trapz(Vb,gaussian_reduction);
  %   z=z*200;
     plot(Vb,di/mean(abs(di)),'b',Vb,d2i/mean(abs(d2i)),'g',Vb,reduced_posd2i*max(d2i/mean(abs(d2i)))/10,'r');
     grid on;
-    legend('di/dV','2nd deriv','reduced 2nd deriv')
 
     
     %    Ib5 = smooth(Ib,0.14,'sgolay');
@@ -328,4 +294,5 @@ end
 %Vph_knee = -vbKnee1;
 
 %vPlasma=vSC+vbPlasma;
+
 

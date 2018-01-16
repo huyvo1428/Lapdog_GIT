@@ -31,6 +31,8 @@ function [sigma, mu] = gaussfit( x, y, sigma0, mu0 )
 % yp = 1/(sqrt(2*pi)* sigma ) * exp( - (xp-mu).^2 / (2*sigma^2));
 % plot( x, y, 'o', xp, yp, '-' );
 
+warning('off','MATLAB:illConditionedMatrix')
+
             diag = 0;
 
 % Maximum number of iterations

@@ -198,7 +198,11 @@ try
                     if strcmp(fileflag(1),'V')
                         
                         
-                        vpred = vp - mean(vp);
+                        %vpred = vp - mean(vp);
+                        
+                        P= polyfit(1:length(vp),vp,1);
+                        vpred = vp - polyval(P,1:length(vp));
+                        
                         %       lens = length(vp);
                         [psd,freq] = pwelch(vpred,hanning(lens),[], nfft, fsamp);
                         

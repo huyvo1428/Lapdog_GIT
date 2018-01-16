@@ -75,14 +75,15 @@ if((min(ip) >= 0) || (max(ip) <= 0))
     % No zero crossing in this case
     lastneg = NaN;
     firstpos = NaN;
+    return;
+
 else
     lastneg = max(find(ip<0));
     firstpos = min(find(ip>0));
 end
-if(isnan(lastneg) || isnan(firstpos))
-    par = 2;
-    return;
-end
+%if(isnan(lastneg) || isnan(firstpos))
+%    par = 2;
+%end
 
 % Analyze derivatives:
 % Find inflexion point (maximum in d2I/dV2), calculate derivatives there:

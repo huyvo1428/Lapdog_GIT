@@ -11,32 +11,33 @@
 % dv = 1    --> e.g  212 (rare)
 % dv << 0.25 --> fine sweeps, (not implemented yet)
 %
-function I_filtered = sweepFilterChooser_test(I,dv)
+function [I_filtered, flag] = sweepFilterChooser_test(I,dv,V,flag)
 
+ flag=0; % so far nothing bad has happened.
 
 persistent i
-
-if dv < 0.27 %i.e. if dv ~ 0.25
-    
-    sSpan = ceil(0.1*length(I));  % loose rloess filter
-    sSpan = max(sSpan,6);  %HORRIBLE BUG IF SPAN == 5!!! (or 4)
-  %  sSpan = 0.1001;
-    sMethod = 'loess';   % loose rloess filter
-elseif dv > 0.72
-    
-    sSpan = ceil(0.2*length(I));
-    %sSpan = 0.2;     %pretty heavy sgolay filter.
-    sMethod = 'sgolay';
-else  %i.e. if dv ~ 0.5
-    
-    sSpan = ceil(0.1*length(I));  % loose rloess filter
-    sSpan =max(sSpan,6);  %HORRIBLE BUG IF SPAN == 5!!! (or 4)
-    
-  %  sSpan = 0.1001;        % loose loess filter
-    sMethod = 'loess';
-end
-        
-    I_filtered = smooth(I,sSpan,sMethod,1).'; %filter sweep NB transpose
+% 
+% if dv < 0.27 %i.e. if dv ~ 0.25
+%     
+%     sSpan = ceil(0.1*length(I));  % loose rloess filter
+%     sSpan = max(sSpan,6);  %HORRIBLE BUG IF SPAN == 5!!! (or 4)
+%   %  sSpan = 0.1001;
+%     sMethod = 'loess';   % loose rloess filter
+% elseif dv > 0.72
+%     
+%     sSpan = ceil(0.2*length(I));
+%     %sSpan = 0.2;     %pretty heavy sgolay filter.
+%     sMethod = 'sgolay';
+% else  %i.e. if dv ~ 0.5
+%     
+%     sSpan = ceil(0.1*length(I));  % loose rloess filter
+%     sSpan =max(sSpan,6);  %HORRIBLE BUG IF SPAN == 5!!! (or 4)
+%     
+%   %  sSpan = 0.1001;        % loose loess filter
+%     sMethod = 'loess';
+% end
+    [I_filtered, flag] = Blackmansmoothing(V',I',0.1); %returns a smoothened curve, flags if the extrapolation is particularly nasty.
+    %I_filtered = smooth(I,sSpan,sMethod,1).'; %filter sweep NB transpose
     Rsq = 1 - nansum(((I-I_filtered).^2))/nansum(((I-nanmean(I)).^2));
     
 %     
@@ -65,18 +66,18 @@ end
          fprintf(1,'%i bad smoothening performance\n',i);
      end
      
-     
-     I_filtered = smooth(I,'rloess',1).';
-     Rsq = 1 - nansum(((I-I_filtered).^2))/nansum(((I-nanmean(I)).^2));
-     
-     if Rsq < 0.95         
-         
-         i = i+10000;
-         
-         I_filtered = I; %skip filtering enterirely
- 
-         
-     end
+     flag = 1; % flag if the performance was bad.
+%      I_filtered = smooth(I,'rloess',1).';
+%      Rsq = 1 - nansum(((I-I_filtered).^2))/nansum(((I-nanmean(I)).^2));
+%      
+%      if Rsq < 0.95         
+%          
+%          i = i+10000;
+%          
+%          I_filtered = I; %skip filtering enterirely
+%  
+%          
+%      end
  end 
 end
 

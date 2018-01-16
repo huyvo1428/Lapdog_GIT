@@ -2,7 +2,7 @@
 % methods.
 function [] = an_sweepmain(an_ind,tabindex,targetfullname)
 
-global an_tabindex;
+global an_tabindex der_struct;
 global target;
 global diag_info
 global CO IN     % Physical & instrumental constants
@@ -374,7 +374,9 @@ try
         % analyse!
 
 
+%         parfor k=1:len    % Iterate over first sweep in every potential sweep pair (one/two sweeps)
         for k=1:len    % Iterate over first sweep in every potential sweep pair (one/two sweeps)
+
             %  a= cspice_str2et(timing{1,k});
 
             % quality factor check
@@ -414,10 +416,11 @@ try
             EP(k).asm_Vsc_ni_ne = nansum((DP_asm(k).ion_Vb_intersect(1)-(sqrt(DP_asm(k).ion_intersect(1))*DP_asm(k).ne(1)/DP_asm(k).ni_2comp(1)).^2)/DP_asm(k).ion_slope(1));
             EP(k).Vsc_ni_ne     = nansum((DP(k).ion_Vb_intersect(1)    -(sqrt(DP(k).ion_intersect(1))    *DP(k).ne(1)    /DP(k).ni_2comp(1)).^2)    /DP(k).ion_slope(1));
 
-        end % for
+        end % parfor
 
         if (split~=0)    % If every sweep/pair is really two sweeps...
 
+            %parfor k=1:length(Iarr2(1,:))     % Iterate over second sweep in every sweep pair (two sweeps together)
             for k=1:length(Iarr2(1,:))     % Iterate over second sweep in every sweep pair (two sweeps together)
                 m=k+len;
                 %note Vb =! Vb2, Iarr =! Iarr2, etc.
@@ -546,6 +549,53 @@ try
         an_tabindex{end,8} = timing;
         an_tabindex{end,9} = row_bytes;
 
+         if str2double(probe)==1
+            dfile= wfile;
+            dfile(end-6:end-4)='A1P';
+            awID= fopen(dfile,'w');
+            if i==1
+                 der_struct=[];
+                 der_struct.file={};                 
+                 der_struct.shortname={};
+                 der_struct.firstind=[];
+                 der_struct.rows=[];
+                 der_struct.cols=[];
+                 der_struct.an_ind_id=[];
+                 der_struct.timing={};
+                 der_struct.bytes=[];
+            end
+            
+            
+            for k=1:klen
+                
+                dstr1  = sprintf('%s, %s, %16s, %16s, %04i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf);
+                dstr2 = sprintf(' %14.7e, %14.7e', DP(k).Vph_knee(1),DP(k).Te_exp_belowVknee(1));
+                
+                dstrtot=strcat(dstr1,dstr2);
+                dstrtot=strrep(dstrtot,'  0.0000000e+00','          -1000'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
+                dstrtot=strrep(dstrtot,'  NaN','-1000'); %
+                %                         dstrtot=strrep(dstrtot,'-Inf','-1000');
+                %                         dstrtot=strrep(dstrtot,'Inf','-1000');
+                drow_bytes = fprintf(awID,'%s\r\n',dstrtot);
+                
+            end
+            fclose(awID);
+                                
+            %der_struct=[];
+            der_struct.file{i}      = dfile;
+            der_struct.shortname{i} =strrep(dfile,rfolder,'');
+            der_struct.firstind(i)  =tabindex{an_ind(i),3};
+            der_struct.rows(i)      =klen;
+            der_struct.cols(i)      =7;
+            der_struct.an_ind_id(i) =an_ind(i);
+            der_struct.timing(i,1:4)=timing;
+            der_struct.bytes=drow_bytes;
+                      
+        end
+
+        
+        
+        
         %clear output structs before looping again
         clear AP DP EP
         

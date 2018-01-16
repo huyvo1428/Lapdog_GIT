@@ -77,7 +77,7 @@ try
     end
     
     rind = ind(bot):ind(end); %this could be even more empty
-
+    rind = rind(I(rind)>0); %ignore stray negatives...
     
 catch err    
     return

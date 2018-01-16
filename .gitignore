@@ -38,3 +38,9 @@ index/
 temp/
 
 summary.xlsx
+
+dustgrains
+
+*.mat
+
+ManualSweepanalysis.m

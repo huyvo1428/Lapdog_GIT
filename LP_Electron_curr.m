@@ -137,7 +137,6 @@ bot= bot -1 + find(I(bot:end)>0,1,'first');    %only choose currents above 0
 %choose starting point some points away from Vsc and has a positive
 %current value.
 
-
 %bot = max([ind(1),bot]);
 
 ind = bot:len; % Only the first ALG.SM_Below_Vs*100% above the spacecraft potential is now
@@ -200,8 +199,21 @@ if(Te>=0 && ~isinf(Te))
 %    ne = Ie0 / (IN.probe_A*CO.e*sqrt(CO.e*Te/(2*pi*CO.me))); %from
 %    intersect, but it is very sensitive to Vsc errors 
 
+
+    %L^-3 =    M^0.5* V^0.5* Q T^-1 V-1 / (L^2 * Q^1.5 ) = M^0.5*V^-0.5*T^-1*Q^-0.5 * L^-2
+    %V = M L^2 T^-2 Q-1 -> 
+    % L ^-3 = L^-3, qed.
+    
+    %m^-3 =    ?kg  ?V  q s-1 V-1     m-2   Q-1.5 
+    % V = kg m2s-2 Q-q  > V^-0.5 = kg^-0.5 s m^-1 q^0.5
+    %m ^-3 =  ?kg q-0.5 s^-1 m^-2   kg^-0.5 s m^-1 q^0.5 
+    %m^-3 = m^-3
+    
+    
+    
     ne = sqrt(2*pi*CO.me*Te)*a(1) / (IN.probe_A*CO.e.^1.5); %sensitivity to Vsc
     % errors still comes from Te, but we can substitute for that with assumptions on Te Later
+    
      
     ne = ne /1E6;
     s_ne = sqrt((0.5*s_Te/sqrt(Te)).^2 +a(2).^2);
