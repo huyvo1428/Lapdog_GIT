@@ -727,7 +727,6 @@ function [data, N_rows] = read_AxS_file_INTERNAL(file_path, probe_nbr)
     file_column_name_list = file_contents(1,:);
     file_data             = file_contents(2:end, :);
     
-<<<<<<< Updated upstream
     data = [];
     for i = 1:N_cols     % For every column ...
         % DEBUG
@@ -751,120 +750,6 @@ function [data, N_rows] = read_AxS_file_INTERNAL(file_path, probe_nbr)
             error('Trying to add the same structure field name a second time.');
             skey
             data
-=======
-    % Read IxL/IxH file
-    % -----------------
-    % WARNING: Relies on hardcoded column numbers.
-    % IxL and IxH files have the same format.
-    %
-    % =============================================================================================
-    % NOTE: An out-of-memory error has been observed here once on squid with output as below.
-    % The code was executed some weeks before 2015-06-11 for archive 1504 (May 2015).
-    % The line numbers could not be used since the code version had changed.
-    % THIS IMPLIES THAT THIS FUNCTION SHOULD BE OPTIMIZED WITH REGARDS TO MEMORY USE.
-    % Therefore tries to catch error locally when information is still available (e.g. file_path).
-    % -------------------------------------------------------------------------------------
-    % ....
-    %  Macroblock 40 out of  40.
-    %  Latest file created from 2015-04-30T23:56:45.123
-    %  Analysing sweeps
-    % 1 bad smoothening performance
-    % Downsample Low frequency measurements
-    % Generating Spectra
-    % Best estimates
-    % 
-    % lapdog:best_estimates error message: Out of memory. Type HELP MEMORY for your options.
-    % best_estimates/read_IxLH_file_bias_voltage_INTERNAL, 839,
-    % best_estimates/main_INTERNAL, 142,
-    % best_estimates, 65,
-    % analysis, 92,
-    % lapdog, 113,
-    % analysis (incl. best_estimates): 32178 s (elapsed wall time)
-    % lapdog: generate LBL files....
-    % createLBL: 180 s (elapsed wall time)
-    % lapdog: DONE!
-    % moving derived archive to /data/LAP_ARCHIVE/
-    % moving edited& calibrated archives to /data/LAP_ARCHIVE
-    % removing archives from workfolder
-    % DONE!
-    % =============================================================================================
-    % Command-line experiment on memory use when reading file
-    % (all columns, double precision; middle column is unnecessarily string).
-    % ----------------------------------------------------------------------
-    % % -rw-r--r-- 1 ros1a rosetta 436M 2015-06-06 18.40:42 D09/RPCLAP_20150409_000150_807_I1H.TAB
-    %
-    % >> fid = fopen('/data/LAP_ARCHIVE/RO-C-RPCLAP-5-1504-DERIV-V0.3/2015/APR/D09/RPCLAP_20150409_000150_807_I1H.TAB', 'r');
-    % >> file_contents = textscan(fid, '%s%f%s%f%s', 'delimiter', ',');
-    % >> fc_1 = file_contents{1,1};
-    % >> fc_2 = file_contents{1,2};
-    % >> fc_3 = file_contents{1,3};
-    % >> fc_4 = file_contents{1,4};
-    % >> fc_5 = file_contents{1,5};
-    % >> whos file_contents fc_1 fc_2 fc_3 fc_4 fc_5
-    %   Name                     Size                 Bytes  Class     Attributes
-    % 
-    %   fc_1               5499840x1              615982080  cell                
-    %   fc_2               5499840x1               43998720  double              
-    %   fc_3               5499840x1              475064408  cell                
-    %   fc_4               5499840x1               43998720  double              
-    %   fc_5               5499840x1              362989440  cell                
-    %   file_contents            1x5             1542033668  cell                    // 1.5 GB!!!!
-    function data = read_IxLH_file_bias_voltage_INTERNAL(file_path, probe_nbr)        
-        try        
-            fid = fopen(file_path, 'r');
-            if fid < 0
-                error(sprintf('Can not read file: %s', file_path))
-            end
-            %fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
-            
-            % IMPLEMENTATION NOTE: Letting textscan parse numbers is much faster (about ~7 times)
-            % than doing so manually with str2double after having read file into strings.
-            % IxL files can be so large that speed matters.
-            %
-            % IMPLEMENTATION NOTE: Only reads the necessary columns and only at single precision to
-            % reduce memory use. The lower precision (and hence lower memory use) does seem to
-            % follow the values into other variables.
-            % %f32 - read a number and convert to single
-            % * - Ignore field, do not read
-            file_contents = textscan(fid, '%*s%f32%*s%f32%*s', 'delimiter', ',');
-            
-            N_rows = length(file_contents{1});
-            fclose(fid);
-        
-            %data.UTC_TIME = file_contents{1};    % For debugging. Can disable to reduce memory use.
-            data.TIME_OBT = file_contents{1};
-            data.V_bias   = file_contents{2};
-
-            % Add extra fields that may be needed by algorithms.
-            data.probe_nbr = zeros(N_rows, 1) + probe_nbr;
-%           t = tic;
-%           for i_row = 1:N_rows
-%               data.TIME_et(i_row, 1) = cspice_str2et(data.TIME_UTC{i_row});    % Very slow for large files.
-%           end
-%           toc(t)
-
-            if MEMORY_USE_LOG_ENABLED
-                fprintf(1, 'read_IxLH_file_bias_voltage_INTERNAL: End of function (try clause) - calling "whos file_contents"\n')
-                whos file_contents   % DEBUG
-            end
-        catch err
-            % Try catch error locally to try to give information on out-of-memory errors.
-            
-            fprintf(1,'\nlapdog: best_estimates error message: %s\n',err.message);
-        
-            len = length(err.stack);
-            if (~isempty(len))
-                for i=1:len
-                    fprintf(1,'%s, %i,\n', err.stack(i).name, err.stack(i).line);
-                end
-            end
-            
-            if MEMORY_USE_LOG_ENABLED
-                fprintf(1, 'read_IxLH_file_bias_voltage_INTERNAL: End of function (catch clause) - calling "whos file_contents"\n')
-                whos file_contents   % DEBUG
-            end
-            error(sprintf('Error occurred when reading IxL/IxH file "%s".\n', file_path))
->>>>>>> Stashed changes
         end
         data.(skey) = strtrim(file_data(1:end, i));     % NOTE: Trimming and copying strings. No conversion strings-to-numbers.
     end
