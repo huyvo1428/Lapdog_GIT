@@ -5,26 +5,31 @@
 % Only for LBL files based on one OBJECT = TABLE section (plus header keywords).
 %
 %
-% PARAMETER LBL_data = struct with the following fields.
-%    .N_TAB_file_rows
-%    .kvl_header
-%    .consistency_check.N_TAB_bytes_per_row     % Value from when writing TAB file. For double-checking.
-%    .consistency_check.N_TAB_columns           % Value from when writing TAB file. For double-checking.
-%    .OBJTABLE
-%       .DESCRIPTION                   % Description for entire table.
-%       .OBJCOL_list{i}.NAME
-%       .OBJCOL_list{i}.BYTES
-%       .OBJCOL_list{i}.DATA_TYPE
-%       .OBJCOL_list{i}.UNIT               % Optional. Replaced by standardized default value if empty (field exists with value []).
-%                                          % Automatically quoted.
-%       .OBJCOL_list{i}.FORMAT             % Required if not IGNORE_OBJCOLUMN_FORMAT
-%       .OBJCOL_list{i}.ITEMS              % Optional
-%       .OBJCOL_list{i}.DESCRIPTION        % Replaced by standardized default value if empty. Automatically quoted.
-%       .OBJCOL_list{i}.MISSING_CONSTANT   % Optional
+% ARGUMENTS
+% =========
+% TAB_file_path
+% LBL_data      : struct with the following fields.
+%       .N_TAB_file_rows
+%       .kvl_header
+%       .consistency_check
+%           .N_TAB_bytes_per_row        % Value from when writing TAB file. For double-checking.
+%           .N_TAB_columns              % Value from when writing TAB file. For double-checking.
+%       .OBJTABLE
+%           .DESCRIPTION                % Description for entire table (PDS keyword).
+%           .OBJCOL_list{i}             % Struct containing various column PDS keywords.
+%               .NAME
+%           	.BYTES
+%               .DATA_TYPE
+%               .UNIT                   % Optional. Replaced by standardized default value if empty (field exists with value []).
+%                                       % Automatically quoted.
+%               .FORMAT                 % Required if not IGNORE_OBJCOLUMN_FORMAT
+%               .ITEMS                  % Optional
+%               .DESCRIPTION            % Replaced by standardized default value if empty. Automatically quoted.
+%               .MISSING_CONSTANT       % Optional
 %
-% PARAMETER TAB_LBL_inconsistency_policy = 'warning', 'error', or 'nothing'.
-%    Determines how to react in the event of
-%    inconsistencies.
+% TAB_LBL_inconsistency_policy : 'warning', 'error', or 'nothing'.
+%       Determines how to react in the event of
+%       inconsistencies.
 %
 % NOTE: LBL_data.consistency_check.* are not actually needed to complete the function's tasks. They are there
 % as consistency checks so that the caller can submit those values when they came from code creating

@@ -1,9 +1,12 @@
 % Read ODL/LBL file "header", i.e. all the keywords from the beginning of
 % the file up until the first OBJECT statement.
 %
+% ARGUMENTS
+% =========
 % kvl                    : Key-value (pair) list
 % delete_header_key_list : Cell array of keys which are removed if found (must not be found).
 % 
+%
 % NOTE: CALIB_LBL_str    keeps   quotes.
 %       CALIB_LBL_struct removes quotes.
 % NOTE: Can not handle empty lines.
