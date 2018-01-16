@@ -136,29 +136,29 @@ try
 
             
 %------------------- EDDER DOESN'T NEED OFFSET CORRECTSIONS, nor SWEEPWINDOW DELETION------------------------%  FKJN 16/1 2018          
-%             if fileflag(2) =='3' % read file probe 3
-% 
-%                 scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
-% 
-% 
-%                 %apply offset, but keep it in cell array format.
-%                 if fileflag(1) =='V'  %for macro 700,701,702,705,706
-%                     scantemp(:,3)=cellfun(@(x) x+Offset.V1L,scantemp(:,3),'un',0);
-%                     scantemp(:,4)=cellfun(@(x) x+Offset.V2L,scantemp(:,4),'un',0);
-%                 else  %hypothetically, we could have I1-I2. (no current macro)
-%                     scantemp(:,3)=cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
-%                 end
-% 
-% 
-%             else %other probes
-% 
-% 
-%                 scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
-% 
-%                 %apply offset, but keep it in cell array format.
-%                 scantemp(:,3) =cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
-% 
-%             end
+            if fileflag(2) =='3' % read file probe 3
+
+                scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
+
+
+                %apply offset, but keep it in cell array format.
+                if fileflag(1) =='V'  %for macro 700,701,702,705,706
+                    scantemp(:,3)=cellfun(@(x) x+Offset.V1L,scantemp(:,3),'un',0);
+                    scantemp(:,4)=cellfun(@(x) x+Offset.V2L,scantemp(:,4),'un',0);
+                else  %hypothetically, we could have I1-I2. (no current macro)
+                    scantemp(:,3)=cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
+                end
+
+
+            else %other probes
+
+
+                scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
+
+                %apply offset, but keep it in cell array format.
+                scantemp(:,3) =cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
+
+            end
             
             %at some macros, we have measurements taken during sweeps, which leads to weird results
             %we need to find these and remove them
@@ -215,7 +215,7 @@ try
                     for (j=1:scanlength)       %print
                         
                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %03i\r\n'...
+                        fprintf(twID,'%s, %16.6f, %14i, %14i, %14i, %03i\r\n'...
                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qualityF);
                     end
                 else
@@ -223,7 +223,7 @@ try
                     for (j=1:scanlength)       %print
                         
                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %03i\r\n'...
+                        fprintf(twID,'%s, %16.6f, %14i, %14i, %03i\r\n'...
                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),qualityF);
                     end%for
                 end%if fileflag
@@ -307,7 +307,7 @@ try
                 potout(1:2:2*length(reltime)) = reltime;
                 potout(2:2:2*length(reltime)) = potbias;
                 
-                b1= fprintf(twID,'%14.7e, %14.7e\r\n',potout);
+                b1= fprintf(twID,'%14i, %14i\r\n',potout);
       
                 
             end %if first iteration +bugfix
@@ -334,62 +334,62 @@ try
 
 
 
-               if diag
-                    
-                    figure(163);
-                    
-                    subplot(2,2,1)
-                    plot(potbias,curArray);
-                    xlabel('Vp [V]');
-                    ylabel('I');
-                    title('edited sweep, factor 3 & 1, 99% confidence, 60% confidence');
-                    grid on;
-                    
-                    % curTmp = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
-                    
-                    subplot(2,2,2)
-                    plot(scantemp{1,4}(:),scantemp{1,3}(:),'b',potbias,(mean(scantemp{1,3}(:)) + 2*std(scantemp{1,3}(:))),'r',potbias,(mean(scantemp{1,3}(:)) - 2*std(scantemp{1,3}(:))),'r')
-                    %plot(potbias,curTmp)
-                    
-                    %hold all
-                    %      plot(potbias,(mean(scantemp{1,3}(:)) + 3*std(scantemp{1,3}(:))));
-                    xlabel('Vp [V]');
-                    ylabel('I');
-                    title('unedited sweep');
-                    grid on;
-                    
-                    
-                    subplot(2,2,3)
-                    plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,3)))
-                    xlabel('Vp [V]');
-                    ylabel('I');
-                    title('unedited sweep, factor 3&3 99% confidence, 99%confidene ');
-                    grid on;
-                    
-                    subplot(2,2,4)
-                    plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,2,0.8)),'b',potbias,curArray,'r')
-                    %        plot(potbias,curArray);
-                    xlabel('Vp [V]');
-                    ylabel('I');
-                    title('unedited sweep, factor 2&0.8');
-                    grid on;
-                    
-                    
-                    
-                end
+%                if diag
+%                     
+%                     figure(163);
+%                     
+%                     subplot(2,2,1)
+%                     plot(potbias,curArray);
+%                     xlabel('Vp [V]');
+%                     ylabel('I');
+%                     title('edited sweep, factor 3 & 1, 99% confidence, 60% confidence');
+%                     grid on;
+%                     
+%                     % curTmp = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
+%                     
+%                     subplot(2,2,2)
+%                     plot(scantemp{1,4}(:),scantemp{1,3}(:),'b',potbias,(mean(scantemp{1,3}(:)) + 2*std(scantemp{1,3}(:))),'r',potbias,(mean(scantemp{1,3}(:)) - 2*std(scantemp{1,3}(:))),'r')
+%                     %plot(potbias,curTmp)
+%                     
+%                     %hold all
+%                     %      plot(potbias,(mean(scantemp{1,3}(:)) + 3*std(scantemp{1,3}(:))));
+%                     xlabel('Vp [V]');
+%                     ylabel('I');
+%                     title('unedited sweep');
+%                     grid on;
+%                     
+%                     
+%                     subplot(2,2,3)
+%                     plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,3)))
+%                     xlabel('Vp [V]');
+%                     ylabel('I');
+%                     title('unedited sweep, factor 3&3 99% confidence, 99%confidene ');
+%                     grid on;
+%                     
+%                     subplot(2,2,4)
+%                     plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,2,0.8)),'b',potbias,curArray,'r')
+%                     %        plot(potbias,curArray);
+%                     xlabel('Vp [V]');
+%                     ylabel('I');
+%                     title('unedited sweep, factor 2&0.8');
+%                     grid on;
+%                     
+%                     
+%                     
+%                 end
                 
-            else
+            %else
                 curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
                 
                 
-            end%if LDL macro check & downsampling
+            %end%if LDL macro check & downsampling
             
             
             
             curArray=curArray+ CURRENTOFFSET;
             
             b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
-            b3 = fprintf(twID2,', %14.7e',curArray.'); %some steps could be "NaN" values if LDL macro
+            b3 = fprintf(twID2,', %14i',curArray.'); %some steps could be "NaN" values if LDL macro
             b4 = fprintf(twID2,'\r\n');
             
             %%Finalise
