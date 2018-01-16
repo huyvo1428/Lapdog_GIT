@@ -15,7 +15,7 @@ main.m
 control.m
 
 # Need to include "mice" in case it is a symbolic link to a directory.
-irfu-matlab/
+# irfu-matlab/    # Lapdog does not use irfu-matlab/ anymore.
 server/
 mice/
 mice
