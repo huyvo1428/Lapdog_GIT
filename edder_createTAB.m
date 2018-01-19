@@ -76,15 +76,17 @@ try
     CURRENTO1 = 0;
     CURRENTO2 = 0;
     
-    if fileflag(2) =='1'
-        CURRENTOFFSET = -1.8E-9;
-    elseif fileflag(2) =='2'
-        CURRENTOFFSET = 6.1E-9;
-    elseif fileflag(2) =='3'
-        CURRENTO1 = -1.8E-9;
-        CURRENTO2 = 6.1E-9;
-    end
     
+    
+%     if fileflag(2) =='1'
+%         CURRENTOFFSET = -1.8E-9;
+%     elseif fileflag(2) =='2'
+%         CURRENTOFFSET = 6.1E-9;
+%     elseif fileflag(2) =='3'
+%         CURRENTO1 = -1.8E-9;
+%         CURRENTO2 = 6.1E-9;
+%     end
+%     
     
     CURRENTOFFSET = 0;
     CURRENTO1 = 0;
@@ -141,22 +143,22 @@ try
                 scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
 
 
-                %apply offset, but keep it in cell array format.
-                if fileflag(1) =='V'  %for macro 700,701,702,705,706
-                    scantemp(:,3)=cellfun(@(x) x+Offset.V1L,scantemp(:,3),'un',0);
-                    scantemp(:,4)=cellfun(@(x) x+Offset.V2L,scantemp(:,4),'un',0);
-                else  %hypothetically, we could have I1-I2. (no current macro)
-                    scantemp(:,3)=cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
-                end
+%                 %apply offset, but keep it in cell array format.
+%                 if fileflag(1) =='V'  %for macro 700,701,702,705,706
+%                     scantemp(:,3)=cellfun(@(x) x+Offset.V1L,scantemp(:,3),'un',0);
+%                     scantemp(:,4)=cellfun(@(x) x+Offset.V2L,scantemp(:,4),'un',0);
+%                 else  %hypothetically, we could have I1-I2. (no current macro)
+%                     scantemp(:,3)=cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
+%                 end
 
 
             else %other probes
 
 
                 scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
-
-                %apply offset, but keep it in cell array format.
-                scantemp(:,3) =cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
+% 
+%                 %apply offset, but keep it in cell array format.
+%                 scantemp(:,3) =cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
 
             end
             
@@ -213,18 +215,24 @@ try
                 if fileflag(2) =='3'
                     
                     for (j=1:scanlength)       %print
-                        
-                        %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                        fprintf(twID,'%s, %16.6f, %14i, %14i, %14i, %03i\r\n'...
-                            ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qualityF);
+
+                        bytes= fprintf(twID,'%s, %16.6f, %14i, %14i, %14i\r\n'...
+                            ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j));                    
+                       
+%                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+%                         fprintf(twID,'%s, %16.6f, %14i, %14i, %14i, %03i\r\n'...
+%                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qualityF);
                     end
                 else
                     
                     for (j=1:scanlength)       %print
+   
                         
-                        %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                        fprintf(twID,'%s, %16.6f, %14i, %14i, %03i\r\n'...
-                            ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),qualityF);
+                        bytes=fprintf(twID,'%s, %16.6f, %14i, %14i\r\n'...
+                            ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+%                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
+%                         fprintf(twID,'%s, %16.6f, %14i, %14i, %03i\r\n'...
+%                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),qualityF);
                     end%for
                 end%if fileflag
             end%if scanlength
@@ -242,6 +250,12 @@ try
                     tabindex{end,4}= timing{1,1}; %%remember stop time in universal time and spaceclock time
                     tabindex{end,5}= timing{1,2}; %remember that obt =/= SCT
                     tabindex{end,6}= counttemp;
+                    tabindex{end,7}= 4;
+                    tabindex{end,8}= bytes;
+                    if fileflag(2) =='3'
+                        tabindex{end,7}= 5;
+                    end
+                    
                 end
                 
             end

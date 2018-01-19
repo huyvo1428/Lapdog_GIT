@@ -38,7 +38,7 @@ fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n')
 % fprintf(1,'lapdog: Reading pds.conf\r ')
 batch_control;
 
-%derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-99');
+derivedpath = strrep(archivepath,'RPCLAP-2','RPCLAP-99');
 derivedpath = strrep(derivedpath,'EDITED','EDDER');
 
 % Set up PDS keywords etc:
@@ -110,7 +110,7 @@ save(tabindexfile,'tabindex');
 
 
 
-edder_analysis;
+%edder_analysis; Let's not.
 
 
 
