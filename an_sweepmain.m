@@ -507,13 +507,13 @@ try
             str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs,  AP(k).vx,   DP(k).Vsg);
             str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).firstpos);
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
-            str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Iph0, DP(k).Tph, DP(k).Vsi, DP(k).Vph_knee, DP(k).Te, DP(k).ne);
+            str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Iph0, DP(k).Tph, DP(k).Vsi(1), DP(k).Vph_knee, DP(k).Te, DP(k).ne);
             str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
             str7  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_Vb_intersect,DP(k).e_Vb_intersect);
             str8  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Tphc,DP(k).nphc,DP(k).phc_slope,DP(k).phc_intersect);                                                                                                      %NB DP(k).Te_exp is vector size 2, so two ouputs.
             str9  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', EP(k).ne_5eV, DP(k).ni_1comp, DP(k).ni_2comp, DP(k).v_ion, DP(k).Te_exp, DP(k).ne_exp, DP(k).Rsq.linear, DP(k).Rsq.exp);
             str10 = sprintf(' %14.7e, %14.7e,',DP(k).Vbar);
-            str11 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).Iph0,DP_asm(k).Tph,DP_asm(k).Vsi,DP_asm(k).Te,DP_asm(k).ne);
+            str11 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).Iph0,DP_asm(k).Tph,DP_asm(k).Vsi(1),DP_asm(k).Te,DP_asm(k).ne);
             str12 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).ion_slope,DP_asm(k).ion_intersect,DP_asm(k).e_slope,DP_asm(k).e_intersect);
             str13 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', DP_asm(k).ion_Vb_intersect, DP_asm(k).e_Vb_intersect);
             str14 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).Tphc,DP_asm(k).nphc,DP_asm(k).phc_slope,DP_asm(k).phc_intersect);
