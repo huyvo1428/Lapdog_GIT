@@ -119,7 +119,7 @@ kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_PHASE_NAME',     
 %
 % NOTE: The conversion must work for cell arrays with zero rows (cell(9,0)) and cell arrays with one item (cell(9,1)).
 % NOTE: Old code contained a check for whether the tabindex{i,9} (i_index_last) was empty (the cell array component, not the whole cell array). Why?
-% Could not find any occurences of error message in any of the lap_agaility logs (covering time interval 2014-06-13 -- 2016-06-16). /2016-06-16
+% Could not find any occurences of error message in any of the lap_agility logs (covering time interval 2014-06-13 -- 2016-06-16). /2016-06-16
 % NOTE: Old code contained precautions for the cases that tabindex and/or an_tabindex were empty. Why? Remove? Assertion?
 % PROPOSAL: Similarily convert blockTAB to struct. In all of Lapdog?
 % PROPOSAL: Implement via two separate function files.
@@ -751,8 +751,25 @@ end   % for
 % Create LBL files for files in der_struct (A1P).
 %
 %=================================================
-createLBL_A1P(kvl_LBL_all, index, NO_ODL_UNIT, MISSING_CONSTANT, DELETE_HEADER_KEY_LIST, general_TAB_LBL_inconsistency_policy);
-    
+
+
+try
+    kvl_LBL_all
+    index
+    NO_ODL_UNIT
+    MISSING_CONSTANT
+    DELETE_HEADER_KEY_LIST
+    general_TAB_LBL_inconsistency_policy
+    createLBL_A1P(kvl_LBL_all, index, NO_ODL_UNIT, MISSING_CONSTANT, DELETE_HEADER_KEY_LIST, general_TAB_LBL_inconsistency_policy);
+catch err
+    fprintf(1,'\nlapdog:createLBL_A1P error message: %s\n',err.message);    
+    len = length(err.stack);
+    if (~isempty(len))
+        for i=1:len
+            fprintf(1,'%s, %i,\n', err.stack(i).name, err.stack(i).line);
+        end
+    end
+end
 
 
 cspice_unload(kernel_file);
