@@ -136,9 +136,8 @@ try
 
             
 %------------------- EDDER DOESN'T NEED OFFSET CORRECTSIONS, nor SWEEPWINDOW DELETION------------------------%  FKJN 16/1 2018          
-%             if fileflag(2) =='3' % read file probe 3
-% 
-%                 scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
+            if fileflag(2) =='3' % read file probe 3
+                 scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
 % 
 % 
 %                 %apply offset, but keep it in cell array format.
@@ -150,15 +149,15 @@ try
 %                 end
 % 
 % 
-%             else %other probes
+             else %other probes
 % 
 % 
-%                 scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
+                 scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
 % 
 %                 %apply offset, but keep it in cell array format.
 %                 scantemp(:,3) =cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
 % 
-%             end
+             end
             
             %at some macros, we have measurements taken during sweeps, which leads to weird results
             %we need to find these and remove them
@@ -313,11 +312,10 @@ try
             end %if first iteration +bugfix
             
             
-%------------------- EDDER DOESN'T NEED OFFSET CORRECTSIONS, nor SWEEPWINDOW DELETION------------------------%  FKJN 16/1 2018                     
+%------------------- EDDER DOESN'T NEED LDL CORRECTIONS------------------------%  FKJN 16/1 2018                     
             %checks if macro is LDL macro, and downsamples current measurement
             if any(ismember(macroNo,LDLMACROS)) %if macro is any of the LDL macros
                 qualityF = qualityF+40; %LDL macro measurement
-            end%LDLMACROS
 %                 %filter LDL sweep for noisy points. the last two number
 %                 %dictate how heavy filtering is needed. 3 & 1 are good from
 %                 %experience.
@@ -378,15 +376,16 @@ try
                     
                 end
                 
-            else
-                curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
+           % else
                 
                 
             end%if LDL macro check & downsampling
             
-            
-            
-            curArray=curArray+ CURRENTOFFSET;
+            curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
+
+            %------------------- EDDER DOESN'T NEED OFFSET CORRECTIONS------------------------%  FKJN 16/1 2018                     
+
+          %  curArray=curArray+ CURRENTOFFSET;
             
             b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
             b3 = fprintf(twID2,', %14.7e',curArray.'); %some steps could be "NaN" values if LDL macro

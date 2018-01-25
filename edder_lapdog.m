@@ -39,11 +39,12 @@ fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n')
 
 
 % fprintf(1,'lapdog: Reading pds.conf\r ')
-batch_control;
-
-derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-99');
-derivedpath = strrep(derivedpath,'CALIB','EDDER');
-
+% batch_control;
+% 
+% derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-99');
+% derivedpath = strrep(derivedpath,'CALIB','EDDER');
+derivedpath = strrep(archivepath,'RPCLAP-2','RPCLAP-99');
+derivedpath = strrep(derivedpath,'EDITED','EDDER');
 % Set up PDS keywords etc:
 
 fprintf(1,'lapdog: calling preamble...\n')
