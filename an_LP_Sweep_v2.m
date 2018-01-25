@@ -67,7 +67,7 @@ DP = [];
 
 DP.Iph0             = NaN;
 DP.Tph              = NaN;
-DP.Vsi              = NaN;
+DP.Vsi              = nan(1,2);;
 DP.Te               = nan(1,2);
 DP.ne               = nan(1,2);
 
@@ -439,13 +439,15 @@ try %try the dynamic solution first, then the static.
 
 
         if(isempty(idx))
-            DP.Vsi = NaN;
+            DP.Vsi = nan(1,2);
             Q(4) = 4;
             DP.Iph0 = Iph0_limit;
 
             Iph(:)=0;
         else
-            DP.Vsi = tempV(idx);
+            DP.Vsi(1) = -tempV(idx);
+            DP.Vsi(2) = 2e-9/ion.a(1);
+            
             DP.Iph0 = Iftmp * exp(-(tempV(idx)+Vknee)/Tph); %should be the same as Iph0_limit, right?
 
             %this is all stupid. Iph0 should be larger than ion.Vpb, etc, but only by some unknown factor (Vintersect-Vsc)*ion.Vpa.
@@ -516,7 +518,16 @@ try %try the dynamic solution first, then the static.
         %
         %         Iph(1:idx1)=DP.Iph0; %add photosaturation current
 
+    else%illumination
+        
+        DP.Vsi(1) = (ion.b(1)/ion.a(1));
+        DP.Vsi(2) = 2e-9/ion.a(1);
+       % DP.Vsi(1) = -DP.Vsi(1) ;
+
     end
+    
+    
+
 
 
 
@@ -671,7 +682,7 @@ try %try the dynamic solution first, then the static.
 
         subplot(3,2,3),plot(V+Vsc,I,'b',V+Vsc,asm_ion.I,'g');grid on;
         title([sprintf('Ion current vs Vp, out.Q(1)=%d',asm_ion.Q(1))])
-        legend('I','I_i_o_n')
+        legend('I','I_{ion}')
 
     end
 
@@ -720,12 +731,9 @@ try %try the dynamic solution first, then the static.
     DP_asm.ne_exp           = asm_expfit.ne;
 
 
-    asm_expfit_belowVknee = asm_expfit;
-
-
-
-
-    %asm_expfit_belowVknee = LP_expfit_Te(V,I-ion.I,Vsc,filter_max);
+   % asm_expfit_belowVknee = asm_expfit;
+    asm_expfit_belowVknee = LP_expfit_Te(V,asm_Itemp,Vsc,filter_max);
+%    asm_expfit_belowVknee = LP_expfit_Te(V,I-ion.I,Vsc,filter_max);
     DP_asm.Te_exp_belowVknee            = asm_expfit_belowVknee.Te; %contains both value and sigma frac.
     DP_asm.Ie0_exp_belowVknee           = asm_expfit_belowVknee.Ie0;
     DP_asm.ne_exp_belowVknee            = asm_expfit_belowVknee.ne;
@@ -757,7 +765,7 @@ try %try the dynamic solution first, then the static.
     %
     if (an_debug>3)  %debug plot
         figure(34);
-        subplot(3,2,1),plot(V,Is,'b',V,asm_Itemp - asm_elec.I,'g',V,asm_Itemp -asm_expfit.I,'r');grid on;
+        subplot(3,2,1),plot(V,I,'b',V,asm_Itemp - asm_elec.I,'g',V,asm_Itemp -asm_expfit.I,'r');grid on;
         title([sprintf('I, I-all_linear, I-all_exp %s %s',diag_info{1},strrep(diag_info{1,2}(end-26:end-12),'_',''))])
         legend('I','I-I\_linear','I-I\_exp','Location','NorthWest')
     end
@@ -768,25 +776,35 @@ try %try the dynamic solution first, then the static.
     %----------------------------------------------------------
     %get V intersection:
 
-    Tph = assmpt.Tph;
-    Iftmp = assmpt.Iph0;
+    
+    DP_asm.Vsi(1) = (asm_ion.b(1))/asm_ion.a(1);
+    DP_asm.Vsi(2) = 2e-9/asm_ion.a(1); %2nA accuracy error?
+ %   DP_asm.Vsi(1) = -DP_asm.Vsi(1);
 
-    %diph = abs(  ion current(tempV)  - photelectron log current(Vdagger) )
-    diph = abs(asm_ion.a(1)*V + asm_ion.b(1) -Iftmp*exp(-(V+Vsc-Vplasma)/Tph));
-    %find minimum
-    idx1 = find(diph==min(diph),1);
 
-    % add 1E5 accuracy on min, and try it again for +-1 V.
-    tempV = V(idx1)-1:1E-5:(V(idx1)+1);
-    diph = abs(asm_ion.a(1)*tempV + asm_ion.b(1) -Iftmp*exp(-(tempV+Vsc-Vplasma)/Tph));
-    eps = abs(Iftmp)/1000;  %good order estimate of minimum accuracy
-    idx = find(diph==min(diph) & diph < eps,1);
-
-    if(isempty(idx))
-        DP_asm.Vsi = NaN;
-    else
-        DP_asm.Vsi = tempV(idx);
-    end
+    
+    
+%     Tph = assmpt.Tph;
+%     Iftmp = assmpt.Iph0;
+% 
+%     %diph = abs(  ion current(tempV)  - photelectron log current(Vdagger) )
+%     diph = abs(asm_ion.a(1)*V + asm_ion.b(1) -Iftmp*exp(-(V+Vsc-Vplasma)/Tph));
+%     %find minimum
+%     idx1 = find(diph==min(diph),1);
+% 
+%     % add 1E5 accuracy on min, and try it again for +-1 V.
+%     tempV = V(idx1)-1:1E-5:(V(idx1)+1);
+%     diph = abs(asm_ion.a(1)*tempV + asm_ion.b(1) -Iftmp*exp(-(tempV+Vsc-Vplasma)/Tph));
+%     eps = abs(Iftmp)/1000;  %good order estimate of minimum accuracy
+%     idx = find(diph==min(diph) & diph < eps,1);
+% 
+%     if(isempty(idx))
+%         DP_asm.Vsi = NaN;
+%     else
+%         DP_asm.Vsi = tempV(idx);
+%     end
+    
+    
 
 
     %----------------------------------------------------------

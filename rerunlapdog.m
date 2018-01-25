@@ -162,7 +162,7 @@ if ge(remake_index,0) %remake index ~=-1
         %newstring= '/data/LAP_ARCHIVE/';
         fprintf(1,'replacing substring type 2...\n');
 
-        index = struct_string_replace(index,substring,newstring); %third party code
+       % index = struct_string_replace(index,substring,newstring); %third party code
         
 
         fprintf(1, 'lapdog: succesfully loaded server index\n');

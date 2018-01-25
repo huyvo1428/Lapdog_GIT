@@ -15,7 +15,7 @@ main.m
 control.m
 
 # Need to include "mice" in case it is a symbolic link to a directory.
-irfu-matlab/
+# irfu-matlab/    # Lapdog does not use irfu-matlab/ anymore.
 server/
 mice/
 mice
@@ -44,3 +44,9 @@ dustgrains
 *.mat
 
 ManualSweepanalysis.m
+
+macro204.m
+
+more23Sept_tests.m
+
+test_deleteme.m

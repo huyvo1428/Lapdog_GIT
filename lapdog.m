@@ -7,27 +7,25 @@
 %For batch mode execution via script, to execute local execution in Matlab, see main.m
 %
 %
-%Quick description
-%1. The program is designed to be called by a script, and somewhat controlled in batch_control.m, with no other user
-% input necessary
-%2. preamble defines some variables used everywhere in the script
-%3.
-%indexgen reads every .LBL file in the archive (50% of all files) as
-%specified from the index.dat file in outputs it into a useful "index"
-%variable
-%4. some post-processing of the index is needed in indexcorr to split files
-%exactly at midnight, OBS some files created in temp/ folder,
-%5.generates daily geometry files
-%6. Seperates all files into macro operation blocks, each block terminated
-%by midnight or new macroid
-%7.
-%process reads all data, and mills it into new, condensed files
-%** information of each new file is stored in "tabindex" variable
-%8. an_IV analyses sweeps, wave snapshots (spectra), and downsamples data for
-%quick-look plots and stores them in files
-%** information of each new file is stored in "an_tabindex" variable
-%9. createLBL produces .LBL files for each generated file  (PDS archive
-%specific file type)
+% Quick description
+% 1. The program is designed to be called by a script, and somewhat controlled in batch_control.m, with no other user
+%    input necessary
+% 2. preamble defines some variables used everywhere in the script
+% 3. indexgen reads every .LBL file in the archive (50% of all files) as
+%    specified from the index.dat file in outputs it into a useful "index"
+%    variable
+% 4. some post-processing of the index is needed in indexcorr to split files
+%    exactly at midnight, OBS some files created in temp/ folder,
+% 5. generates daily geometry files
+% 6. Seperates all files into macro operation blocks, each block terminated
+%    by midnight or new macroid
+% 7. process reads all data, and mills it into new, condensed files
+%    information of each new file is stored in "tabindex" variable
+% 8. an_IV analyses sweeps, wave snapshots (spectra), and downsamples data for
+%    quick-look plots and stores them in files
+%    information of each new file is stored in "an_tabindex" variable
+% 9. createLBL produces .LBL files for each generated file  (PDS archive
+%    specific file type)
 %
 
 function [] = lapdog(archpath, archID, missioncalendar)
