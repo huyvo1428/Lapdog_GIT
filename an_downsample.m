@@ -27,9 +27,18 @@ foutarr=cell(1,7);
 
 
 j=0;
+global SATURATION_CONSTANT
 
 try
+        %fileflag = tabindex{an_ind(i),1}(end-6:end-4);
     
+        mode = tabindex{an_ind(i),1}(end-6);
+
+        if mode =='V'  % Voltage  data
+            test_column = 4;
+        else % Current  data
+            test_column = 3;
+        end
     
     for i=1:length(an_ind)     % Iterate over files (indices).
         
@@ -42,7 +51,11 @@ try
         scantemp=textscan(arID,'%s%f%f%f%d','delimiter',',');
         fclose(arID);
         
-        
+%                     %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+%                     %apparently an if/else case is 2.13 times faster than querying
+%                     %both columns
+                    scantemp{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT)    = NaN;
+%                     %-------------------------------------------------------------%
         
         UTCpart1 = scantemp{1,1}{1,1}(1:11);
         
@@ -156,7 +169,18 @@ try
         
         %  sumunique= @(x) sum(unique(x));
         
-        
+        %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+
+        if mode =='V'  % Voltage  data
+            vsd(isnan(vmu))=SATURATION_CONSTANT;
+            vmu(isnan(vmu))=SATURATION_CONSTANT;
+        else            
+            isd(isnan(imu))=SATURATION_CONSTANT;
+            imu(isnan(imu))=SATURATION_CONSTANT;
+        end
+
+        %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+
         
         
         foutarr{1,3}( inter(1):inter(end), 1 ) = imu( inter(1):inter(end) ); %prepare for printing results

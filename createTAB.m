@@ -56,6 +56,12 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 % e.g. QF = 320 -> Sweep during measurement, bug during measurement, bias change during measurement
 %  QF =000 ALL OK.
 
+%globals
+global SATURATION_CONSTANT;
+global tabindex;  %global index
+global LDLMACROS; %global constant list
+
+
 try
 macroNo = index(tabind(1)).macro;
 diag = 0;
@@ -66,51 +72,49 @@ dirM = upper(datestr(index(tabind(1)).t0,'mmm'));
 dirD = strcat('D',datestr(index(tabind(1)).t0,'dd'));
 tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 
-% Offset handling
-% Now with hardcoded current offset (possibly due to a constant stray
-% current during calibration which is not present during measurements)
-Offset = [];
-Offset.I1L = 0;   % The old value -23E-9 is now part of pds ADC20 calibration ("Delta").
-%Offset.B1S = +1E-9;
-%Offset.I2L = -23E-9;
-Offset.I2L = 0;   % The old value -23E-9 is now part of pds ADC20 calibration ("Delta").
-%Offset.B2S = +6.5E-9; These values are from  an incorrectly applied old 4kHZ calibration of
-%8kHZ sweeps. They should also be applied to HF data.
-Offset.I3L = 0;
-Offset.V1L = 0;
-Offset.V2L = 0;
-Offset.V3L = 0;
 
-
-%Edit FKJN 26e Sept 2016 4/8 khz filter offset calibration. should be moved to pds soon.
-%global of8khzfilterMacros;
-% of4khzfilterMacros = hex2dec({'410','411','412','415','416','417','612','613','615','616','710','910'});    % NOTE: Must be cell array with strings for hex2dec ({} not []).
-% if any(ismember(macroNo,of4khzfilterMacros)) %if macro is any of the LDL macros
-%    Offset.B1S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
-%    Offset.B2S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
-%    fprintf(1,'NO 4khz correction macro was %X',macroNo);
+%FKJN Offset correction no longer needed 6/3 2018
+% % Offset handling
+% % Now with hardcoded current offset (possibly due to a constant stray
+% % current during calibration which is not present during measurements)
+% Offset = [];
+% Offset.I1L = 0;   % The old value -23E-9 is now part of pds ADC20 calibration ("Delta").
+% %Offset.B1S = +1E-9;
+% %Offset.I2L = -23E-9;
+% Offset.I2L = 0;   % The old value -23E-9 is now part of pds ADC20 calibration ("Delta").
+% %Offset.B2S = +6.5E-9; These values are from  an incorrectly applied old 4kHZ calibration of
+% %8kHZ sweeps. They should also be applied to HF data.
+% Offset.I3L = 0;
+% Offset.V1L = 0;
+% Offset.V2L = 0;
+% Offset.V3L = 0;
 % 
-% else
-%    Offset.B1S = 1.4*1E-9*20000/65535; %0.43 nA
-%    Offset.B2S = 25.35*1E-9*20000/65535;%7.74 nA
-%    %note that old calibration was -1E-9 and -6.5E-9. Maybe due to inexactness of determination, or a temporal thing. 
-%    fprintf(1,'YES 4khz correction macro was %X',macroNo);
 % 
-% end
-% 8 kHz-filter calibration offsets are hereafter handled by pds (takes high-gain/low-gain, density/E field mode, ADC16/ADC20) into account.
-% They should therefore be zero here. /Erik P G Johansson 2017-05-17
-Offset.B1S = 0;
-Offset.B2S = 0;
-
-Offset.I1H = Offset.B1S;
-Offset.I2H = Offset.B2S; %these offsets are due to a 4/8khz filter calibration.
-    
+% %Edit FKJN 26e Sept 2016 4/8 khz filter offset calibration. should be moved to pds soon.
+% %global of8khzfilterMacros;
+% % of4khzfilterMacros = hex2dec({'410','411','412','415','416','417','612','613','615','616','710','910'});    % NOTE: Must be cell array with strings for hex2dec ({} not []).
+% % if any(ismember(macroNo,of4khzfilterMacros)) %if macro is any of the LDL macros
+% %    Offset.B1S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
+% %    Offset.B2S = 0; %calibration from macro 104 is on 4kHZ filters, so these macros are fine and treated in pds
+% %    fprintf(1,'NO 4khz correction macro was %X',macroNo);
+% % 
+% % else
+% %    Offset.B1S = 1.4*1E-9*20000/65535; %0.43 nA
+% %    Offset.B2S = 25.35*1E-9*20000/65535;%7.74 nA
+% %    %note that old calibration was -1E-9 and -6.5E-9. Maybe due to inexactness of determination, or a temporal thing. 
+% %    fprintf(1,'YES 4khz correction macro was %X',macroNo);
+% % 
+% % end
+% % 8 kHz-filter calibration offsets are hereafter handled by pds (takes high-gain/low-gain, density/E field mode, ADC16/ADC20) into account.
+% % They should therefore be zero here. /Erik P G Johansson 2017-05-17
+% Offset.B1S = 0;
+% Offset.B2S = 0;
+% 
+% Offset.I1H = Offset.B1S;
+% Offset.I2H = Offset.B2S; %these offsets are due to a 4/8khz filter calibration.
+%     
 % NOTE: fileflag = B1S/B2S really refers to BxS + IxS.
 % For that case, CURRENTOFFSET refers to the IxS files (not the BxS files which only contain voltages).
-
-    
-
-
 
  %   case 'I2L'
        % corr_factor_710= 13/16;
@@ -126,66 +130,55 @@ Offset.I2H = Offset.B2S; %these offsets are due to a 4/8khz filter calibration.
 %         else
 %             CURRENTOFFSET = Offset.I2L;
 %         end
+    %FKJN Offset correction no longer needed 6/3 2018
+
+% ma_corr_factor= 4/5;
+% 
+% switch fileflag     %we have detected different offset on different modes
+%     case 'I1H'        
+%         CURRENTOFFSET = Offset.I1H; %...=Offset.B1S
+%         ma_corr_factor= 1;
+%     case 'I2H'        
+%         CURRENTOFFSET = Offset.I2H;%...=Offset.B2S
+%         ma_corr_factor= 1;
+%     case 'B1S'
+%         CURRENTOFFSET = Offset.B1S;
+% 
+%     case 'B2S'
+%         CURRENTOFFSET = Offset.B2S;        
+% 
+%     otherwise %I3H,V1L,V2L,V3L
+%               
+%         %FKJN test implementation
+% %          if macroNo == hex2dec('604')
+% %              ma_corr_factor = 2/3; %test
+% %          end
+%             
+%         CURRENTOFFSET = 0;
+%         
+% end
 
 
-ma_corr_factor= 4/5;
+%fprintf(1,'CURRENTOFFSET = %e \n',CURRENTOFFSET);
 
-switch fileflag     %we have detected different offset on different modes
-    case 'I1H'        
-        CURRENTOFFSET = Offset.I1H; %...=Offset.B1S
-        ma_corr_factor= 1;
-    case 'I2H'        
-        CURRENTOFFSET = Offset.I2H;%...=Offset.B2S
-        ma_corr_factor= 1;
-    case 'B1S'
-        CURRENTOFFSET = Offset.B1S;
-
-    case 'B2S'
-        CURRENTOFFSET = Offset.B2S;        
-
-    otherwise %I3H,V1L,V2L,V3L
-              
-        %FKJN test implementation
-%          if macroNo == hex2dec('604')
-%              ma_corr_factor = 2/3; %test
-%          end
-            
-        CURRENTOFFSET = 0;
-        
+if ~isempty(SATURATION_CONSTANT)
+    
+    fprintf(1,'SATURATION_CONSTANT = %e \n',SATURATION_CONSTANT);
+else
+    fprintf(1,'SATURATION_CONSTANT not set, setting...\n');
+    SATURATION_CONSTANT = -1000;
 end
+ 
 
+% I only think I need this for sweep data (since it's averaged in this
+% function)
 
-   fprintf(1,'CURRENTOFFSET = %e \n',CURRENTOFFSET);
-
-
-%
-% CURRENTOFFSET = 0;
-% CURRENTO1 = 0;
-% CURRENTO2 = 0;
-%
-% if fileflag(2) =='1'
-%     CURRENTOFFSET = +1E-9;
-% elseif fileflag(2) =='2'
-%     CURRENTOFFSET = 6.5E-9;
-% elseif fileflag(2) =='3'
-%     CURRENTO1 = +1E-9;
-%     CURRENTO2 = 6.5E-9;
-% end
-% if(~index(tabind(1)).sweep) % if not a sweep
-%     CURRENTOFFSET = 0;
-%     CURRENTO1 = 0;
-%     CURRENTO2 = 0;
-% end
-
+ 
 
 
 filename = sprintf('%sRPCLAP_%s_%s_%03x_%s.TAB', tabfolder, datestr(macrotime,'yyyymmdd'), datestr(macrotime,'HHMMSS'), macroNo, fileflag);
 filenamep = strrep(filename,tabfolder,'');
 twID = fopen(filename,'w');
-
-global tabindex;  %global index
-global LDLMACROS; %global constant list
-
 
 %tabindex has format:
 %{ ,1} filename
@@ -208,7 +201,6 @@ len = length(tabind);
 counttemp = 0;
 delfile = 1;
 
-%try
     %tot_bytes = 0;
     if(~index(tabind(1)).sweep); %% if not a sweep, do:
 
@@ -227,27 +219,51 @@ delfile = 1;
             if fileflag(2) =='3' % read file probe 3
 
                 scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
-
+            %FKJN Offset correction no longer needed 6/3 2018
 
                 %apply offset, but keep it in cell array format.
-                if fileflag(1) =='V'  %for macro 700,701,702,705,706
-                    scantemp(:,3)=cellfun(@(x) x+Offset.V1L,scantemp(:,3),'un',0);
-                    scantemp(:,4)=cellfun(@(x) x+Offset.V2L,scantemp(:,4),'un',0);
-                else  %hypothetically, we could have I1-I2. (no current macro)
-                    scantemp(:,3)=cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
-                end
+%                 if fileflag(1) =='V'  %for macro 700,701,702,705,706
+%                     scantemp(:,3)=cellfun(@(x) x+Offset.V1L,scantemp(:,3),'un',0);
+%                     scantemp(:,4)=cellfun(@(x) x+Offset.V2L,scantemp(:,4),'un',0);
+%                 else  %hypothetically, we could have I1-I2. (no current macro)
+%                     scantemp(:,3)=cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
+%                 end
+
+%                     %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+% 
+%                 if fileflag(1) =='V'  %for macro 700,701,702,705,706
+%                     scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
+%                     scantemp{1,4}(scantemp{1,4}==SATURATION_CONSTANT)    = NaN;
+%                 else  %hypothetically, we could have I1-I2. (no current macro)
+%                     scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
+%                 end
+% 
+%                     %-------------------------------------------------------------%
 
 
             else %other probes
 
 
                 scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
+                
+%                 
+%                     %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+%                     %apparently an if/else case is 2.13 times faster than querying
+%                     %both columns
+%                 if fileflag(1) =='V'  % Voltage  data
+%                     scantemp{1,4}(scantemp{1,4}==SATURATION_CONSTANT)    = NaN;
+%                 else  %Current data 
+%                     scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
+%                 end
+%                     %-------------------------------------------------------------%
 
+                %FKJN Offset correction no longer needed 6/3 2018
                 %apply offset, but keep it in cell array format.
-                scantemp(:,3) =cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
+               % scantemp(:,3) =cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
 
             end
 
+                        
             %at some macros, we have measurements taken during sweeps, which leads to weird results
             %we need to find these and remove them
 
@@ -284,7 +300,7 @@ delfile = 1;
 
                     end%if
                 end
-                end%  sweep window deletions
+            end%  sweep window deletions
                 
                 
                 %if macroNo == hex2dec('710') || macroNo == hex2dec('910')                 
@@ -314,6 +330,12 @@ delfile = 1;
 
                     for (j=1:scanlength)       %print
 
+                        
+%                                     
+%             %----------- SATURATION un-HANDLING FKJN 6/3 2018 ---------------%
+%%%%%%%%%%%%% NOT NEEDED?
+%             %-------------------------------------------------------------%
+                        
                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
                         fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %03i\r\n'...
                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qualityF);
@@ -386,7 +408,10 @@ delfile = 1;
             scantemp{1,3}(1:step1)    = [];
             scantemp{1,4}(1:step1)    = [];
 
-
+            
+            %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+            scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
+            %-------------------------------------------------------------%
 
             if (i==1) %do this only once + bugfix
 
@@ -515,9 +540,17 @@ delfile = 1;
             end%if LDL macro check & downsampling
 
 
+            %FKJN Offset correction no longer needed 6/3 2018
+            %curArray=curArray+ CURRENTOFFSET;
 
-            curArray=curArray+ CURRENTOFFSET;
+            
+            
+            %----------- SATURATION un-HANDLING FKJN 6/3 2018 ---------------%
+                 curArray(isnan(curArray))  = SATURATION_CONSTANT;
+            %-------------------------------------------------------------%
 
+            
+            
             b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
             b3 = fprintf(twID2,', %14.7e',curArray.'); %some steps could be "NaN" values if LDL macro
             b4 = fprintf(twID2, '\r\n');

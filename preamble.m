@@ -22,18 +22,9 @@ IN.probe_cA = pi*IN.probe_r^2;
 
 
 
-% Set up automatic ssh login on vroom.umea.irf.se (assumes you have generated a
-% public rsa key in your .ssh directory on squid and copied it to the known_hosts
-% file in your .ssh directory on vroom)
-% This will ask you for your ssh password once per session, instead of 
-% twice per day in the archive... 
-% if(do_geom & ~exist('ssh_ok'))
-%   unix('eval `ssh-agent`');
-%   unix('ssh-add ~/.ssh/id_dsa');
-%   unix('ssh-add -l');
-%   ssh_ok = 1;
-% end
-% 
+
+
+
 
 
 % Read mission calendar:
@@ -126,5 +117,15 @@ processlevel = tmp{1};
 
 % archiveid is used internally for keeping track of index files. It is not a PDS thing.
 archiveid = sprintf('%s_%d',shortphase,processlevel);
+
+
+
+
+
+global SATURATION_CONSTANT
+SATURATION_CONSTANT=-1000;
+
+
+
 
 % End of preamble.m 
