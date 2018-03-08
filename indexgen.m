@@ -18,7 +18,7 @@ ilp = fopen(str);
 
 if ilp < 0
     fprintf(1,'Error, cannot open file %s\n', str);
-    break
+    return;%break
 end % if I/O error
 
 
@@ -26,7 +26,7 @@ tmp=textscan(ilp,'%s %*s %*s %*s %*s %*s','Delimiter',',');
 
 if isempty(tmp{1})
 	fprintf(1,'Error- Empty file  %s\n', str);
-	break
+    return;%break
 end
 
 

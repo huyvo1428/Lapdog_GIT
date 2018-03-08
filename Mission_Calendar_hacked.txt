@@ -28,6 +28,7 @@
 "CRUISE 6"                 :CR6 :2011-07-14:0917:"SOLAR WIND"                           :SS       :"SOLAR SYSTEM":SW
 "RENDEZVOUS MANOEUVRE 2"   :RVM2:2014-01-23:0211:"SOLAR WIND"                           :SS       :"SOLAR SYSTEM":SW
 "MTP 01"                   :M01 :2014-03-07:0028:"SOLAR WIND"                           :SS       :"SOLAR SYSTEM":SW
+"TEST Saturation"          :TDDG:2015-05-20:0001:"SOLAR WIND"                           :SS       :"SOLAR SYSTEM":SW
 "MAY 2014"                 :1405:2014-05-01:0031:"67P/CHURYUMOV-GERASIMENKO 1 (1969 R1)":C:"COMET"       :67P
 "JUN 2014"                 :1406:2014-06-01:0030:"67P/CHURYUMOV-GERASIMENKO 1 (1969 R1)":C:"COMET"       :67P
 "JUL 2014"                 :1407:2014-07-01:0031:"67P/CHURYUMOV-GERASIMENKO 1 (1969 R1)":C:"COMET"       :67P

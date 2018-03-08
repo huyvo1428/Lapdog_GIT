@@ -25,7 +25,7 @@ foutarr=cell(1,7);
 % low sample size(for avgs) = +2
 % some zeropadding(for psd) = +2
 
-
+i=1; %
 j=0;
 global SATURATION_CONSTANT
 
@@ -103,9 +103,11 @@ try
         
         
         
-        
+        %this @mean function will output mean even there is a single NaN
+        %value in the interval. This is what we want in this case, I
+        %believe.
         imu = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN); %select measurements during specific intervals, accumulate mean to array and print NaN otherwise
-        isd = accumarray(inter,scantemp{1,3}(:),[],@std); %select measurements during specific intervals, accumulate standard deviation to array and print zero otherwise
+        isd = accumarray(inter,scantemp{1,3}(:),[],@nanstd); %select measurements during specific intervals, accumulate standard deviation to array and print zero otherwise
         
         vmu = accumarray(inter,scantemp{1,4}(:),[],@mean,NaN);
         vsd = accumarray(inter,scantemp{1,4}(:),[],@std);

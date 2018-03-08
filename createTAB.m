@@ -163,7 +163,7 @@ tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 
 if ~isempty(SATURATION_CONSTANT)
     
-    fprintf(1,'SATURATION_CONSTANT = %e \n',SATURATION_CONSTANT);
+    %fprintf(1,'SATURATION_CONSTANT = %e \n',SATURATION_CONSTANT);
 else
     fprintf(1,'SATURATION_CONSTANT not set, setting...\n');
     SATURATION_CONSTANT = -1000;
@@ -229,16 +229,23 @@ delfile = 1;
 %                     scantemp(:,3)=cellfun(@(x) x+CURRENTOFFSET,scantemp(:,3),'un',0);
 %                 end
 
-%                     %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-% 
-%                 if fileflag(1) =='V'  %for macro 700,701,702,705,706
-%                     scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
-%                     scantemp{1,4}(scantemp{1,4}==SATURATION_CONSTANT)    = NaN;
-%                 else  %hypothetically, we could have I1-I2. (no current macro)
-%                     scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
-%                 end
-% 
-%                     %-------------------------------------------------------------%
+
+                    %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+                     %apparently an if/else case is 2.13 times faster than querying
+                     %both columns
+                if fileflag(1) =='V'  %for macro 700,701,702,705,706
+                   % scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;    
+                   % scantemp{1,4}(scantemp{1,4}==SATURATION_CONSTANT)    = NaN;
+                   
+                    satur_ind = scantemp{1,3} ==SATURATION_CONSTANT; 
+                    satur_ind2= scantemp{1,4} ==SATURATION_CONSTANT; 
+                    satur_ind = satur_ind2 | satur_ind; %combine logical matrices
+                else  %hypothetically, we could have I1-I2. (no current macro)
+                    %scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
+                    satur_ind= scantemp{1,3}==SATURATION_CONSTANT; 
+                end
+
+                     %-------------------------------------------------------------%
 
 
             else %other probes
@@ -246,16 +253,19 @@ delfile = 1;
 
                 scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
                 
-%                 
-%                     %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-%                     %apparently an if/else case is 2.13 times faster than querying
-%                     %both columns
-%                 if fileflag(1) =='V'  % Voltage  data
-%                     scantemp{1,4}(scantemp{1,4}==SATURATION_CONSTANT)    = NaN;
-%                 else  %Current data 
-%                     scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
-%                 end
-%                     %-------------------------------------------------------------%
+                
+                     %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+                     %apparently an if/else case is 2.13 times faster than querying
+                     %both columns
+                 if fileflag(1) =='V'  % Voltage  data
+                   %  scantemp{1,4}(scantemp{1,4}==SATURATION_CONSTANT)    = NaN;
+                     satur_ind= scantemp{1,4}==SATURATION_CONSTANT; 
+                 else  %Current data 
+                   %  scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
+                     satur_ind= scantemp{1,3}==SATURATION_CONSTANT; 
+                 end
+
+                     %-------------------------------------------------------------%
 
                 %FKJN Offset correction no longer needed 6/3 2018
                 %apply offset, but keep it in cell array format.
@@ -263,14 +273,15 @@ delfile = 1;
 
             end
 
-                        
+             %  qf_tot=qualityF+400*any(satur_ind); %satur_ind is reset every loop until this
+      
             %at some macros, we have measurements taken during sweeps, which leads to weird results
             %we need to find these and remove them
 
             if ~isempty(sweept)
 
-                lee= length(scantemp{1,2}(:));
-                del = false(1,lee);
+                %lee= length(scantemp{1,2}(:));
+                %del = false(1,lee);
 
 
                 if scantemp{1,2}(end)<sweept(1,1) || scantemp{1,2}(1)>sweept(2,end)
@@ -298,6 +309,8 @@ delfile = 1;
                             scantemp{1,5}(del)    = [];
                         end
 
+                        satur_ind(del) = []; %hopefully satur_ind now is the same length as the others 
+
                     end%if
                 end
             end%  sweep window deletions
@@ -324,21 +337,22 @@ delfile = 1;
             if scanlength ~=0 %if not file is empty/all invalid
                 delfile = 0; %file will not be deleted
                 timing={scantemp{1,1}{end,1},scantemp{1,2}(end)}; %remember last timers
+%             %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
 
+              qf=qualityF+400*(satur_ind); %satur_ind is of length (scanlength), so qf is unique for each row.
+               
+              %nb: qf here is a vector!  in non-sweep qf is a scalar!
+%             %-------------------------------------------------------------%
+                        
 
                 if fileflag(2) =='3'
 
                     for (j=1:scanlength)       %print
+                                  
 
-                        
-%                                     
-%             %----------- SATURATION un-HANDLING FKJN 6/3 2018 ---------------%
-%%%%%%%%%%%%% NOT NEEDED?
-%             %-------------------------------------------------------------%
-                        
                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
                         fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %03i\r\n'...
-                            ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qualityF);
+                            ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qf(j)); %edit FKJN 8/3 2018. qualityF --> qf(j)
                     end
                 else
 
@@ -346,7 +360,7 @@ delfile = 1;
 
                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
                         fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %03i\r\n'...
-                            ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),qualityF);
+                            ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),qf(j)); %edit FKJN 8/3 2018. qualityF --> qf(j)
                     end%for
                 end%if fileflag
             end%if scanlength
@@ -410,7 +424,11 @@ delfile = 1;
 
             
             %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-            scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
+             satur_ind = scantemp{1,3}==SATURATION_CONSTANT; % logical vector which is true if any current is saturated (pds outputs -1000 as of 6/3 2018)
+             %scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
+             scantemp{1,3}(satur_ind) = NaN;% This should also work, so we don't have to
+        
+            
             %-------------------------------------------------------------%
 
             if (i==1) %do this only once + bugfix
@@ -546,9 +564,23 @@ delfile = 1;
             
             
             %----------- SATURATION un-HANDLING FKJN 6/3 2018 ---------------%
-                 curArray(isnan(curArray))  = SATURATION_CONSTANT;
+                  %LDL and macrospecific currents apply to all data in
+                  %macroblock (and in a file). Saturation only applies to a
+                  %sweep. any(satur_ind) can be 0 or 1 from one sweep to 
+                  %the next, so qf_tot can vary ±400 between rows
+                % qf=qualityF+400*any(satur_ind);
+                 qualityF= qualityF+400*any(satur_ind);
+                 
+                 %NEVERMIND this ->obs: qf here is a scalar! in non-sweep data it's a vector!
+                  %the awkward handling is due to qualityF being a value
+
+
+                 curArray(isnan(curArray))  = SATURATION_CONSTANT; %not only aturated values, but filtered(LDL offsets) NaN's too.
             %-------------------------------------------------------------%
 
+            
+            
+            
             
             
             b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);

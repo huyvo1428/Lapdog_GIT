@@ -24,7 +24,7 @@ global assmpt;
 
 dynampath = strrep(mfilename('fullpath'),'/an_sweepmain','');
 kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
-paths();
+paths(); 
 
 cspice_furnsh(kernelFile);
 
@@ -87,8 +87,13 @@ try
         
         
         %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-        
-            Iarr(Iarr==SATURATION_CONSTANT)    = NaN;
+        satur_ind = Iarr==SATURATION_CONSTANT; % logical matrix which is true if any current is saturated (pds outputs -1000 as of 6/3 2018)
+        %Iarr(Iarr==SATURATION_CONSTANT)    = NaN;
+        Iarr(satur_ind) = NaN;% This should also work, so we don't have to
+        %do this twice
+        %
+        %note that this index needs special handling for V or /\ sweeps
+        %(see :if split), etc
         %-------------------------------------------------------------%
         
         % Classify "sweep" depending on voltage curve: one/two sweeps, up/down, where split.
@@ -118,9 +123,12 @@ try
             % Split data for first and second sweep in sweep pair.
             Vb2   = Vb(mind:end);
             Iarr2 = Iarr(mind:end,:);
+           % satur_ind2 = satur_ind(mind:end,:);%mirror Iarr treatment everywhere.
+            
 
             Vb   = Vb(1:mind);
             Iarr = Iarr(1:mind,:);
+           % satur_ind = satur_ind(1:mind,:); %mirror Iarr treatment everywhere.
 
             Tarr2 = Tarr;
             t_sweep_rel = scantemp2{1,1};     % Time, relative to beginning of sweep/pair sequence (one/two sweeps).
@@ -147,7 +155,7 @@ try
         [altitude,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
         clear junk
 
-        if strcmp(mode(2),'1'); %probe 1???
+        if strcmp(mode(2),'1') %probe 1
             %current (Elias) SAA = z axis, Anders = x axis.
             % *Anders values* (converted to the present solar aspect angle definition
             % by ADDING 90 degrees) :
@@ -391,6 +399,11 @@ try
             if (abs(SAA(1, 2*k-1)-SAA(1, 2*k)) >0.05) %rotation of more than 0.05 degrees  %arbitrary chosen value... seems decent
                 qf = qf+20; %rotation
             end
+            
+%             if (any(satur_ind(:,k))) 
+%                 qf = qf+400; % saturation flagging
+%             end
+            
 
             EP(k).split = 0;
             EP(k).SAA = mean(SAA(1,2*k-1:2*k));
@@ -436,6 +449,14 @@ try
                 if (abs(SAA(1, 2*k-1)-SAA(1, 2*k)) >0.05) %rotation of more than 0.01 degrees
                     qf = qf+20; %rotation
                 end
+                
+%                 
+%                 if (any(satur_ind2(:,k)))
+%                     qf = qf+400; % saturation flagging not necessary.
+%                     Done in createTAB and already in QF array
+%                 end
+                
+                
 
                 EP(m).split = split;  % 1 for V form, -1 for upside-down V
                 EP(m).SAA = mean(SAA(1,2*k-1:2*k));
