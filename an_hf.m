@@ -207,8 +207,8 @@ try
                         
                         %vpred = vp - mean(vp);
                         
-                        P= polyfit(1:lens,vp,1);
-                        vpred = vp - polyval(P,1:lens);
+                        P= polyfit(1:lens,vp.',1);
+                        vpred = vp - polyval(P,1:lens).';
                         
                         %       lens = length(vp);
                         [psd,freq] = pwelch(vpred,hanning(lens),[], nfft, fsamp);
@@ -220,8 +220,8 @@ try
                         
                         
                         %ibred = ib - mean(ib);
-                        P= polyfit(1:lens,ib,1);
-                        ibred = ib - polyval(P,1:lens);
+                        P= polyfit(1:lens,ib.',1);
+                        ibred = ib - polyval(P,1:lens).';
                         
                         
                         [psd,freq] = pwelch(ibred,hanning(lens),[], nfft, fsamp);
