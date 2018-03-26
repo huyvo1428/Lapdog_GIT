@@ -51,7 +51,7 @@
 %       (2) Also does not use general-purpose ODL writing function (like EJ's write_ODL_from_struct).
 %       (3) OBJTABLE_DELIMITER
 %       (4) hardcoded indentation length
-%       NOTE: Uses createLBL_KVPL_add_kv_pair, createLBL_KVPL_merge.
+%       NOTE: Uses lib_shared_EJ.KVPL.add_kv_pair, lib_shared_EJ.KVPL.merge.
 %
 function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inconsistency_policy)
     %
@@ -288,14 +288,14 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
     kvl_set = [];   % NOTE: Can not initialize with "struct(...)". That gives an unintended result due to a special interpretation for arrays.
     kvl_set.keys   = {};
     kvl_set.values = {};
-    kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_TYPE',  'FIXED_LENGTH');   % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
-    kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'RECORD_BYTES', sprintf('%i',   OBJTABLE_data.ROW_BYTES));
-    kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_NAME',    sprintf('"%s"', LBL_filename));    % Should be qouted.
-    kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, '^TABLE',       sprintf('"%s"', TAB_filename));    % Should be qouted.
-    kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'PRODUCT_ID',   sprintf('"%s"', file_basename));   % Should be qouted.
-    kvl_set = createLBL_KVPL_add_kv_pair(kvl_set, 'FILE_RECORDS', sprintf('%i',   LBL_data.N_TAB_file_rows));
+    kvl_set = lib_shared_EJ.KVPL.add_kv_pair(kvl_set, 'RECORD_TYPE',  'FIXED_LENGTH');   % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
+    kvl_set = lib_shared_EJ.KVPL.add_kv_pair(kvl_set, 'RECORD_BYTES', sprintf('%i',   OBJTABLE_data.ROW_BYTES));
+    kvl_set = lib_shared_EJ.KVPL.add_kv_pair(kvl_set, 'FILE_NAME',    sprintf('"%s"', LBL_filename));    % Should be qouted.
+    kvl_set = lib_shared_EJ.KVPL.add_kv_pair(kvl_set, '^TABLE',       sprintf('"%s"', TAB_filename));    % Should be qouted.
+    kvl_set = lib_shared_EJ.KVPL.add_kv_pair(kvl_set, 'PRODUCT_ID',   sprintf('"%s"', file_basename));   % Should be qouted.
+    kvl_set = lib_shared_EJ.KVPL.add_kv_pair(kvl_set, 'FILE_RECORDS', sprintf('%i',   LBL_data.N_TAB_file_rows));
     
-    LBL_data.kvl_header = createLBL_KVPL_merge(LBL_data.kvl_header, kvl_set);
+    LBL_data.kvl_header = lib_shared_EJ.KVPL.merge(LBL_data.kvl_header, kvl_set);
     
     %################################################################################################
     

@@ -31,5 +31,5 @@ function [kvl_header, CALIB_LBL_struct] = createLBL_read_LBL_file(file_path, del
     %end
     
     % kvl_header = createLBL_compatibility_substitute_LBL_keys(kvl_header, probe_nbr);
-    kvl_header = createLBL_KVPL_delete_keys(kvl_header, delete_header_key_list, 'may have keys');
+    kvl_header = lib_shared_EJ.KVPL.delete_keys(kvl_header, delete_header_key_list, 'may have keys');
 end

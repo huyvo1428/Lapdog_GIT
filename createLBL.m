@@ -84,30 +84,30 @@ ROSETTA_NAIF_ID  = -226;    % Used for SPICE.
 kvl_LBL_all = [];
 kvl_LBL_all.keys = {};
 kvl_LBL_all.values = {};
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PDS_VERSION_ID',            'PDS3');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_QUALITY_ID',           '"1"');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCT_TYPE',              '"DDR"');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PROCESSING_LEVEL_ID',       '"5"');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PDS_VERSION_ID',            'PDS3');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'DATA_QUALITY_ID',           '"1"');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCT_TYPE',              '"DDR"');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PROCESSING_LEVEL_ID',       '"5"');
 
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
-%kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_ID',               producershortname);
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_ID',        'RO');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'INSTRUMENT_ID',             'RPCLAP');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'TARGET_TYPE',               sprintf('"%s"', targettype));
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_ID',                'ROSETTA');
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
-kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
-%kvl_LBL_all = createLBL_KVPL_add_kv_pair(kvl_LBL_all, '', );
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
+%kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCER_ID',               producershortname);
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_ID',        'RO');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_ID',             'RPCLAP');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'TARGET_TYPE',               sprintf('"%s"', targettype));
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'MISSION_ID',                'ROSETTA');
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
+kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
+%kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, '', );
 
 
 
@@ -204,12 +204,12 @@ for i=1:length(stabindex)
         SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(i_index_last).sct0str(2), obt2sct(stabindex(i).SCT_stop));
         
         kvl_LBL = kvl_LBL_all;
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'START_TIME',                   CALIB_LBL_struct.START_TIME);        % UTC start time
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'STOP_TIME',                    stabindex(i).UTC_stop(1:23));        % UTC stop time
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', CALIB_LBL_struct.SPACECRAFT_CLOCK_START_COUNT);
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'START_TIME',                   CALIB_LBL_struct.START_TIME);        % UTC start time
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'STOP_TIME',                    stabindex(i).UTC_stop(1:23));        % UTC stop time
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', CALIB_LBL_struct.SPACECRAFT_CLOCK_START_COUNT);
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
         
-        kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL, 'require preexisting keys');
+        kvl_LBL = lib_shared_EJ.KVPL.overwrite_values(kvl_LBL_CALIB, kvl_LBL, 'require preexisting keys');
         
         LBL_data.kvl_header = kvl_LBL;
         clear   kvl_LBL kvl_LBL_CALIB
@@ -337,10 +337,10 @@ if(~isempty(blockTAB));   % Remove?
         START_TIME = datestr(blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
         STOP_TIME  = datestr(blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
         kvl_LBL = kvl_LBL_all;
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'START_TIME',                   START_TIME);       % UTC start time
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'START_TIME',                   START_TIME);       % UTC start time
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
         LBL_data.kvl_header = kvl_LBL;
         clear   kvl_LBL
         
@@ -404,7 +404,7 @@ for i=1:length(san_tabindex)
             
             TAB_file_info = dir(san_tabindex(i).path);
             kvl_LBL = kvl_LBL_all;
-            kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
+            kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
             try
                 %===============================================================
                 % NOTE: createLBL_create_EST_LBL_header(...)
@@ -438,7 +438,7 @@ for i=1:length(san_tabindex)
                 index(san_tabindex(i).i_index).probe);
             
             % Add DESCRIPTION?!!
-            kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL_all, 'require preexisting keys');
+            kvl_LBL = lib_shared_EJ.KVPL.overwrite_values(kvl_LBL_CALIB, kvl_LBL_all, 'require preexisting keys');
             
             LBL_data.kvl_header = kvl_LBL;
             clear kvl_LBL kvl_LBL_CALIB

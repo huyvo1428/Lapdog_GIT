@@ -36,12 +36,12 @@ function createLBL_A1P(kvl_LBL_all, index, NO_ODL_UNIT, MISSING_CONSTANT, DELETE
             index(i_index).probe);
         
         kvl_LBL = kvl_LBL_all;
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'START_TIME',                   startStopTimes{1});        % UTC start time
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'STOP_TIME',                    startStopTimes{2});        % UTC stop time
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', startStopTimes{3});
-        kvl_LBL = createLBL_KVPL_add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  startStopTimes{4});
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'START_TIME',                   startStopTimes{1});        % UTC start time
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'STOP_TIME',                    startStopTimes{2});        % UTC stop time
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', startStopTimes{3});
+        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  startStopTimes{4});
         
-        kvl_LBL = createLBL_KVPL_overwrite_values(kvl_LBL_CALIB, kvl_LBL, 'require preexisting keys');
+        kvl_LBL = lib_shared_EJ.KVPL.overwrite_values(kvl_LBL_CALIB, kvl_LBL, 'require preexisting keys');
         
         LBL_data = [];
         LBL_data.kvl_header = kvl_LBL;

@@ -41,8 +41,8 @@ function kvl_EST_header = createLBL_create_EST_LBL_header(EST_TAB_path, CALIB_LB
             i_probes(j));
         
         kvl_src_list{end+1} = kvl_LBL_src;            
-        START_TIME_list{end+1} = createLBL_KVPL_read_value(kvl_LBL_src, 'START_TIME');
-        STOP_TIME_list{end+1}  = createLBL_KVPL_read_value(kvl_LBL_src, 'STOP_TIME');
+        START_TIME_list{end+1} = lib_shared_EJ.KVPL.read_value(kvl_LBL_src, 'START_TIME');
+        STOP_TIME_list{end+1}  = lib_shared_EJ.KVPL.read_value(kvl_LBL_src, 'STOP_TIME');
     end
 
     %=====================================================
@@ -50,10 +50,10 @@ function kvl_EST_header = createLBL_create_EST_LBL_header(EST_TAB_path, CALIB_LB
     %=====================================================
     [junk, i_sort] = sort(START_TIME_list);   i_start = i_sort(1);
     [junk, i_sort] = sort(STOP_TIME_list);    i_stop  = i_sort(end);
-    kvl_set = createLBL_KVPL_add_copy_of_kv_pair( kvl_src_list{i_start}, kvl_set, 'START_TIME');
-    kvl_set = createLBL_KVPL_add_copy_of_kv_pair( kvl_src_list{i_start}, kvl_set, 'SPACECRAFT_CLOCK_START_COUNT');
-    kvl_set = createLBL_KVPL_add_copy_of_kv_pair( kvl_src_list{i_stop},  kvl_set, 'STOP_TIME');
-    kvl_set = createLBL_KVPL_add_copy_of_kv_pair( kvl_src_list{i_stop},  kvl_set, 'SPACECRAFT_CLOCK_STOP_COUNT');
+    kvl_set = lib_shared_EJ.KVPL.add_copy_of_kv_pair( kvl_src_list{i_start}, kvl_set, 'START_TIME');
+    kvl_set = lib_shared_EJ.KVPL.add_copy_of_kv_pair( kvl_src_list{i_start}, kvl_set, 'SPACECRAFT_CLOCK_START_COUNT');
+    kvl_set = lib_shared_EJ.KVPL.add_copy_of_kv_pair( kvl_src_list{i_stop},  kvl_set, 'STOP_TIME');
+    kvl_set = lib_shared_EJ.KVPL.add_copy_of_kv_pair( kvl_src_list{i_stop},  kvl_set, 'SPACECRAFT_CLOCK_STOP_COUNT');
     
     
     
@@ -107,7 +107,7 @@ function kvl_EST_header = createLBL_create_EST_LBL_header(EST_TAB_path, CALIB_LB
         end
     end
 
-    kvl_EST_header = createLBL_KVPL_overwrite_values(kvl_EST_header, kvl_set, 'require preexisting keys');   % NOTE: Must do this for both N_src_files == 1, AND == 2.
+    kvl_EST_header = lib_shared_EJ.KVPL.overwrite_values(kvl_EST_header, kvl_set, 'require preexisting keys');   % NOTE: Must do this for both N_src_files == 1, AND == 2.
 
 end
 
