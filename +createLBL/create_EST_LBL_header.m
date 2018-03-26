@@ -12,13 +12,13 @@
 % 
 % ASSUMES: The two LBL files have identical header keys on identical positions (line numbers)!
 %==============================================================================================
-function kvl_EST_header = createLBL_create_EST_LBL_header(EST_TAB_path, CALIB_LBL_paths, i_probes, kvl_set, delete_header_key_list)
+function kvl_EST_header = create_EST_LBL_header(EST_TAB_path, CALIB_LBL_paths, i_probes, kvl_set, delete_header_key_list)
 %
 % PROPOSAL: Move out ODL variables that are in common (key+value) for all LBL files.
 % PROPOSAL: Move collision-handling code into separate general-purpose function(s).
 %     NOTE: The code should preferably try to maintain the order of key-value pairs
 %           which should be easy now when has code to enforce order of keys with
-%           "KVPL_order_by_key_list_INTERNAL" in "createLBL_write_LBL_header".
+%           "KVPL_order_by_key_list_INTERNAL" in "write_LBL_header".
 %
 % PROPOSAL: Accept the LBL files for the AxS files instead of CALIB files. Should give the same result already.
 %    CON: Calling code has no way of finding the source AxS files from tabindex/an_tab_index(?).
@@ -36,7 +36,7 @@ function kvl_EST_header = createLBL_create_EST_LBL_header(EST_TAB_path, CALIB_LB
     START_TIME_list = {};
     STOP_TIME_list  = {};
     for j = 1:N_src_files   % For every source file (A1S, A2S)...
-        [kvl_LBL_src, junk] = createLBL_read_LBL_file(...
+        [kvl_LBL_src, junk] = createLBL.read_LBL_file(...
             CALIB_LBL_paths{j}, delete_header_key_list, ...
             i_probes(j));
         

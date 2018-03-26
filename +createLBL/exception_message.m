@@ -5,7 +5,7 @@
 % NOTE: Uses hardcoded reference to createLBL (text) in error message.
 % IMPLEMENTATION NOTE: I have tried to implement printing stack trace with "dbstack" but not been able to make it work.
 % 
-function createLBL_exception_message(exception, policy)
+function exception_message(exception, policy)
 % PROPOSAL: Remake into more general function.
 %   PROPOSAL: Optionally ("policy") be able to generate error?!
 %   PROPOSAL: Remove reference to createLBL.

@@ -47,13 +47,13 @@
 % (E-mail Tony Allen->Erik Johansson 2015-07-03 and that thread).
 %
 % NOTE: Not full general-purpose function.
-%       (1) Calls createLBL_write_LBL_header to write initial top-level PDS keywords.
+%       (1) Calls createLBL.write_LBL_header to write initial top-level PDS keywords.
 %       (2) Also does not use general-purpose ODL writing function (like EJ's write_ODL_from_struct).
 %       (3) OBJTABLE_DELIMITER
 %       (4) hardcoded indentation length
 %       NOTE: Uses lib_shared_EJ.KVPL.add_kv_pair, lib_shared_EJ.KVPL.merge.
 %
-function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inconsistency_policy)
+function create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inconsistency_policy)
     %
     % CONCEIVABLE LBL FILE SPECIAL CASES that may have different requirements:
     %    Data measurement files (DATA/)
@@ -91,7 +91,7 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
     %
     % PROPOSAL: Write to file using the general-purpose write_ODL_from_struct function? Only need to build structure to pass on.
     %    NOTE: Actually concerns quite a small part of the code.
-    %    NOTE: Need to simultaneously abolish createLBL_write_LBL_header which should not be used by any other code.
+    %    NOTE: Need to simultaneously abolish createLBL.write_LBL_header which should not be used by any other code.
     %    PRO: Standardizes LBL "beautification", ODL assertions (slow?).
     %    PRO: Shortens code.
     %
@@ -312,7 +312,7 @@ function createLBL_create_OBJTABLE_LBL_file(TAB_file_path, LBL_data, TAB_LBL_inc
     %=========================
     % Write LBL file "header"
     %=========================
-    createLBL_write_LBL_header(pi.fid, LBL_data.kvl_header);
+    createLBL.write_LBL_header(pi.fid, LBL_data.kvl_header);
     
     %=====================================
     % Write LBL file OBJECT=TABLE segment

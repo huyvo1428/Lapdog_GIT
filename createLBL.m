@@ -150,7 +150,7 @@ for i=1:length(stabindex)
         %--------------------------
         % Read the CALIB1 LBL file
         %--------------------------
-        [kvl_LBL_CALIB, CALIB_LBL_struct] = createLBL_read_LBL_file(...
+        [kvl_LBL_CALIB, CALIB_LBL_struct] = createLBL.read_LBL_file(...
             index(i_index_first).lblfile, DELETE_HEADER_KEY_LIST, ...
             index(i_index_first).probe);
 
@@ -261,11 +261,11 @@ for i=1:length(stabindex)
             
         end
         
-        createLBL_create_OBJTABLE_LBL_file(stabindex(i).path, LBL_data, general_TAB_LBL_inconsistency_policy);
+        createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LBL_data, general_TAB_LBL_inconsistency_policy);
         clear   LBL_data
         
     catch err
-        createLBL_exception_message(err, generate_file_fail_policy)
+        createLBL.exception_message(err, generate_file_fail_policy)
         fprintf(1,'lapdog: Skipping LBL file (tabindex) - Continuing\n');
     end    % try-catch
 end    % for
@@ -318,7 +318,7 @@ if(~isempty(blockTAB));   % Remove?
         LBL_data.OBJTABLE.OBJCOL_list = ocl;
         clear   ocl
         
-        createLBL_create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LBL_data, general_TAB_LBL_inconsistency_policy);
+        createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LBL_data, general_TAB_LBL_inconsistency_policy);
         clear   LBL_data
         
     end   % for
@@ -365,7 +365,7 @@ for i=1:length(san_tabindex)
             kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
             try
                 %===============================================================
-                % NOTE: createLBL_create_EST_LBL_header(...)
+                % NOTE: createLBL.create_EST_LBL_header(...)
                 % sets certain LBL/ODL variables to handle collisions:
                 %    START_TIME / STOP_TIME,
                 %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
@@ -374,7 +374,7 @@ for i=1:length(san_tabindex)
                 EST_TAB_path = san_tabindex(i).path;
                 i_probes = [index(i_index_src).probe];
                 CALIB_LBL_paths = {index(i_index_src).lblfile};
-                kvl_LBL = createLBL_create_EST_LBL_header(EST_TAB_path, CALIB_LBL_paths, i_probes, kvl_LBL, DELETE_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
+                kvl_LBL = createLBL.create_EST_LBL_header(EST_TAB_path, CALIB_LBL_paths, i_probes, kvl_LBL, DELETE_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
                 
                 LBL_data.kvl_header = kvl_LBL;
                 clear kvl_LBL
@@ -391,7 +391,7 @@ for i=1:length(san_tabindex)
             % CASE: Any type of file EXCEPT best estimates.
             %===============================================
             
-            [kvl_LBL_CALIB, CALIB_LBL_struct] = createLBL_read_LBL_file(...
+            [kvl_LBL_CALIB, CALIB_LBL_struct] = createLBL.read_LBL_file(...
                 index(san_tabindex(i).i_index).lblfile, DELETE_HEADER_KEY_LIST, ...
                 index(san_tabindex(i).i_index).probe);
             
@@ -688,13 +688,13 @@ for i=1:length(san_tabindex)
 
 
 
-        createLBL_create_OBJTABLE_LBL_file(san_tabindex(i).path, LBL_data, TAB_LBL_inconsistency_policy);
+        createLBL.create_OBJTABLE_LBL_file(san_tabindex(i).path, LBL_data, TAB_LBL_inconsistency_policy);
         clear   LBL_data   TAB_LBL_inconsistency_policy
         
         
         
     catch err
-        createLBL_exception_message(err, generate_file_fail_policy)
+        createLBL.exception_message(err, generate_file_fail_policy)
         fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
     end    % try-catch
     
@@ -718,9 +718,13 @@ try
     MISSING_CONSTANT
     DELETE_HEADER_KEY_LIST
     general_TAB_LBL_inconsistency_policy
-    createLBL_A1P(kvl_LBL_all, index, NO_ODL_UNIT, MISSING_CONSTANT, DELETE_HEADER_KEY_LIST, general_TAB_LBL_inconsistency_policy);
+    
+    global der_struct    % Global variable with info on A1P files.
+    if ~isempty(der_struct)
+        createLBL.write_A1P(kvl_LBL_all, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DELETE_HEADER_KEY_LIST, general_TAB_LBL_inconsistency_policy);
+    end
 catch err
-    fprintf(1,'\nlapdog:createLBL_A1P error message: %s\n',err.message);    
+    fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',err.message);    
     len = length(err.stack);
     if (~isempty(len))
         for i=1:len

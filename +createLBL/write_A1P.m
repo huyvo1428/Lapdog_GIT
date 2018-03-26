@@ -4,24 +4,15 @@
 %
 % ARGUMENTS
 % =========
-% TAB_LBL_inconsistency_policy : As defined in createLBL_create_OBJTABLE_LBL_file.
+% der_struct                   : Global variable "der_struct" defined by other Lapdog code. The function does not read
+%                                the global variable by itself.
+% TAB_LBL_inconsistency_policy : String. As defined in createLBL.create_OBJTABLE_LBL_file.
 %
 %
-% NOTE: Uses global variable "der_struct".
-% NOTE: Should work well if "der_struct" is not defined.
-%
-function createLBL_A1P(kvl_LBL_all, index, NO_ODL_UNIT, MISSING_CONSTANT, DELETE_HEADER_KEY_LIST, TAB_LBL_inconsistency_policy)
-% PROPOSAL: Make independent of global variable "der_struct". Submit as argument instead.
+function write_A1P(kvl_LBL_all, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DELETE_HEADER_KEY_LIST, TAB_LBL_inconsistency_policy)
 %
 % PROPOSAL: Do not write LBL file. Return ~LBL_data instead.
 %   CON: Would be nice to have all dependence on "der_struct" here.
-    
-    global der_struct    % Global variable with info on A1P files.
-    if isempty(der_struct)
-        return
-    end
-    
-    
     
     for iFile = 1:numel(der_struct.file)
         startStopTimes = der_struct.timing(iFile, :);
@@ -31,7 +22,7 @@ function createLBL_A1P(kvl_LBL_all, index, NO_ODL_UNIT, MISSING_CONSTANT, DELETE
         %--------------------------
         % Read the CALIB1 LBL file
         %--------------------------
-        [kvl_LBL_CALIB, junk] = createLBL_read_LBL_file(...
+        [kvl_LBL_CALIB, junk] = createLBL.read_LBL_file(...
             index(i_index).lblfile, DELETE_HEADER_KEY_LIST, ...
             index(i_index).probe);
         
@@ -65,7 +56,7 @@ function createLBL_A1P(kvl_LBL_all, index, NO_ODL_UNIT, MISSING_CONSTANT, DELETE
         LBL_data.OBJTABLE.OBJCOL_list = ocl;
         clear ocl
         
-        createLBL_create_OBJTABLE_LBL_file(der_struct.file{iFile}, LBL_data, TAB_LBL_inconsistency_policy);
+        createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, LBL_data, TAB_LBL_inconsistency_policy);
         clear   LBL_data
         
     end   % for

@@ -5,7 +5,7 @@
 % NOTE: Always prints exact string, without adding quotes.
 %
 %
-function createLBL_write_LBL_header(fid, kvl)   % kvl = key-value list
+function write_LBL_header(fid, kvl)   % kvl = key-value list
 % PROPOSAL: Take parameter TAB_file_path ==> Set RECORD_BYTES (file size), ^TABLE, (RECORDS?!!)
 %
 % PROPOSAL: Separate parameter for (overwrite) values for e.g. PRODUCT_TYPE, PROCESSING_LEVEL_ID and other values which are the same for all files.

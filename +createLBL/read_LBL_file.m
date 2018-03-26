@@ -11,14 +11,14 @@
 %       CALIB_LBL_struct removes quotes.
 % NOTE: Can not handle empty lines.
 %
-function [kvl_header, CALIB_LBL_struct] = createLBL_read_LBL_file(file_path, delete_header_key_list, probe_nbr)
+function [kvl_header, CALIB_LBL_struct] = read_LBL_file(file_path, delete_header_key_list, probe_nbr)
 %
-% PROPOSAL: Move keyword compatibility subsitution code (createLBL_compatibility_substitute_LBL_keys) into this function.
-%    NOTE: createLBL_compatibility_substitute_LBL_keys is only called from here.
+% PROPOSAL: Move keyword compatibility subsitution code (createLBL.compatibility_substitute_LBL_keys) into this function.
+%    NOTE: createLBL.compatibility_substitute_LBL_keys is only called from here.
 % PROPOSAL: Change name to something implying only reading CALIB LBL files?
 %
 % PROPOSAL: Remove all quotes from values.
-%    CON: createLBL_write_LBL_header must determine which keys should have quotes. ==> Another long list which might not capture all keywords.
+%    CON: createLBL.write_LBL_header must determine which keys should have quotes. ==> Another long list which might not capture all keywords.
 
     [CALIB_LBL_str, CALIB_LBL_struct] = lib_shared_EJ.read_ODL_to_structs(file_path);   % Read CALIB LBL file.
     kvl_header = [];
@@ -30,6 +30,6 @@ function [kvl_header, CALIB_LBL_struct] = createLBL_read_LBL_file(file_path, del
     %    kvl_header.values{i} = value(value ~= '"');    % Remove all quotes.
     %end
     
-    % kvl_header = createLBL_compatibility_substitute_LBL_keys(kvl_header, probe_nbr);
+    % kvl_header = createLBL.compatibility_substitute_LBL_keys(kvl_header, probe_nbr);
     kvl_header = lib_shared_EJ.KVPL.delete_keys(kvl_header, delete_header_key_list, 'may have keys');
 end
