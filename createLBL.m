@@ -195,8 +195,8 @@ for i=1:length(stabindex)
                 LBL_data.consistency_check.N_TAB_bytes_per_row = 32;   % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
                 LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION);
                 ocl = [];
-                ocl{end+1} = struct('NAME', 'SWEEP_TIME',                 'FORMAT', 'E14.7', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS', 'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
-                ocl{end+1} = struct('NAME', sprintf('P%i_VOLTAGE', Pnum), 'FORMAT', 'E14.7', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'VOLT',    'DESCRIPTION', 'CALIBRATED VOLTAGE BIAS');
+                ocl{end+1} = struct('NAME', 'SWEEP_TIME',                 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS', 'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
+                ocl{end+1} = struct('NAME', sprintf('P%i_VOLTAGE', Pnum), 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'VOLT',    'DESCRIPTION', 'CALIBRATED VOLTAGE BIAS');
                 LBL_data.OBJTABLE.OBJCOL_list = ocl;
                 clear ocl
                 
@@ -218,7 +218,7 @@ for i=1:length(stabindex)
 
                 DESC_MISS = {'DESCRIPTION', sprintf('One current for each of the voltage potential sweep steps described by %s. Each current is the average over multiple measurements on a single potential step.', Bfile)};
                 ocl{end+1} = struct('NAME', sprintf('P%i_SWEEP_CURRENT', Pnum), 'DATA_TYPE', 'ASCII_REAL', 'ITEM_BYTES', 14, 'UNIT', 'AMPERE', ...
-                    'ITEMS', stabindex(i).N_columns-5, 'FORMAT', 'E14.7', DESC_MISS{:});
+                    'ITEMS', stabindex(i).N_columns-5, DESC_MISS{:});
                 % Adding MISSING_CONSTANT since create_C2D2_from_CALIB1_DERIV1 replaces NaN to fit with this.
                 
                 LBL_data.OBJTABLE.OBJCOL_list = ocl;
@@ -245,20 +245,25 @@ for i=1:length(stabindex)
             % -----------------------------------------------------------------------------
             ocl = CALIB_LBL_struct.OBJECT___TABLE{1}.OBJECT___COLUMN;
             for i_oc = 1:length(ocl)
-                oc = ocl{i_oc};
-                ocl{i_oc} = rmfield(oc, 'START_BYTE');
+                oc = ocl{i_oc};   % Shorten variable
+                
+                oc = rmfield(oc, 'START_BYTE');
+                if isfield(oc, 'FORMAT')
+                    oc = rmfield(oc, 'FORMAT');  % Fails if fields does not exist.
+                end
                 
                 % Add UNIT for UTC_TIME since it does not seem to have it already in the CALIB LBL file.
                 if strcmp(oc.NAME, 'UTC_TIME') && ~isfield(oc, 'UNIT')
-                    ocl{i_oc}.UNIT = 'SECONDS';
+                    oc.UNIT = 'SECONDS';
                 end
+                ocl{i_oc} = oc;
+                clear oc
             end
             ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES', 3, 'UNIT', NO_ODL_UNIT, ...
                 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
             
             LBL_data.OBJTABLE.OBJCOL_list = ocl;
             clear ocl
-            
         end
         
         createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LBL_data, general_TAB_LBL_inconsistency_policy);
@@ -418,13 +423,13 @@ for i=1:length(san_tabindex)
             LBL_data.OBJTABLE = [];
             LBL_data.OBJTABLE.DESCRIPTION = sprintf('"%s %s SECONDS DOWNSAMPLED"', CALIB_LBL_struct.DESCRIPTION, lname(end-10:end-9));
             ocl = {};
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                          'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',                          'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
-            ocl{end+1} = struct('NAME', 'OBT_TIME',                          'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',                    'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
-            ocl{end+1} = struct('NAME', sprintf('P%i_CURRENT',        Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', 'FORMAT', 'E14.7', 'DESCRIPTION', 'AVERAGED CURRENT');
-            ocl{end+1} = struct('NAME', sprintf('P%i_CURRENT_STDDEV', Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', 'FORMAT', 'E14.7', 'DESCRIPTION', 'CURRENT STANDARD DEVIATION');
-            ocl{end+1} = struct('NAME', sprintf('P%i_VOLT',           Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', 'FORMAT', 'E14.7', 'DESCRIPTION', 'AVERAGED MEASURED VOLTAGE');
-            ocl{end+1} = struct('NAME', sprintf('P%i_VOLT_STDDEV',    Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', 'FORMAT', 'E14.7', 'DESCRIPTION', 'VOLTAGE STANDARD DEVIATION');
-            ocl{end+1} = struct('NAME', 'QUALITY',                           'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_INTEGER',                    'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                          'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
+            ocl{end+1} = struct('NAME', 'OBT_TIME',                          'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
+            ocl{end+1} = struct('NAME', sprintf('P%i_CURRENT',        Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED CURRENT');
+            ocl{end+1} = struct('NAME', sprintf('P%i_CURRENT_STDDEV', Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'CURRENT STANDARD DEVIATION');
+            ocl{end+1} = struct('NAME', sprintf('P%i_VOLT',           Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED MEASURED VOLTAGE');
+            ocl{end+1} = struct('NAME', sprintf('P%i_VOLT_STDDEV',    Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'VOLTAGE STANDARD DEVIATION');
+            ocl{end+1} = struct('NAME', 'QUALITY',                           'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
             LBL_data.OBJTABLE.OBJCOL_list = ocl;
             clear ocl
             
@@ -487,7 +492,6 @@ for i=1:length(san_tabindex)
                     ocl2{i_oc}.BYTES = 14;
                 end
                 ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
-                ocl2{i_oc}.FORMAT    = 'E14.7';
             end
             
             LBL_data.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
@@ -503,7 +507,7 @@ for i=1:length(san_tabindex)
             LBL_data.OBJTABLE.DESCRIPTION = 'FREQUENCY LIST OF PSD SPECTRA FILE';
             ocl = {};
             ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', san_tabindex(i).N_TAB_columns, 'UNIT', 'Hz', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
-                'FORMAT', 'E14.7', 'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdname));
+                'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdname));
             LBL_data.OBJTABLE.OBJCOL_list = ocl;
             clear   ocl pdsname
             
