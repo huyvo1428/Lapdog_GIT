@@ -1,43 +1,105 @@
-%===================================================================================================
-% createLBL.m
-% 
+
+%function createLBL_main(derivedpath, datasetid, shortphase, datasetname, ...
+%        lbltime, lbleditor, lblrev, ...
+%        producerfullname, producershortname, targetfullname, targettype, missionphase, tabindex, blockTAB, index, an_tabindex)
+
+%
 % Create .LBL files for all .TAB files.
+% NOTE: Uses global variable "der_struct"
+%
+% VARIABLE NAMING CONVENTIONS
+% ===========================
+% OCL = Object Column List
+% KVL = Key-Value (pair) List
+
 %===================================================================================================
-% PROPOSAL: Shorten all error messages except the first one(s).
-% 
 % PROPOSAL/TODO: Have one MISSING_CONSTANT for createLBL.m and one for ~best_estimates.m.
 %    QUESTION: How?
-% PROPOSAL: Put code converting tabindex and an_tabindex to structs into separate function(s).
 % PROPOSAL: Different LABEL_REVISION_NOTE för CALIB2, DERIV2. Multiple rows?
 % PROPOSAL: Use get_PDS.m.
-% PROPOSAL: Set MISSING_CONSTANT also for IxS (VxS?) files, despite that NaN is only exchanged for MISSING_CONSTANT in
-% create_C2D2_from_CALIB1_DERIV1.
-%    CON: TAB and LBL files are inconsistent in DERIV1.
+%   TODO-NEED-INFO: Why? What needed for?
 %
-% PROPOSAL: Move different for-loops into separate functions.
+% PROPOSAL: Stop/disable generating AxS LBL files.
+%   PRO: Will never be used (but lead to work).
+%   PRO: Are not up-to-date and generate errors/warnings which are typically ignored.
+%
+%
+%
+% PROPOSAL: Move different sections into separate functions.
 %   PRO: No need to clear variables.
 %   PRO: Smaller code sections.
+%   PROPOSAL: for-loops, or that which is iterated over.
+%
+% PROPOSAL: Make into script that simply calls separate main function (other file).
+%   PRO: Better encapsulation/modularization.
+%   PRO: Can use own variable names.
+%   PRO: Better for testing since arguments are more transparent.
+%   PRO: Can have local functions (instead of separate files).
+%   CON: Too many arguments (16).
+%       PROPOSAL: Set struct which is passed to function.
+%   PROPOSAL: Do not reference any global variables in main function.
+%       CON/PROBLEM: der_struct is not defined for non-EDDER and can thus not just be added as argument.
+%
+% PROPOSAL: Move "global der_struct" to code calling createLBL_main.
+%   CON: Should not be used for EDDER (but might still be defined, surviving from a previous EDDER run).
+%
+% TODO: Make work with EDDER and DERIV at the same time.
+%   TODO-NEED-INFO/TODO-DECISION: How determine if running regular Lapdog (lapdog.m or main.m) or EDDER (edder_lapdog.m)?
+%       PROPOSAL: Flag in main function (lapdog.m, main.m, edder_lapdog.m)
+%       PROPOSAL: Detect it from TAB files somehow, e.g. row width.
+%       PROPOSAL: Detect it from source directory: EDITED/CALIB ==> EDDER/Normal.
+%       TODO-NEED-INFO: Are the standard data structures with TAB metadata updated? Which are needed?
+%           index, tabindex, an_tabindex, der_struct (should not be needed).
+%   TODO: Make sure DATA_SET_ID is correct.
+%       NOTE: 2018-03-26: Ex:
+%           Directory RO-C-RPCLAP-99-TDDG-EDDER-V0.1/
+%           DATA_SET_ID="RO-A-RPCLAP-3-AST2-CALIB-V2.0 ??" (including question marks)
+%       PROPOSAL: Set by ro_create_delivery.
+%           NOTE: Might already be done.
+%   TODO: Handle that different sets of files for EDDER and DERIV.
+%   TODO: Handle different column widths for EDDER and DERIV.
+%       TODO: DERIV Ix[HL] have extra quality column which EDDER does not.    --------------------------- TODO
+%
+% TODO-DECISION: What kind of information should be set in
+%   (1) createLBL, and
+%   (2) ~create_C2D2_from_CALIB1/create_E2C2D2_from_CALIB1_EDITED1,
+%   respectively. What philosophy should one use.
+%   NOTE: Want to avoid setting the same information twice. Avoid first setting in createLBL, and then overwriting in
+%         ~create_E2C2D2_*.
+%   --
+%   Ex: Column description differences.
+%   Ex: DATA_SET_ID + DATA_SET_NAME
+%   Ex: PRODUCT_TYPE + PROCESSING_LEVEL_ID (level)
+%   Ex: ^EAICD_DESC, MISSING_CONSTANT
+%   Ex: PRODUCER_ID, PRODUCER_FULL_NAME, PRODUCER_INSTITUTION_NAME, INSTRUMENT_* (5 keywords)
+%   --
+%   PROPOSAL:
+%       Lapdog/createLBL should handle:
+%           - Philosophically:
+%               - All metadata which naturally (could) vary between individual data products (not just between PDS data sets)
+%                   Ex: TODO-DECISION: Common within PDS data set, i.e. DATA_SET_ID/-NAME, 
+%               - All metadata close to the TAB contents.
+%           - Explicitly: 
+%               - Column description differences (between EDDER/LAPDOG); columns present, widths of columns).
+%               - MISSION_CONSTANT
+%       ~create_E2C2D2 should handle
+%           - Philosophically: Metadata which has to do with how to select Lapdog/Edder data products to be included in
+%             delivery data sets.
+%       NOTE: Assumes that all delivery/PDS data sets pass through ~create_E2C2D2.
+%
+%   PROPOSAL: Values NOT set by createLBL, should be set to invalid placeholder values, e.g. ^EAICD_DESC = <unset>.
+%       PRO: Makes it clear in createLBL what information is not set (but not the reverse).
+%       PROPOSAL: ~create_E2C2D2 should only be allowed to overwrite such placeholder values (assertion).
+%   PROPOSAL: createLBL should NEVER set unused/overwritten keywords (not even to placeholder values).
+%       ~create_E2C2D2 should add the keys instead and check for collisions.
+%
 %===================================================================================================
 
 t_start = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
 previous_warnings_settings = warning('query');
 warning('on', 'all')
 
-
-%=========================================================
-% Read kernel file - Use default file in Lapdog directory
-%=========================================================
-%kernel_file = [dynampath, filesep, 'metakernel_rosetta.txt'];   % dynampath is no longer set for unknown reason.
-current_m_file = mfilename('fullpath');
-[Lapdog_directory, basename, ext] = fileparts(current_m_file);
-kernel_file = fullfile(Lapdog_directory, 'metakernel_rosetta.txt');
-if ~exist(kernel_file, 'file')
-    fprintf(1, 'Can not find kernel file "%s" (pwd="%s")', kernel_file, pwd)
-    % Call error too?
-end
-cspice_furnsh(kernel_file); 
-
-
+global SATURATION_CONSTANT
 
 % Set policy for error messages when failing to generate a file.
 % --------------------------------------------------------------
@@ -64,10 +126,56 @@ AxS_TAB_LBL_inconsistency_policy     = 'nothing';
 % is simply unknown at present.
 %========================================================================================
 NO_ODL_UNIT       = [];
-ODL_VALUE_UNKNOWN = [];   %'<Unknown>';  % Unit is unknown.
-DELETE_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
-MISSING_CONSTANT = -1000;   % NOTE: This constant must be reflected in the corresponding section in best_estimates!!!
-ROSETTA_NAIF_ID  = -226;    % Used for SPICE.
+ODL_VALUE_UNKNOWN = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown.
+DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
+MISSING_CONSTANT = SATURATION_CONSTANT;    % NOTE: This constant must be reflected in the corresponding section in best_estimates!!!
+%MISSING_CONSTANT_DESCRIPTION_AMENDMENT = sprintf('A value of %g refers to that the original value was saturated, or that it was an average over at least one saturated value.', MISSING_CONSTANT);
+ROSETTA_NAIF_ID  = -226;     % Used for SPICE.
+%EAICD_FILE_NAME  = 'RO-IRFU-LAP-EAICD.PDF';    % NOTE: Must match EJ_rosetta.delivery.create_DOCINFO.m (EJ's code).
+
+
+
+%=====================================================================================
+% Determine whether 
+% (1) Lapdog's EDDER (for producing EDITED2), or
+% (2) Lapdog's DERIV (for producing CALIB2, DERIV2).
+% IMPLEMENTATION NOTE: "fileparts" does not work as intended if path ends with slash.
+%=====================================================================================
+derivedPathModifCell = regexp(derivedpath, '.*[^/]', 'match');       % Remove trailing slashes (i.e. Linux only).
+[parentPath, basename, suffixJunk] = fileparts(derivedPathModifCell{1});    % NOTE: fileparts interprets the period in DATA_SET_ID as separating basename from suffix.
+if strfind(basename, 'EDDER')
+    generatingDeriv1 = 0;
+elseif strfind(basename, 'DERIV')
+    generatingDeriv1 = 1;
+else
+    error('Can not interpret whether generating (Lapdog''s) EDDER or (Lapdog''s) DERIV1 data set.')
+end
+
+
+
+% Set PDS keywords to use for column descriptions which differ between EDITED2/EDDER and DERIV/CALIB2
+% ---------------------------------------------------------------------------------------------------
+% IMPLEMENTATION NOTE: Some are meant to be used on the form DATA_UNIT_CURRENT{:} in object column description struct declaration/assignment, "... = struct(...)".
+% This makes it possible to optionally omit the keyword, besides shortening the assignment when non-empty. This is not
+% currently used though.
+if generatingDeriv1
+    DATA_DATA_TYPE    = {'DATA_TYPE', 'ASCII_REAL'};
+    DATA_UNIT_CURRENT = {'UNIT', 'AMPERE'};   
+    DATA_UNIT_VOLTAGE = {'UNIT', 'VOLT'};
+    VOLTAGE_BIAS_DESC = 'CALIBRATED VOLTAGE BIAS.';
+    VOLTAGE_MEAS_DESC = 'MEASURED CALIBRATED VOLTAGE.';
+    CURRENT_BIAS_DESC = 'CALIBRATED CURRENT BIAS.';
+    CURRENT_MEAS_DESC = 'MEASURED CALIBRATED CURRENT.';
+else
+    % CASE: EDDER run
+    DATA_DATA_TYPE    = {'DATA_TYPE', 'ASCII_INTEGER'};
+    DATA_UNIT_CURRENT = {'UNIT', 'N/A'};
+    DATA_UNIT_VOLTAGE = {'UNIT', 'N/A'};
+    VOLTAGE_BIAS_DESC = 'VOLTAGE BIAS.';
+    VOLTAGE_MEAS_DESC = 'MEASURED VOLTAGE.';
+    CURRENT_BIAS_DESC = 'CURRENT BIAS.';
+    CURRENT_MEAS_DESC = 'MEASURED CURRENT.';
+end
 
 
 
@@ -80,6 +188,7 @@ ROSETTA_NAIF_ID  = -226;    % Used for SPICE.
 % NOTE: Only keys that already exist in the CALIB files that are read (otherwise intentional error)
 %       and which are thus overwritten.
 % NOTE: Might not be complete.
+% NOTE: Contains many hardcoded constants, but not only.
 %====================================================================================================
 kvl_LBL_all = [];
 kvl_LBL_all.keys = {};
@@ -107,18 +216,33 @@ kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'TARGET_TYPE',        
 kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'MISSION_ID',                'ROSETTA');
 kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
 kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
-%kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, '', );
+% ^EAICD_DESC = Filename of file under DOCUMENT directory (or subdirectory under it) in final PDS-compliant data set.
+% NOT relative path, NOT data product name.
+%kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, '^EAICD_DESC',               sprintf('"%s"', EAICD_FILE_NAME));
 
 
 
-% IMPLEMENTATION NOTE: It is useful for the code to interpret the non-existence of "an_tabindex" as an empty variable
-% since this is what you get if you disable "analysis" which is useful for speeding up the generation of CALIB2 datasets.
-% Old createLBL code also seemed written on the premise that it might eb empty.
-if ~exist('an_tabindex', 'var')
-    warning('"an_tabindex is not defined. - Creating an empty "an_tabindex".')
-    an_tabindex = [];
+%=========================================================
+% Read kernel file - Use default file in Lapdog directory
+%=========================================================
+current_m_file = mfilename('fullpath');
+[Lapdog_directory, basenameJunk, extJunk] = fileparts(current_m_file);
+kernel_file = fullfile(Lapdog_directory, 'metakernel_rosetta.txt');
+if ~exist(kernel_file, 'file')
+    fprintf(1, 'Can not find kernel file "%s" (pwd="%s")', kernel_file, pwd)
+    % Call error too?
 end
-[stabindex, san_tabindex] = createLBL.convert_std_structs(tabindex, an_tabindex);
+cspice_furnsh(kernel_file); 
+
+
+
+%==========================================================
+% Convert tabindex and an_tabindex into equivalent structs
+%==========================================================
+[stabindex   ] = createLBL.convert_tabindex(   tabindex);
+if generatingDeriv1
+    [san_tabindex] = createLBL.convert_an_tabindex(an_tabindex);
+end
 
 
 
@@ -142,7 +266,6 @@ for i=1:length(stabindex)
         %=========================================
         
         tname = stabindex(i).filename;
-        lname = strrep(tname, '.TAB', '.LBL');
         Pnum = index(stabindex(i).i_index_first).probe;
         i_index_first = stabindex(i).i_index_first;
         i_index_last  = stabindex(i).i_index_last;
@@ -151,7 +274,7 @@ for i=1:length(stabindex)
         % Read the CALIB1 LBL file
         %--------------------------
         [kvl_LBL_CALIB, CALIB_LBL_struct] = createLBL.read_LBL_file(...
-            index(i_index_first).lblfile, DELETE_HEADER_KEY_LIST, ...
+            index(i_index_first).lblfile, DONT_READ_HEADER_KEY_LIST, ...
             index(i_index_first).probe);
 
         
@@ -166,7 +289,7 @@ for i=1:length(stabindex)
         kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'STOP_TIME',                    stabindex(i).UTC_stop(1:23));        % UTC stop time
         kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', CALIB_LBL_struct.SPACECRAFT_CLOCK_START_COUNT);
         kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
-        
+
         kvl_LBL = lib_shared_EJ.KVPL.overwrite_values(kvl_LBL_CALIB, kvl_LBL, 'require preexisting keys');
         
         LBL_data.kvl_header = kvl_LBL;
@@ -176,60 +299,74 @@ for i=1:length(stabindex)
         
         LBL_data.N_TAB_file_rows = stabindex(i).N_TAB_file_rows;
         
-        
+        isSweep       = (tname(30)=='S');
+        isSweepTable  = (tname(28)=='B') && isSweep;
+        isDensityMode = (tname(28)=='I');
+        %isHf          = (tname(30)=='H');
         
         %=======================================
         %
         % LBL file: Create OBJECT TABLE section
         %
         %=======================================
-        if (tname(30)=='S')
+        if (isSweep)
             
             %=========================
             % CASE: Sweep files (xxS)
             %=========================
             
-            if (tname(28)=='B')
+            if (isSweepTable)
                 
                 LBL_data.OBJTABLE = [];
                 LBL_data.consistency_check.N_TAB_bytes_per_row = 32;   % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
                 LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION);
                 ocl = [];
-                ocl{end+1} = struct('NAME', 'SWEEP_TIME',                 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS', 'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
-                ocl{end+1} = struct('NAME', sprintf('P%i_VOLTAGE', Pnum), 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'VOLT',    'DESCRIPTION', 'CALIBRATED VOLTAGE BIAS');
+                ocl{end+1} = struct('NAME', 'SWEEP_TIME',                 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS',    'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
+                ocl{end+1} = struct('NAME', sprintf('P%i_VOLTAGE', Pnum),  DATA_DATA_TYPE{:},        'BYTES', 14, DATA_UNIT_VOLTAGE{:}, 'DESCRIPTION', VOLTAGE_BIAS_DESC);
                 LBL_data.OBJTABLE.OBJCOL_list = ocl;
                 clear ocl
-                
+
             else
-                % CASE: tname(28) == 'I'
-                
+                % CASE: Sweep data (not sweep description table)
+
                 Bfile = tname;
                 Bfile(28) = 'B';
-                
+
                 LBL_data.OBJTABLE = [];
                 LBL_data.consistency_check.N_TAB_bytes_per_row = stabindex(i).N_TAB_bytes_per_row;
                 LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s', CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION);
                 ocl = [];
-                ocl{end+1} = struct('NAME', 'START_TIME_UTC',                   'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-                ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',                    'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-                ocl{end+1} = struct('NAME', 'START_TIME_OBT',                   'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
-                ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',                    'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
-                ocl{end+1} = struct('NAME', 'QUALITY',                          'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', 'N/A',     'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
+                ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+                ocl{end+1} = struct('NAME',  'STOP_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+                ocl{end+1} = struct('NAME', 'START_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
+                ocl{end+1} = struct('NAME',  'STOP_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
+                if generatingDeriv1
+                    ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
+                end
 
-                DESC_MISS = {'DESCRIPTION', sprintf('One current for each of the voltage potential sweep steps described by %s. Each current is the average over multiple measurements on a single potential step.', Bfile)};
-                ocl{end+1} = struct('NAME', sprintf('P%i_SWEEP_CURRENT', Pnum), 'DATA_TYPE', 'ASCII_REAL', 'ITEM_BYTES', 14, 'UNIT', 'AMPERE', ...
-                    'ITEMS', stabindex(i).N_columns-5, DESC_MISS{:});
-                % Adding MISSING_CONSTANT since create_C2D2_from_CALIB1_DERIV1 replaces NaN to fit with this.
+                % NOTE/BUG: The file referenced in DESCRIPTION may have the wrong name since it is renamed by other code before delivery.
+                ocl{end+1} = createLBL.optionally_add_MISSING_CONSTANT(...
+                    generatingDeriv1, MISSING_CONSTANT, ...
+                    struct(...
+                        'NAME', sprintf('P%i_SWEEP_CURRENT', Pnum), DATA_DATA_TYPE{:}, 'ITEM_BYTES', 14, DATA_UNIT_CURRENT{:}, ...
+                        'ITEMS', stabindex(i).N_columns - length(ocl), ...
+                        'DESCRIPTION', sprintf([...
+                            'One current for each of the voltage potential sweep steps described by %s. ', ...
+                            'Each current is the average over one or multiple measurements on a single potential step.'], Bfile)), ...
+                    sprintf([...
+                        'A value of %g refers to ', ...
+                        '(1) that the underlying set of samples contained at least one saturated value, and/or ', ...
+                        '(2) there were no samples which were not disturbed by RPCMIP left to make an average over.'], MISSING_CONSTANT));
                 
                 LBL_data.OBJTABLE.OBJCOL_list = ocl;
-                clear ocl
+                clear ocl oc
             end
-            
+
         else
-            %=============================================
-            % CASE: Anything EXCEPT sweep files (NOT xxS)
-            %=============================================
-            
+            %============================================================
+            % CASE: Anything EXCEPT sweep files (NOT xxS) <==> [IV]x[HL]
+            %============================================================
+
             LBL_data.OBJTABLE = [];
             LBL_data.OBJTABLE.DESCRIPTION = CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION;    % BUG: Possibly double quotation marks.
             if Pnum ~= 3
@@ -239,28 +376,63 @@ for i=1:length(stabindex)
                 LBL_data.consistency_check.N_TAB_columns       = 6;   % NOTE: Hardcoded. TODO: Fix!
                 LBL_data.consistency_check.N_TAB_bytes_per_row = 99;  % NOTE: Hardcoded. TODO: Fix!
             end
+            if ~generatingDeriv1
+                LBL_data.consistency_check.N_TAB_columns       = LBL_data.consistency_check.N_TAB_columns       - 1;
+                LBL_data.consistency_check.N_TAB_bytes_per_row = LBL_data.consistency_check.N_TAB_bytes_per_row - 5;
+            end
             
             % -----------------------------------------------------------------------------
             % Recycle OBJCOL info/columns from CALIB LBL file (!) and then add one column.
             % -----------------------------------------------------------------------------
-            ocl = CALIB_LBL_struct.OBJECT___TABLE{1}.OBJECT___COLUMN;
-            for i_oc = 1:length(ocl)
-                oc = ocl{i_oc};   % Shorten variable
-                
-                oc = rmfield(oc, 'START_BYTE');
-                if isfield(oc, 'FORMAT')
-                    oc = rmfield(oc, 'FORMAT');  % Fails if fields does not exist.
+%             ocl = CALIB_LBL_struct.OBJECT___TABLE{1}.OBJECT___COLUMN;
+%             for i_oc = 1:length(ocl)
+%                 oc = ocl{i_oc};   % Shorten variable
+% 
+%                 % Remove START_BYTE (automatically derived) and FORMAT (forbidden by createLBL.create_OBJTABLE_LBL_file).
+%                 oc = rmfield(oc, 'START_BYTE');
+%                 if isfield(oc, 'FORMAT')
+%                     oc = rmfield(oc, 'FORMAT');  % Fails if fields does not exist.
+%                 end
+%                 
+%                 % Add UNIT for UTC_TIME since it does not seem to have it already in the CALIB1 LBL file.
+%                 if strcmp(oc.NAME, 'UTC_TIME') && ~isfield(oc, 'UNIT')
+%                     oc.UNIT = 'SECONDS';
+%                 end
+%                 ocl{i_oc} = oc;
+%                 clear oc
+%             end
+            ocl = {};
+            ocl{end+1} = struct('NAME', 'UTC_TIME', 'DATA_TYPE', 'TIME',       'UNIT', 'SECONDS', 'BYTES', 26, 'DESCRIPTION', 'UTC TIME');
+            ocl{end+1} = struct('NAME', 'OBT_TIME', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECONDS', 'BYTES', 16, 'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
+            if Pnum ~=3
+                % CASE: P1 or P2
+                currentOc = struct('NAME', sprintf('P%i_CURRENT', Pnum), DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14);
+                voltageOc = struct('NAME', sprintf('P%i_VOLTAGE', Pnum), DATA_DATA_TYPE{:}, DATA_UNIT_VOLTAGE{:}, 'BYTES', 14);
+                if isDensityMode
+                    currentOc.DESCRIPTION = CURRENT_MEAS_DESC;
+                    voltageOc.DESCRIPTION = VOLTAGE_BIAS_DESC;
+                    currentOc = createLBL.optionally_add_MISSING_CONSTANT(generatingDeriv1, MISSING_CONSTANT, currentOc, ...
+                        sprintf('A value of %g means that the original sample was saturated.', MISSING_CONSTANT));   % NOTE: Modifies currentOc.
+                else
+                    currentOc.DESCRIPTION = CURRENT_BIAS_DESC;
+                    voltageOc.DESCRIPTION = VOLTAGE_MEAS_DESC;
+                    voltageOc = createLBL.optionally_add_MISSING_CONSTANT(generatingDeriv1, MISSING_CONSTANT, voltageOc, ...
+                        sprintf('A value of %g means that the original sample was saturated.', MISSING_CONSTANT));   % NOTE: Modifies voltageOc.
                 end
-                
-                % Add UNIT for UTC_TIME since it does not seem to have it already in the CALIB LBL file.
-                if strcmp(oc.NAME, 'UTC_TIME') && ~isfield(oc, 'UNIT')
-                    oc.UNIT = 'SECONDS';
-                end
-                ocl{i_oc} = oc;
-                clear oc
+                ocl{end+1} = currentOc;
+                ocl{end+1} = voltageOc;
+                clear currentOc voltageOc
+            else
+                % CASE: P3
+                error('This code segment has not been completed for P3.')
+                %ocl{end+1} = struct('NAME', 'P1_CURRENT', DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', CURRENT_MEAS_DESC);
+                %ocl{end+1} = struct('NAME', 'P2_CURRENT', DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', CURRENT_MEAS_DESC);
+                %ocl{end+1} = struct('NAME', 'P3_VOLTAGE', DATA_DATA_TYPE{:}, DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', VOLTAGE_BIAS_DESC);
             end
-            ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES', 3, 'UNIT', NO_ODL_UNIT, ...
-                'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
+            if generatingDeriv1
+                ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'BYTES',  3, ...
+                    'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
+            end
             
             LBL_data.OBJTABLE.OBJCOL_list = ocl;
             clear ocl
@@ -269,9 +441,9 @@ for i=1:length(stabindex)
         createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LBL_data, general_TAB_LBL_inconsistency_policy);
         clear   LBL_data
         
-    catch err
-        createLBL.exception_message(err, generate_file_fail_policy)
-        fprintf(1,'lapdog: Skipping LBL file (tabindex) - Continuing\n');
+    catch exception
+        createLBL.exception_message(exception, generate_file_fail_policy);
+        fprintf(1,'lapdog: Skipping LBL file (tabindex)index - Continuing\n');
     end    % try-catch
 end    % for
 
@@ -282,429 +454,442 @@ end    % for
 % Create LBL files for (TAB files in) blockTAB.
 %
 %===============================================
-if(~isempty(blockTAB));   % Remove?
-    for i=1:length(blockTAB)
-        
-        LBL_data = [];
-        LBL_data.consistency_check.N_TAB_columns       =  3;
-        LBL_data.consistency_check.N_TAB_bytes_per_row = 55;                   % NOTE: HARDCODED! TODO: Fix.
-
-        
-        
-        %==============================================
-        %
-        % LBL file: Create header/key-value pairs
-        %
-        % NOTE: Does not rely on reading old LBL file.
-        %==============================================
-        START_TIME = datestr(blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
-        STOP_TIME  = datestr(blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
-        kvl_LBL = kvl_LBL_all;
-        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'START_TIME',                   START_TIME);       % UTC start time
-        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
-        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
-        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
-        LBL_data.kvl_header = kvl_LBL;
-        clear   kvl_LBL
-        
-        
-
-        %=======================================
-        % LBL file: Create OBJECT TABLE section
-        %=======================================
-        
-        LBL_data.N_TAB_file_rows = blockTAB(i).rcount;
-        LBL_data.OBJTABLE = [];
-        LBL_data.OBJTABLE.DESCRIPTION = 'BLOCKLIST DATA. START & STOP TIME OF MACRO BLOCK AND MACRO ID.';
-        ocl = [];
-        ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss');
-        ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'LAST START TIME OF MACRO BLOCK FILE YYYY-MM-DD HH:MM:SS.sss');
-        ocl{end+1} = struct('NAME', 'MACRO_ID',       'DATA_TYPE', 'CHARACTER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'HEXADECIMAL MACRO IDENTIFICATION NUMBER.');
-        LBL_data.OBJTABLE.OBJCOL_list = ocl;
-        clear   ocl
-        
-        createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LBL_data, general_TAB_LBL_inconsistency_policy);
-        clear   LBL_data
-        
-    end   % for
-
-end   % if 
-
-
-
-%==================================================
-%
-% Create LBL files for (TAB files in) an_tabindex.
-%
-%==================================================
-for i=1:length(san_tabindex)
-    try
-        TAB_LBL_inconsistency_policy = general_TAB_LBL_inconsistency_policy;   % Default value, unless overwritten for specific data file types.
-        
-        tname = san_tabindex(i).filename;
-        lname = strrep(tname, 'TAB', 'LBL');
-        
-        mode = tname(end-6:end-4);
-        Pnum = index(san_tabindex(i).i_index).probe;     % Probe number
-        
-        LBL_data = [];
-        LBL_data.N_TAB_file_rows = san_tabindex(i).N_TAB_file_rows;
-        LBL_data.consistency_check.N_TAB_bytes_per_row = san_tabindex(i).N_TAB_bytes_per_row;
-        LBL_data.consistency_check.N_TAB_columns       = san_tabindex(i).N_TAB_columns;
-        
-        
-        
-        %=========================================
-        %
-        % LBL file: Create header/key-value pairs
-        %
-        %=========================================
-        
-        if strcmp(san_tabindex(i).data_type, 'best_estimates')
-            %======================
-            % CASE: Best estimates
-            %======================
-            
-            TAB_file_info = dir(san_tabindex(i).path);
-            kvl_LBL = kvl_LBL_all;
-            kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
-            try
-                %===============================================================
-                % NOTE: createLBL.create_EST_LBL_header(...)
-                % sets certain LBL/ODL variables to handle collisions:
-                %    START_TIME / STOP_TIME,
-                %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
-                %===============================================================
-                i_index_src  = san_tabindex(i).i_index;
-                EST_TAB_path = san_tabindex(i).path;
-                i_probes = [index(i_index_src).probe];
-                CALIB_LBL_paths = {index(i_index_src).lblfile};
-                kvl_LBL = createLBL.create_EST_LBL_header(EST_TAB_path, CALIB_LBL_paths, i_probes, kvl_LBL, DELETE_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
-                
-                LBL_data.kvl_header = kvl_LBL;
-                clear kvl_LBL
-                
-            catch exc
-                fprintf(1, ['ERROR: ', exc.message])
-                fprintf(1, exc.getReport)
-                
-                continue
-            end
-            
-        else
-            %===============================================
-            % CASE: Any type of file EXCEPT best estimates.
-            %===============================================
-            
-            [kvl_LBL_CALIB, CALIB_LBL_struct] = createLBL.read_LBL_file(...
-                index(san_tabindex(i).i_index).lblfile, DELETE_HEADER_KEY_LIST, ...
-                index(san_tabindex(i).i_index).probe);
-            
-            % Add DESCRIPTION?!!
-            kvl_LBL = lib_shared_EJ.KVPL.overwrite_values(kvl_LBL_CALIB, kvl_LBL_all, 'require preexisting keys');
-            
-            LBL_data.kvl_header = kvl_LBL;
-            clear kvl_LBL kvl_LBL_CALIB
-            
-        end   % if-else
-        
-        
-        
-        %=======================================
-        %
-        % LBL file: Create OBJECT TABLE section
-        %
-        %=======================================
-        
-        if strcmp(san_tabindex(i).data_type, 'downsample')   %%%%%%%% DOWNSAMPLED FILE %%%%%%%%%%%%%%%
-            
-            
-            
-            LBL_data.OBJTABLE = [];
-            LBL_data.OBJTABLE.DESCRIPTION = sprintf('"%s %s SECONDS DOWNSAMPLED"', CALIB_LBL_struct.DESCRIPTION, lname(end-10:end-9));
-            ocl = {};
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                          'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
-            ocl{end+1} = struct('NAME', 'OBT_TIME',                          'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
-            ocl{end+1} = struct('NAME', sprintf('P%i_CURRENT',        Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED CURRENT');
-            ocl{end+1} = struct('NAME', sprintf('P%i_CURRENT_STDDEV', Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'CURRENT STANDARD DEVIATION');
-            ocl{end+1} = struct('NAME', sprintf('P%i_VOLT',           Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED MEASURED VOLTAGE');
-            ocl{end+1} = struct('NAME', sprintf('P%i_VOLT_STDDEV',    Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'VOLTAGE STANDARD DEVIATION');
-            ocl{end+1} = struct('NAME', 'QUALITY',                           'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
-            LBL_data.OBJTABLE.OBJCOL_list = ocl;
-            clear ocl
-            
-            
-            
-        elseif strcmp(san_tabindex(i).data_type, 'spectra')   %%%%%%%%%%%%%%%% SPECTRA FILE %%%%%%%%%%
-            
-            
-            
-            LBL_data.OBJTABLE = [];
-            LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT', mode);
-            %---------------------------------------------
-            ocl1 = {};
-            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'SPECTRA STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
-            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_OBT',  'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
-            ocl1{end+1} = struct('NAME', 'QUALITY',                'UNIT', NO_ODL_UNIT, 'BYTES', 3,  'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
-            %---------------------------------------------
-            ocl2 = {};
-            if strcmp(mode(1), 'I')
-                
-                if Pnum == 3
-                    ocl2{end+1} = struct('NAME', 'P1_P2_CURRENT_MEAN',              'UNIT', 'AMPERE', 'DESCRIPTION', 'MEASURED CURRENT DIFFERENCE MEAN');
-                    ocl2{end+1} = struct('NAME', 'P1_VOLTAGE_MEAN',                 'UNIT', 'VOLT',   'DESCRIPTION',     'BIAS VOLTAGE');
-                    ocl2{end+1} = struct('NAME', 'P2_VOLTAGE_MEAN',                 'UNIT', 'VOLT',   'DESCRIPTION',     'BIAS VOLTAGE');
-                else
-                    ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', Pnum), 'UNIT', 'AMPERE', 'DESCRIPTION', 'MEASURED CURRENT MEAN');
-                    ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', Pnum), 'UNIT', 'VOLT',   'DESCRIPTION',     'BIAS VOLTAGE');
-                end
-                PSD_DESCRIPTION = 'PSD CURRENT SPECTRUM';
-                PSD_UNIT = 'NANOAMPERE^2/Hz';
-                
-            elseif strcmp(mode(1),'V')
-                
-                if Pnum == 3
-                    ocl2{end+1} = struct('NAME', 'P1_CURRENT_MEAN',              'UNIT', 'AMPERE',    'DESCRIPTION',     'BIAS CURRENT');
-                    ocl2{end+1} = struct('NAME', 'P2_CURRENT_MEAN',              'UNIT', 'AMPERE',    'DESCRIPTION',     'BIAS CURRENT');
-                    ocl2{end+1} = struct('NAME', 'P1_P2_VOLTAGE_MEAN',           'UNIT', 'VOLT',      'DESCRIPTION', 'MEASURED VOLTAGE DIFFERENCE MEAN');
-                else
-                    ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', Pnum), 'UNIT', 'AMPERE',    'DESCRIPTION', '    BIAS CURRENT MEAN');
-                    ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', Pnum), 'UNIT', 'VOLT',      'DESCRIPTION', 'MEASURED VOLTAGE MEAN');
-                end
-                PSD_DESCRIPTION = 'PSD VOLTAGE SPECTRUM';
-                PSD_UNIT        = 'VOLT^2/Hz';
-                
-            else
-                error('Error, bad mode identifier in an_tabindex{%i,2} = san_tabindex(%i).filename = "%s".', i, i, san_tabindex(i).filename);
-            end
-            N_spectrum_cols = san_tabindex(i).N_TAB_columns - (length(ocl1) + length(ocl2));
-            ocl2{end+1} = struct('NAME', sprintf('PSD_%s', mode), 'ITEMS', N_spectrum_cols, ...
-                'UNIT', PSD_UNIT, 'DESCRIPTION', PSD_DESCRIPTION);
-
-
-
-            for i_oc = 1:length(ocl2)
-                if isfield(ocl2{i_oc}, 'ITEMS')
-                    ocl2{i_oc}.ITEM_BYTES = 14;
-                else
-                    ocl2{i_oc}.BYTES = 14;
-                end
-                ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
-            end
-            
-            LBL_data.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
-            clear ocl1 ocl2
-            
-        elseif  strcmp(san_tabindex(i).data_type, 'frequency')    %%%%%%%%%%%% FREQUENCY FILE %%%%%%%%%
-            
-            
-            
-            psdname = strrep(san_tabindex(i).filename, 'FRQ', 'PSD');
-            
-            LBL_data.OBJTABLE = [];
-            LBL_data.OBJTABLE.DESCRIPTION = 'FREQUENCY LIST OF PSD SPECTRA FILE';
-            ocl = {};
-            ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', san_tabindex(i).N_TAB_columns, 'UNIT', 'Hz', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
-                'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdname));
-            LBL_data.OBJTABLE.OBJCOL_list = ocl;
-            clear   ocl pdsname
-            
-            
-            
-        elseif  strcmp(san_tabindex(i).data_type, 'sweep')    %%%%%%%%%%%% SWEEP ANALYSIS FILE %%%%%%%%%
-            
-            
-            
-            LBL_data.OBJTABLE = [];
-            LBL_data.OBJTABLE.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE', stabindex(san_tabindex(i).i_tabindex).filename);
-            
-            ocl1 = {};
-            ocl1{end+1} = struct('NAME', 'START_TIME(UTC)', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
-            ocl1{end+1} = struct('NAME', 'STOP_TIME(UTC)',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION',  'Stop time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
-            ocl1{end+1} = struct('NAME', 'START_TIME_OBT',  'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Start time of sweep. SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
-            ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION',  'Stop time of sweep. SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
-            ocl1{end+1} = struct('NAME', 'Qualityfactor',   'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Quality factor from 0-100.');   % TODO: Correct?
-            ocl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'degrees',   'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle in spacecraft XZ plane, measured from Z+ axis.');
-            ocl1{end+1} = struct('NAME', 'Illumination',    'UNIT', NO_ODL_UNIT, 'BYTES',  4, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
-            ocl1{end+1} = struct('NAME', 'direction',       'UNIT', NO_ODL_UNIT, 'BYTES',  1, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
-            % ----- (NOTE: Switching from ocl1 to ocl2.) -----
-            ocl2 = {};
-            ocl2{end+1} = struct('NAME', 'old.Vsi',                'UNIT', 'V',         'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current. Older analysis method.');
-            ocl2{end+1} = struct('NAME', 'old.Vx',                 'UNIT', 'V',         'DESCRIPTION', 'Spacecraft potential + Te from electron current fit. Older analysis method.');
-            ocl2{end+1} = struct('NAME', 'Vsg',                    'UNIT', 'V',         'DESCRIPTION', 'Spacecraft potential from gaussian fit to second derivative.');
-            ocl2{end+1} = struct('NAME', 'sigma_Vsg',              'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for spacecraft potential from gaussian fit to second derivative.');
-            ocl2{end+1} = struct('NAME', 'old.Tph',                'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron temperature. Older analysis method.');
-            ocl2{end+1} = struct('NAME', 'old.Iph0',               'UNIT', 'A',         'DESCRIPTION', 'Photosaturation current. Older analysis method.');
-            ocl2{end+1} = struct('NAME', 'Vb_lastnegcurrent',      'UNIT', 'V',         'DESCRIPTION', 'bias potential below zero current.');
-            ocl2{end+1} = struct('NAME', 'Vb_firstposcurrent',     'UNIT', 'V',         'DESCRIPTION', 'bias potential above zero current.');
-            ocl2{end+1} = struct('NAME', 'Vbinfl',                 'UNIT', 'V',         'DESCRIPTION', 'Bias potential of inflection point in current.');
-            ocl2{end+1} = struct('NAME', 'dIinfl',                 'UNIT', 'A/V',       'DESCRIPTION', 'Derivative of current in inflection point.');
-            ocl2{end+1} = struct('NAME', 'd2Iinfl',                'UNIT', 'A/V^2',     'DESCRIPTION', 'Second derivative of current in inflection point.');
-            ocl2{end+1} = struct('NAME', 'Iph0',                   'UNIT', 'A',         'DESCRIPTION', 'Photosaturation current.');
-            ocl2{end+1} = struct('NAME', 'Tph',                    'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron temperature.');
-            ocl2{end+1} = struct('NAME', 'Vsi',                    'UNIT', 'V',         'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current.');
-            ocl2{end+1} = struct('NAME',       'Vph_knee',         'UNIT', 'V',         'DESCRIPTION',                               'Potential at probe position from photoelectron current knee (gaussian fit to second derivative).');
-            ocl2{end+1} = struct('NAME', 'sigma_Vph_knee',         'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Potential at probe position from photoelectron current knee (gaussian fit to second derivative).');   % New from commit 3dce0a0, 2014-12-16 or earlier.
-            ocl2{end+1} = struct('NAME',       'Te_linear',        'UNIT', 'eV',        'DESCRIPTION',                               'Electron temperature from linear fit to electron current.');
-            ocl2{end+1} = struct('NAME', 'sigma_Te_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron temperature from linear fit to electron current.');   % New from commit 3dce0a0, 2014-12-16 or earlier.
-            ocl2{end+1} = struct('NAME',       'ne_linear',        'UNIT', 'cm^-3',     'DESCRIPTION',                               'Electron (plasma) density from linear fit to electron current.');
-            ocl2{end+1} = struct('NAME', 'sigma_ne_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron (plasma) density from linear fit to electron current.');   % New from commit 3dce0a0, 2014-12-16 or earlier.
-            ocl2{end+1} = struct('NAME',       'ion_slope',        'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of ion current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME', 'sigma_ion_slope',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of ion current fit as a function of absolute potential');
-            ocl2{end+1} = struct('NAME',       'ion_intersect',    'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME', 'sigma_ion_intersect',    'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of ion current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME',       'e_slope',          'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of linear electron current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME', 'sigma_e_slope',          'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear electron current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME',       'e_intersect',      'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME', 'sigma_e_intersect',      'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME',       'ion_Vb_intersect', 'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME', 'sigma_ion_Vb_intersect', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Y-intersection of ion current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME',       'e_Vb_intersect',   'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME', 'sigma_e_Vb_intersect',   'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME', 'Tphc',                   'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron cloud temperature (if applicable).');
-            ocl2{end+1} = struct('NAME', 'nphc',                   'UNIT', 'cm^-3',     'DESCRIPTION', 'Photoelectron cloud density (if applicable).');
-            ocl2{end+1} = struct('NAME',       'phc_slope',        'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of linear photoelectron current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME', 'sigma_phc_slope',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear photoelectron current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME',       'phc_intersect',    'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear photoelectron current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME', 'sigma_phc_intersect',    'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear photoelectron current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME', 'ne_5eV',                 'UNIT', 'cm^-3',     'DESCRIPTION', 'Electron density from linear electron current fit, assuming electron temperature Te = 5 eV.');
-            ocl2{end+1} = struct('NAME', 'ni_v_dep',               'UNIT', 'cm^-3',     'DESCRIPTION', 'Ion density from slope of ion current fit assuming ions of a certain mass and velocity.');
-            ocl2{end+1} = struct('NAME', 'ni_v_indep',             'UNIT', 'cm^-3',     'DESCRIPTION', 'Ion density from slope and intersect of ion current fit assuming ions of a certain mass. velocity independent estimate.');
-            ocl2{end+1} = struct('NAME', 'v_ion',                  'UNIT', 'm/s',       'DESCRIPTION', 'Ion ram velocity derived from the velocity independent and dependent ion density estimate.');
-            ocl2{end+1} = struct('NAME',       'Te_exp',           'UNIT', 'eV',        'DESCRIPTION',                               'Electron temperature from exponential fit to electron current.');
-            ocl2{end+1} = struct('NAME', 'sigma_Te_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for electron temperature from exponential fit to electron current.');
-            ocl2{end+1} = struct('NAME',       'ne_exp',           'UNIT', 'cm^-3',     'DESCRIPTION',                               'Electron density derived from fit of exponential part of the thermal electron current.');  % New from commit 3dce0a0, 2014-12-16 or earlier.
-            ocl2{end+1} = struct('NAME', 'sigma_ne_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for electron density derived from fit of exponential part of the thermal electron current.');  % New from commit 3dce0a0, 2014-12-16 or earlier.
-            
-            ocl2{end+1} = struct('NAME', 'Rsquared_linear',            'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the linear part of the ideal electron current.');   % New from commit f89c62b, 2015-01-09 or earlier.
-            ocl2{end+1} = struct('NAME', 'Rsquared_exp',               'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the exponential part of the ideal electron current.');   % New from commit f89c62b, 2015-01-09 or earlier.
-            
-            ocl2{end+1} = struct('NAME',       'Vbar',              'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
-            ocl2{end+1} = struct('NAME', 'sigma_Vbar',              'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
-            
-            ocl2{end+1} = struct('NAME', 'ASM_Iph0',                   'UNIT', 'A',         'DESCRIPTION', 'Assumed photosaturation current used (referred to) in the Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'ASM_Tph',                    'UNIT', 'eV',        'DESCRIPTION', 'Assumed photoelectron temperature used (referred to) in the Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_Vsi',                    'UNIT', 'V',         'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_Te_linear',        'UNIT', 'eV',        'DESCRIPTION',                               'Electron temperature from linear fit to electron current with Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_Te_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron temperature from linear fit to electron current with Fixed photoelectron current assumption.');   % New from commit 3dce0a0, 2014-12-16 or earlier.
-            ocl2{end+1} = struct('NAME',       'asm_ne_linear',        'UNIT', 'cm^-3',     'DESCRIPTION',                               'Electron (plasma) density from linear fit to electron current with Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'sigma_asm_ne_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron (plasma) density from linear fit to electron current with Fixed photoelectron current assumption.');   % New from commit 3dce0a0, 2014-12-16 or earlier.
-            ocl2{end+1} = struct('NAME',       'asm_ion_slope',        'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of ion current fit as a function of absolute potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_ion_slope',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of ion current fit as a function of absolute potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_ion_intersect',    'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of absolute potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_ion_intersect',    'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of ion current fit as a function of absolute potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_e_slope',          'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of linear electron current fit as a function of absolute potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_e_slope',          'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear electron current fit as a function of absolute potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_e_intersect',      'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of absolute potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_e_intersect',      'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of absolute potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_ion_Vb_intersect', 'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of bias potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_ion_Vb_intersect', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Y-intersection of ion current fit as a function of bias potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_e_Vb_intersect',   'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of bias potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_e_Vb_intersect',   'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of bias potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_Tphc',                   'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron cloud temperature (if applicable). Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_nphc',                   'UNIT', 'cm^-3',     'DESCRIPTION', 'Photoelectron cloud density (if applicable). Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_phc_slope',        'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_phc_slope',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_phc_intersect',    'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_phc_intersect',    'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Y-intersection of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_ne_5eV',                 'UNIT', 'cm^-3',     'DESCRIPTION', 'Electron density from linear electron current fit, assuming Te= 5eV. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_ni_v_dep',               'UNIT', 'cm^-3',     'DESCRIPTION', 'Ion density from slope of ion current fit assuming ions of a certain mass and velocity. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_ni_v_indep',             'UNIT', 'cm^-3',     'DESCRIPTION', 'Ion density from slope and intersect of ion current fit assuming ions of a certain mass. velocity independent estimate. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_v_ion',                  'UNIT', 'm/s',       'DESCRIPTION', 'Ion ram velocity derived from the velocity independent and dependent ion density estimate. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_Te_exp',           'UNIT', 'eV',        'DESCRIPTION',                               'Electron temperature from exponential fit to electron current. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_Te_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for electron temperature from exponential fit to electron current. Fixed photoelectron current assumption.');
-            ocl2{end+1} = struct('NAME',       'asm_ne_exp',           'UNIT', 'cm^-3',     'DESCRIPTION',                               'Electron density derived from fit of exponential part of the thermal electron current.');    % New from commit 3dce0a0, 2014-12-16 or earlier.
-            ocl2{end+1} = struct('NAME', 'asm_sigma_ne_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron density derived from fit of exponential part of the thermal electron current.');    % New from commit 3dce0a0, 2014-12-16 or earlier.
-            ocl2{end+1} = struct('NAME', 'asm_Rsquared_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the linear part of the ideal electron current. Fixed photoelectron current assumption.');   % New from commit f89c62b, 2015-01-09 or earlier.
-            ocl2{end+1} = struct('NAME', 'asm_Rsquared_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the exponential part of the ideal electron current. Fixed photoelectron current assumption.');   % New from commit f89c62b, 2015-01-09 or earlier.
-            
-            ocl2{end+1} = struct('NAME', 'ASM_m_ion',      'BYTES', 3, 'UNIT', 'amu',               'DESCRIPTION', 'Assumed ion mass for all ions.');     % New from commit a56c578, 2015-01-22 or earlier.
-            ocl2{end+1} = struct('NAME', 'ASM_Z_ion',      'BYTES', 2, 'UNIT', 'Elementary charge', 'DESCRIPTION', 'Assumed ion charge for all ions.');   % New from commit a56c578, 2015-01-22 or earlier.
-            ocl2{end+1} = struct('NAME', 'ASM_v_ion',                  'UNIT', 'm/s',               'DESCRIPTION', 'Assumed ion ram speed in used in *_v_dep variables.');   % New from commit a56c578, 2015-01-22 or earlier. Earlier name: ASM_m_vram, ASM_vram_ion.
-            ocl2{end+1} = struct('NAME',     'Vsc_ni_ne',              'UNIT', 'V',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (ni_v_indep) and electron (ne_linear) densities.');   % New from commit a56c578, 2015-01-22 or earlier.
-            ocl2{end+1} = struct('NAME', 'asm_Vsc_ni_ne',              'UNIT', 'V',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (asm_ni_v_indep) and electron (asm_ne_linear) densities. Fixed photoelectron current assumption.');   % New from commit a56c578, 2015-01-22 or earlier.
-            
-            ocl2{end+1} = struct('NAME', 'Vsc_aion',                  'UNIT', 'V',      'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
-            ocl2{end+1} = struct('NAME', 'ni_aion',                   'UNIT', 'cm^-3',  'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
-            ocl2{end+1} = struct('NAME', 'v_aion',                    'UNIT', 'm/s',    'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
-            ocl2{end+1} = struct('NAME', 'asm_Vsc_aion',              'UNIT', 'V',      'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
-            ocl2{end+1} = struct('NAME', 'asm_ni_aion',               'UNIT', 'cm^-3',  'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
-            ocl2{end+1} = struct('NAME', 'asm_v_aion',                'UNIT', 'm/s',    'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
-            %---------------------------------------------------------------------------------------------------
-            
-            ocl2{end+1} = struct('NAME',           'Te_exp_belowVknee', 'UNIT', 'eV',    'DESCRIPTION', '');
-            ocl2{end+1} = struct('NAME',     'sigma_Te_exp_belowVknee', 'UNIT', 'eV',    'DESCRIPTION', '');
-            ocl2{end+1} = struct('NAME',           'ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
-            ocl2{end+1} = struct('NAME',     'sigma_ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
-            ocl2{end+1} = struct('NAME',       'asm_Te_exp_belowVknee', 'UNIT', 'eV',    'DESCRIPTION', '');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_Te_exp_belowVknee', 'UNIT', 'eV',    'DESCRIPTION', '');
-            ocl2{end+1} = struct('NAME',       'asm_ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
-            ocl2{end+1} = struct('NAME', 'asm_sigma_ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
-            
-            for i_oc = 1:length(ocl2)
-                if ~isfield(ocl2{i_oc}, 'BYTES')
-                    ocl2{i_oc}.BYTES = 14;
-                end
-                ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
-            end
-            LBL_data.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
-            clear   ocl1 ocl2
-            
-            TAB_LBL_inconsistency_policy = AxS_TAB_LBL_inconsistency_policy;   % NOTE: Different policy for A?S.LBL files.
-            
-            
-            
-        elseif  strcmp(san_tabindex(i).data_type,'best_estimates')    %%%%%%%%%%%% BEST ESTIMATES FILE %%%%%%%%%%%%
-            
-            
-            
-            LBL_data.OBJTABLE = [];
-            LBL_data.OBJTABLE.DESCRIPTION = sprintf('BEST ESTIMATES OF PHYSICAL VALUES FROM MODEL FITTED ANALYSIS.');   % Bad description? To specific?
-            ocl = [];
-            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
-            ocl{end+1} = struct('NAME', 'QUALITY',            'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
-            ocl{end+1} = struct('NAME', 'npl',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-3',    'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of plasma number density.');
-            ocl{end+1} = struct('NAME', 'Te',                 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'eV',        'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of electron temperature.');
-            ocl{end+1} = struct('NAME', 'Vsc',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',         'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of spacecraft potential.');
-            ocl{end+1} = struct('NAME', 'Probe_number',       'DATA_TYPE', 'ASCII_REAL', 'BYTES',  1, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Probe number. 1 or 2.');
-            ocl{end+1} = struct('NAME', 'Direction',          'DATA_TYPE', 'ASCII_REAL', 'BYTES',  1, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
-            ocl{end+1} = struct('NAME', 'Illumination',       'DATA_TYPE', 'ASCII_REAL', 'BYTES',  4, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
-            ocl{end+1} = struct('NAME', 'Sweep_group_number', 'DATA_TYPE', 'ASCII_REAL', 'BYTES',  5, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', ...
-                ['Number signifying which group of sweeps the data comes from. ', ...
-                'Groups of sweeps are formed for the purpose of deriving/selecting values to be used in best estimates. ', ...
-                'All sweeps with the same group number are almost simultaneous. For every type of best estimate, at most one is chosen from each group.' ...
-                ]);  % NOTE: Causes trouble by making such a long line in LBL file?!!
-            LBL_data.OBJTABLE.OBJCOL_list = ocl;
-            clear   ocl
-
-
-
-        else
-
-            error('Error, bad identifier in an_tabindex{%i,7} = san_tabindex(%i).data_type = "%s"',i, i, san_tabindex(i).data_type);
-
-        end
-
-
-
-        createLBL.create_OBJTABLE_LBL_file(san_tabindex(i).path, LBL_data, TAB_LBL_inconsistency_policy);
-        clear   LBL_data   TAB_LBL_inconsistency_policy
-        
-        
-        
-    catch err
-        createLBL.exception_message(err, generate_file_fail_policy)
-        fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
-    end    % try-catch
+for i=1:length(blockTAB)
+    
+    LBL_data = [];
+    LBL_data.consistency_check.N_TAB_columns       =  3;
+    LBL_data.consistency_check.N_TAB_bytes_per_row = 55;                   % NOTE: HARDCODED! TODO: Fix.
     
     
+    
+    %==============================================
+    %
+    % LBL file: Create header/key-value pairs
+    %
+    % NOTE: Does not rely on reading old LBL file.
+    %==============================================
+    START_TIME = datestr(blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
+    STOP_TIME  = datestr(blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
+    kvl_LBL = kvl_LBL_all;
+    kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'START_TIME',                   START_TIME);       % UTC start time
+    kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
+    kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
+    kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
+    LBL_data.kvl_header = kvl_LBL;
+    clear   kvl_LBL
+    
+    
+    
+    %=======================================
+    % LBL file: Create OBJECT TABLE section
+    %=======================================
+    
+    LBL_data.N_TAB_file_rows = blockTAB(i).rcount;
+    LBL_data.OBJTABLE = [];
+    LBL_data.OBJTABLE.DESCRIPTION = 'BLOCKLIST DATA. START & STOP TIME OF MACRO BLOCK AND MACRO ID.';
+    ocl = [];
+    ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss');
+    ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'LAST START TIME OF MACRO BLOCK FILE YYYY-MM-DD HH:MM:SS.sss');
+    ocl{end+1} = struct('NAME', 'MACRO_ID',       'DATA_TYPE', 'CHARACTER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'HEXADECIMAL MACRO IDENTIFICATION NUMBER.');
+    LBL_data.OBJTABLE.OBJCOL_list = ocl;
+    clear   ocl
+    
+    createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LBL_data, general_TAB_LBL_inconsistency_policy);
+    clear   LBL_data
     
 end   % for
+
+
+
+%===============================================
+%
+% Create LBL files for TAB files in an_tabindex
+%
+%===============================================
+if generatingDeriv1
+    for i=1:length(san_tabindex)
+        try
+            TAB_LBL_inconsistency_policy = general_TAB_LBL_inconsistency_policy;   % Default value, unless overwritten for specific data file types.
+            
+            tname = san_tabindex(i).filename;
+            lname = strrep(tname, 'TAB', 'LBL');
+            
+            mode = tname(end-6:end-4);
+            Pnum = index(san_tabindex(i).i_index).probe;     % Probe number
+            isDensityMode = (mode(1) == 'I');
+            isEFieldMode  = (mode(1) == 'V');
+            
+            LBL_data = [];
+            LBL_data.N_TAB_file_rows = san_tabindex(i).N_TAB_file_rows;
+            LBL_data.consistency_check.N_TAB_bytes_per_row = san_tabindex(i).N_TAB_bytes_per_row;
+            LBL_data.consistency_check.N_TAB_columns       = san_tabindex(i).N_TAB_columns;
+            
+            
+            
+            %=========================================
+            %
+            % LBL file: Create header/key-value pairs
+            %
+            %=========================================
+            
+            if strcmp(san_tabindex(i).data_type, 'best_estimates')
+                %======================
+                % CASE: Best estimates
+                %======================
+                
+                %TAB_file_info = dir(san_tabindex(i).path);
+                kvl_LBL = kvl_LBL_all;
+                kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
+                try
+                    %===============================================================
+                    % NOTE: createLBL.create_EST_LBL_header(...)
+                    % sets certain LBL/ODL variables to handle collisions:
+                    %    START_TIME / STOP_TIME,
+                    %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
+                    %===============================================================
+                    i_index_src  = san_tabindex(i).i_index;
+                    EST_TAB_path = san_tabindex(i).path;
+                    i_probes = [index(i_index_src).probe];
+                    CALIB_LBL_paths = {index(i_index_src).lblfile};
+                    kvl_LBL = createLBL.create_EST_LBL_header(EST_TAB_path, CALIB_LBL_paths, i_probes, kvl_LBL, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
+                    
+                    LBL_data.kvl_header = kvl_LBL;
+                    clear kvl_LBL
+                    
+                catch exc
+                    createLBL.exception_message(exc, generate_file_fail_policy)
+                    continue
+                end
+                
+            else
+                %===============================================
+                % CASE: Any type of file EXCEPT best estimates.
+                %===============================================
+                
+                [kvl_LBL_CALIB, CALIB_LBL_struct] = createLBL.read_LBL_file(...
+                    index(san_tabindex(i).i_index).lblfile, DONT_READ_HEADER_KEY_LIST, ...
+                    index(san_tabindex(i).i_index).probe);
+                
+                % Add DESCRIPTION?!!
+                kvl_LBL = lib_shared_EJ.KVPL.overwrite_values(kvl_LBL_CALIB, kvl_LBL_all, 'require preexisting keys');
+                
+                LBL_data.kvl_header = kvl_LBL;
+                clear kvl_LBL kvl_LBL_CALIB
+                
+            end   % if-else
+            
+            
+            
+            %=======================================
+            %
+            % LBL file: Create OBJECT TABLE section
+            %
+            %=======================================
+            
+            if strcmp(san_tabindex(i).data_type, 'downsample')   %%%%%%%% DOWNSAMPLED FILE %%%%%%%%%%%%%%%
+                
+                
+                
+                mcDescrAmendment = sprintf('A value of %g means that the underlying time period which was averaged over contained at least one saturated value.', MISSING_CONSTANT);
+                
+                LBL_data.OBJTABLE = [];
+                samplingRateSecondsStr = lname(end-10:end-9);
+                % NOTE: Empirically, CALIB_LBL_struct.DESCRIPTION is something technical, like "D_P1_TRNC_20_BIT_RAW_BIP". Keep?
+                LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s %s SECONDS DOWNSAMPLED', CALIB_LBL_struct.DESCRIPTION, samplingRateSecondsStr);
+                ocl = {};
+                ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
+                ocl{end+1} = struct('NAME', 'OBT_TIME', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
+                
+                oc1 = struct('NAME', sprintf('P%i_CURRENT',        Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED CURRENT.');
+                oc2 = struct('NAME', sprintf('P%i_CURRENT_STDDEV', Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'CURRENT STANDARD DEVIATION.');
+                oc3 = struct('NAME', sprintf('P%i_VOLTAGE',        Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED VOLTAGE.');
+                oc4 = struct('NAME', sprintf('P%i_VOLTAGE_STDDEV', Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'VOLTAGE STANDARD DEVIATION.');
+                oc1 = createLBL.optionally_add_MISSING_CONSTANT(isDensityMode, MISSING_CONSTANT, oc1 , mcDescrAmendment);
+                oc2 = createLBL.optionally_add_MISSING_CONSTANT(isDensityMode, MISSING_CONSTANT, oc2 , mcDescrAmendment);
+                oc3 = createLBL.optionally_add_MISSING_CONSTANT(isEFieldMode,  MISSING_CONSTANT, oc3 , mcDescrAmendment);
+                oc4 = createLBL.optionally_add_MISSING_CONSTANT(isEFieldMode,  MISSING_CONSTANT, oc4 , mcDescrAmendment);
+                ocl(end+1:end+4) = {oc1; oc2; oc3; oc4};
+                
+                ocl{end+1} = struct('NAME', 'QUALITY', 'BYTES', 3, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
+                
+                LBL_data.OBJTABLE.OBJCOL_list = ocl;
+                clear ocl oc1 oc2 oc3 oc4
+                
+                
+                
+            elseif strcmp(san_tabindex(i).data_type, 'spectra')   %%%%%%%%%%%%%%%% SPECTRA FILE %%%%%%%%%%
+                
+                
+                
+                LBL_data.OBJTABLE = [];
+                LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT', mode);
+                %---------------------------------------------
+                ocl1 = {};
+                ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+                ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'SPECTRA STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+                ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
+                ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_OBT',  'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
+                ocl1{end+1} = struct('NAME', 'QUALITY',                'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
+                %---------------------------------------------
+                ocl2 = {};
+                mcDescrAmendment = sprintf('A value of %g means that there was at least one saturated sample in the same time interval uninterrupted by RPCMIP disturbances.', MISSING_CONSTANT);
+                if isDensityMode
+                    
+                    if Pnum == 3
+                        ocl2{end+1} = struct('NAME', 'P1_P2_CURRENT_MEAN',              'UNIT', 'AMPERE', 'DESCRIPTION', ['MEASURED CURRENT DIFFERENCE MEAN. ', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
+                        ocl2{end+1} = struct('NAME', 'P1_VOLTAGE_MEAN',                 'UNIT', 'VOLT',   'DESCRIPTION',      'BIAS VOLTAGE');
+                        ocl2{end+1} = struct('NAME', 'P2_VOLTAGE_MEAN',                 'UNIT', 'VOLT',   'DESCRIPTION',      'BIAS VOLTAGE');
+                    else
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', Pnum), 'UNIT', 'AMPERE', 'DESCRIPTION', ['MEASURED CURRENT MEAN. ', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', Pnum), 'UNIT', 'VOLT',   'DESCRIPTION',     'BIAS VOLTAGE');
+                    end
+                    PSD_DESCRIPTION = 'PSD CURRENT SPECTRUM';
+                    PSD_UNIT        = 'NANOAMPERE^2/Hz';
+                    
+                elseif isEFieldMode
+                    
+                    if Pnum == 3
+                        ocl2{end+1} = struct('NAME', 'P1_CURRENT_MEAN',    'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT');
+                        ocl2{end+1} = struct('NAME', 'P2_CURRENT_MEAN',    'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT');
+                        ocl2{end+1} = struct('NAME', 'P1_P2_VOLTAGE_MEAN', 'UNIT', 'VOLT',      'DESCRIPTION', ['MEASURED VOLTAGE DIFFERENCE MEAN. ', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
+                    else
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', Pnum), 'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT MEAN');
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', Pnum), 'UNIT', 'VOLT',      'DESCRIPTION', ['MEASURED VOLTAGE MEAN', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
+                    end
+                    PSD_DESCRIPTION = 'PSD VOLTAGE SPECTRUM';
+                    PSD_UNIT        = 'VOLT^2/Hz';
+                    
+                else
+                    error('Error, bad mode identifier in an_tabindex{%i,2} = san_tabindex(%i).filename = "%s".', i, i, san_tabindex(i).filename);
+                end
+                N_spectrum_cols = san_tabindex(i).N_TAB_columns - (length(ocl1) + length(ocl2));
+                ocl2{end+1} = struct('NAME', sprintf('PSD_%s', mode), 'ITEMS', N_spectrum_cols, 'UNIT', PSD_UNIT, 'DESCRIPTION', PSD_DESCRIPTION);
+                
+                
+                
+                % Set ITEM_BYTES/BYTES for all columns at once. Shortens overall code.
+                for i_oc = 1:length(ocl2)
+                    if isfield(ocl2{i_oc}, 'ITEMS')    ocl2{i_oc}.ITEM_BYTES = 14;
+                    else                               ocl2{i_oc}.BYTES = 14;
+                    end
+                    ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
+                end
+                
+                LBL_data.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
+                clear ocl1 ocl2
+                
+                
+                
+            elseif  strcmp(san_tabindex(i).data_type, 'frequency')    %%%%%%%%%%%% FREQUENCY FILE %%%%%%%%%
+                
+                
+                
+                psdname = strrep(san_tabindex(i).filename, 'FRQ', 'PSD');
+                
+                LBL_data.OBJTABLE = [];
+                LBL_data.OBJTABLE.DESCRIPTION = 'FREQUENCY LIST OF PSD SPECTRA FILE';
+                ocl = {};
+                % NOTE/BUG: The file referenced in DESCRIPTION may have the wrong name since it is renamed by other code before delivery.
+                ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', san_tabindex(i).N_TAB_columns, 'UNIT', 'Hz', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
+                    'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdname));
+                LBL_data.OBJTABLE.OBJCOL_list = ocl;
+                clear   ocl pdsname
+                
+                
+                
+            elseif  strcmp(san_tabindex(i).data_type, 'sweep')    %%%%%%%%%%%% SWEEP ANALYSIS FILE %%%%%%%%%
+                
+                
+                
+                LBL_data.OBJTABLE = [];
+                LBL_data.OBJTABLE.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE', stabindex(san_tabindex(i).i_tabindex).filename);
+                
+                ocl1 = {};
+                ocl1{end+1} = struct('NAME', 'START_TIME(UTC)', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
+                ocl1{end+1} = struct('NAME', 'STOP_TIME(UTC)',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION',  'Stop time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
+                ocl1{end+1} = struct('NAME', 'START_TIME_OBT',  'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Start time of sweep. SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
+                ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION',  'Stop time of sweep. SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
+                ocl1{end+1} = struct('NAME', 'Qualityfactor',   'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Quality factor from 0-100.');   % TODO: Correct?
+                ocl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'degrees',   'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle in spacecraft XZ plane, measured from Z+ axis.');
+                ocl1{end+1} = struct('NAME', 'Illumination',    'UNIT', NO_ODL_UNIT, 'BYTES',  4, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
+                ocl1{end+1} = struct('NAME', 'direction',       'UNIT', NO_ODL_UNIT, 'BYTES',  1, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
+                % ----- (NOTE: Switching from ocl1 to ocl2.) -----
+                ocl2 = {};
+                ocl2{end+1} = struct('NAME', 'old.Vsi',                'UNIT', 'V',         'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current. Older analysis method.');
+                ocl2{end+1} = struct('NAME', 'old.Vx',                 'UNIT', 'V',         'DESCRIPTION', 'Spacecraft potential + Te from electron current fit. Older analysis method.');
+                ocl2{end+1} = struct('NAME', 'Vsg',                    'UNIT', 'V',         'DESCRIPTION', 'Spacecraft potential from gaussian fit to second derivative.');
+                ocl2{end+1} = struct('NAME', 'sigma_Vsg',              'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for spacecraft potential from gaussian fit to second derivative.');
+                ocl2{end+1} = struct('NAME', 'old.Tph',                'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron temperature. Older analysis method.');
+                ocl2{end+1} = struct('NAME', 'old.Iph0',               'UNIT', 'A',         'DESCRIPTION', 'Photosaturation current. Older analysis method.');
+                ocl2{end+1} = struct('NAME', 'Vb_lastnegcurrent',      'UNIT', 'V',         'DESCRIPTION', 'bias potential below zero current.');
+                ocl2{end+1} = struct('NAME', 'Vb_firstposcurrent',     'UNIT', 'V',         'DESCRIPTION', 'bias potential above zero current.');
+                ocl2{end+1} = struct('NAME', 'Vbinfl',                 'UNIT', 'V',         'DESCRIPTION', 'Bias potential of inflection point in current.');
+                ocl2{end+1} = struct('NAME', 'dIinfl',                 'UNIT', 'A/V',       'DESCRIPTION', 'Derivative of current in inflection point.');
+                ocl2{end+1} = struct('NAME', 'd2Iinfl',                'UNIT', 'A/V^2',     'DESCRIPTION', 'Second derivative of current in inflection point.');
+                ocl2{end+1} = struct('NAME', 'Iph0',                   'UNIT', 'A',         'DESCRIPTION', 'Photosaturation current.');
+                ocl2{end+1} = struct('NAME', 'Tph',                    'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron temperature.');
+                ocl2{end+1} = struct('NAME', 'Vsi',                    'UNIT', 'V',         'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current.');
+                ocl2{end+1} = struct('NAME',       'Vph_knee',         'UNIT', 'V',         'DESCRIPTION',                               'Potential at probe position from photoelectron current knee (gaussian fit to second derivative).');
+                ocl2{end+1} = struct('NAME', 'sigma_Vph_knee',         'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Potential at probe position from photoelectron current knee (gaussian fit to second derivative).');   % New from commit 3dce0a0, 2014-12-16 or earlier.
+                ocl2{end+1} = struct('NAME',       'Te_linear',        'UNIT', 'eV',        'DESCRIPTION',                               'Electron temperature from linear fit to electron current.');
+                ocl2{end+1} = struct('NAME', 'sigma_Te_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron temperature from linear fit to electron current.');   % New from commit 3dce0a0, 2014-12-16 or earlier.
+                ocl2{end+1} = struct('NAME',       'ne_linear',        'UNIT', 'cm^-3',     'DESCRIPTION',                               'Electron (plasma) density from linear fit to electron current.');
+                ocl2{end+1} = struct('NAME', 'sigma_ne_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron (plasma) density from linear fit to electron current.');   % New from commit 3dce0a0, 2014-12-16 or earlier.
+                ocl2{end+1} = struct('NAME',       'ion_slope',        'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of ion current fit as a function of absolute potential.');
+                ocl2{end+1} = struct('NAME', 'sigma_ion_slope',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of ion current fit as a function of absolute potential');
+                ocl2{end+1} = struct('NAME',       'ion_intersect',    'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of absolute potential.');
+                ocl2{end+1} = struct('NAME', 'sigma_ion_intersect',    'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of ion current fit as a function of absolute potential.');
+                ocl2{end+1} = struct('NAME',       'e_slope',          'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of linear electron current fit as a function of absolute potential.');
+                ocl2{end+1} = struct('NAME', 'sigma_e_slope',          'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear electron current fit as a function of absolute potential.');
+                ocl2{end+1} = struct('NAME',       'e_intersect',      'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of absolute potential.');
+                ocl2{end+1} = struct('NAME', 'sigma_e_intersect',      'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of absolute potential.');
+                ocl2{end+1} = struct('NAME',       'ion_Vb_intersect', 'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of bias potential.');
+                ocl2{end+1} = struct('NAME', 'sigma_ion_Vb_intersect', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Y-intersection of ion current fit as a function of bias potential.');
+                ocl2{end+1} = struct('NAME',       'e_Vb_intersect',   'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of bias potential.');
+                ocl2{end+1} = struct('NAME', 'sigma_e_Vb_intersect',   'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of bias potential.');
+                ocl2{end+1} = struct('NAME', 'Tphc',                   'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron cloud temperature (if applicable).');
+                ocl2{end+1} = struct('NAME', 'nphc',                   'UNIT', 'cm^-3',     'DESCRIPTION', 'Photoelectron cloud density (if applicable).');
+                ocl2{end+1} = struct('NAME',       'phc_slope',        'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of linear photoelectron current fit as a function of bias potential.');
+                ocl2{end+1} = struct('NAME', 'sigma_phc_slope',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear photoelectron current fit as a function of bias potential.');
+                ocl2{end+1} = struct('NAME',       'phc_intersect',    'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear photoelectron current fit as a function of bias potential.');
+                ocl2{end+1} = struct('NAME', 'sigma_phc_intersect',    'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear photoelectron current fit as a function of bias potential.');
+                ocl2{end+1} = struct('NAME', 'ne_5eV',                 'UNIT', 'cm^-3',     'DESCRIPTION', 'Electron density from linear electron current fit, assuming electron temperature Te = 5 eV.');
+                ocl2{end+1} = struct('NAME', 'ni_v_dep',               'UNIT', 'cm^-3',     'DESCRIPTION', 'Ion density from slope of ion current fit assuming ions of a certain mass and velocity.');
+                ocl2{end+1} = struct('NAME', 'ni_v_indep',             'UNIT', 'cm^-3',     'DESCRIPTION', 'Ion density from slope and intersect of ion current fit assuming ions of a certain mass. velocity independent estimate.');
+                ocl2{end+1} = struct('NAME', 'v_ion',                  'UNIT', 'm/s',       'DESCRIPTION', 'Ion ram velocity derived from the velocity independent and dependent ion density estimate.');
+                ocl2{end+1} = struct('NAME',       'Te_exp',           'UNIT', 'eV',        'DESCRIPTION',                               'Electron temperature from exponential fit to electron current.');
+                ocl2{end+1} = struct('NAME', 'sigma_Te_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for electron temperature from exponential fit to electron current.');
+                ocl2{end+1} = struct('NAME',       'ne_exp',           'UNIT', 'cm^-3',     'DESCRIPTION',                               'Electron density derived from fit of exponential part of the thermal electron current.');  % New from commit 3dce0a0, 2014-12-16 or earlier.
+                ocl2{end+1} = struct('NAME', 'sigma_ne_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for electron density derived from fit of exponential part of the thermal electron current.');  % New from commit 3dce0a0, 2014-12-16 or earlier.
+                
+                ocl2{end+1} = struct('NAME', 'Rsquared_linear',            'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the linear part of the ideal electron current.');   % New from commit f89c62b, 2015-01-09 or earlier.
+                ocl2{end+1} = struct('NAME', 'Rsquared_exp',               'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the exponential part of the ideal electron current.');   % New from commit f89c62b, 2015-01-09 or earlier.
+                
+                ocl2{end+1} = struct('NAME',       'Vbar',              'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
+                ocl2{end+1} = struct('NAME', 'sigma_Vbar',              'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
+                
+                ocl2{end+1} = struct('NAME', 'ASM_Iph0',                   'UNIT', 'A',         'DESCRIPTION', 'Assumed photosaturation current used (referred to) in the Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'ASM_Tph',                    'UNIT', 'eV',        'DESCRIPTION', 'Assumed photoelectron temperature used (referred to) in the Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_Vsi',                    'UNIT', 'V',         'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_Te_linear',        'UNIT', 'eV',        'DESCRIPTION',                               'Electron temperature from linear fit to electron current with Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_Te_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron temperature from linear fit to electron current with Fixed photoelectron current assumption.');   % New from commit 3dce0a0, 2014-12-16 or earlier.
+                ocl2{end+1} = struct('NAME',       'asm_ne_linear',        'UNIT', 'cm^-3',     'DESCRIPTION',                               'Electron (plasma) density from linear fit to electron current with Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'sigma_asm_ne_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron (plasma) density from linear fit to electron current with Fixed photoelectron current assumption.');   % New from commit 3dce0a0, 2014-12-16 or earlier.
+                ocl2{end+1} = struct('NAME',       'asm_ion_slope',        'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of ion current fit as a function of absolute potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_ion_slope',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of ion current fit as a function of absolute potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_ion_intersect',    'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of absolute potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_ion_intersect',    'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of ion current fit as a function of absolute potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_e_slope',          'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of linear electron current fit as a function of absolute potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_e_slope',          'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear electron current fit as a function of absolute potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_e_intersect',      'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of absolute potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_e_intersect',      'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of absolute potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_ion_Vb_intersect', 'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of bias potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_ion_Vb_intersect', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Y-intersection of ion current fit as a function of bias potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_e_Vb_intersect',   'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of bias potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_e_Vb_intersect',   'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of bias potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_Tphc',                   'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron cloud temperature (if applicable). Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_nphc',                   'UNIT', 'cm^-3',     'DESCRIPTION', 'Photoelectron cloud density (if applicable). Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_phc_slope',        'UNIT', 'A/V',       'DESCRIPTION',                               'Slope of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_phc_slope',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_phc_intersect',    'UNIT', 'A',         'DESCRIPTION',                               'Y-intersection of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_phc_intersect',    'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Y-intersection of linear photoelectron current fit as a function of bias potential. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_ne_5eV',                 'UNIT', 'cm^-3',     'DESCRIPTION', 'Electron density from linear electron current fit, assuming Te= 5eV. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_ni_v_dep',               'UNIT', 'cm^-3',     'DESCRIPTION', 'Ion density from slope of ion current fit assuming ions of a certain mass and velocity. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_ni_v_indep',             'UNIT', 'cm^-3',     'DESCRIPTION', 'Ion density from slope and intersect of ion current fit assuming ions of a certain mass. velocity independent estimate. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_v_ion',                  'UNIT', 'm/s',       'DESCRIPTION', 'Ion ram velocity derived from the velocity independent and dependent ion density estimate. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_Te_exp',           'UNIT', 'eV',        'DESCRIPTION',                               'Electron temperature from exponential fit to electron current. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_Te_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for electron temperature from exponential fit to electron current. Fixed photoelectron current assumption.');
+                ocl2{end+1} = struct('NAME',       'asm_ne_exp',           'UNIT', 'cm^-3',     'DESCRIPTION',                               'Electron density derived from fit of exponential part of the thermal electron current.');    % New from commit 3dce0a0, 2014-12-16 or earlier.
+                ocl2{end+1} = struct('NAME', 'asm_sigma_ne_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron density derived from fit of exponential part of the thermal electron current.');    % New from commit 3dce0a0, 2014-12-16 or earlier.
+                ocl2{end+1} = struct('NAME', 'asm_Rsquared_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the linear part of the ideal electron current. Fixed photoelectron current assumption.');   % New from commit f89c62b, 2015-01-09 or earlier.
+                ocl2{end+1} = struct('NAME', 'asm_Rsquared_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the exponential part of the ideal electron current. Fixed photoelectron current assumption.');   % New from commit f89c62b, 2015-01-09 or earlier.
+                
+                ocl2{end+1} = struct('NAME', 'ASM_m_ion',      'BYTES', 3, 'UNIT', 'amu',               'DESCRIPTION', 'Assumed ion mass for all ions.');     % New from commit a56c578, 2015-01-22 or earlier.
+                ocl2{end+1} = struct('NAME', 'ASM_Z_ion',      'BYTES', 2, 'UNIT', 'Elementary charge', 'DESCRIPTION', 'Assumed ion charge for all ions.');   % New from commit a56c578, 2015-01-22 or earlier.
+                ocl2{end+1} = struct('NAME', 'ASM_v_ion',                  'UNIT', 'm/s',               'DESCRIPTION', 'Assumed ion ram speed in used in *_v_dep variables.');   % New from commit a56c578, 2015-01-22 or earlier. Earlier name: ASM_m_vram, ASM_vram_ion.
+                ocl2{end+1} = struct('NAME',     'Vsc_ni_ne',              'UNIT', 'V',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (ni_v_indep) and electron (ne_linear) densities.');   % New from commit a56c578, 2015-01-22 or earlier.
+                ocl2{end+1} = struct('NAME', 'asm_Vsc_ni_ne',              'UNIT', 'V',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (asm_ni_v_indep) and electron (asm_ne_linear) densities. Fixed photoelectron current assumption.');   % New from commit a56c578, 2015-01-22 or earlier.
+                
+                ocl2{end+1} = struct('NAME', 'Vsc_aion',                  'UNIT', 'V',      'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+                ocl2{end+1} = struct('NAME', 'ni_aion',                   'UNIT', 'cm^-3',  'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+                ocl2{end+1} = struct('NAME', 'v_aion',                    'UNIT', 'm/s',    'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+                ocl2{end+1} = struct('NAME', 'asm_Vsc_aion',              'UNIT', 'V',      'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+                ocl2{end+1} = struct('NAME', 'asm_ni_aion',               'UNIT', 'cm^-3',  'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+                ocl2{end+1} = struct('NAME', 'asm_v_aion',                'UNIT', 'm/s',    'DESCRIPTION', '');  % New from commit 96660fb, 2015-02-10 or earlier.
+                %---------------------------------------------------------------------------------------------------
+                
+                ocl2{end+1} = struct('NAME',           'Te_exp_belowVknee', 'UNIT', 'eV',    'DESCRIPTION', '');
+                ocl2{end+1} = struct('NAME',     'sigma_Te_exp_belowVknee', 'UNIT', 'eV',    'DESCRIPTION', '');
+                ocl2{end+1} = struct('NAME',           'ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
+                ocl2{end+1} = struct('NAME',     'sigma_ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
+                ocl2{end+1} = struct('NAME',       'asm_Te_exp_belowVknee', 'UNIT', 'eV',    'DESCRIPTION', '');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_Te_exp_belowVknee', 'UNIT', 'eV',    'DESCRIPTION', '');
+                ocl2{end+1} = struct('NAME',       'asm_ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
+                ocl2{end+1} = struct('NAME', 'asm_sigma_ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
+                
+                for i_oc = 1:length(ocl2)
+                    if ~isfield(ocl2{i_oc}, 'BYTES')
+                        ocl2{i_oc}.BYTES = 14;
+                    end
+                    ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
+                end
+                LBL_data.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
+                clear   ocl1 ocl2
+                
+                TAB_LBL_inconsistency_policy = AxS_TAB_LBL_inconsistency_policy;   % NOTE: Different policy for A?S.LBL files.
+                
+                
+                
+            elseif  strcmp(san_tabindex(i).data_type,'best_estimates')    %%%%%%%%%%%% BEST ESTIMATES FILE %%%%%%%%%%%%
+                
+                
+                
+                LBL_data.OBJTABLE = [];
+                LBL_data.OBJTABLE.DESCRIPTION = sprintf('BEST ESTIMATES OF PHYSICAL VALUES FROM MODEL FITTED ANALYSIS.');   % Bad description? To specific?
+                ocl = [];
+                ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+                ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+                ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
+                ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
+                ocl{end+1} = struct('NAME', 'QUALITY',            'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
+                ocl{end+1} = struct('NAME', 'npl',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-3',    'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of plasma number density.');
+                ocl{end+1} = struct('NAME', 'Te',                 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'eV',        'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of electron temperature.');
+                ocl{end+1} = struct('NAME', 'Vsc',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',         'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of spacecraft potential.');
+                ocl{end+1} = struct('NAME', 'Probe_number',       'DATA_TYPE', 'ASCII_REAL', 'BYTES',  1, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Probe number. 1 or 2.');
+                ocl{end+1} = struct('NAME', 'Direction',          'DATA_TYPE', 'ASCII_REAL', 'BYTES',  1, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
+                ocl{end+1} = struct('NAME', 'Illumination',       'DATA_TYPE', 'ASCII_REAL', 'BYTES',  4, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
+                ocl{end+1} = struct('NAME', 'Sweep_group_number', 'DATA_TYPE', 'ASCII_REAL', 'BYTES',  5, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', ...
+                    ['Number signifying which group of sweeps the data comes from. ', ...
+                    'Groups of sweeps are formed for the purpose of deriving/selecting values to be used in best estimates. ', ...
+                    'All sweeps with the same group number are almost simultaneous. For every type of best estimate, at most one is chosen from each group.' ...
+                    ]);  % NOTE: Causes trouble by making such a long line in LBL file?!!
+                LBL_data.OBJTABLE.OBJCOL_list = ocl;
+                clear   ocl
+                
+                
+                
+            else
+                
+                error('Error, bad identifier in an_tabindex{%i,7} = san_tabindex(%i).data_type = "%s"',i, i, san_tabindex(i).data_type);
+                
+            end
+            
+            
+            
+            createLBL.create_OBJTABLE_LBL_file(san_tabindex(i).path, LBL_data, TAB_LBL_inconsistency_policy);
+            clear   LBL_data   TAB_LBL_inconsistency_policy
+            
+            
+            
+        catch err
+            createLBL.exception_message(err, generate_file_fail_policy)
+            fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
+        end    % try-catch
+        
+        
+        
+    end    % for
+end    % if generatingDeriv1
 
 
 
@@ -713,31 +898,28 @@ end   % for
 % Create LBL files for files in der_struct (A1P).
 %
 %=================================================
-
-
-try
-    kvl_LBL_all
-    index
-    NO_ODL_UNIT
-    MISSING_CONSTANT
-    DELETE_HEADER_KEY_LIST
-    general_TAB_LBL_inconsistency_policy
-    
-    global der_struct    % Global variable with info on A1P files.
-    if ~isempty(der_struct)
-        createLBL.write_A1P(kvl_LBL_all, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DELETE_HEADER_KEY_LIST, general_TAB_LBL_inconsistency_policy);
-    end
-catch err
-    fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',err.message);    
-    len = length(err.stack);
-    if (~isempty(len))
-        for i=1:len
-            fprintf(1,'%s, %i,\n', err.stack(i).name, err.stack(i).line);
+if generatingDeriv1
+    try
+        global der_struct    % Global variable with info on A1P files.
+        if ~isempty(der_struct)
+            % NOTE: "der_struct" is only defined/set when running Lapdog DERIV. However, since it is a global variable,
+            % it may survive from a Lapdog DERIV run until a edder_lapdog run.
+            % If so, der_struct.file{iFile} will contain paths to a DERIV-data set. May thus lead to overwriting LBL
+            % files in DERIV data set if called when writing EDDER data set!!!
+            % Therefore important to NOT RUN this code for EDDER.
+            createLBL.write_A1P(kvl_LBL_all, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DONT_READ_HEADER_KEY_LIST, general_TAB_LBL_inconsistency_policy);
         end
+        
+    catch exc
+        createLBL.exception_message(exc, generate_file_fail_policy)
+        fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',exc.message);
     end
 end
+
 
 
 cspice_unload(kernel_file);
 warning(previous_warnings_settings)
 fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, t_start));
+
+%end   % createLBL_main

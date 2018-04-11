@@ -4,12 +4,14 @@
 %
 % ARGUMENTS
 % =========
+% index                        : Lapdog's "index" variable.
 % der_struct                   : Global variable "der_struct" defined by other Lapdog code. The function does not read
 %                                the global variable by itself.
+% dontReadHeaderKeyList        : Cell array of strings. PDS keys to not READ from source data set LBL file.
 % TAB_LBL_inconsistency_policy : String. As defined in createLBL.create_OBJTABLE_LBL_file.
 %
 %
-function write_A1P(kvl_LBL_all, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DELETE_HEADER_KEY_LIST, TAB_LBL_inconsistency_policy)
+function write_A1P(kvl_LBL_all, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, dontReadHeaderKeyList, TAB_LBL_inconsistency_policy)
 %
 % PROPOSAL: Do not write LBL file. Return ~LBL_data instead.
 %   CON: Would be nice to have all dependence on "der_struct" here.
@@ -23,7 +25,7 @@ function write_A1P(kvl_LBL_all, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT
         % Read the CALIB1 LBL file
         %--------------------------
         [kvl_LBL_CALIB, junk] = createLBL.read_LBL_file(...
-            index(i_index).lblfile, DELETE_HEADER_KEY_LIST, ...
+            index(i_index).lblfile, dontReadHeaderKeyList, ...
             index(i_index).probe);
         
         kvl_LBL = kvl_LBL_all;

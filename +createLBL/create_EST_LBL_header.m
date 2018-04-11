@@ -2,7 +2,7 @@
 % Create LBL header for EST in the form of a key-value (kv) list.
 % 
 % Combines information from ONE OR TWO LBL file headers.
-% to produce information for new combined header (without writing to file).
+% to produce information for ONE new combined header (without writing to file).
 %
 % EST_TAB_path    : Path to EST TAB file.
 % CALIB_LBL_paths : Cell array of paths to the (one or two) CALIB files containing PDS keywords for the AxS files.

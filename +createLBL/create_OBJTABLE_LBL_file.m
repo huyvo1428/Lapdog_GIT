@@ -7,22 +7,26 @@
 %
 % ARGUMENTS
 % =========
-% tabFilePath                           : Pat to TAB file.
+% tabFilePath                           : Path to TAB file.
 % lblData                               : Struct with the following fields.
 %       .N_TAB_file_rows
 %       .kvl_header
 %       .consistency_check
-%           .N_TAB_bytes_per_row        % Value from when writing TAB file. For double-checking.
-%           .N_TAB_columns              % Value from when writing TAB file. For double-checking.
+%           .N_TAB_bytes_per_row        : Value from when writing TAB file. For double-checking.
+%           .N_TAB_columns              : Value from when writing TAB file. For double-checking.
 %       .OBJTABLE
-%           .DESCRIPTION                % Description for entire table (PDS keyword).
-%           .OBJCOL_list{i}             % Struct containing fields corresponding to various column PDS keywords.
-%                                       % NOTE: ".FORMAT" excplicitly forbidden.
+%           .DESCRIPTION                : Description for entire table (PDS keyword).
+%           .OBJCOL_list{i}             : Struct containing fields corresponding to various column PDS keywords.
+%                                         NOTE: The order of the fields does not matter. The implementation specifies
+%                                               the order of keywords (within an OBJECT=COLUMN segment) in the label file.
+%                                         NOTE: ".FORMAT" explicitly forbidden.
 %               .NAME
 %               .DATA_TYPE
-%               .UNIT                   % Optional. Replaced by standardized default value if empty. Automatically quoted.
-%               .DESCRIPTION            % Replaced by standardized default value if empty. Automatically quoted.
-%               .MISSING_CONSTANT       % Optional
+%               .UNIT                   : Replaced by standardized default value if empty. Automatically quoted.
+%                                         (Optional by PDS, required here)
+%               .DESCRIPTION            : Replaced by standardized default value if empty. Must not contains quotes.
+%                                         (Automatically quoted.)
+%               .MISSING_CONSTANT       : Optional
 %               Either (1)
 %           	  .BYTES
 %               or (2)
@@ -42,7 +46,7 @@
 %
 % NOTE: The caller is NOT supposed to surround key value strings with quotes, or units with </>.
 % The implementation should add that when appropriate.
-% NOTE: The implementation will add certain keywords to kvl_header, and derive the values, and assume that caller has not set them. Error otherwise.
+% NOTE: The implementation will add certain keywords to lblData.kvl_header, and derive the values, and assume that caller has not set them. Error otherwise.
 %
 % NOTE: Previous implementations have added a DELIMITER=", " field (presumably not PDS compliant) in
 % agreement with Imperial College/Tony Allen to somehow help them process the files
@@ -77,12 +81,18 @@ function create_OBJTABLE_LBL_file(tabFilePath, lblData, tabLblInconsistencyPolic
     %                 PRODUCT_ID   = "2014-DEC-31orb"
     %         CON: Works fine as it is.
     %
-    % PROPOSAL: Derive number of TAB file rows from TAB file itself instead of through argument?
-    % PROPOSAL: Change name from "tabLblInconsistencyPolicy" to "assertions".
+    % PROPOSAL: Abolish N_TAB_bytes_per_row.
+    %   PRO: Same check performed via check against actual file size.
     %
-    % PROBLEM/BUG?: .DESCRIPTION=[] ==> 'N/A'
-    % PROPOSAL: Currently removes quotes from OBJTABLE_data.DESCRIPTION. Require (assert) absence of quotes and change
-    %           calling code (createLBL), incl. when recycling string from CALIB1/EDITED1 data sets.
+    % TODO-DECISION: How handle UNIT (optional according to PDS)
+    %   PROPOSAL: (1) Require caller to set .UNIT and have 'N/A' (or []) represent absence of unit.
+    %       PRO: Forces caller to set UNIT.
+    %       CON: Longer calls.
+    %   PROPOSAL: (2) Optional .UNIT for caller.
+    %       CON: Absence of UNIT can otherwise be interpreted as (1) forgetting to set it, or (2) absence of unit.
+    %       PRO: Shorter calls.
+    %   PROPOSAL: Only include UNIT (in LBL) if caller sets .UNIT to value other than 'N/A'.
+    
 
 
     
@@ -94,7 +104,9 @@ function create_OBJTABLE_LBL_file(tabFilePath, lblData, tabLblInconsistencyPolic
     
     % NOTE: Exclude COLUMNS, ROW_BYTES, ROWS.
     PERMITTED_OBJTABLE_FIELD_NAMES = {'COLUMNS_consistency_check', 'ROW_BYTES_consistency_check', 'DESCRIPTION', 'OBJCOL_list'};
-    % NOTE: Exclude ITEM_OFFSET
+    
+    % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
+    % NOTE: Includes both required and optional fields.
     PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT'};
     INDENTATION_LENGTH             = 4;
     %CONTENT_MAX_ROW_LENGTH         = 70;    % Excludes line break characters.
@@ -111,9 +123,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, lblData, tabLblInconsistencyPolic
     OBJTABLE_data = lblData.OBJTABLE;
     
     % --------------------------------------------------------------
-    % ASSERTION: Argument check
-    % -------------------------
-    % Check if caller only uses permissible field names. Disable?
+    % ASSERTION: Caller only uses permissible field names.
     % Useful when changing field names.
     % --------------------------------------------------------------
     if any(~ismember(fieldnames(OBJTABLE_data), PERMITTED_OBJTABLE_FIELD_NAMES))
@@ -121,8 +131,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, lblData, tabLblInconsistencyPolic
     end
     
     %-----------------------------------------------------------------------------------
-    % ASSERTION: Argument check
-    % -------------------------
+    % ASSERTION: Misc. argument check
+    % -------------------------------
     % When a caller takes values from tabindex, an_tabindex etc, and they are sometimes
     % mistakenly set to []. Therefore this check is useful. A mistake might
     % otherwise be discovered first when examining LBL files.
@@ -130,6 +140,13 @@ function create_OBJTABLE_LBL_file(tabFilePath, lblData, tabLblInconsistencyPolic
     if isempty(lblData.consistency_check.N_TAB_columns) || isempty(lblData.consistency_check.N_TAB_bytes_per_row) || isempty(lblData.N_TAB_file_rows)
         error('ERROR: Trying to use empty value.')
     end
+    
+    % ASSERTION: TAB file exists
+    if ~(exist(tabFilePath, 'file') && ~exist(tabFilePath, 'dir'))
+        % CASE: There is no such non-directory TAB file.
+        error('ERROR: Can not find TAB file "%s" (needed for consistency check).', tabFilePath)
+    end
+    
     
     %################################################################################################
     
@@ -158,6 +175,14 @@ function create_OBJTABLE_LBL_file(tabFilePath, lblData, tabLblInconsistencyPolic
         [cd, nSubcolumns] = complement_column_data(cd, ...
             PERMITTED_OBJCOL_FIELD_NAMES, BYTES_BETWEEN_COLUMNS, PDS_IDENTIFIER_PERMITTED_CHARS, ...
             lblFilePath, tabLblInconsistencyPolicy);
+        
+        % ASSERTION
+        for fnCell = fieldnames(cd)'
+            fn = fnCell{1};
+            if ischar(cd.(fn)) && ~isempty(strfind(cd.(fn), '"'))
+                error('Keyword ("%s") value contains quotes.', fn)
+            end
+        end
         
         OBJCOL_namesList{end+1} = cd.NAME;
         OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + nSubcolumns;
@@ -197,20 +222,19 @@ function create_OBJTABLE_LBL_file(tabFilePath, lblData, tabLblInconsistencyPolic
         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
     end
     
-    % ASSERTION: TAB file size consistent with (indirectly) ROWS*ROW_BYTES.
+    % ASSERTION: TAB file size is consistent with (indirectly) ROWS*ROW_BYTES.
     temp = dir(tabFilePath); tabFileSize = temp.bytes;
     if tabFileSize ~= (OBJTABLE_data.ROW_BYTES * lblData.N_TAB_file_rows)
-        msg = sprintf(['Inconsistent file size:\n', ...
+        msg = sprintf(['TAB file size is not consistent with LBL file, "%s":\n', ...
             '    tabFileSize             = %g\n', ...
             '    OBJTABLE_data.ROW_BYTES = %g\n', ...
             '    lblData.N_TAB_file_rows = %g'], ...
-            tabFileSize, OBJTABLE_data.ROW_BYTES, lblData.N_TAB_file_rows);
+            tabFilePath, tabFileSize, OBJTABLE_data.ROW_BYTES, lblData.N_TAB_file_rows);
         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
     end
     
-    % Remove quotes, if there are any. Quotes are added later.
-    % NOTE: One does not want to give error on finding quotes since the value may have been read from CALIB LBL file.
-    OBJTABLE_data.DESCRIPTION = strrep(OBJTABLE_data.DESCRIPTION, '"', '');
+    % ASSERTION: No quotes in OBJECT=TABLE DESCRIPTION keyword.
+    assert_nonempty_unquoted(OBJTABLE_data.DESCRIPTION)
 
     %################################################################################################
 
@@ -248,23 +272,25 @@ end
 
 
 
+% NOTE: Function name somewhat misleading since it contains a lot of useful assertions that have nothing to do with
+% complementing the columnData struct.
 function [columnData, nSubcolumns] = complement_column_data(columnData, ...
         PERMITTED_OBJCOL_FIELD_NAMES, BYTES_BETWEEN_COLUMNS, PDS_IDENTIFIER_PERMITTED_CHARS, ...
         lblFilePath, tabLblInconsistencyPolicy)
-    
+
     cd = columnData;
-    
-    % --------------------------------------------------------------
-    % ASSERTION: Added fields that can not be used?
-    % --------------------------------------------------------------
+
+    %---------------------------------------------------------------
+    % ASSERTION: Only using permitted fields
+    % --------------------------------------
     % Useful for not loosing information in optional arguments/field
     % names by misspelling, or misspelling when overwriting values,
     % or adding fields that are never used by the function.
-    % --------------------------------------------------------------
+    %---------------------------------------------------------------
     if any(~ismember(fieldnames(cd), PERMITTED_OBJCOL_FIELD_NAMES))
         error('ERROR: Found illegal COLUMN OBJECT field name(s).')
     end
-    
+
     if isfield(cd, 'BYTES') && ~isfield(cd, 'ITEMS') && ~isfield(cd, 'ITEM_BYTES')
         % CASE: Has           BYTES
         %       Does not have ITEMS, ITEM_BYTES
@@ -276,40 +302,32 @@ function [columnData, nSubcolumns] = complement_column_data(columnData, ...
         cd.ITEM_OFFSET = cd.ITEM_BYTES + BYTES_BETWEEN_COLUMNS;
         cd.BYTES       = nSubcolumns * cd.ITEM_BYTES + (nSubcolumns-1) * BYTES_BETWEEN_COLUMNS;
     else
-        % Value is needed in case execution continues after warning/error. If wrong value, then possibly this will cause further
-        % errors anyway.
-        %if isfield(cd, 'ITEMS')
-        %    nSubcolumns = cd.ITEMS;
-        %else
-        %    nSubcolumns = 1;
-        %end
-
         warning_error___LOCAL(sprintf('Found disallowed combination of BYTES/ITEMS/ITEM_BYTES. NAME="%s". ABORTING creation of LBL file', cd.NAME), tabLblInconsistencyPolicy)
         return   % NOTE: ABORTING & EXITING to avoid causing further errors.
     end
 
-    %-------------------------------------------------------------------
-    % Check UNIT:
+    %------------
+    % Check UNIT
+    %------------
+    if isempty(cd.UNIT)
+        cd.UNIT = 'N/A';     % NOTE: Should add quotes later.
+    end    
+    % ASSERTIONS
     % Check for presence of "raised minus" in UNIT.
     % This is a common typo when writing cm^-3 which then becomes cm⁻3.
-    %-------------------------------------------------------------------
-    if isfield(cd, 'UNIT')
-        if isempty(cd.UNIT)
-            cd.UNIT = 'N/A';     % NOTE: Should add quotes later.
-        end
-        
-        % ASSERTION
-        if any(strfind(cd.UNIT, '⁻')) || any(strfind(cd.UNIT, '"'))
-            warning_error___LOCAL(sprintf('Found "raised minus" or double quote in UNIT. This is assumed to be a typo. NAME="%s"; UNIT="%s"', cd.NAME, cd.UNIT), tabLblInconsistencyPolicy)
-        end
-    end
+    if any(strfind(cd.UNIT, '⁻'))
+        warning_error___LOCAL(sprintf('Found "raised minus" in UNIT. This is assumed to be a typo. NAME="%s"; UNIT="%s"', cd.NAME, cd.UNIT), tabLblInconsistencyPolicy)
+    end        
+    assert_nonempty_unquoted(cd.UNIT)
     
     %------------
     % Check NAME
     %------------
+    % ASSERTION: Not empty.
     if isempty(cd.NAME)
         error('ERROR: Trying to use empty value for NAME.')
     end
+    % ASSERTION: Only uses permitted characters.
     usedDisallowedChars = setdiff(cd.NAME, PDS_IDENTIFIER_PERMITTED_CHARS);
     if ~isempty(usedDisallowedChars)
         % NOTE 2016-07-22: The NAME value that triggers this error may come from a CALIB LBL file produced by pds, NAME = P1-P2_CURRENT/VOLTAGE.
@@ -321,13 +339,14 @@ function [columnData, nSubcolumns] = complement_column_data(columnData, ...
         cd.NAME = strrep(cd.NAME, '-', '_');     % TEMPORARY.
     end
     
+    %-------------------
+    % Check DESCRIPTION
+    %-------------------
     if isempty(cd.DESCRIPTION)
         cd.DESCRIPTION = 'N/A';   % NOTE: Quotes are added later.
-    else
-        if ~isempty(strfind(cd.DESCRIPTION, '"'))
-            error('Parameter field DESCRIPTION contains quotes. This is not needed as quotes are added automatically.')
-        end
     end
+    % ASSERTION: Does not contain quotes.    
+    assert_nonempty_unquoted(cd.DESCRIPTION)
     
     columnData = cd;
 end
@@ -359,7 +378,7 @@ end
 
 
 
-% Create SSL for the content a OBJECT=COLUMN segment.
+% Create SSL for the content an OBJECT=COLUMN segment.
 % cd : Column data struct.
 function [s, nSubcolumns] = create_OBJ_COLUMN_content(cd, PDS_START_BYTE)
     s = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
@@ -372,12 +391,6 @@ function [s, nSubcolumns] = create_OBJ_COLUMN_content(cd, PDS_START_BYTE)
     if isfield(cd, 'UNIT')
         s = add_SSL(s, 'UNIT', '"%s"', cd.UNIT);
     end
-    if isfield(cd, 'FORMAT')
-        s = add_SSL(s, 'FORMAT', '%s', cd.FORMAT);
-    end
-    if isfield(cd, 'MISSING_CONSTANT')
-        s = add_SSL(s, 'MISSING_CONSTANT', '%f', cd.MISSING_CONSTANT);
-    end
     if isfield(cd, 'ITEMS')
         s = add_SSL(s, 'ITEMS',       '%i', cd.ITEMS);
         s = add_SSL(s, 'ITEM_BYTES',  '%i', cd.ITEM_BYTES);
@@ -387,6 +400,9 @@ function [s, nSubcolumns] = create_OBJ_COLUMN_content(cd, PDS_START_BYTE)
         nSubcolumns = 1;
     end
     s = add_SSL(s, 'DESCRIPTION', '"%s"', cd.DESCRIPTION);      % NOTE: Added quotes.
+    if isfield(cd, 'MISSING_CONSTANT')
+        s = add_SSL(s, 'MISSING_CONSTANT', '%f', cd.MISSING_CONSTANT);
+    end
 end
 
 
@@ -397,15 +413,29 @@ function s = add_SSL(s, key, pattern, value)
     s.objects{end+1} = [];
 end
 
-function s = add_SSL_OBJECT(s, value, sslObjectContents)
+function s = add_SSL_OBJECT(s, objectValue, sslObjectContents)
     s.keys   {end+1} = 'OBJECT';
-    s.values {end+1} = value;
+    s.values {end+1} = objectValue;
     s.objects{end+1} = sslObjectContents;
 end
 
 
 
 %##########################################################################################################
+
+
+
+function assert_nonempty_unquoted(str)
+% PROPOSAL: Use warning_error___LOCAL?
+    if isempty(str)
+        error('String value is empty.')
+    end
+        
+    % ASSERTION: No quotes.
+    if ~isempty(strfind(str, '"'))
+        error('String value contains quotes.')
+    end
+end
 
 
 
