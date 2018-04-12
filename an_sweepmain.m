@@ -599,10 +599,13 @@ try
                 dstr2 = sprintf(' %14.7e, %14.7e', DP(k).Vph_knee(1),DP(k).Te_exp_belowVknee(1));
                 
                 dstrtot=strcat(dstr1,dstr2);
-                dstrtot=strrep(dstrtot,'  0.0000000e+00','          -1000'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
-                dstrtot=strrep(dstrtot,'  NaN','-1000'); %
-                %                         dstrtot=strrep(dstrtot,'-Inf','-1000');
-                %                         dstrtot=strrep(dstrtot,'Inf','-1000');
+                % NOTE: Can not replace NaN etc with string "-1000" directly, since DVAL-NG inteprets that as an integer (?), which
+                % is incompatible with DATA_TYPE=ASCII_REAL.  /Erik P G Johansson
+                dstrtot=strrep(dstrtot,'  0.0000000e+00','       -1.0e+03'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
+                %dstrtot=strrep(dstrtot,'  NaN','-1000');
+                dstrtot=strrep(dstrtot,'     NaN','-1.0e+03');
+                %                         dstrtot=strrep(dstrtot,'  -Inf','-1.0e3');
+                %                         dstrtot=strrep(dstrtot,'   Inf','-1.0e3');
                 drow_bytes = fprintf(awID,'%s\r\n',dstrtot);
                 
             end
