@@ -37,33 +37,23 @@
 %   PRO: Can have local functions (instead of separate files).
 %   CON: Too many arguments (16).
 %       PROPOSAL: Set struct which is passed to function.
+%   --
+%   PROPOSAL: Move some +createLB/* functions into it.
 %   PROPOSAL: Do not reference any global variables in main function.
 %       CON/PROBLEM: der_struct is not defined for non-EDDER and can thus not just be added as argument.
 %
-% PROPOSAL: Move "global der_struct" to code calling createLBL_main.
-%   CON: Should not be used for EDDER (but might still be defined, surviving from a previous EDDER run).
-%
 % TODO: Make work with EDDER and DERIV at the same time.
-%   TODO-NEED-INFO/TODO-DECISION: How determine if running regular Lapdog (lapdog.m or main.m) or EDDER (edder_lapdog.m)?
-%       PROPOSAL: Flag in main function (lapdog.m, main.m, edder_lapdog.m)
-%       PROPOSAL: Detect it from TAB files somehow, e.g. row width.
-%       PROPOSAL: Detect it from source directory: EDITED/CALIB ==> EDDER/Normal.
-%       TODO-NEED-INFO: Are the standard data structures with TAB metadata updated? Which are needed?
-%           index, tabindex, an_tabindex, der_struct (should not be needed).
 %   TODO: Make sure DATA_SET_ID is correct.
 %       NOTE: 2018-03-26: Ex:
 %           Directory RO-C-RPCLAP-99-TDDG-EDDER-V0.1/
 %           DATA_SET_ID="RO-A-RPCLAP-3-AST2-CALIB-V2.0 ??" (including question marks)
 %       PROPOSAL: Set by ro_create_delivery.
 %           NOTE: Might already be done.
-%   TODO: Handle that different sets of files for EDDER and DERIV.
-%   TODO: Handle different column widths for EDDER and DERIV.
-%       TODO: DERIV Ix[HL] have extra quality column which EDDER does not.    --------------------------- TODO
 %
 % TODO-DECISION: What kind of information should be set in
 %   (1) createLBL, and
 %   (2) ~create_C2D2_from_CALIB1/create_E2C2D2_from_CALIB1_EDITED1,
-%   respectively. What philosophy should one use.
+%   respectively? What philosophy should one use?
 %   NOTE: Want to avoid setting the same information twice. Avoid first setting in createLBL, and then overwriting in
 %         ~create_E2C2D2_*.
 %   --
@@ -126,7 +116,7 @@ AxS_TAB_LBL_inconsistency_policy     = 'nothing';
 % is simply unknown at present.
 %========================================================================================
 NO_ODL_UNIT       = [];
-ODL_VALUE_UNKNOWN = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown.
+ODL_VALUE_UNKNOWN = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown. Should not be used for official deliveries.
 DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
 MISSING_CONSTANT = SATURATION_CONSTANT;    % NOTE: This constant must be reflected in the corresponding section in best_estimates!!!
 %MISSING_CONSTANT_DESCRIPTION_AMENDMENT = sprintf('A value of %g refers to that the original value was saturated, or that it was an average over at least one saturated value.', MISSING_CONSTANT);
@@ -369,21 +359,26 @@ for i=1:length(stabindex)
 
             LBL_data.OBJTABLE = [];
             LBL_data.OBJTABLE.DESCRIPTION = CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION;    % BUG: Possibly double quotation marks.
+            
+            %-----------------------------------------------------------------------------
+            % HARD-CODED constants, to account for that these values are not set by other
+            % Lapdog code as they are for other data products.
+            %-----------------------------------------------------------------------------
             if Pnum ~= 3
-                LBL_data.consistency_check.N_TAB_columns       = 5;   % NOTE: Hardcoded. TODO: Fix!
-                LBL_data.consistency_check.N_TAB_bytes_per_row = 83;  % NOTE: Hardcoded. TODO: Fix!
+                LBL_data.consistency_check.N_TAB_columns       = 5;
+                LBL_data.consistency_check.N_TAB_bytes_per_row = 83;
             else
-                LBL_data.consistency_check.N_TAB_columns       = 6;   % NOTE: Hardcoded. TODO: Fix!
-                LBL_data.consistency_check.N_TAB_bytes_per_row = 99;  % NOTE: Hardcoded. TODO: Fix!
+                LBL_data.consistency_check.N_TAB_columns       = 6;
+                LBL_data.consistency_check.N_TAB_bytes_per_row = 99;
             end
             if ~generatingDeriv1
                 LBL_data.consistency_check.N_TAB_columns       = LBL_data.consistency_check.N_TAB_columns       - 1;
                 LBL_data.consistency_check.N_TAB_bytes_per_row = LBL_data.consistency_check.N_TAB_bytes_per_row - 5;
             end
             
-            % -----------------------------------------------------------------------------
+            %------------------------------------------------------------------------------
             % Recycle OBJCOL info/columns from CALIB LBL file (!) and then add one column.
-            % -----------------------------------------------------------------------------
+            %------------------------------------------------------------------------------
 %             ocl = CALIB_LBL_struct.OBJECT___TABLE{1}.OBJECT___COLUMN;
 %             for i_oc = 1:length(ocl)
 %                 oc = ocl{i_oc};   % Shorten variable

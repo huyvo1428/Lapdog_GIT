@@ -83,6 +83,9 @@ function create_OBJTABLE_LBL_file(tabFilePath, lblData, tabLblInconsistencyPolic
     %
     % PROPOSAL: Abolish N_TAB_bytes_per_row.
     %   PRO: Same check performed via check against actual file size.
+    % PROPOSAL: Read one TAB file row and count the number of strings ", ", infer number of columns, and use for
+    %   consistency check.
+    %   PRO: Can basically abolish consistency_check.N_TAB_columns.
     %
     % TODO-DECISION: How handle UNIT (optional according to PDS)
     %   PROPOSAL: (1) Require caller to set .UNIT and have 'N/A' (or []) represent absence of unit.
@@ -104,7 +107,6 @@ function create_OBJTABLE_LBL_file(tabFilePath, lblData, tabLblInconsistencyPolic
     
     % NOTE: Exclude COLUMNS, ROW_BYTES, ROWS.
     PERMITTED_OBJTABLE_FIELD_NAMES = {'COLUMNS_consistency_check', 'ROW_BYTES_consistency_check', 'DESCRIPTION', 'OBJCOL_list'};
-    
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
     % NOTE: Includes both required and optional fields.
     PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT'};
