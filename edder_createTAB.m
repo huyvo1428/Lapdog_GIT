@@ -137,7 +137,7 @@ try
             
 
             
-%------------------- EDDER DOESN'T NEED OFFSET CORRECTSIONS, nor SWEEPWINDOW DELETION------------------------%  FKJN 16/1 2018          
+%------------------- EDDER DOESN'T NEED OFFSET CORRECTIONS, nor SWEEP WINDOW DELETION------------------------%  FKJN 16/1 2018          
             if fileflag(2) =='3' % read file probe 3
                  scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
 
@@ -397,7 +397,7 @@ try
 
           %  curArray=curArray+ CURRENTOFFSET;
             
-            b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
+            b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));   % Removed quality flag.
             b3 = fprintf(twID2,', %14i',curArray.'); %some steps could be "NaN" values if LDL macro
             b4 = fprintf(twID2,'\r\n');
             
@@ -409,7 +409,7 @@ try
                 tabindex{end,8}=b1;
                 
                 
-                tabindex(end+1,1:7)={filename2,strrep(filename2,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len,length(potbias)+5};
+                tabindex(end+1,1:7) = {filename2, strrep(filename2,tabfolder,''), tabind(1), scantemp{1,1}{end,1}(1:23), scantemp{1,2}(end), len, length(potbias)+4};   % Removed quality flag.
                 tabindex{end,8} = b2+b3+b4;
                 tabindex{end,9} = tabind(end);
                 %           tabindex(end+1,1:6)={filename3,strrep(filename3,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len};
