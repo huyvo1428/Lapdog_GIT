@@ -2,8 +2,8 @@
 % Modify a column description struct to include a MISSING_CONSTANT.
 %
 %
-% ARGUMENTS
-% =========
+% ARGUMENTS AND RETURN VALUES
+% ===========================
 % addMissingConstant    : True/false.
 % oc                    : OC = "OBJECT=COLUMN"
 % descriptionAmendement : String which is added to the end of DESCRIPTION (after adding one whitespace).

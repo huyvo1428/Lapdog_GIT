@@ -85,26 +85,26 @@
 %
 %===================================================================================================
 
-t_start = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
-previous_warnings_settings = warning('query');
+executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
+prevWarningsSettings = warning('query');
 warning('on', 'all')
 
 global SATURATION_CONSTANT
 
 % Set policy for error messages when failing to generate a file.
 % --------------------------------------------------------------
-%generate_file_fail_policy = 'message+stack trace';
-generate_file_fail_policy = 'message';
-%generate_file_fail_policy = 'nothing';    % Somewhat misleading. Something may still be printed.
+generateFileFailPolicy = 'message+stack trace';
+%generateFileFailPolicy = 'message';
+%generateFileFailPolicy = 'nothing';    % Somewhat misleading. Something may still be printed.
 
 
 
 % Set policy for errors/warning when LBL files are (believed to be) inconsistent with TAB files.
 % ----------------------------------------------------------------------------------------------
-%general_TAB_LBL_inconsistency_policy = 'error';
-general_TAB_LBL_inconsistency_policy = 'warning';
-%AxS_TAB_LBL_inconsistency_policy     = 'warning';
-AxS_TAB_LBL_inconsistency_policy     = 'nothing';
+%generalTabLblInconsistencyPolicy = 'error';
+generalTabLblInconsistencyPolicy = 'warning';
+axsTabLblInconsistencyPolicy     = 'warning';
+%axsTabLblInconsistencyPolicy     = 'nothing';
 
 
 
@@ -180,57 +180,58 @@ end
 % NOTE: Might not be complete.
 % NOTE: Contains many hardcoded constants, but not only.
 %====================================================================================================
-kvl_LBL_all = [];
-kvl_LBL_all.keys = {};
-kvl_LBL_all.values = {};
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PDS_VERSION_ID',            'PDS3');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'DATA_QUALITY_ID',           '"1"');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCT_TYPE',              '"DDR"');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PROCESSING_LEVEL_ID',       '"5"');
+KvlLblAll = [];
+KvlLblAll.keys = {};
+KvlLblAll.values = {};
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'PDS_VERSION_ID',            'PDS3');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'DATA_QUALITY_ID',           '"1"');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'PRODUCT_TYPE',              '"DDR"');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'PROCESSING_LEVEL_ID',       '"5"');
 
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
-%kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCER_ID',               producershortname);
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_ID',        'RO');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'INSTRUMENT_ID',             'RPCLAP');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'TARGET_TYPE',               sprintf('"%s"', targettype));
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'MISSION_ID',                'ROSETTA');
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
-kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
+%KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_ID',               producershortname);
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_HOST_ID',        'RO');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_ID',             'RPCLAP');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'TARGET_TYPE',               sprintf('"%s"', targettype));
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'MISSION_ID',                'ROSETTA');
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
+KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
 % ^EAICD_DESC = Filename of file under DOCUMENT directory (or subdirectory under it) in final PDS-compliant data set.
 % NOT relative path, NOT data product name.
-%kvl_LBL_all = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL_all, '^EAICD_DESC',               sprintf('"%s"', EAICD_FILE_NAME));
+%KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, '^EAICD_DESC',               sprintf('"%s"', EAICD_FILE_NAME));
 
 
 
 %=========================================================
 % Read kernel file - Use default file in Lapdog directory
 %=========================================================
-current_m_file = mfilename('fullpath');
-[Lapdog_directory, basenameJunk, extJunk] = fileparts(current_m_file);
-kernel_file = fullfile(Lapdog_directory, 'metakernel_rosetta.txt');
-if ~exist(kernel_file, 'file')
-    fprintf(1, 'Can not find kernel file "%s" (pwd="%s")', kernel_file, pwd)
+currentMFile = mfilename('fullpath');
+[lapdogDir, basenameJunk, extJunk] = fileparts(currentMFile);
+metakernelFile = fullfile(lapdogDir, 'metakernel_rosetta.txt');
+if ~exist(metakernelFile, 'file')
+    fprintf(1, 'Can not find kernel file "%s" (pwd="%s")', metakernelFile, pwd)
     % Call error too?
 end
-cspice_furnsh(kernel_file); 
+cspice_furnsh(metakernelFile); 
 
 
 
 %==========================================================
 % Convert tabindex and an_tabindex into equivalent structs
 %==========================================================
-[stabindex   ] = createLBL.convert_tabindex(   tabindex);
+[stabindex] = createLBL.convert_tabindex(tabindex);
 if generatingDeriv1
+    % IMPLEMENTATION NOTE: Variable an_tabindex never defined during EDDER runs?
     [san_tabindex] = createLBL.convert_an_tabindex(an_tabindex);
 end
 
@@ -241,12 +242,12 @@ end
 % Create LBL files for (TAB files in) tabindex.
 %
 %===============================================
-for i=1:length(stabindex)
+for i = 1:length(stabindex)
     try
         
-        LBL_data = [];
-        LBL_data.consistency_check.N_TAB_columns = stabindex(i).N_columns;
-        % "LBL_data.consistency_check.N_TAB_bytes_per_row" can not be set centrally here
+        LblData = [];
+        LblData.ConsistencyCheck.nTabColumns = stabindex(i).nColumns;
+        % "LblData.ConsistencyCheck.nTabBytesPerRow" can not be set centrally here
         % since it is hardcoded for some TAB file types.
         
         %=========================================
@@ -255,44 +256,44 @@ for i=1:length(stabindex)
         %
         %=========================================
         
-        tname = stabindex(i).filename;
-        Pnum = index(stabindex(i).i_index_first).probe;
-        i_index_first = stabindex(i).i_index_first;
-        i_index_last  = stabindex(i).i_index_last;
+        tabFilename = stabindex(i).filename;
+        iIndexFirst = stabindex(i).iIndexFirst;
+        iIndexLast  = stabindex(i).iIndexLast;
+        probeNbr    = index(iIndexFirst).probe;
         
         %--------------------------
         % Read the CALIB1 LBL file
         %--------------------------
-        [kvl_LBL_CALIB, CALIB_LBL_struct] = createLBL.read_LBL_file(...
-            index(i_index_first).lblfile, DONT_READ_HEADER_KEY_LIST, ...
-            index(i_index_first).probe);
+        [KvlLblCalib1, Calib1LblSs] = createLBL.read_LBL_file(...
+            index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST, ...
+            index(iIndexFirst).probe);
 
         
         
-        % NOTE: One can obtain a stop/ending SCT value from index(stabindex(i).i_index_last).sct1str; too, but experience
+        % NOTE: One can obtain a stop/ending SCT value from index(stabindex(i).iIndexLast).sct1str; too, but experience
         % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
         % Example: LAP_20150503_210047_525_I2L.LBL
-        SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(i_index_last).sct0str(2), obt2sct(stabindex(i).SCT_stop));
+        SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(stabindex(i).sctStop));
         
-        kvl_LBL = kvl_LBL_all;
-        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'START_TIME',                   CALIB_LBL_struct.START_TIME);        % UTC start time
-        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'STOP_TIME',                    stabindex(i).UTC_stop(1:23));        % UTC stop time
-        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', CALIB_LBL_struct.SPACECRAFT_CLOCK_START_COUNT);
-        kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
+        KvlLbl = KvlLblAll;
+        KvlLbl = lib_shared_EJ.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   Calib1LblSs.START_TIME);        % UTC start time
+        KvlLbl = lib_shared_EJ.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    stabindex(i).utcStop(1:23));    % UTC stop  time
+        KvlLbl = lib_shared_EJ.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', Calib1LblSs.SPACECRAFT_CLOCK_START_COUNT);
+        KvlLbl = lib_shared_EJ.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
 
-        kvl_LBL = lib_shared_EJ.KVPL.overwrite_values(kvl_LBL_CALIB, kvl_LBL, 'require preexisting keys');
+        KvlLbl = lib_shared_EJ.KVPL.overwrite_values(KvlLblCalib1, KvlLbl, 'require preexisting keys');
         
-        LBL_data.kvl_header = kvl_LBL;
-        clear   kvl_LBL kvl_LBL_CALIB
+        LblData.KvlHeader = KvlLbl;
+        clear   KvlLbl KvlLblCalib1
         
         
         
-        LBL_data.N_TAB_file_rows = stabindex(i).N_TAB_file_rows;
+        LblData.nTabFileRows = stabindex(i).nTabFileRows;
         
-        isSweep       = (tname(30)=='S');
-        isSweepTable  = (tname(28)=='B') && isSweep;
-        isDensityMode = (tname(28)=='I');
-        %isHf          = (tname(30)=='H');
+        isSweep       = (tabFilename(30)=='S');
+        isSweepTable  = (tabFilename(28)=='B') && isSweep;
+        isDensityMode = (tabFilename(28)=='I');
+        %isHf          = (tabFilename(30)=='H');
         
         %=======================================
         %
@@ -307,24 +308,24 @@ for i=1:length(stabindex)
             
             if (isSweepTable)
                 
-                LBL_data.OBJTABLE = [];
-                LBL_data.consistency_check.N_TAB_bytes_per_row = 32;   % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
-                LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION);
+                LblData.OBJTABLE = [];
+                LblData.ConsistencyCheck.nTabBytesPerRow = 32;   % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
+                LblData.OBJTABLE.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
                 ocl = [];
-                ocl{end+1} = struct('NAME', 'SWEEP_TIME',                 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS',    'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
-                ocl{end+1} = struct('NAME', sprintf('P%i_VOLTAGE', Pnum),  DATA_DATA_TYPE{:},        'BYTES', 14, DATA_UNIT_VOLTAGE{:}, 'DESCRIPTION', VOLTAGE_BIAS_DESC);
-                LBL_data.OBJTABLE.OBJCOL_list = ocl;
-                clear ocl
+                ocl{end+1} = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS',    'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
+                ocl{end+1} = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr),  DATA_DATA_TYPE{:},        'BYTES', 14, DATA_UNIT_VOLTAGE{:}, 'DESCRIPTION', VOLTAGE_BIAS_DESC);
+                LblData.OBJTABLE.OBJCOL_list = ocl;
+                clear   ocl
 
             else
                 % CASE: Sweep data (not sweep description table)
 
-                Bfile = tname;
-                Bfile(28) = 'B';
+                bxsTabFilename = tabFilename;
+                bxsTabFilename(28) = 'B';
 
-                LBL_data.OBJTABLE = [];
-                LBL_data.consistency_check.N_TAB_bytes_per_row = stabindex(i).N_TAB_bytes_per_row;
-                LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s', CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION);
+                LblData.OBJTABLE = [];
+                LblData.ConsistencyCheck.nTabBytesPerRow = stabindex(i).nTabBytesPerRow;
+                LblData.OBJTABLE.DESCRIPTION = sprintf('%s', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
                 ocl = [];
                 ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
                 ocl{end+1} = struct('NAME',  'STOP_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
@@ -334,22 +335,22 @@ for i=1:length(stabindex)
                     ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
                 end
 
-                % NOTE/BUG: The file referenced in DESCRIPTION may have the wrong name since it is renamed by other code before delivery.
+                % NOTE/BUG: The file referenced in DESCRIPTION may have the wrong name since files are renamed by other code before delivery.
                 ocl{end+1} = createLBL.optionally_add_MISSING_CONSTANT(...
                     generatingDeriv1, MISSING_CONSTANT, ...
                     struct(...
-                        'NAME', sprintf('P%i_SWEEP_CURRENT', Pnum), DATA_DATA_TYPE{:}, 'ITEM_BYTES', 14, DATA_UNIT_CURRENT{:}, ...
-                        'ITEMS', stabindex(i).N_columns - length(ocl), ...
+                        'NAME', sprintf('P%i_SWEEP_CURRENT', probeNbr), DATA_DATA_TYPE{:}, 'ITEM_BYTES', 14, DATA_UNIT_CURRENT{:}, ...
+                        'ITEMS', stabindex(i).nColumns - length(ocl), ...
                         'DESCRIPTION', sprintf([...
                             'One current for each of the voltage potential sweep steps described by %s. ', ...
-                            'Each current is the average over one or multiple measurements on a single potential step.'], Bfile)), ...
+                            'Each current is the average over one or multiple measurements on a single potential step.'], bxsTabFilename)), ...
                     sprintf([...
                         'A value of %g refers to ', ...
                         '(1) that the underlying set of samples contained at least one saturated value, and/or ', ...
                         '(2) there were no samples which were not disturbed by RPCMIP left to make an average over.'], MISSING_CONSTANT));
                 
-                LBL_data.OBJTABLE.OBJCOL_list = ocl;
-                clear ocl oc
+                LblData.OBJTABLE.OBJCOL_list = ocl;
+                clear   ocl oc
             end
 
         else
@@ -357,31 +358,31 @@ for i=1:length(stabindex)
             % CASE: Anything EXCEPT sweep files (NOT xxS) <==> [IV]x[HL]
             %============================================================
 
-            LBL_data.OBJTABLE = [];
-            LBL_data.OBJTABLE.DESCRIPTION = CALIB_LBL_struct.OBJECT___TABLE{1}.DESCRIPTION;    % BUG: Possibly double quotation marks.
+            LblData.OBJTABLE = [];
+            LblData.OBJTABLE.DESCRIPTION = Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION;    % BUG: Possibly double quotation marks.
             
             %-----------------------------------------------------------------------------
             % HARD-CODED constants, to account for that these values are not set by other
             % Lapdog code as they are for other data products.
             %-----------------------------------------------------------------------------
-            if Pnum ~= 3
-                LBL_data.consistency_check.N_TAB_columns       = 5;
-                LBL_data.consistency_check.N_TAB_bytes_per_row = 83;
+            if probeNbr ~= 3
+                LblData.ConsistencyCheck.nTabColumns     =  5;
+                LblData.ConsistencyCheck.nTabBytesPerRow = 83;
             else
-                LBL_data.consistency_check.N_TAB_columns       = 6;
-                LBL_data.consistency_check.N_TAB_bytes_per_row = 99;
+                LblData.ConsistencyCheck.nTabColumns     =  6;
+                LblData.ConsistencyCheck.nTabBytesPerRow = 99;
             end
             if ~generatingDeriv1
-                LBL_data.consistency_check.N_TAB_columns       = LBL_data.consistency_check.N_TAB_columns       - 1;
-                LBL_data.consistency_check.N_TAB_bytes_per_row = LBL_data.consistency_check.N_TAB_bytes_per_row - 5;
+                LblData.ConsistencyCheck.nTabColumns     = LblData.ConsistencyCheck.nTabColumns     - 1;
+                LblData.ConsistencyCheck.nTabBytesPerRow = LblData.ConsistencyCheck.nTabBytesPerRow - 5;
             end
             
             %------------------------------------------------------------------------------
             % Recycle OBJCOL info/columns from CALIB LBL file (!) and then add one column.
             %------------------------------------------------------------------------------
-%             ocl = CALIB_LBL_struct.OBJECT___TABLE{1}.OBJECT___COLUMN;
-%             for i_oc = 1:length(ocl)
-%                 oc = ocl{i_oc};   % Shorten variable
+%             ocl = Calib1LblSs.OBJECT___TABLE{1}.OBJECT___COLUMN;
+%             for iOc = 1:length(ocl)
+%                 oc = ocl{iOc};   % Shorten variable
 % 
 %                 % Remove START_BYTE (automatically derived) and FORMAT (forbidden by createLBL.create_OBJTABLE_LBL_file).
 %                 oc = rmfield(oc, 'START_BYTE');
@@ -393,16 +394,16 @@ for i=1:length(stabindex)
 %                 if strcmp(oc.NAME, 'UTC_TIME') && ~isfield(oc, 'UNIT')
 %                     oc.UNIT = 'SECONDS';
 %                 end
-%                 ocl{i_oc} = oc;
-%                 clear oc
+%                 ocl{iOc} = oc;
+%                 clear   oc
 %             end
             ocl = {};
             ocl{end+1} = struct('NAME', 'UTC_TIME', 'DATA_TYPE', 'TIME',       'UNIT', 'SECONDS', 'BYTES', 26, 'DESCRIPTION', 'UTC TIME');
             ocl{end+1} = struct('NAME', 'OBT_TIME', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECONDS', 'BYTES', 16, 'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
-            if Pnum ~=3
+            if probeNbr ~=3
                 % CASE: P1 or P2
-                currentOc = struct('NAME', sprintf('P%i_CURRENT', Pnum), DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14);
-                voltageOc = struct('NAME', sprintf('P%i_VOLTAGE', Pnum), DATA_DATA_TYPE{:}, DATA_UNIT_VOLTAGE{:}, 'BYTES', 14);
+                currentOc = struct('NAME', sprintf('P%i_CURRENT', probeNbr), DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14);
+                voltageOc = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr), DATA_DATA_TYPE{:}, DATA_UNIT_VOLTAGE{:}, 'BYTES', 14);
                 if isDensityMode
                     currentOc.DESCRIPTION = CURRENT_MEAS_DESC;
                     voltageOc.DESCRIPTION = VOLTAGE_BIAS_DESC;
@@ -416,7 +417,7 @@ for i=1:length(stabindex)
                 end
                 ocl{end+1} = currentOc;
                 ocl{end+1} = voltageOc;
-                clear currentOc voltageOc
+                clear   currentOc voltageOc
             else
                 % CASE: P3
                 error('This code segment has not been completed for P3.')
@@ -429,15 +430,15 @@ for i=1:length(stabindex)
                     'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
             end
             
-            LBL_data.OBJTABLE.OBJCOL_list = ocl;
-            clear ocl
+            LblData.OBJTABLE.OBJCOL_list = ocl;
+            clear   ocl
         end
         
-        createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LBL_data, general_TAB_LBL_inconsistency_policy);
-        clear   LBL_data
+        createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LblData, generalTabLblInconsistencyPolicy);
+        clear   LblData
         
     catch exception
-        createLBL.exception_message(exception, generate_file_fail_policy);
+        createLBL.exception_message(exception, generateFileFailPolicy);
         fprintf(1,'lapdog: Skipping LBL file (tabindex)index - Continuing\n');
     end    % try-catch
 end    % for
@@ -449,11 +450,11 @@ end    % for
 % Create LBL files for (TAB files in) blockTAB.
 %
 %===============================================
-for i=1:length(blockTAB)
+for i = 1:length(blockTAB)
     
-    LBL_data = [];
-    LBL_data.consistency_check.N_TAB_columns       =  3;
-    LBL_data.consistency_check.N_TAB_bytes_per_row = 55;                   % NOTE: HARDCODED! TODO: Fix.
+    LblData = [];
+    LblData.ConsistencyCheck.nTabColumns     =  3;
+    LblData.ConsistencyCheck.nTabBytesPerRow = 55;                   % NOTE: HARDCODED! TODO: Fix.
     
     
     
@@ -461,17 +462,17 @@ for i=1:length(blockTAB)
     %
     % LBL file: Create header/key-value pairs
     %
-    % NOTE: Does not rely on reading old LBL file.
+    % NOTE: Does NOT rely on reading old LBL file.
     %==============================================
     START_TIME = datestr(blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
     STOP_TIME  = datestr(blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
-    kvl_LBL = kvl_LBL_all;
-    kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'START_TIME',                   START_TIME);       % UTC start time
-    kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
-    kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
-    kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
-    LBL_data.kvl_header = kvl_LBL;
-    clear   kvl_LBL
+    KvlLbl = KvlLblAll;
+    KvlLbl = lib_shared_EJ.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   START_TIME);       % UTC start time
+    KvlLbl = lib_shared_EJ.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
+    KvlLbl = lib_shared_EJ.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
+    KvlLbl = lib_shared_EJ.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
+    LblData.KvlHeader = KvlLbl;
+    clear   KvlLbl
     
     
     
@@ -479,18 +480,18 @@ for i=1:length(blockTAB)
     % LBL file: Create OBJECT TABLE section
     %=======================================
     
-    LBL_data.N_TAB_file_rows = blockTAB(i).rcount;
-    LBL_data.OBJTABLE = [];
-    LBL_data.OBJTABLE.DESCRIPTION = 'BLOCKLIST DATA. START & STOP TIME OF MACRO BLOCK AND MACRO ID.';
+    LblData.nTabFileRows = blockTAB(i).rcount;
+    LblData.OBJTABLE = [];
+    LblData.OBJTABLE.DESCRIPTION = 'BLOCKLIST DATA. START & STOP TIME OF MACRO BLOCK AND MACRO ID.';
     ocl = [];
     ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START TIME OF MACRO BLOCK YYYY-MM-DD HH:MM:SS.sss');
     ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'LAST START TIME OF MACRO BLOCK FILE YYYY-MM-DD HH:MM:SS.sss');
     ocl{end+1} = struct('NAME', 'MACRO_ID',       'DATA_TYPE', 'CHARACTER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'HEXADECIMAL MACRO IDENTIFICATION NUMBER.');
-    LBL_data.OBJTABLE.OBJCOL_list = ocl;
+    LblData.OBJTABLE.OBJCOL_list = ocl;
     clear   ocl
     
-    createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LBL_data, general_TAB_LBL_inconsistency_policy);
-    clear   LBL_data
+    createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LblData, generalTabLblInconsistencyPolicy);
+    clear   LblData
     
 end   % for
 
@@ -502,22 +503,22 @@ end   % for
 %
 %===============================================
 if generatingDeriv1
-    for i=1:length(san_tabindex)
+    for i = 1:length(san_tabindex)
         try
-            TAB_LBL_inconsistency_policy = general_TAB_LBL_inconsistency_policy;   % Default value, unless overwritten for specific data file types.
+            tabLblInconsistencyPolicy = generalTabLblInconsistencyPolicy;   % Default value, unless overwritten for specific data file types.
             
-            tname = san_tabindex(i).filename;
-            lname = strrep(tname, 'TAB', 'LBL');
+            tabFilename = san_tabindex(i).filename;
+            lblFilename = strrep(tabFilename, 'TAB', 'LBL');
             
-            mode = tname(end-6:end-4);
-            Pnum = index(san_tabindex(i).i_index).probe;     % Probe number
+            mode = tabFilename(end-6:end-4);
+            probeNbr = index(san_tabindex(i).iIndex).probe;     % Probe number
             isDensityMode = (mode(1) == 'I');
             isEFieldMode  = (mode(1) == 'V');
             
-            LBL_data = [];
-            LBL_data.N_TAB_file_rows = san_tabindex(i).N_TAB_file_rows;
-            LBL_data.consistency_check.N_TAB_bytes_per_row = san_tabindex(i).N_TAB_bytes_per_row;
-            LBL_data.consistency_check.N_TAB_columns       = san_tabindex(i).N_TAB_columns;
+            LblData = [];
+            LblData.nTabFileRows = san_tabindex(i).nTabFileRows;
+            LblData.ConsistencyCheck.nTabBytesPerRow = san_tabindex(i).nTabBytesPerRow;
+            LblData.ConsistencyCheck.nTabColumns     = san_tabindex(i).nTabColumns;
             
             
             
@@ -527,14 +528,14 @@ if generatingDeriv1
             %
             %=========================================
             
-            if strcmp(san_tabindex(i).data_type, 'best_estimates')
+            if strcmp(san_tabindex(i).dataType, 'best_estimates')
                 %======================
                 % CASE: Best estimates
                 %======================
                 
                 %TAB_file_info = dir(san_tabindex(i).path);
-                kvl_LBL = kvl_LBL_all;
-                kvl_LBL = lib_shared_EJ.KVPL.add_kv_pair(kvl_LBL, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
+                KvlLbl = KvlLblAll;
+                KvlLbl = lib_shared_EJ.KVPL.add_kv_pair(KvlLbl, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
                 try
                     %===============================================================
                     % NOTE: createLBL.create_EST_LBL_header(...)
@@ -542,34 +543,34 @@ if generatingDeriv1
                     %    START_TIME / STOP_TIME,
                     %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
                     %===============================================================
-                    i_index_src  = san_tabindex(i).i_index;
-                    EST_TAB_path = san_tabindex(i).path;
-                    i_probes = [index(i_index_src).probe];
-                    CALIB_LBL_paths = {index(i_index_src).lblfile};
-                    kvl_LBL = createLBL.create_EST_LBL_header(EST_TAB_path, CALIB_LBL_paths, i_probes, kvl_LBL, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
+                    iIndexSrc         = san_tabindex(i).iIndex;
+                    estTabPath        = san_tabindex(i).path;
+                    probeNbrList      = [index(iIndexSrc).probe];
+                    calib1LblPathList = {index(iIndexSrc).lblfile};
+                    KvlLbl = createLBL.create_EST_LBL_header(estTabPath, calib1LblPathList, probeNbrList, KvlLbl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
                     
-                    LBL_data.kvl_header = kvl_LBL;
-                    clear kvl_LBL
+                    LblData.KvlHeader = KvlLbl;
+                    clear   KvlLbl
                     
-                catch exc
-                    createLBL.exception_message(exc, generate_file_fail_policy)
+                catch exception
+                    createLBL.exception_message(exception, generateFileFailPolicy)
                     continue
                 end
-                
+
             else
                 %===============================================
                 % CASE: Any type of file EXCEPT best estimates.
                 %===============================================
                 
-                [kvl_LBL_CALIB, CALIB_LBL_struct] = createLBL.read_LBL_file(...
-                    index(san_tabindex(i).i_index).lblfile, DONT_READ_HEADER_KEY_LIST, ...
-                    index(san_tabindex(i).i_index).probe);
+                [KvlLblCalib1, Calib1LblSs] = createLBL.read_LBL_file(...
+                    index(san_tabindex(i).iIndex).lblfile, DONT_READ_HEADER_KEY_LIST, ...
+                    index(san_tabindex(i).iIndex).probe);
                 
                 % Add DESCRIPTION?!!
-                kvl_LBL = lib_shared_EJ.KVPL.overwrite_values(kvl_LBL_CALIB, kvl_LBL_all, 'require preexisting keys');
+                KvlLbl = lib_shared_EJ.KVPL.overwrite_values(KvlLblCalib1, KvlLblAll, 'require preexisting keys');
                 
-                LBL_data.kvl_header = kvl_LBL;
-                clear kvl_LBL kvl_LBL_CALIB
+                LblData.KvlHeader = KvlLbl;
+                clear   KvlLbl KvlLblCalib1
                 
             end   % if-else
             
@@ -581,24 +582,24 @@ if generatingDeriv1
             %
             %=======================================
             
-            if strcmp(san_tabindex(i).data_type, 'downsample')   %%%%%%%% DOWNSAMPLED FILE %%%%%%%%%%%%%%%
+            if strcmp(san_tabindex(i).dataType, 'downsample')   %%%%%%%% DOWNSAMPLED FILE %%%%%%%%%%%%%%%
                 
                 
                 
                 mcDescrAmendment = sprintf('A value of %g means that the underlying time period which was averaged over contained at least one saturated value.', MISSING_CONSTANT);
                 
-                LBL_data.OBJTABLE = [];
-                samplingRateSecondsStr = lname(end-10:end-9);
-                % NOTE: Empirically, CALIB_LBL_struct.DESCRIPTION is something technical, like "D_P1_TRNC_20_BIT_RAW_BIP". Keep?
-                LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s %s SECONDS DOWNSAMPLED', CALIB_LBL_struct.DESCRIPTION, samplingRateSecondsStr);
+                LblData.OBJTABLE = [];
+                samplingRateSecondsStr = lblFilename(end-10:end-9);
+                % NOTE: Empirically, Calib1LblSs.DESCRIPTION is something technical, like "D_P1_TRNC_20_BIT_RAW_BIP". Keep?
+                LblData.OBJTABLE.DESCRIPTION = sprintf('%s %s SECONDS DOWNSAMPLED', Calib1LblSs.DESCRIPTION, samplingRateSecondsStr);
                 ocl = {};
                 ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
                 ocl{end+1} = struct('NAME', 'OBT_TIME', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
                 
-                oc1 = struct('NAME', sprintf('P%i_CURRENT',        Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED CURRENT.');
-                oc2 = struct('NAME', sprintf('P%i_CURRENT_STDDEV', Pnum), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'CURRENT STANDARD DEVIATION.');
-                oc3 = struct('NAME', sprintf('P%i_VOLTAGE',        Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED VOLTAGE.');
-                oc4 = struct('NAME', sprintf('P%i_VOLTAGE_STDDEV', Pnum), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'VOLTAGE STANDARD DEVIATION.');
+                oc1 = struct('NAME', sprintf('P%i_CURRENT',        probeNbr), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED CURRENT.');
+                oc2 = struct('NAME', sprintf('P%i_CURRENT_STDDEV', probeNbr), 'UNIT', 'AMPERE',    'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'CURRENT STANDARD DEVIATION.');
+                oc3 = struct('NAME', sprintf('P%i_VOLTAGE',        probeNbr), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'AVERAGED VOLTAGE.');
+                oc4 = struct('NAME', sprintf('P%i_VOLTAGE_STDDEV', probeNbr), 'UNIT', 'VOLT',      'BYTES', 14, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'VOLTAGE STANDARD DEVIATION.');
                 oc1 = createLBL.optionally_add_MISSING_CONSTANT(isDensityMode, MISSING_CONSTANT, oc1 , mcDescrAmendment);
                 oc2 = createLBL.optionally_add_MISSING_CONSTANT(isDensityMode, MISSING_CONSTANT, oc2 , mcDescrAmendment);
                 oc3 = createLBL.optionally_add_MISSING_CONSTANT(isEFieldMode,  MISSING_CONSTANT, oc3 , mcDescrAmendment);
@@ -607,17 +608,17 @@ if generatingDeriv1
                 
                 ocl{end+1} = struct('NAME', 'QUALITY', 'BYTES', 3, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
                 
-                LBL_data.OBJTABLE.OBJCOL_list = ocl;
-                clear ocl oc1 oc2 oc3 oc4
+                LblData.OBJTABLE.OBJCOL_list = ocl;
+                clear   ocl oc1 oc2 oc3 oc4
                 
                 
                 
-            elseif strcmp(san_tabindex(i).data_type, 'spectra')   %%%%%%%%%%%%%%%% SPECTRA FILE %%%%%%%%%%
+            elseif strcmp(san_tabindex(i).dataType, 'spectra')   %%%%%%%%%%%%%%%% SPECTRA FILE %%%%%%%%%%
                 
                 
                 
-                LBL_data.OBJTABLE = [];
-                LBL_data.OBJTABLE.DESCRIPTION = sprintf('%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT', mode);
+                LblData.OBJTABLE = [];
+                LblData.OBJTABLE.DESCRIPTION = sprintf('%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT', mode);
                 %---------------------------------------------
                 ocl1 = {};
                 ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
@@ -630,26 +631,26 @@ if generatingDeriv1
                 mcDescrAmendment = sprintf('A value of %g means that there was at least one saturated sample in the same time interval uninterrupted by RPCMIP disturbances.', MISSING_CONSTANT);
                 if isDensityMode
                     
-                    if Pnum == 3
+                    if probeNbr == 3
                         ocl2{end+1} = struct('NAME', 'P1_P2_CURRENT_MEAN',              'UNIT', 'AMPERE', 'DESCRIPTION', ['MEASURED CURRENT DIFFERENCE MEAN. ', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
                         ocl2{end+1} = struct('NAME', 'P1_VOLTAGE_MEAN',                 'UNIT', 'VOLT',   'DESCRIPTION',      'BIAS VOLTAGE');
                         ocl2{end+1} = struct('NAME', 'P2_VOLTAGE_MEAN',                 'UNIT', 'VOLT',   'DESCRIPTION',      'BIAS VOLTAGE');
                     else
-                        ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', Pnum), 'UNIT', 'AMPERE', 'DESCRIPTION', ['MEASURED CURRENT MEAN. ', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
-                        ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', Pnum), 'UNIT', 'VOLT',   'DESCRIPTION',     'BIAS VOLTAGE');
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', probeNbr), 'UNIT', 'AMPERE', 'DESCRIPTION', ['MEASURED CURRENT MEAN. ', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', probeNbr), 'UNIT', 'VOLT',   'DESCRIPTION',     'BIAS VOLTAGE');
                     end
                     PSD_DESCRIPTION = 'PSD CURRENT SPECTRUM';
                     PSD_UNIT        = 'NANOAMPERE^2/Hz';
                     
                 elseif isEFieldMode
                     
-                    if Pnum == 3
+                    if probeNbr == 3
                         ocl2{end+1} = struct('NAME', 'P1_CURRENT_MEAN',    'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT');
                         ocl2{end+1} = struct('NAME', 'P2_CURRENT_MEAN',    'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT');
                         ocl2{end+1} = struct('NAME', 'P1_P2_VOLTAGE_MEAN', 'UNIT', 'VOLT',      'DESCRIPTION', ['MEASURED VOLTAGE DIFFERENCE MEAN. ', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
                     else
-                        ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', Pnum), 'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT MEAN');
-                        ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', Pnum), 'UNIT', 'VOLT',      'DESCRIPTION', ['MEASURED VOLTAGE MEAN', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', probeNbr), 'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT MEAN');
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', probeNbr), 'UNIT', 'VOLT',      'DESCRIPTION', ['MEASURED VOLTAGE MEAN', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
                     end
                     PSD_DESCRIPTION = 'PSD VOLTAGE SPECTRUM';
                     PSD_UNIT        = 'VOLT^2/Hz';
@@ -657,47 +658,46 @@ if generatingDeriv1
                 else
                     error('Error, bad mode identifier in an_tabindex{%i,2} = san_tabindex(%i).filename = "%s".', i, i, san_tabindex(i).filename);
                 end
-                N_spectrum_cols = san_tabindex(i).N_TAB_columns - (length(ocl1) + length(ocl2));
+                N_spectrum_cols = san_tabindex(i).nTabColumns - (length(ocl1) + length(ocl2));
                 ocl2{end+1} = struct('NAME', sprintf('PSD_%s', mode), 'ITEMS', N_spectrum_cols, 'UNIT', PSD_UNIT, 'DESCRIPTION', PSD_DESCRIPTION);
                 
                 
-                
-                % Set ITEM_BYTES/BYTES for all columns at once. Shortens overall code.
-                for i_oc = 1:length(ocl2)
-                    if isfield(ocl2{i_oc}, 'ITEMS')    ocl2{i_oc}.ITEM_BYTES = 14;
-                    else                               ocl2{i_oc}.BYTES = 14;
+                % For all columns: Set ITEM_BYTES/BYTES.
+                for iOc = 1:length(ocl2)
+                    if isfield(ocl2{iOc}, 'ITEMS')    ocl2{iOc}.ITEM_BYTES = 14;
+                    else                              ocl2{iOc}.BYTES      = 14;
                     end
-                    ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
+                    ocl2{iOc}.DATA_TYPE = 'ASCII_REAL';
                 end
                 
-                LBL_data.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
-                clear ocl1 ocl2
+                LblData.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
+                clear   ocl1 ocl2
                 
                 
                 
-            elseif  strcmp(san_tabindex(i).data_type, 'frequency')    %%%%%%%%%%%% FREQUENCY FILE %%%%%%%%%
+            elseif  strcmp(san_tabindex(i).dataType, 'frequency')    %%%%%%%%%%%% FREQUENCY FILE %%%%%%%%%
                 
                 
                 
-                psdname = strrep(san_tabindex(i).filename, 'FRQ', 'PSD');
+                psdTabFilename = strrep(san_tabindex(i).filename, 'FRQ', 'PSD');
                 
-                LBL_data.OBJTABLE = [];
-                LBL_data.OBJTABLE.DESCRIPTION = 'FREQUENCY LIST OF PSD SPECTRA FILE';
+                LblData.OBJTABLE = [];
+                LblData.OBJTABLE.DESCRIPTION = 'FREQUENCY LIST OF PSD SPECTRA FILE';
                 ocl = {};
                 % NOTE/BUG: The file referenced in DESCRIPTION may have the wrong name since it is renamed by other code before delivery.
-                ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', san_tabindex(i).N_TAB_columns, 'UNIT', 'Hz', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
-                    'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdname));
-                LBL_data.OBJTABLE.OBJCOL_list = ocl;
+                ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', san_tabindex(i).nTabColumns, 'UNIT', 'Hz', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
+                    'DESCRIPTION', sprintf('FREQUENCY LIST OF PSD SPECTRA FILE %s', psdTabFilename));
+                LblData.OBJTABLE.OBJCOL_list = ocl;
                 clear   ocl pdsname
-                
-                
-                
-            elseif  strcmp(san_tabindex(i).data_type, 'sweep')    %%%%%%%%%%%% SWEEP ANALYSIS FILE %%%%%%%%%
-                
-                
-                
-                LBL_data.OBJTABLE = [];
-                LBL_data.OBJTABLE.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE', stabindex(san_tabindex(i).i_tabindex).filename);
+
+
+
+            elseif  strcmp(san_tabindex(i).dataType, 'sweep')    %%%%%%%%%%%% SWEEP ANALYSIS FILE %%%%%%%%%
+
+
+
+                LblData.OBJTABLE = [];
+                LblData.OBJTABLE.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE', stabindex(san_tabindex(i).iTabindex).filename);
                 
                 ocl1 = {};
                 ocl1{end+1} = struct('NAME', 'START_TIME(UTC)', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
@@ -757,11 +757,11 @@ if generatingDeriv1
                 ocl2{end+1} = struct('NAME',       'ne_exp',           'UNIT', 'cm^-3',     'DESCRIPTION',                               'Electron density derived from fit of exponential part of the thermal electron current.');  % New from commit 3dce0a0, 2014-12-16 or earlier.
                 ocl2{end+1} = struct('NAME', 'sigma_ne_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for electron density derived from fit of exponential part of the thermal electron current.');  % New from commit 3dce0a0, 2014-12-16 or earlier.
                 
-                ocl2{end+1} = struct('NAME', 'Rsquared_linear',            'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the linear part of the ideal electron current.');   % New from commit f89c62b, 2015-01-09 or earlier.
-                ocl2{end+1} = struct('NAME', 'Rsquared_exp',               'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the exponential part of the ideal electron current.');   % New from commit f89c62b, 2015-01-09 or earlier.
+                ocl2{end+1} = struct('NAME', 'Rsquared_linear',        'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the linear part of the ideal electron current.');   % New from commit f89c62b, 2015-01-09 or earlier.
+                ocl2{end+1} = struct('NAME', 'Rsquared_exp',           'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the exponential part of the ideal electron current.');   % New from commit f89c62b, 2015-01-09 or earlier.
                 
-                ocl2{end+1} = struct('NAME',       'Vbar',              'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
-                ocl2{end+1} = struct('NAME', 'sigma_Vbar',              'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
+                ocl2{end+1} = struct('NAME',       'Vbar',             'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
+                ocl2{end+1} = struct('NAME', 'sigma_Vbar',             'UNIT', ODL_VALUE_UNKNOWN,    'DESCRIPTION', '');  % New from commit, aa33268 2015-03-26 or earlier.
                 
                 ocl2{end+1} = struct('NAME', 'ASM_Iph0',                   'UNIT', 'A',         'DESCRIPTION', 'Assumed photosaturation current used (referred to) in the Fixed photoelectron current assumption.');
                 ocl2{end+1} = struct('NAME', 'ASM_Tph',                    'UNIT', 'eV',        'DESCRIPTION', 'Assumed photoelectron temperature used (referred to) in the Fixed photoelectron current assumption.');
@@ -822,25 +822,25 @@ if generatingDeriv1
                 ocl2{end+1} = struct('NAME',       'asm_ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
                 ocl2{end+1} = struct('NAME', 'asm_sigma_ne_exp_belowVknee', 'UNIT', 'cm^-3', 'DESCRIPTION', '');
                 
-                for i_oc = 1:length(ocl2)
-                    if ~isfield(ocl2{i_oc}, 'BYTES')
-                        ocl2{i_oc}.BYTES = 14;
+                for iOc = 1:length(ocl2)
+                    if ~isfield(ocl2{iOc}, 'BYTES')
+                        ocl2{iOc}.BYTES = 14;
                     end
-                    ocl2{i_oc}.DATA_TYPE = 'ASCII_REAL';
+                    ocl2{iOc}.DATA_TYPE = 'ASCII_REAL';
                 end
-                LBL_data.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
+                LblData.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
                 clear   ocl1 ocl2
                 
-                TAB_LBL_inconsistency_policy = AxS_TAB_LBL_inconsistency_policy;   % NOTE: Different policy for A?S.LBL files.
+                tabLblInconsistencyPolicy = axsTabLblInconsistencyPolicy;   % NOTE: Different policy for A?S.LBL files.
                 
                 
                 
-            elseif  strcmp(san_tabindex(i).data_type,'best_estimates')    %%%%%%%%%%%% BEST ESTIMATES FILE %%%%%%%%%%%%
+            elseif  strcmp(san_tabindex(i).dataType,'best_estimates')    %%%%%%%%%%%% BEST ESTIMATES FILE %%%%%%%%%%%%
                 
                 
                 
-                LBL_data.OBJTABLE = [];
-                LBL_data.OBJTABLE.DESCRIPTION = sprintf('BEST ESTIMATES OF PHYSICAL VALUES FROM MODEL FITTED ANALYSIS.');   % Bad description? To specific?
+                LblData.OBJTABLE = [];
+                LblData.OBJTABLE.DESCRIPTION = sprintf('BEST ESTIMATES OF PHYSICAL VALUES FROM MODEL FITTED ANALYSIS.');   % Bad description? To specific?
                 ocl = [];
                 ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
                 ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
@@ -858,26 +858,26 @@ if generatingDeriv1
                     'Groups of sweeps are formed for the purpose of deriving/selecting values to be used in best estimates. ', ...
                     'All sweeps with the same group number are almost simultaneous. For every type of best estimate, at most one is chosen from each group.' ...
                     ]);  % NOTE: Causes trouble by making such a long line in LBL file?!!
-                LBL_data.OBJTABLE.OBJCOL_list = ocl;
+                LblData.OBJTABLE.OBJCOL_list = ocl;
                 clear   ocl
                 
                 
                 
             else
                 
-                error('Error, bad identifier in an_tabindex{%i,7} = san_tabindex(%i).data_type = "%s"',i, i, san_tabindex(i).data_type);
+                error('Error, bad identifier in an_tabindex{%i,7} = san_tabindex(%i).dataType = "%s"',i, i, san_tabindex(i).dataType);
                 
             end
             
             
             
-            createLBL.create_OBJTABLE_LBL_file(san_tabindex(i).path, LBL_data, TAB_LBL_inconsistency_policy);
-            clear   LBL_data   TAB_LBL_inconsistency_policy
+            createLBL.create_OBJTABLE_LBL_file(san_tabindex(i).path, LblData, tabLblInconsistencyPolicy);
+            clear   LblData   tabLblInconsistencyPolicy
             
             
             
-        catch err
-            createLBL.exception_message(err, generate_file_fail_policy)
+        catch exception
+            createLBL.exception_message(exception, generateFileFailPolicy)
             fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
         end    % try-catch
         
@@ -897,24 +897,24 @@ if generatingDeriv1
     try
         global der_struct    % Global variable with info on A1P files.
         if ~isempty(der_struct)
-            % NOTE: "der_struct" is only defined/set when running Lapdog DERIV. However, since it is a global variable,
-            % it may survive from a Lapdog DERIV run until a edder_lapdog run.
-            % If so, der_struct.file{iFile} will contain paths to a DERIV-data set. May thus lead to overwriting LBL
-            % files in DERIV data set if called when writing EDDER data set!!!
-            % Therefore important to NOT RUN this code for EDDER.
-            createLBL.write_A1P(kvl_LBL_all, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DONT_READ_HEADER_KEY_LIST, general_TAB_LBL_inconsistency_policy);
+            % IMPLEMENTATION NOTE: "der_struct" is only defined/set when running Lapdog DERIV. However, since it is a
+            % global variable, it may survive from a Lapdog DERIV run until a edder_lapdog run. If so,
+            % der_struct.file{iFile} will contain paths to a DERIV-data set. May thus lead to overwriting LBL files in
+            % DERIV data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
+            % EDDER.
+            createLBL.write_A1P(KvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DONT_READ_HEADER_KEY_LIST, generalTabLblInconsistencyPolicy);
         end
         
-    catch exc
-        createLBL.exception_message(exc, generate_file_fail_policy)
-        fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',exc.message);
+    catch exception
+        createLBL.exception_message(exception, generateFileFailPolicy)
+        fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',exception.message);
     end
 end
 
 
 
-cspice_unload(kernel_file);
-warning(previous_warnings_settings)
-fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, t_start));
+cspice_unload(metakernelFile);
+warning(prevWarningsSettings)
+fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, executionBeginDateVec));
 
 %end   % createLBL_main
