@@ -24,9 +24,7 @@ function write_A1P(kvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, 
         %--------------------------
         % Read the CALIB1 LBL file
         %--------------------------
-        [kvlLblCalib1, junk] = createLBL.read_LBL_file(...
-            index(iIndex).lblfile, dontReadHeaderKeyList, ...
-            index(iIndex).probe);
+        [kvlLblCalib1, junk] = createLBL.read_LBL_file(index(iIndex).lblfile, dontReadHeaderKeyList);
         
         kvlLbl = kvlLblAll;
         kvlLbl = lib_shared_EJ.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1});        % UTC start time

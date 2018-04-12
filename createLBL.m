@@ -66,7 +66,7 @@
 %   PROPOSAL:
 %       Lapdog/createLBL should handle:
 %           - Philosophically:
-%               - All metadata which naturally (could) vary between individual data products (not just between PDS data sets)
+%               - All metadata which naturally (could) vary between indivikernel_filedual data products (not just between PDS data sets)
 %                   Ex: TODO-DECISION: Common within PDS data set, i.e. DATA_SET_ID/-NAME, 
 %               - All metadata close to the TAB contents.
 %           - Explicitly: 
@@ -91,23 +91,6 @@ warning('on', 'all')
 
 global SATURATION_CONSTANT
 
-% Set policy for error messages when failing to generate a file.
-% --------------------------------------------------------------
-generateFileFailPolicy = 'message+stack trace';
-%generateFileFailPolicy = 'message';
-%generateFileFailPolicy = 'nothing';    % Somewhat misleading. Something may still be printed.
-
-
-
-% Set policy for errors/warning when LBL files are (believed to be) inconsistent with TAB files.
-% ----------------------------------------------------------------------------------------------
-%generalTabLblInconsistencyPolicy = 'error';
-generalTabLblInconsistencyPolicy = 'warning';
-axsTabLblInconsistencyPolicy     = 'warning';
-%axsTabLblInconsistencyPolicy     = 'nothing';
-
-
-
 %========================================================================================
 % "Constants"
 % -----------
@@ -122,6 +105,25 @@ MISSING_CONSTANT = SATURATION_CONSTANT;    % NOTE: This constant must be reflect
 %MISSING_CONSTANT_DESCRIPTION_AMENDMENT = sprintf('A value of %g refers to that the original value was saturated, or that it was an average over at least one saturated value.', MISSING_CONSTANT);
 ROSETTA_NAIF_ID  = -226;     % Used for SPICE.
 %EAICD_FILE_NAME  = 'RO-IRFU-LAP-EAICD.PDF';    % NOTE: Must match EJ_rosetta.delivery.create_DOCINFO.m (EJ's code).
+DEBUG_ON = 1;
+
+
+
+% Set policy for errors/warning
+% (1) when failing to generate a file, 
+% (2) when LBL files are (believed to be) inconsistent with TAB files.
+if DEBUG_ON
+    GENERATE_FILE_FAIL_POLICY = 'message+stack trace';
+    
+    GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'error';
+    AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
+else
+    GENERATE_FILE_FAIL_POLICY = 'message';
+    %GENERATE_FILE_FAIL_POLICY = 'nothing';    % Somewhat misleading. Something may still be printed.
+    
+    GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'warning';
+    AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
+end
 
 
 
@@ -265,8 +267,7 @@ for i = 1:length(stabindex)
         % Read the CALIB1 LBL file
         %--------------------------
         [KvlLblCalib1, Calib1LblSs] = createLBL.read_LBL_file(...
-            index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST, ...
-            index(iIndexFirst).probe);
+            index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST);
 
         
         
@@ -434,11 +435,11 @@ for i = 1:length(stabindex)
             clear   ocl
         end
         
-        createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LblData, generalTabLblInconsistencyPolicy);
+        createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LblData, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         clear   LblData
         
     catch exception
-        createLBL.exception_message(exception, generateFileFailPolicy);
+        createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY);
         fprintf(1,'lapdog: Skipping LBL file (tabindex)index - Continuing\n');
     end    % try-catch
 end    % for
@@ -490,7 +491,7 @@ for i = 1:length(blockTAB)
     LblData.OBJTABLE.OBJCOL_list = ocl;
     clear   ocl
     
-    createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LblData, generalTabLblInconsistencyPolicy);
+    createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LblData, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
     clear   LblData
     
 end   % for
@@ -505,10 +506,9 @@ end   % for
 if generatingDeriv1
     for i = 1:length(san_tabindex)
         try
-            tabLblInconsistencyPolicy = generalTabLblInconsistencyPolicy;   % Default value, unless overwritten for specific data file types.
+            tabLblInconsistencyPolicy = GENERAL_TAB_LBL_INCONSISTENCY_POLICY;   % Default value, unless overwritten for specific data file types.
             
             tabFilename = san_tabindex(i).filename;
-            lblFilename = strrep(tabFilename, 'TAB', 'LBL');
             
             mode = tabFilename(end-6:end-4);
             probeNbr = index(san_tabindex(i).iIndex).probe;     % Probe number
@@ -553,7 +553,7 @@ if generatingDeriv1
                     clear   KvlLbl
                     
                 catch exception
-                    createLBL.exception_message(exception, generateFileFailPolicy)
+                    createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY)
                     continue
                 end
 
@@ -563,8 +563,7 @@ if generatingDeriv1
                 %===============================================
                 
                 [KvlLblCalib1, Calib1LblSs] = createLBL.read_LBL_file(...
-                    index(san_tabindex(i).iIndex).lblfile, DONT_READ_HEADER_KEY_LIST, ...
-                    index(san_tabindex(i).iIndex).probe);
+                    index(san_tabindex(i).iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
                 
                 % Add DESCRIPTION?!!
                 KvlLbl = lib_shared_EJ.KVPL.overwrite_values(KvlLblCalib1, KvlLblAll, 'require preexisting keys');
@@ -589,7 +588,7 @@ if generatingDeriv1
                 mcDescrAmendment = sprintf('A value of %g means that the underlying time period which was averaged over contained at least one saturated value.', MISSING_CONSTANT);
                 
                 LblData.OBJTABLE = [];
-                samplingRateSecondsStr = lblFilename(end-10:end-9);
+                samplingRateSecondsStr = tabFilename(end-10:end-9);
                 % NOTE: Empirically, Calib1LblSs.DESCRIPTION is something technical, like "D_P1_TRNC_20_BIT_RAW_BIP". Keep?
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s %s SECONDS DOWNSAMPLED', Calib1LblSs.DESCRIPTION, samplingRateSecondsStr);
                 ocl = {};
@@ -831,7 +830,7 @@ if generatingDeriv1
                 LblData.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
                 clear   ocl1 ocl2
                 
-                tabLblInconsistencyPolicy = axsTabLblInconsistencyPolicy;   % NOTE: Different policy for A?S.LBL files.
+                tabLblInconsistencyPolicy = AxS_TAB_LBL_INCONSISTENCY_POLICY;   % NOTE: Different policy for A?S.LBL files.
                 
                 
                 
@@ -877,7 +876,7 @@ if generatingDeriv1
             
             
         catch exception
-            createLBL.exception_message(exception, generateFileFailPolicy)
+            createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY)
             fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
         end    % try-catch
         
@@ -902,11 +901,11 @@ if generatingDeriv1
             % der_struct.file{iFile} will contain paths to a DERIV-data set. May thus lead to overwriting LBL files in
             % DERIV data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
             % EDDER.
-            createLBL.write_A1P(KvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DONT_READ_HEADER_KEY_LIST, generalTabLblInconsistencyPolicy);
+            createLBL.write_A1P(KvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         end
         
     catch exception
-        createLBL.exception_message(exception, generateFileFailPolicy)
+        createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY)
         fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',exception.message);
     end
 end

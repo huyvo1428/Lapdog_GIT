@@ -96,6 +96,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolic
     %       CON: Absence of UNIT can otherwise be interpreted as (1) forgetting to set it, or (2) absence of unit.
     %       PRO: Shorter calls.
     %   PROPOSAL: Only include UNIT (in LBL) if caller sets .UNIT to value other than 'N/A'.
+    %
+    % PROPOSAL: PERMITTED_OBJTABLE_FIELD_NAMES should be exact required set (+assertion).
     
 
 
@@ -107,7 +109,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolic
     BYTES_PER_LINEBREAK   = 2;                 % Carriage return + line feed.
     
     % NOTE: Exclude COLUMNS, ROW_BYTES, ROWS.
-    PERMITTED_OBJTABLE_FIELD_NAMES = {'COLUMNS_consistency_check', 'ROW_BYTES_consistency_check', 'DESCRIPTION', 'OBJCOL_list'};
+    PERMITTED_OBJTABLE_FIELD_NAMES = {'DESCRIPTION', 'OBJCOL_list'};
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
     % NOTE: Includes both required and optional fields.
     PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT'};
@@ -141,7 +143,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolic
     % otherwise be discovered first when examining LBL files.
     %-----------------------------------------------------------------------------------
     if isempty(LblData.ConsistencyCheck.nTabColumns) || isempty(LblData.ConsistencyCheck.nTabBytesPerRow) || isempty(LblData.nTabFileRows)
-        error('ERROR: Trying to use empty value.')
+        error('ERROR: Trying to use empty value when disallowed.')
     end
     
     % ASSERTION: TAB file exists

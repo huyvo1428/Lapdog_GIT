@@ -72,11 +72,14 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % PROPOSAL: Do not build up PO_table.
 %===========================================================================================
 
+    global SATURATION_CONSTANT
+
     try
         warnings_settings = warning('query');
         warning('on', 'all')
         
-        MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in createLBL!!!
+        %MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in createLBL!!!
+        MISSING_CONSTANT = SATURATION_CONSTANT;    % NOTE: This constant must be reflected in the corresponding section in createLBL!!!
         MEMORY_USE_LOG_ENABLED = 0;  % Enable/disable memory usage log output. Printouts should be removed permanently some day.
         t_start = clock;             % NOTE: Not number of seconds, but [year month day hour minute seconds].
     

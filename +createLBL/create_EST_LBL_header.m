@@ -40,9 +40,7 @@ function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, pro
     START_TIME_list = {};
     STOP_TIME_list  = {};
     for j = 1:nSrcFiles   % For every source file (A1S, A2S)...
-        [KvlLblSrc, junk] = createLBL.read_LBL_file(...
-            calib1LblPathList{j}, deleteHeaderKeyList, ...
-            probeNbrList(j));
+        [KvlLblSrc, junk] = createLBL.read_LBL_file(calib1LblPathList{j}, deleteHeaderKeyList);
         
         kvlSrcList{end+1} = KvlLblSrc;            
         START_TIME_list{end+1} = lib_shared_EJ.KVPL.read_value(KvlLblSrc, 'START_TIME');

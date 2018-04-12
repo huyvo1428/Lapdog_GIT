@@ -8,10 +8,8 @@
 % deleteHeaderKeyList : Cell array of keys which are removed if found (must not be found).
 % 
 %
-function [KvlHeader, SimpleStruct] = read_LBL_file(filePath, deleteHeaderKeyList, probeNbr)
+function [KvlHeader, SimpleStruct] = read_LBL_file(filePath, deleteHeaderKeyList)
 %
-% PROPOSAL: Move keyword compatibility subsitution code (createLBL.compatibility_substitute_LBL_keys) into this function.
-%    NOTE: createLBL.compatibility_substitute_LBL_keys is only called from here.
 % PROPOSAL: Change name to something implying only reading CALIB LBL files?
 %
 % PROPOSAL: Remove all quotes from values.
@@ -29,6 +27,5 @@ function [KvlHeader, SimpleStruct] = read_LBL_file(filePath, deleteHeaderKeyList
     %    KvlHeader.values{i} = value(value ~= '"');    % Remove all quotes.
     %end
     
-    % KvlHeader = createLBL.compatibility_substitute_LBL_keys(KvlHeader, probeNbr);
     KvlHeader = lib_shared_EJ.KVPL.delete_keys(KvlHeader, deleteHeaderKeyList, 'may have keys');
 end

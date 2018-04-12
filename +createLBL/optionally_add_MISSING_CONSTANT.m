@@ -13,8 +13,13 @@
 % Initially created 2018-04-10 by Erik P G Johansson, IRF Uppsala.
 %
 function oc = optionally_add_MISSING_CONSTANT(addMissingConstant, missingConstant, oc, descriptionAmendment)
-    if addMissingConstant
-        
+    % ASSERTION
+    % IMPLEMENTATION NOTE: Assertion here to guard against caller confusing arguments with each other.
+    if ~(islogical(addMissingConstant) || ismember(addMissingConstant, [0,1]))
+        error('addMissingConstant=%g not true/false or 0/1.', addMissingConstant)
+    end    
+    
+    if addMissingConstant        
         % ASSERTION
         if oc.DESCRIPTION(end) ~= '.'
             error('Preexisting un-amended DESCRIPTION does not end with period.')
