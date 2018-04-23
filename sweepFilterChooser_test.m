@@ -11,7 +11,7 @@
 % dv = 1    --> e.g  212 (rare)
 % dv << 0.25 --> fine sweeps, (not implemented yet)
 %
-function [I_filtered, flag] = sweepFilterChooser_test(I,dv,V,flag)
+function [I_filtered, flag] = sweepFilterChooser_test(I,dv,V)
 
  flag=0; % so far nothing bad has happened.
 

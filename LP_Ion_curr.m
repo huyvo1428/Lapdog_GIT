@@ -212,15 +212,22 @@ if upper_comparison_bool
         %electron retarding current. Let's compute R^2 and see which fit was
         %objectively better.
         
-        q_ind = 1:l_ind;
+        q_ind = 1:floor(l_ind*0.75+0.5);
         I_diff_low   = I(q_ind) - polyval(P_Vb,V(q_ind)); %
         I_diff_upper = I(q_ind) - polyval(P_Vb_upper,V(q_ind));
         
+        Rsq_low_temp=  nansum((I_diff_low.^2))  /nansum(((I(q_ind)-nanmean(I(q_ind))).^2));
+        Rsq_upper_temp=nansum((I_diff_upper.^2))/nansum(((I(q_ind)-nanmean(I(q_ind))).^2));
         
-        Rsq_low   = 1 - nansum((I_diff_low.^2))  /nansum(((I(q_ind)-nanmean(I(q_ind))).^2));
-        Rsq_upper = 1 - nansum((I_diff_upper.^2))/nansum(((I(q_ind)-nanmean(I(q_ind))).^2));
+        Rsq_low   = 1 - Rsq_low_temp;
+        Rsq_upper = 1 - Rsq_upper_temp;
         
-        if Rsq_low < Rsq_upper  % Upper fit was much better, so let's pretend that's what we did all along.
+        
+        %this eq makes it so that if both fits are bad, rsq_low_temp is
+        %probably preferred, since it's longer and not as affected by 
+        %Ie_(exp). If both fits are good, than the Rsq_upper_temp is a very low value, and would not be heavily weighted against.
+        if Rsq_low_temp-Rsq_upper_temp/2 > Rsq_upper_temp       
+%        if Rsq_low < Rsq_upper  % Upper fit was much better, so let's pretend that's what we did all along.
             fprintf(1,'ion sweep region changed, Rsq_low was =%5.3e,Rsq_upper was =%5.3e ',Rsq_low,Rsq_upper)
             fprintf(1,'V & I = \n');
             fprintf(1,'%e,',V);

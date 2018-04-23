@@ -72,7 +72,7 @@ ip = ip(ind);
 
 
 % Look for zero crossing interval:
-if((min(ip) >= 0) || (max(ip) <= 0))
+if((min(ip) >= 0) || (max(ip) <= 0))s
     % No zero crossing in this case
     lastneg = NaN;
     firstpos = NaN;
@@ -91,15 +91,14 @@ else
 %         %AP.Vz=polyval(P,0);
 %                 
 %     else
-        ind_vz=min([max([lastneg-3;1]),firstpos]):max([min([lastneg+3;length(y)])],firstpos);%stay within limits, but use firstpositive location also. It might be before or after lastneg, depending on the noise
+        ind_vz=min([max([lastneg-3;1]),firstpos]):max([min([lastneg+3;length(ip)])],firstpos);%stay within limits, but use firstpositive location also. It might be before or after lastneg, depending on the noise
         %ind_vz=max([lastneg-3;1]):min([lastneg+3;length(ip)]);%stay within limits
         ind_vz(isnan(ip(ind_vz)))=[]; %remove nans
-        AP.Vz=interp1(ip(ind_vz),vb(ind_vz),0,'extrap');
+        AP.Vz=interp1(ip(ind_vz),vb(ind_vz),0,'linear','extrap');
         
 %        P=polyfit(ip(ind_vz),vb(ind_vz),1);
 %        AP.Vz=polyval(P,0);
         
-    end
     
     
 end

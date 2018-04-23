@@ -604,7 +604,7 @@ try
                 dstr1  = sprintf('%s, %s, %16s, %16s, %04i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf);
                 
                 
-                if isnan(DP(k).Vph_knee(1)
+                if isnan(DP(k).Vph_knee(1))
                 dstr2 = sprintf(' %14.7e, %14.7e', DP(k).Vph_knee(1),DP(k).Te_exp_belowVknee(1));
                 
                 
@@ -615,6 +615,8 @@ try
                 %                         dstrtot=strrep(dstrtot,'-Inf','-1000');
                 %                         dstrtot=strrep(dstrtot,'Inf','-1000');
                 drow_bytes = fprintf(awID,'%s\r\n',dstrtot);
+                end
+                
                 
             end
             fclose(awID);
