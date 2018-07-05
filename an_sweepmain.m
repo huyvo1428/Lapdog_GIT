@@ -245,6 +245,8 @@ try
         AP(len).vbinf    = [];
         AP(len).diinf    = [];
         AP(len).d2iinf   = [];
+        AP(len).Vz       = [];
+
 
         %EP = extra parameters, not from functions
 
@@ -507,7 +509,7 @@ try
         % DELIVERY) NOTIFY TONY ALLEN!
         fprintf(awID,strcat('START_TIME(UTC), STOP_TIME(UTC), START_TIME_OBT, STOP_TIME_OBT, Qualityfactor, SAA, Illumination, direction',...
         ', old.Vsi, old.Vx, Vsg, sigma_Vsg',...
-        ', old.Tph, old.Iph0, Vb_lastnegcurrent, Vb_firstposcurrent',...
+        ', old.Tph, old.Iph0, Vb_lastnegcurrent, Vz',...
         ', Vbinfl, dIinfl, d2Iinfl',...
         ', Iph0, Tph, Vsi, Vph_knee, sigma_Vph_knee, Te_linear, sigma_Te_linear, ne_linear, sigma_ne_linear',...
         ', ion_slope, sigma_ion_slope, ion_intersect, sigma_ion_intersect, e_slope, sigma_e_slope, e_intersect, sigma_e_intersect',...
@@ -532,7 +534,7 @@ try
 
             str1  = sprintf('%s, %s, %16s, %16s, %03i, %07.3f, %04.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
             str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs,  AP(k).vx,   DP(k).Vsg);
-            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).firstpos);
+            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).Vz);
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
             str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Iph0, DP(k).Tph, DP(k).Vsi(1), DP(k).Vph_knee, DP(k).Te, DP(k).ne);
             str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
@@ -593,10 +595,19 @@ try
             end
             
             
+         %   nanind=isnan(DP(:).Vph_knee(1));
+            
+            
+            
             for k=1:klen
                 
                 dstr1  = sprintf('%s, %s, %16s, %16s, %04i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf);
+                
+                
+                if isnan(DP(k).Vph_knee(1))
                 dstr2 = sprintf(' %14.7e, %14.7e', DP(k).Vph_knee(1),DP(k).Te_exp_belowVknee(1));
+                
+                
                 
                 dstrtot=strcat(dstr1,dstr2);
                 % NOTE: Can not replace NaN etc with string "-1000" directly, since DVAL-NG inteprets that as an integer (?), which
@@ -607,6 +618,8 @@ try
                 %                         dstrtot=strrep(dstrtot,'  -Inf','-1.0e3');
                 %                         dstrtot=strrep(dstrtot,'   Inf','-1.0e3');
                 drow_bytes = fprintf(awID,'%s\r\n',dstrtot);
+                end
+                
                 
             end
             fclose(awID);
