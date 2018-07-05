@@ -6,7 +6,7 @@ function [spiceDirectory] = paths()
 %   Code tries to extract the path to MICE from the SPICE metakernel file (!!)
 %   in the metakernel as an item under "PATH_VALUES" and "PATH_SYMBOLS" respectively.
 %   If the path is found it adds (two) derived MICE paths to the MATLAB path.
-%   If the path is not found, then only a warning is given (not error).
+%   If the path is not found, then only a log message is given (not warning/error).
 %   A caller can thus add MICE to the MATLAB path manually instead
 %   of having to construct a ~non-standard metakernel.
 %
@@ -116,7 +116,7 @@ if ~isempty(micePath)
     addpath([micePath '/lib']);
 else
     % NOTE: Useful not to give errors, so that Lapdog also works with metakernel without MICE path.
-    warning('Can not find MICE path in metakernel.')
+    fprintf('Notice: Can not find MICE path in metakernel. Requires MICE to have been added to the MATLAB path by the caller.\n')
 end
 
 % Add irfu-matlab path

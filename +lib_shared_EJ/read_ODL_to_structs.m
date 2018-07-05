@@ -91,13 +91,13 @@ function [s_str_lists, s_simple, end_text_line_list] = read_ODL_to_structs(file_
     % determine where in pds, lapdog etc. the original error lies (e.g. a ODL file produced by pds,
     % or lapdog code producing or I2L.LBL files, or A?S.LBL files, or EST.LBL files).
     if (~exist(file_path, 'file'))
-        error(sprintf('Can not find file: "%s"', file_path))
+        error('Can not find file: "%s"', file_path)
     end
     try
         % Read list of lines/rows. No parsing. 
         line_list = read_file_to_line_list(file_path);
     catch e
-        error(sprintf('Can not read file: %s', file_path))
+        error('Can not read file: %s', file_path)
     end
     
     %try

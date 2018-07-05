@@ -60,13 +60,15 @@
 %   Ex: Column description differences.
 %   Ex: DATA_SET_ID + DATA_SET_NAME
 %   Ex: PRODUCT_TYPE + PROCESSING_LEVEL_ID (level)
-%   Ex: ^EAICD_DESC, MISSING_CONSTANT
+%   Ex: ^EAICD_DESC/ARCHIVE_CONTENT_DESC, MISSING_CONSTANT
 %   Ex: PRODUCER_ID, PRODUCER_FULL_NAME, PRODUCER_INSTITUTION_NAME, INSTRUMENT_* (5 keywords)
+%   Ex: Ordering of header keywords.
+%       NOTE: Best done together with checking for forbidden keys (and enforcing quotes?) ==> Lapdog.
 %   --
 %   PROPOSAL:
 %       Lapdog/createLBL should handle:
 %           - Philosophically:
-%               - All metadata which naturally (could) vary between indivikernel_filedual data products (not just between PDS data sets)
+%               - All metadata which naturally (could) vary between individdual data products (not just between PDS data sets)
 %                   Ex: TODO-DECISION: Common within PDS data set, i.e. DATA_SET_ID/-NAME, 
 %               - All metadata close to the TAB contents.
 %           - Explicitly: 
@@ -82,7 +84,6 @@
 %       PROPOSAL: ~create_E2C2D2 should only be allowed to overwrite such placeholder values (assertion).
 %   PROPOSAL: createLBL should NEVER set unused/overwritten keywords (not even to placeholder values).
 %       ~create_E2C2D2 should add the keys instead and check for collisions.
-%
 %===================================================================================================
 
 executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
@@ -104,9 +105,9 @@ DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES'
 MISSING_CONSTANT = SATURATION_CONSTANT;    % NOTE: This constant must be reflected in the corresponding section in best_estimates!!!
 %MISSING_CONSTANT_DESCRIPTION_AMENDMENT = sprintf('A value of %g refers to that the original value was saturated, or that it was an average over at least one saturated value.', MISSING_CONSTANT);
 ROSETTA_NAIF_ID  = -226;     % Used for SPICE.
-%EAICD_FILE_NAME  = 'RO-IRFU-LAP-EAICD.PDF';    % NOTE: Must match EJ_rosetta.delivery.create_DOCINFO.m (EJ's code).
 INDENTATION_LENGTH = 4;
 DEBUG_ON = 1;
+%EAICD_FILE_NAME  = 'RO-IRFU-LAP-EAICD.PDF';    % NOTE: Must match EJ_rosetta.delivery.create_DOCINFO.m (EJ's code).
 
 
 

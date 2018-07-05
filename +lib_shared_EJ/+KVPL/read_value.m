@@ -4,7 +4,7 @@
 function value = read_value(kvl, key)
     iKv = find(strcmp(key, kvl.keys));
     if length(iKv) ~= 1
-        error(sprintf('Key-value list does not have exactly one of the specified key="%s".', key))
+        error('Key-value list does not have exactly one of the specified key="%s".', key)
     end
     value = kvl.values{iKv};
 end

@@ -86,6 +86,13 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %   PROPOSAL: Only include UNIT (in LBL) if caller sets .UNIT to value other than 'N/A'.
     %
     % PROPOSAL: PERMITTED_OBJTABLE_FIELD_NAMES should be exact required set (+assertion).
+    %
+    % PROPOSAL: Reorg into separate function which creates and returns the SSL with only the needed fields.
+    %           Add header using standard SSL function(s) (needs to be created).
+    %   PRO: Easier to modify SSL in standardized fashion for not yet written LBL files.
+    %       Ex: ^ARCHIVE_CONTENT_DESC for geometry LBL files. (Never read and modified, only created.)
+    %   CON/PROBLEM: How/where force quotes? Key reordering (relative to keys required for OBJECT=TABLE)?
+    %       PROPOSAL: Standard function for adding header keys.
     
 
     
@@ -516,7 +523,7 @@ function ssl = create_SSL_header(kvl, HeaderOptions)   % kvl = key-value list
         
         % ASSERTION
         if ~ischar(value)
-            error(sprintf('(key-) value is not a MATLAB string:\n key = "%s", fopen(fid) = "%s"', key, fopen(fid)))
+            error('(key-) value is not a MATLAB string:\n key = "%s", fopen(fid) = "%s"', key, fopen(fid))
         end
         
         if ismember(key, HeaderOptions.forceQuotesKeysList) && ~any('"' == value)

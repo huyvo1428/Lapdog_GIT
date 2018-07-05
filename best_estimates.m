@@ -841,7 +841,7 @@ function data = read_IxLH_file_bias_voltage_INTERNAL(file_path, probe_nbr, memor
     try
         fid = fopen(file_path, 'r');
         if fid < 0
-            error(sprintf('Can not read file: %s', file_path))
+            error('Can not read file: %s', file_path)
         end
         %fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
         
@@ -891,7 +891,7 @@ function data = read_IxLH_file_bias_voltage_INTERNAL(file_path, probe_nbr, memor
             fprintf(1, 'read_IxLH_file_bias_voltage_INTERNAL: End of function (catch clause) - calling "whos file_contents"\n')
             whos file_contents   % DEBUG
         end
-        error(sprintf('Error occurred when reading IxL/IxH file "%s".\n', file_path))
+        error('Error occurred when reading IxL/IxH file "%s".\n', file_path)
     end
 end
 

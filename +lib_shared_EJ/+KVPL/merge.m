@@ -16,7 +16,7 @@ function   kvlDest = merge(kvl1, kvl2)
 
     intersectingKeysList = intersect(kvl1.keys, kvl2.keys);
     if ~isempty(intersectingKeysList)
-        error(sprintf('ERROR: kvl1 and kvl2 have %i keys in common, e.g. key = "%s".', numel(intersectingKeysList), intersectingKeysList{1}));
+        error('ERROR: kvl1 and kvl2 have %i keys in common, e.g. key = "%s".', numel(intersectingKeysList), intersectingKeysList{1});
     end
     
     kvlDest = [];
