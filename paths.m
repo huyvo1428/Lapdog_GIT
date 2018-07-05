@@ -1,10 +1,16 @@
 function [spiceDirectory] = paths()
 % PATHS Gives paths to SPICE kernels directory and sets up MICE paths.
-%   spiceDirectory = path() returns the path to the parent directory of the
+%   spiceDirectory = paths() returns the path to the parent directory of the
 %   Rosetta SPICE kernels as a string.
 %   
-%   NOTE: It also extracts the paths to MICE and irfu-matlab from the metakernel file (!!)
-%   and adds them to the MATLAB path.
+%   Code tries to extract the path to MICE from the SPICE metakernel file (!!)
+%   in the metakernel as an item under "PATH_VALUES" and "PATH_SYMBOLS" respectively.
+%   If the path is found it adds (two) derived MICE paths to the MATLAB path.
+%   If the path is not found, then only a warning is given (not error).
+%   A caller can thus add MICE to the MATLAB path manually instead
+%   of having to construct a ~non-standard metakernel.
+%
+%   2018-04-12: Removed dependence on irfu-matlab, since Lapdog should not need it anymore.
 %--------------------------------------------------------------------------
 % Get SPICE kernels parent directory from metakernel file
 
@@ -76,7 +82,7 @@ end
 % Identify SPICE and MICE paths (by comparison to path symbols array)
 i_spk  = strcmpi(s, 'SPK');
 i_mice = strcmpi(s, 'MICE');
-i_irfu = strcmpi(s, 'irfu-matlab');
+%i_irfu = strcmpi(s, 'irfu-matlab');
 % 
 % 
 % 
@@ -85,7 +91,7 @@ i_irfu = strcmpi(s, 'irfu-matlab');
 
 spiceDirectory = cell2mat(cellstr(p(i_spk)));    % NOTE: Assigning the function's return value.
 micePath = cell2mat(cellstr(p(i_mice)));
-irfuPath = cell2mat(cellstr(p(i_irfu)));
+%irfuPath = cell2mat(cellstr(p(i_irfu)));
 
 % 
 % 
@@ -102,12 +108,19 @@ irfuPath = cell2mat(cellstr(p(i_irfu)));
 %--------------------------------------------------------------------------
 % Set up mice paths
 
+
 % Add mice paths
-addpath([micePath '/src/mice']);
-addpath([micePath '/lib']);
+% NOTE: If above code does not find MICE path in metakernel, then micePath will be an empty string (no errors).
+if ~isempty(micePath)
+    addpath([micePath '/src/mice']);
+    addpath([micePath '/lib']);
+else
+    % NOTE: Useful not to give errors, so that Lapdog also works with metakernel without MICE path.
+    warning('Can not find MICE path in metakernel.')
+end
 
 % Add irfu-matlab path
-addpath(irfuPath);
+%addpath(irfuPath);    % Path to irfu-matlab should not be needed anymore.
 
 
 end
