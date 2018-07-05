@@ -5,7 +5,7 @@
 %
 % ARGUMENTS
 % =========
-% keyOrderList : Cell array of strings.
+% keyOrderList : Cell array of unique strings.
 %
 %
 % NOTE: Does not assume any relationship between kvl.keys and keyOrderList

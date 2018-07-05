@@ -16,18 +16,21 @@
 % midRowsMaxLength   : Max length of rows which are not first or last.
 % lastRowMaxLength   : Max length of last row.
 % lineBreakStr       : String to be used to represent inserted line break.
-% errorPolicy        : String that says what to do when can not satisfy the rowMaxLength values.
-%   'Error'              : Error
-%   'Permit longer rows' : Permit longer rows, but only when necessary to.
+% errorPolicy        : String constant. Whether to trigger error when can not satisfy the rowMaxLength values.
+%   'Error'          : Error
+%   'Warning'        : Warning. Permit longer rows, but only when necessary to.
+%   'Nothing'        : No error/warning/log message. Permit longer rows, but only when necessary to.
+%                      NOTE: The caller can still give error/warning by analyzing the returned string list.
 %
 % NOTE: Row max lengths EXCLUDE the length of lineBreakStr.
 %
 %
 % RETURN VALUES
 % =============
-% str     : String including line breaks. NOTE: There will be no added line break at the end of the string. This is
-%           useful sometimes, eg. for quoting the entire string when writing ODL file keyword values.
-% strList : String as list of strings ("rows"), separated by the line breaks which are not included in these strings.
+% str            : String including line breaks. NOTE: There will be no added line break at the end of the string. This is
+%                  useful sometimes, eg. for quoting the entire string when writing ODL file keyword values.
+% strList        : String as list of strings ("rows"), separated by the line breaks which are not included in these strings.
+% firstRowLength : The actual length of the first row.
 %
 %
 % SPECIAL CASES
@@ -44,7 +47,7 @@
 %  * ~BUG: Algorithm can not take advantage of lastRowMaxLength > midRowsMaxLength. Last row will likely be shorter than
 %    necessary.
 %  * Strings already containing line breaks. The current implementation (2017-11-15) is not aware of preexisting line
-%    breaks and will ignore. The function is not meant to be used on such strings.
+%    breaks and will ignore them. The function is not meant to be used on such strings.
 %
 %
 % DEFINITION OF TERMS
@@ -66,11 +69,15 @@ function [str, strList] = break_text(str, firstRowMaxLength, midRowsMaxLength, l
 % PROPOSAL: Assertion for string containing line breaks.
 % PROPOSAL: Do not remove "unnecessary" whitespace. Policy?
 %   PRO: Potentially needed for DVAL to accept broken lines of INSTRUMENT_NAME = "ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE".
+%
+% warningPolicy      : String constant. Whether to trigger warning when can not satisfy the rowMaxLength values.
+%   'Warning on longer rows'
+%   'Permit longer rows'
 
     % ASSERTION: Check row max lengths.
     % Useful to check this in case the rox max lengths are automatically calculated (can go wrong).
     if ~all([firstRowMaxLength, midRowsMaxLength, lastRowMaxLength] > 0)
-        error('At least one row max length argument is non-positive.')
+        error('At least one row-max length argument is non-positive.')
     end
     
     
@@ -95,8 +102,7 @@ function [str, strList] = break_text(str, firstRowMaxLength, midRowsMaxLength, l
     if length(strList{end}) > lastRowMaxLength
         strList{end+1} = '';
     end
-        
-    
+
     % Convert list of strings to string with characters for line breaks.
     str = strList{1};
     for i = 2:numel(strList)
@@ -112,6 +118,7 @@ function [str1, str2] = line_break_once(str, maxRowLength, errorPolicy)
     
     LINE_BREAK_CANDIDATE_REGEXP = ' *';
     
+    % Set LBC1 to be a "virtual" LBC just before beginning of string.
     iLbc1Begin = 0;
     iLbc1End   = 0;    
     lbc2IsLast = false;
@@ -121,7 +128,7 @@ function [str1, str2] = line_break_once(str, maxRowLength, errorPolicy)
         iLbc2End   = iLbc1End + regexp(str(iLbc1End+1:end), LINE_BREAK_CANDIDATE_REGEXP, 'end',   'once');
         
         if isempty(iLbc2Begin)
-            % Use "virtual" LBC just after end of string.
+            % Set LBC2 to a "virtual" LBC just after end of string.
             iLbc2Begin = length(str) + 1;
             iLbc2End   = length(str) + 1;
             lbc2IsLast = true;
@@ -137,13 +144,15 @@ function [str1, str2] = line_break_once(str, maxRowLength, errorPolicy)
                 switch errorPolicy
                     case 'Error'
                         error('Can not line break string. Too far between potential line breaks.')
-                    case 'Permit longer rows'
+                    case 'Warning'
                         warning('Can not line break string. Too far between potential line breaks.')
-                        iLbcBeginToUse = iLbc2Begin;
-                        iLbcEndToUse   = iLbc2End;
+                    case 'Nothing'
+                        ;
                     otherwise
                         error('Can not interpret errorPolicy="%s"', errorPolicy)
                 end
+                iLbcBeginToUse = iLbc2Begin;
+                iLbcEndToUse   = iLbc2End;
             else
                 iLbcBeginToUse = iLbc1Begin;
                 iLbcEndToUse   = iLbc1End;

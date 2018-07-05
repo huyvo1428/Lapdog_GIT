@@ -12,8 +12,7 @@
 % =========
 % s_str_lists         : See lib_shared_EJ.read_ODL_to_structs.
 % endRowsList         : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
-% contentRowMaxLength : Maximum length of row, excluding line break characters.
-%                       70+2 charactes per row applies to Rosetta .CAT files.
+% contentRowMaxLength : Max row length, not counting line break.
 %
 %
 % Initially created 2016-07-07 by Erik P G Johansson, IRF Uppsala, Sweden.
@@ -91,33 +90,27 @@ function write_key_values(c, s, indentationLevel, rowMaxLength, lineBreak)
             % CASE: non-OBJECT key
             %======================
             
-            % Create string of whitespaces used for placing "=" so that all "=" line up.
-            postKeyPadding = repmat(' ', 1, maxNonObjectKeyLength-length(key));    
+            postKeyPaddingLength = maxNonObjectKeyLength-length(key);
             
-            % IMPLEMENTATION NOTE: Put together and write string to file without using fprintf/sprintf since the value
-            % string may contain characters interpreted by fprintf/sprintf. Code has previously generated warnings
-            % when using fprintf/sprintf but this avoids that.
+
+            [str, firstRowExcess] = compose_non_object_key_assignment(key, value, postKeyPaddingLength, indentationStr, rowMaxLength, lineBreak);
             
-            str1 = [indentationStr, key, postKeyPadding, ' = '];
-            str2 = lineBreak;
-            
-            %=======================================
-            % Line-break the value string, maybe...
-            %=======================================
-            % NOTE: To be on the safe side, only line-break keyword values which are both
-            % (1) quoted, and
-            % (2) not already line broken.
-            % NOTE: Line breaks DATA_SET_NAME = e.g. "ROSETTA-ORBITER STEINS RPCLAP 2 AST1 EDITED V1.0"
-            %       Not sure if OK.
-            if ~isempty(strfind(value, '"')) && isempty(strfind(value, lineBreak))
-                value = lib_shared_EJ.break_text(value, ...
-                    rowMaxLength-length(str1), ...    % NOTE: String contains beginning quote. Therefore does NOT need to subtract 1 from rowMaxLength.
-                    rowMaxLength, ...
-                    rowMaxLength, ...    % NOTE: String contains ending quote. Therefore does NOT need to subtract 1 from rowMaxLength.
-                    lineBreak, 'Permit longer rows');
+            if isfinite(firstRowExcess) && (firstRowExcess > 0)
+                % CASE: Line-breaking failed on first row.
+
+                % Try to shorten post-key padding length.                
+                postKeyPaddingLength = postKeyPaddingLength - firstRowExcess;
+                if postKeyPaddingLength < 0
+                    warning('Can not line break properly (first row). (1)')
+                    postKeyPaddingLength = 0;
+                end
+
+                % Try to line-break again.
+                [str, firstRowExcess] = compose_non_object_key_assignment(key, value, postKeyPaddingLength, indentationStr, rowMaxLength, lineBreak);
+                if firstRowExcess > 0
+                    warning('Can not line break properly (first row). (2)')
+                end
             end
-            str = [str1, value, str2];
-            %str = [indentationStr, key, postKeyPadding, ' = ', value, lineBreak];
             
             fwrite(c.fid, str);
             
@@ -133,4 +126,60 @@ function write_key_values(c, s, indentationLevel, rowMaxLength, lineBreak)
             error('Inconsistent combination of key, value and object.')
         end
     end
+end
+
+
+
+% Try to construct (potentially) line-broken string for key assignment.
+% Line-breaking will only give error if line-breaking on non-first rows fail.
+% The caller must handle line breaking error on first row.
+%
+% IMPLEMENTATION NOTE: This function exists so that the caller may handle some line-breaking errors by detecting error,
+% and then try again with modified input arguments.
+% Rows with a lot of post-key padding like
+%   'FILE_NAME                            = "LAP_20160629_000000_816_B1S.LBL"'
+% have had needed this.
+function [str, firstRowExcess] = compose_non_object_key_assignment(key, value, postKeyPaddingLength, indentationStr, rowMaxLength, lineBreak)
+    firstRowExcess = NaN;
+    
+    % Create string of whitespaces used for placing "=" so that all "=" line up.
+    postKeyPadding = repmat(' ', 1, postKeyPaddingLength);
+    
+    % IMPLEMENTATION NOTE: Put together and write string to file without using fprintf/sprintf since the value
+    % string may contain characters interpreted by fprintf/sprintf. Code has previously generated warnings
+    % when using fprintf/sprintf but this avoids that.
+    
+    str1 = [indentationStr, key, postKeyPadding, ' = '];
+    str2 = lineBreak;
+    
+    
+    
+    %=======================================
+    % Line-break the value string, maybe...
+    %=======================================
+    % NOTE: To be on the safe side, only line-break keyword values which are both
+    % (1) quoted, and
+    % (2) not already line broken.
+    % NOTE: Line breaks DATA_SET_NAME = e.g. "ROSETTA-ORBITER STEINS RPCLAP 2 AST1 EDITED V1.0"
+    %       Not sure if OK.
+    if ~isempty(strfind(value, '"')) && isempty(strfind(value, lineBreak))
+        firstRowMaxLength = rowMaxLength-length(str1);
+        
+        [value, rowList] = lib_shared_EJ.break_text(value, ...
+            firstRowMaxLength, ...    % NOTE: String contains beginning quote. Therefore does NOT need to subtract 1 from rowMaxLength.
+            rowMaxLength, ...
+            rowMaxLength, ...    % NOTE: String contains ending quote. Therefore does NOT need to subtract 1 from rowMaxLength.
+            lineBreak, 'Nothing');   % NOTE: Permit failed line breaking without error. ==> Check manually instead.
+        firstRowExcess = length(rowList{1}) - firstRowMaxLength;
+        
+        if ~isempty(rowList)
+            for iRow = 2:length(rowList)   % NOTE: Includes last row.
+                if length(rowList{iRow}) > rowMaxLength
+                    error('Failed to line break')
+                end
+            end
+        end
+    end    
+    
+    str = [str1, value, str2];
 end
