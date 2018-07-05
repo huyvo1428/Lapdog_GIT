@@ -11,7 +11,7 @@
 % tabLblInconsistencyPolicy : String. As defined in createLBL.create_OBJTABLE_LBL_file.
 %
 %
-function write_A1P(kvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, indentationLength, dontReadHeaderKeyList, tabLblInconsistencyPolicy)
+function write_A1P(kvlLblAll, HeaderOptions, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, indentationLength, dontReadHeaderKeyList, tabLblInconsistencyPolicy)
 %
 % PROPOSAL: Do not write LBL file. Return ~lblData instead.
 %   CON: Would be nice to have all dependence on "der_struct" here.
@@ -57,7 +57,7 @@ function write_A1P(kvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, 
         lblData.OBJTABLE.OBJCOL_list = ocl;
         clear   ocl
         
-        createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, lblData, tabLblInconsistencyPolicy);
+        createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, lblData, HeaderOptions, tabLblInconsistencyPolicy);
         clear   lblData
         
     end   % for
