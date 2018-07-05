@@ -27,6 +27,11 @@
 % 9. createLBL produces .LBL files for each generated file  (PDS archive
 %    specific file type)
 %
+% ARGUMENTS
+% =========
+% archpath        : Path to CALIB1 data set.
+% arhcID          : Mission phase abbreviation, e.g. ESC1, 1601.
+% missioncalendar : pds' mission calendar.
 
 function [] = lapdog(archpath, archID, missioncalendar)
 

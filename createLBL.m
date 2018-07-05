@@ -140,7 +140,7 @@ if strfind(basename, 'EDDER')
 elseif strfind(basename, 'DERIV')
     generatingDeriv1 = 1;
 else
-    error('Can not interpret whether generating (Lapdog''s) EDDER or (Lapdog''s) DERIV1 data set.')
+    error('Can not interpret whether generating (Lapdog''s) EDDER or (Lapdog''s) DERIV1 data set. basename=%s', basename)
 end
 
 
@@ -214,9 +214,9 @@ KvlLblAll = lib_shared_EJ.KVPL.add_kv_pair(KvlLblAll, 'MISSION_PHASE_NAME',     
 
 
 
-%=========================================================
-% Read kernel file - Use default file in Lapdog directory
-%=========================================================
+%=======================================================================================
+% Read kernel file - Use default file in Lapdog directory which the rest of Lapdog uses
+%=======================================================================================
 currentMFile = mfilename('fullpath');
 [lapdogDir, basenameJunk, extJunk] = fileparts(currentMFile);
 metakernelFile = fullfile(lapdogDir, 'metakernel_rosetta.txt');
@@ -224,7 +224,7 @@ if ~exist(metakernelFile, 'file')
     fprintf(1, 'Can not find kernel file "%s" (pwd="%s")', metakernelFile, pwd)
     % Call error too?
 end
-cspice_furnsh(metakernelFile); 
+cspice_furnsh(metakernelFile);
 
 
 

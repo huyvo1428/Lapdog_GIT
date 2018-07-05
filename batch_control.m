@@ -40,5 +40,5 @@ shortphase = archID;
 % 6. Output path
 % ====================================
 
-derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-5');
-derivedpath = strrep(derivedpath,'CALIB','DERIV');
+derivedpath = strrep(archivepath, 'RPCLAP-3', 'RPCLAP-5');
+derivedpath = strrep(derivedpath, 'CALIB',    'DERIV');

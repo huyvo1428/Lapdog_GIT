@@ -27,6 +27,12 @@
 % 9. createLBL produces .LBL files for each generated file  (PDS archive
 %    specific file type)
 %
+% ARGUMENTS
+% =========
+% archpath        : Path to EDITED data set.
+% archID          : Abbreviated mission phase name, e.g. PRL.
+% missioncalendar : Path to pds' mission calendar file.
+%
 function [] = edder_lapdog(archpath, archID, missioncalendar)
 
 
@@ -39,8 +45,8 @@ fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n')
 
 batch_control;
 
-derivedpath = strrep(archivepath,'RPCLAP-2','RPCLAP-99');
-derivedpath = strrep(derivedpath,'EDITED','EDDER');
+derivedpath = strrep(archivepath, 'RPCLAP-2', 'RPCLAP-99');
+derivedpath = strrep(derivedpath, 'EDITED',   'EDDER');
 
 % Set up PDS keywords etc:
 
@@ -50,7 +56,7 @@ preamble;
 
 % Load or, if not defined, generate index:
 % fprintf(1,'lapdog: load indices if existing...')
-dynampath= mfilename('fullpath'); %find path & remove/lapdog from string
+dynampath = mfilename('fullpath'); %find path & remove/lapdog from string
 dynampath = dynampath(1:end-13);
 
 fprintf(1,'lapdog: %s\n',dynampath)
