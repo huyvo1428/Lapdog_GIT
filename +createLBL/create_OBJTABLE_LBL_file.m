@@ -1,5 +1,5 @@
 %
-% Create LBL file for TAB file.
+% Create LBL file for an _existing_ TAB file.
 %
 % ("OBJTABLE" refers to "OBJECT = TABLE" in ODL files.)
 % Only for LBL files based on one OBJECT = TABLE section (plus header keywords).
@@ -9,11 +9,8 @@
 % =========
 % tabFilePath                           : Path to TAB file.
 % LblData                               : Struct with the following fields.
-%       .nTabFileRows
+%       .indentationLength              :
 %       .KvlHeader                      : 
-%       .ConsistencyCheck
-%           .nTabBytesPerRow            : Value from when writing TAB file. For double-checking.
-%           .nTabColumns                : Value from when writing TAB file. For double-checking.
 %       .OBJTABLE                       : (OBJTABLE = "OBJECT = TABLE" segment)
 %           .DESCRIPTION                : Description for entire table (PDS keyword).
 %           .OBJCOL_list{i}             : Struct containing fields corresponding to various column PDS keywords.
@@ -40,14 +37,10 @@
 %                             NOTE: Function may abort in case of 'warning'/'nothing' if it can not recover.
 %
 %
-% NOTE: LblData.ConsistencyCheck.* are not actually needed to complete the function's tasks. They are there
-% as consistency checks so that the caller can submit those values when they came from code creating
-% the TAB file, e.g. fprintf and when setting tabindex{:,6} (number of columns). The code will then
-% produce error/warning if they differ from what the other arguments suggest.
-%
 % NOTE: The caller is NOT supposed to surround key value strings with quotes, or units with </>.
 % The implementation should add that when appropriate.
-% NOTE: The implementation will add certain keywords to LblData.KvlHeader, and derive the values, and assume that caller has not set them. Error otherwise.
+% NOTE: The implementation will add certain keywords to LblData.KvlHeader, and derive the values, and assume that
+% the caller has not set them. Error otherwise (assertion).
 %
 % NOTE: Previous implementations have added a DELIMITER=", " field (presumably not PDS compliant) in
 % agreement with Imperial College/Tony Allen to somehow help them process the files
@@ -57,9 +50,8 @@
 %
 % NOTE: Not full general-purpose function for table files, since
 %       (1) Sorts initial top-level PDS keywords according to hard-coded sorting, adds quotes (to some at least) for hard-coded keywords.
-%       (2) Uses OBJTABLE_DELIMITER string.
-%       (3) Uses hardcoded indentation length
-%       (4) Does not permit FORMAT field, and there are probably other unsupported PDS keywords too.
+%       (2) ASSUMPTION: TAB files are constructed with a fixed length between columns (and no bytes before/after the first/last string).
+%       (3) Does not permit FORMAT field, and there are probably other PDS-keywords which are not supported by this code.
 %
 function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolicy)
     %
@@ -82,11 +74,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolic
     %                 PRODUCT_ID   = "2014-DEC-31orb"
     %         CON: Works fine as it is.
     %
-    % PROPOSAL: Abolish nTabBytesPerRow.
-    %   PRO: Same check performed via check against actual file size.
     % PROPOSAL: Read one TAB file row and count the number of strings ", ", infer number of columns, and use for
     %   consistency check.
-    %   PRO: Can basically abolish ConsistencyCheck.nTabColumns.
     %
     % TODO-DECISION: How handle UNIT (optional according to PDS)
     %   PROPOSAL: (1) Require caller to set .UNIT and have 'N/A' (or []) represent absence of unit.
@@ -100,7 +89,6 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolic
     % PROPOSAL: PERMITTED_OBJTABLE_FIELD_NAMES should be exact required set (+assertion).
     
 
-
     
     %===========
     % Constants
@@ -108,33 +96,37 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolic
     BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns.
     BYTES_PER_LINEBREAK   = 2;                 % Carriage return + line feed.
     
+    PERMITTED_LBLDATA_FIELD_NAMES  = {'indentationLength', 'KvlHeader', 'OBJTABLE'};
     % NOTE: Exclude COLUMNS, ROW_BYTES, ROWS.
     PERMITTED_OBJTABLE_FIELD_NAMES = {'DESCRIPTION', 'OBJCOL_list'};
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
     % NOTE: Includes both required and optional fields.
     PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT'};
-    INDENTATION_LENGTH             = 4;
+    
     %CONTENT_MAX_ROW_LENGTH         = 70;    % Excludes line break characters.
     CONTENT_MAX_ROW_LENGTH         = 1000;    % Excludes line break characters.
     
     % "Planetary Data Systems Standards Reference", Version 3.6, p12-11, section 12.3.4.
     % Applies to what PDS defines as identifiers, i.e. "values" without quotes.
     PDS_IDENTIFIER_PERMITTED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789';
-    
-    
-    
-    %disp(['Create LBL table for: ', tabFilePath]);     % DEBUG / log message.
-    
-    OBJTABLE_data = LblData.OBJTABLE;
-    
+
+
+
     % --------------------------------------------------------------
     % ASSERTION: Caller only uses permissible field names.
     % Useful when changing field names.
     % --------------------------------------------------------------
-    if any(~ismember(fieldnames(OBJTABLE_data), PERMITTED_OBJTABLE_FIELD_NAMES))
-        error('ERROR: Found illegal field name(s) in parameter "OBJTABLE_data".')
+    if ~isempty(setxor(fieldnames(LblData), PERMITTED_LBLDATA_FIELD_NAMES))
+        error('ERROR: Found illegal field name(s) in parameter "LblData".')
     end
+    if ~isempty(setxor(fieldnames(LblData.OBJTABLE), PERMITTED_OBJTABLE_FIELD_NAMES))
+        error('ERROR: Found illegal field name(s) in parameter "LblData.OBJTABLE".')
+    end
+
     
+    
+    OBJTABLE_data = LblData.OBJTABLE;
+
     %-----------------------------------------------------------------------------------
     % ASSERTION: Misc. argument check
     % -------------------------------
@@ -142,19 +134,18 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolic
     % mistakenly set to []. Therefore this check is useful. A mistake might
     % otherwise be discovered first when examining LBL files.
     %-----------------------------------------------------------------------------------
-    if isempty(LblData.ConsistencyCheck.nTabColumns) || isempty(LblData.ConsistencyCheck.nTabBytesPerRow) || isempty(LblData.nTabFileRows)
-        error('ERROR: Trying to use empty value when disallowed.')
-    end
-    
+%     if isempty(LblData.ConsistencyCheck.nTabColumns) || isempty(LblData.ConsistencyCheck.nTabBytesPerRow) || isempty(LblData.nTabFileRows)
+%         error('ERROR: Trying to use empty value when disallowed.')
+%     end
+
     % ASSERTION: TAB file exists
     if ~(exist(tabFilePath, 'file') && ~exist(tabFilePath, 'dir'))
         % CASE: There is no such non-directory TAB file.
         error('ERROR: Can not find TAB file "%s" (needed for consistency check).', tabFilePath)
     end
-    
-    
+
     %################################################################################################
-    
+
     % Extract useful information from TAB file path.
     [filePath, fileBasename, tabFileExt] = fileparts(tabFilePath);
     tabFilename = [fileBasename, tabFileExt];
@@ -211,30 +202,43 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolic
     % -------------------------------------------------------------------------
     % ASSERTIONS: Consistency checks on (1) nbr of columns, (2) bytes per row.
     % -------------------------------------------------------------------------
-    if (OBJTABLE_data.COLUMNS ~= LblData.ConsistencyCheck.nTabColumns)
-        msg =       sprintf('lblFilePath = %s\n', lblFilePath);
-        msg = [msg, sprintf('OBJTABLE_data.COLUMNS (derived)      = %i\n', OBJTABLE_data.COLUMNS)];
-        msg = [msg, sprintf('LblData.ConsistencyCheck.nTabColumns = %i\n', LblData.ConsistencyCheck.nTabColumns)];
-        msg = [msg,         'OBJTABLE_data.COLUMNS deviates from the consistency check value.'];
-        warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
-    end
-    if OBJTABLE_data.ROW_BYTES ~= LblData.ConsistencyCheck.nTabBytesPerRow
-        msg =       sprintf('lblFilePath = %s\n', lblFilePath);
-        msg = [msg, sprintf('OBJTABLE_data.ROW_BYTES (derived)        = %i\n', OBJTABLE_data.ROW_BYTES)];
-        msg = [msg, sprintf('LblData.ConsistencyCheck.nTabBytesPerRow = %i\n', LblData.ConsistencyCheck.nTabBytesPerRow)];
-        msg = [msg,         'OBJTABLE_data.ROW_BYTES deviates from the consistency check value.'];
-        
-        warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
-    end
+%     if (OBJTABLE_data.COLUMNS ~= LblData.ConsistencyCheck.nTabColumns)
+%         msg =       sprintf('lblFilePath = %s\n', lblFilePath);
+%         msg = [msg, sprintf('OBJTABLE_data.COLUMNS (derived)      = %i\n', OBJTABLE_data.COLUMNS)];
+%         msg = [msg, sprintf('LblData.ConsistencyCheck.nTabColumns = %i\n', LblData.ConsistencyCheck.nTabColumns)];
+%         msg = [msg,         'OBJTABLE_data.COLUMNS deviates from the consistency check value.'];
+%         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
+%     end
+%     if OBJTABLE_data.ROW_BYTES ~= LblData.ConsistencyCheck.nTabBytesPerRow
+%         msg =       sprintf('lblFilePath = %s\n', lblFilePath);
+%         msg = [msg, sprintf('OBJTABLE_data.ROW_BYTES (derived)        = %i\n', OBJTABLE_data.ROW_BYTES)];
+%         msg = [msg, sprintf('LblData.ConsistencyCheck.nTabBytesPerRow = %i\n', LblData.ConsistencyCheck.nTabBytesPerRow)];
+%         msg = [msg,         'OBJTABLE_data.ROW_BYTES deviates from the consistency check value.'];
+%         
+%         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
+%     end
+    
+    temp = dir(tabFilePath); tabFileSize = temp.bytes;
     
     % ASSERTION: TAB file size is consistent with (indirectly) ROWS*ROW_BYTES.
-    temp = dir(tabFilePath); tabFileSize = temp.bytes;
-    if tabFileSize ~= (OBJTABLE_data.ROW_BYTES * LblData.nTabFileRows)
+%     if tabFileSize ~= (OBJTABLE_data.ROW_BYTES * LblData.nTabFileRows)
+%         msg = sprintf(['TAB file size is not consistent with LBL file, "%s":\n', ...
+%             '    tabFileSize             = %g\n', ...
+%             '    OBJTABLE_data.ROW_BYTES = %g\n', ...
+%             '    LblData.nTabFileRows    = %g'], ...
+%             tabFilePath, tabFileSize, OBJTABLE_data.ROW_BYTES, LblData.nTabFileRows);
+%         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
+%     end
+
+    LblData.nTabFileRows = floor(tabFileSize / OBJTABLE_data.ROW_BYTES);
+    
+    % ASSERTION: TAB file size is consistent with bytes-per-row (integer multiple).
+    if rem(tabFileSize,OBJTABLE_data.ROW_BYTES) ~= 0
         msg = sprintf(['TAB file size is not consistent with LBL file, "%s":\n', ...
-            '    tabFileSize             = %g\n', ...
-            '    OBJTABLE_data.ROW_BYTES = %g\n', ...
-            '    LblData.nTabFileRows    = %g'], ...
-            tabFilePath, tabFileSize, OBJTABLE_data.ROW_BYTES, LblData.nTabFileRows);
+            '    tabFileSize                           = %g\n', ...
+            '    OBJTABLE_data.ROW_BYTES               = %g\n', ...
+            '    tabFileSize / OBJTABLE_data.ROW_BYTES = %g   (must be an integer)'], ...
+            tabFilePath, tabFileSize, OBJTABLE_data.ROW_BYTES, tabFileSize / OBJTABLE_data.ROW_BYTES);
         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
     end
     
@@ -258,21 +262,19 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, tabLblInconsistencyPolic
     
     LblData.KvlHeader = lib_shared_EJ.KVPL.merge(LblData.KvlHeader, KvlHeaderAdd);
     
-    %################################################################################################
     
+    
+    %=============================================
+    % Construct SSL representing the LBL contents
+    %=============================================
+    ssl = create_SSL_header(LblData.KvlHeader);
+    ssl = add_SSL_OBJECT(ssl, 'TABLE', create_OBJ_TABLE_content(OBJTABLE_data, LblData.nTabFileRows, BYTES_BETWEEN_COLUMNS));
+
+
+
     % Log message
     %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
-    
-    %=========================
-    % Write LBL file "header"
-    %=========================
-    ssl = create_SSL_header(LblData.KvlHeader);
-    
-    
-    
-    ssl = add_SSL_OBJECT(ssl, 'TABLE', create_OBJ_TABLE_content(OBJTABLE_data, LblData.nTabFileRows, BYTES_BETWEEN_COLUMNS));
-    
-    lib_shared_EJ.write_ODL_from_struct(lblFilePath, ssl, {}, INDENTATION_LENGTH, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
+    lib_shared_EJ.write_ODL_from_struct(lblFilePath, ssl, {}, LblData.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
 end
 
 

@@ -105,6 +105,7 @@ MISSING_CONSTANT = SATURATION_CONSTANT;    % NOTE: This constant must be reflect
 %MISSING_CONSTANT_DESCRIPTION_AMENDMENT = sprintf('A value of %g refers to that the original value was saturated, or that it was an average over at least one saturated value.', MISSING_CONSTANT);
 ROSETTA_NAIF_ID  = -226;     % Used for SPICE.
 %EAICD_FILE_NAME  = 'RO-IRFU-LAP-EAICD.PDF';    % NOTE: Must match EJ_rosetta.delivery.create_DOCINFO.m (EJ's code).
+INDENTATION_LENGTH = 4;
 DEBUG_ON = 1;
 
 
@@ -248,7 +249,8 @@ for i = 1:length(stabindex)
     try
         
         LblData = [];
-        LblData.ConsistencyCheck.nTabColumns = stabindex(i).nColumns;
+        LblData.indentationLength = INDENTATION_LENGTH;
+        %LblData.ConsistencyCheck.nTabColumns = stabindex(i).nColumns;
         % "LblData.ConsistencyCheck.nTabBytesPerRow" can not be set centrally here
         % since it is hardcoded for some TAB file types.
         
@@ -289,7 +291,7 @@ for i = 1:length(stabindex)
         
         
         
-        LblData.nTabFileRows = stabindex(i).nTabFileRows;
+        %LblData.nTabFileRows = stabindex(i).nTabFileRows;
         
         isSweep       = (tabFilename(30)=='S');
         isSweepTable  = (tabFilename(28)=='B') && isSweep;
@@ -310,7 +312,7 @@ for i = 1:length(stabindex)
             if (isSweepTable)
                 
                 LblData.OBJTABLE = [];
-                LblData.ConsistencyCheck.nTabBytesPerRow = 32;   % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
+                %LblData.ConsistencyCheck.nTabBytesPerRow = 32;   % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
                 ocl = [];
                 ocl{end+1} = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS',    'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
@@ -325,7 +327,7 @@ for i = 1:length(stabindex)
                 bxsTabFilename(28) = 'B';
 
                 LblData.OBJTABLE = [];
-                LblData.ConsistencyCheck.nTabBytesPerRow = stabindex(i).nTabBytesPerRow;
+                %LblData.ConsistencyCheck.nTabBytesPerRow = stabindex(i).nTabBytesPerRow;
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
                 ocl = [];
                 ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
@@ -366,17 +368,17 @@ for i = 1:length(stabindex)
             % HARD-CODED constants, to account for that these values are not set by other
             % Lapdog code as they are for other data products.
             %-----------------------------------------------------------------------------
-            if probeNbr ~= 3
-                LblData.ConsistencyCheck.nTabColumns     =  5;
-                LblData.ConsistencyCheck.nTabBytesPerRow = 83;
-            else
-                LblData.ConsistencyCheck.nTabColumns     =  6;
-                LblData.ConsistencyCheck.nTabBytesPerRow = 99;
-            end
-            if ~generatingDeriv1
-                LblData.ConsistencyCheck.nTabColumns     = LblData.ConsistencyCheck.nTabColumns     - 1;
-                LblData.ConsistencyCheck.nTabBytesPerRow = LblData.ConsistencyCheck.nTabBytesPerRow - 5;
-            end
+%             if probeNbr ~= 3
+%                 LblData.ConsistencyCheck.nTabColumns     =  5;
+%                 LblData.ConsistencyCheck.nTabBytesPerRow = 83;
+%             else
+%                 LblData.ConsistencyCheck.nTabColumns     =  6;
+%                 LblData.ConsistencyCheck.nTabBytesPerRow = 99;
+%             end
+%             if ~generatingDeriv1
+%                 LblData.ConsistencyCheck.nTabColumns     = LblData.ConsistencyCheck.nTabColumns     - 1;
+%                 LblData.ConsistencyCheck.nTabBytesPerRow = LblData.ConsistencyCheck.nTabBytesPerRow - 5;
+%             end
             
             %------------------------------------------------------------------------------
             % Recycle OBJCOL info/columns from CALIB LBL file (!) and then add one column.
@@ -454,8 +456,9 @@ end    % for
 for i = 1:length(blockTAB)
     
     LblData = [];
-    LblData.ConsistencyCheck.nTabColumns     =  3;
-    LblData.ConsistencyCheck.nTabBytesPerRow = 55;                   % NOTE: HARDCODED! TODO: Fix.
+    LblData.indentationLength = INDENTATION_LENGTH;
+    %LblData.ConsistencyCheck.nTabColumns     =  3;
+    %LblData.ConsistencyCheck.nTabBytesPerRow = 55;                   % NOTE: HARDCODED! TODO: Fix.
     
     
     
@@ -481,7 +484,7 @@ for i = 1:length(blockTAB)
     % LBL file: Create OBJECT TABLE section
     %=======================================
     
-    LblData.nTabFileRows = blockTAB(i).rcount;
+    %LblData.nTabFileRows = blockTAB(i).rcount;
     LblData.OBJTABLE = [];
     LblData.OBJTABLE.DESCRIPTION = 'BLOCKLIST DATA. START & STOP TIME OF MACRO BLOCK AND MACRO ID.';
     ocl = [];
@@ -516,9 +519,10 @@ if generatingDeriv1
             isEFieldMode  = (mode(1) == 'V');
             
             LblData = [];
-            LblData.nTabFileRows = san_tabindex(i).nTabFileRows;
-            LblData.ConsistencyCheck.nTabBytesPerRow = san_tabindex(i).nTabBytesPerRow;
-            LblData.ConsistencyCheck.nTabColumns     = san_tabindex(i).nTabColumns;
+            LblData.indentationLength = INDENTATION_LENGTH;
+            %LblData.nTabFileRows = san_tabindex(i).nTabFileRows;
+            %LblData.ConsistencyCheck.nTabBytesPerRow = san_tabindex(i).nTabBytesPerRow;
+            %LblData.ConsistencyCheck.nTabColumns     = san_tabindex(i).nTabColumns;
             
             
             
@@ -901,7 +905,8 @@ if generatingDeriv1
             % der_struct.file{iFile} will contain paths to a DERIV-data set. May thus lead to overwriting LBL files in
             % DERIV data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
             % EDDER.
-            createLBL.write_A1P(KvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            createLBL.write_A1P(KvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, INDENTATION_LENGTH, ...
+                DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         end
         
     catch exception

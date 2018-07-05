@@ -5,13 +5,13 @@
 % ARGUMENTS
 % =========
 % index                     : Lapdog's "index" variable.
-% der_struct                : Global variable "der_struct" defined by other Lapdog code. The function does not read
-%                             the global variable by itself.
+% der_struct                : Global variable "der_struct" defined by other Lapdog code. The function does NOT read
+%                             the corresponding global variable by itself.
 % dontReadHeaderKeyList     : Cell array of strings. PDS keys to not READ from source data set LBL file.
 % tabLblInconsistencyPolicy : String. As defined in createLBL.create_OBJTABLE_LBL_file.
 %
 %
-function write_A1P(kvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, dontReadHeaderKeyList, tabLblInconsistencyPolicy)
+function write_A1P(kvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, indentationLength, dontReadHeaderKeyList, tabLblInconsistencyPolicy)
 %
 % PROPOSAL: Do not write LBL file. Return ~lblData instead.
 %   CON: Would be nice to have all dependence on "der_struct" here.
@@ -35,12 +35,13 @@ function write_A1P(kvlLblAll, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, 
         kvlLbl = lib_shared_EJ.KVPL.overwrite_values(kvlLblCalib1, kvlLbl, 'require preexisting keys');
 
         lblData = [];
+        lblData.indentationLength = indentationLength;
         lblData.KvlHeader = kvlLbl;
         clear   kvlLbl   kvlLblCalib1
 
-        lblData.nTabFileRows                     = der_struct.rows(iFile);
-        lblData.ConsistencyCheck.nTabBytesPerRow = der_struct.bytes;
-        lblData.ConsistencyCheck.nTabColumns     = der_struct.cols(iFile);
+        %lblData.nTabFileRows                     = der_struct.rows(iFile);
+        %lblData.ConsistencyCheck.nTabBytesPerRow = der_struct.bytes;
+        %lblData.ConsistencyCheck.nTabColumns     = der_struct.cols(iFile);
         
         lblData.OBJTABLE = [];
         lblData.OBJTABLE.DESCRIPTION = 'ANALYZED PROBE 1 PARAMETERS';
