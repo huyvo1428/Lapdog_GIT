@@ -259,14 +259,14 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     KvlHeaderAdd = [];   % NOTE: Can not initialize with "struct(...)". That gives an unintended result due to a special interpretation for arrays.
     KvlHeaderAdd.keys   = {};
     KvlHeaderAdd.values = {};
-    KvlHeaderAdd = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlHeaderAdd, 'RECORD_TYPE',  'FIXED_LENGTH');   % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
-    KvlHeaderAdd = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlHeaderAdd, 'RECORD_BYTES', sprintf('%i',   OBJTABLE_data.ROW_BYTES));
-    KvlHeaderAdd = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlHeaderAdd, 'FILE_NAME',    sprintf('"%s"', lblFilename));    % Should be qouted.
-    KvlHeaderAdd = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlHeaderAdd, '^TABLE',       sprintf('"%s"', tabFilename));    % Should be qouted.
-    KvlHeaderAdd = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlHeaderAdd, 'PRODUCT_ID',   sprintf('"%s"', fileBasename));   % Should be qouted.
-    KvlHeaderAdd = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlHeaderAdd, 'FILE_RECORDS', sprintf('%i',   LblData.nTabFileRows));
+    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'RECORD_TYPE',  'FIXED_LENGTH');   % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
+    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'RECORD_BYTES', sprintf('%i',   OBJTABLE_data.ROW_BYTES));
+    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'FILE_NAME',    sprintf('"%s"', lblFilename));    % Should be qouted.
+    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, '^TABLE',       sprintf('"%s"', tabFilename));    % Should be qouted.
+    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'PRODUCT_ID',   sprintf('"%s"', fileBasename));   % Should be qouted.
+    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'FILE_RECORDS', sprintf('%i',   LblData.nTabFileRows));
     
-    LblData.KvlHeader = EJ_lapdog_shared.EJ_utils.KVPL.merge(LblData.KvlHeader, KvlHeaderAdd);
+    LblData.KvlHeader = EJ_lapdog_shared.utils.KVPL.merge(LblData.KvlHeader, KvlHeaderAdd);
     
     
     
@@ -280,7 +280,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
 
     % Log message
     %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
-    EJ_lapdog_shared.EJ_PDS_utils.write_ODL_from_struct(lblFilePath, ssl, {}, LblData.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
+    EJ_lapdog_shared.PDS_utils.write_ODL_from_struct(lblFilePath, ssl, {}, LblData.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
 end
 
 
@@ -506,7 +506,7 @@ function ssl = create_SSL_header(kvl, HeaderOptions)   % kvl = key-value list
     
     
     % Order keys.
-    kvl = EJ_lapdog_shared.EJ_utils.KVPL.order_by_key_list(kvl, HeaderOptions.keyOrderList);
+    kvl = EJ_lapdog_shared.utils.KVPL.order_by_key_list(kvl, HeaderOptions.keyOrderList);
 
     % ASSERTION: Check that there are no forbidden keys.
     for i=1:length(HeaderOptions.forbiddenKeysList)

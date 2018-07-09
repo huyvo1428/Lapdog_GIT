@@ -43,8 +43,8 @@ function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, pro
         [KvlLblSrc, junk] = createLBL.read_LBL_file(calib1LblPathList{j}, deleteHeaderKeyList);
         
         kvlSrcList{end+1} = KvlLblSrc;            
-        START_TIME_list{end+1} = EJ_lapdog_shared.EJ_utils.KVPL.read_value(KvlLblSrc, 'START_TIME');
-        STOP_TIME_list{end+1}  = EJ_lapdog_shared.EJ_utils.KVPL.read_value(KvlLblSrc, 'STOP_TIME');
+        START_TIME_list{end+1} = EJ_lapdog_shared.utils.KVPL.read_value(KvlLblSrc, 'START_TIME');
+        STOP_TIME_list{end+1}  = EJ_lapdog_shared.utils.KVPL.read_value(KvlLblSrc, 'STOP_TIME');
     end
 
     %=====================================================
@@ -52,10 +52,10 @@ function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, pro
     %=====================================================
     [junk, iSort] = sort(START_TIME_list);   iStart = iSort(1);
     [junk, iSort] = sort( STOP_TIME_list);   iStop  = iSort(end);
-    KvlOverwrite = EJ_lapdog_shared.EJ_utils.KVPL.add_copy_of_kv_pair( kvlSrcList{iStart}, KvlOverwrite, 'START_TIME');
-    KvlOverwrite = EJ_lapdog_shared.EJ_utils.KVPL.add_copy_of_kv_pair( kvlSrcList{iStart}, KvlOverwrite, 'SPACECRAFT_CLOCK_START_COUNT');
-    KvlOverwrite = EJ_lapdog_shared.EJ_utils.KVPL.add_copy_of_kv_pair( kvlSrcList{iStop},  KvlOverwrite, 'STOP_TIME');
-    KvlOverwrite = EJ_lapdog_shared.EJ_utils.KVPL.add_copy_of_kv_pair( kvlSrcList{iStop},  KvlOverwrite, 'SPACECRAFT_CLOCK_STOP_COUNT');
+    KvlOverwrite = EJ_lapdog_shared.utils.KVPL.add_copy_of_kv_pair( kvlSrcList{iStart}, KvlOverwrite, 'START_TIME');
+    KvlOverwrite = EJ_lapdog_shared.utils.KVPL.add_copy_of_kv_pair( kvlSrcList{iStart}, KvlOverwrite, 'SPACECRAFT_CLOCK_START_COUNT');
+    KvlOverwrite = EJ_lapdog_shared.utils.KVPL.add_copy_of_kv_pair( kvlSrcList{iStop},  KvlOverwrite, 'STOP_TIME');
+    KvlOverwrite = EJ_lapdog_shared.utils.KVPL.add_copy_of_kv_pair( kvlSrcList{iStop},  KvlOverwrite, 'SPACECRAFT_CLOCK_STOP_COUNT');
 
 
 
@@ -114,7 +114,7 @@ function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, pro
         end
     end
 
-    KvlEstHeader = EJ_lapdog_shared.EJ_utils.KVPL.overwrite_values(KvlEstHeader, KvlOverwrite, 'require preexisting keys');   % NOTE: Must do this for both nSrcFiles == 1, AND == 2.
+    KvlEstHeader = EJ_lapdog_shared.utils.KVPL.overwrite_values(KvlEstHeader, KvlOverwrite, 'require preexisting keys');   % NOTE: Must do this for both nSrcFiles == 1, AND == 2.
 
 end
 

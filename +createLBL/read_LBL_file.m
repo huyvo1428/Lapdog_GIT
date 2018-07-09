@@ -17,7 +17,7 @@ function [KvlHeader, SimpleStruct] = read_LBL_file(filePath, deleteHeaderKeyList
 
     % NOTE: LblSsl       keeps   quotes.
     %       SimpleStruct removes quotes.
-    [LblSsl, SimpleStruct] = EJ_lapdog_shared.EJ_PDS_utils.read_ODL_to_structs(filePath);   % Read CALIB LBL file.
+    [LblSsl, SimpleStruct] = EJ_lapdog_shared.PDS_utils.read_ODL_to_structs(filePath);   % Read CALIB LBL file.
     KvlHeader = [];
     KvlHeader.keys   = LblSsl.keys  (1:end-1);    % NOTE: LblSsl includes OBJECT = TABLE as last key-value pair.
     KvlHeader.values = LblSsl.values(1:end-1);
@@ -27,5 +27,5 @@ function [KvlHeader, SimpleStruct] = read_LBL_file(filePath, deleteHeaderKeyList
     %    KvlHeader.values{i} = value(value ~= '"');    % Remove all quotes.
     %end
     
-    KvlHeader = EJ_lapdog_shared.EJ_utils.KVPL.delete_keys(KvlHeader, deleteHeaderKeyList, 'may have keys');
+    KvlHeader = EJ_lapdog_shared.utils.KVPL.delete_keys(KvlHeader, deleteHeaderKeyList, 'may have keys');
 end

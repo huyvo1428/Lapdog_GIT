@@ -351,32 +351,32 @@ end
 KvlLblAll = [];
 KvlLblAll.keys = {};
 KvlLblAll.values = {};
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'PDS_VERSION_ID',            'PDS3');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'DATA_QUALITY_ID',           '"1"');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCT_TYPE',              '"DDR"');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'PROCESSING_LEVEL_ID',       '"5"');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PDS_VERSION_ID',            'PDS3');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'DATA_QUALITY_ID',           '"1"');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCT_TYPE',              '"DDR"');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PROCESSING_LEVEL_ID',       '"5"');
 
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
-%KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_ID',               producershortname);
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_HOST_ID',        'RO');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_ID',             'RPCLAP');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'TARGET_TYPE',               sprintf('"%s"', targettype));
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'MISSION_ID',                'ROSETTA');
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
-KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
+%KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_ID',               producershortname);
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_HOST_ID',        'RO');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_ID',             'RPCLAP');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'TARGET_TYPE',               sprintf('"%s"', targettype));
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'MISSION_ID',                'ROSETTA');
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
+KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
 % ^EAICD_DESC = Filename of file under DOCUMENT directory (or subdirectory under it) in final PDS-compliant data set.
 % NOT relative path, NOT data product name.
-%KvlLblAll = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLblAll, '^EAICD_DESC',               sprintf('"%s"', EAICD_FILE_NAME));
+%KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, '^EAICD_DESC',               sprintf('"%s"', EAICD_FILE_NAME));
 
 
 
@@ -444,12 +444,12 @@ for i = 1:length(stabindex)
         SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(stabindex(i).sctStop));
         
         KvlLbl = KvlLblAll;
-        KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   Calib1LblSs.START_TIME);        % UTC start time
-        KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    stabindex(i).utcStop(1:23));    % UTC stop  time
-        KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', Calib1LblSs.SPACECRAFT_CLOCK_START_COUNT);
-        KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
+        KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   Calib1LblSs.START_TIME);        % UTC start time
+        KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    stabindex(i).utcStop(1:23));    % UTC stop  time
+        KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', Calib1LblSs.SPACECRAFT_CLOCK_START_COUNT);
+        KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
 
-        KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.overwrite_values(KvlLblCalib1, KvlLbl, 'require preexisting keys');
+        KvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(KvlLblCalib1, KvlLbl, 'require preexisting keys');
         
         LblData.KvlHeader = KvlLbl;
         clear   KvlLbl KvlLblCalib1
@@ -636,10 +636,10 @@ for i = 1:length(blockTAB)
     START_TIME = datestr(blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
     STOP_TIME  = datestr(blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
     KvlLbl = KvlLblAll;
-    KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   START_TIME);       % UTC start time
-    KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
-    KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
-    KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
+    KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   START_TIME);       % UTC start time
+    KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
+    KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
+    KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
     LblData.KvlHeader = KvlLbl;
     clear   KvlLbl
     
@@ -704,7 +704,7 @@ if generatingDeriv1
                 
                 %TAB_file_info = dir(san_tabindex(i).path);
                 KvlLbl = KvlLblAll;
-                KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(KvlLbl, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
+                KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
                 try
                     %===============================================================
                     % NOTE: createLBL.create_EST_LBL_header(...)
@@ -735,7 +735,7 @@ if generatingDeriv1
                     index(san_tabindex(i).iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
                 
                 % Add DESCRIPTION?!!
-                KvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.overwrite_values(KvlLblCalib1, KvlLblAll, 'require preexisting keys');
+                KvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(KvlLblCalib1, KvlLblAll, 'require preexisting keys');
                 
                 LblData.KvlHeader = KvlLbl;
                 clear   KvlLbl KvlLblCalib1
