@@ -27,12 +27,12 @@ function write_A1P(kvlLblAll, HeaderOptions, index, der_struct, NO_ODL_UNIT, MIS
         [kvlLblCalib1, junk] = createLBL.read_LBL_file(index(iIndex).lblfile, dontReadHeaderKeyList);
         
         kvlLbl = kvlLblAll;
-        kvlLbl = lib_shared_EJ.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1});        % UTC start time
-        kvlLbl = lib_shared_EJ.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2});        % UTC stop time
-        kvlLbl = lib_shared_EJ.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', startStopTimes{3});
-        kvlLbl = lib_shared_EJ.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  startStopTimes{4});
+        kvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1});        % UTC start time
+        kvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2});        % UTC stop time
+        kvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', startStopTimes{3});
+        kvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  startStopTimes{4});
 
-        kvlLbl = lib_shared_EJ.KVPL.overwrite_values(kvlLblCalib1, kvlLbl, 'require preexisting keys');
+        kvlLbl = EJ_lapdog_shared.EJ_utils.KVPL.overwrite_values(kvlLblCalib1, kvlLbl, 'require preexisting keys');
 
         lblData = [];
         lblData.indentationLength = indentationLength;

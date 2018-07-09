@@ -10,7 +10,7 @@
 %
 % ARGUMENTS
 % =========
-% s_str_lists         : See lib_shared_EJ.read_ODL_to_structs.
+% s_str_lists         : See EJ_lapdog_shared.EJ_PDS_utils.read_ODL_to_structs.
 % endRowsList         : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
 % contentRowMaxLength : Max row length, not counting line break.
 %
@@ -165,7 +165,7 @@ function [str, firstRowExcess] = compose_non_object_key_assignment(key, value, p
     if ~isempty(strfind(value, '"')) && isempty(strfind(value, lineBreak))
         firstRowMaxLength = rowMaxLength-length(str1);
         
-        [value, rowList] = lib_shared_EJ.break_text(value, ...
+        [value, rowList] = EJ_lapdog_shared.EJ_generic_utils.break_text(value, ...
             firstRowMaxLength, ...    % NOTE: String contains beginning quote. Therefore does NOT need to subtract 1 from rowMaxLength.
             rowMaxLength, ...
             rowMaxLength, ...    % NOTE: String contains ending quote. Therefore does NOT need to subtract 1 from rowMaxLength.
