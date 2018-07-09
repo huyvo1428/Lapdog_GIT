@@ -84,7 +84,11 @@ function [s_str_lists, s_simple, end_text_line_list] = read_ODL_to_structs(file_
     %
     % PROPOSAL: Somehow keep distinguishing between ODL keys with/without quotes?!!
     % PROPOSAL: Also return data on the format of non-hierarchical list of key-value pairs?!
-    
+    %
+    % PROPOSAL: Reorg. code into (1) read file to cell array of rows, (2) interpret cell array of rows.
+    %   PRO: Can more easily write test code.
+    %   PRO: Can reuse file reading code.
+   
     % Check if file (not directory) exists.
     % -------------------------------------
     % It is useful for the user to know which ODL file is missing so that he/she can more quickly

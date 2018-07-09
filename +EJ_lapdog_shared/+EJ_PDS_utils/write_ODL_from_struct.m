@@ -13,6 +13,8 @@
 % s_str_lists         : See EJ_lapdog_shared.EJ_PDS_utils.read_ODL_to_structs.
 % endRowsList         : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
 % contentRowMaxLength : Max row length, not counting line break.
+%                       NOTE: This is not a rigorous line breaking for everything; only some things. In particular does
+%                       not even try to line break contents of endRowsList.
 %
 %
 % Initially created 2016-07-07 by Erik P G Johansson, IRF Uppsala, Sweden.
@@ -101,14 +103,14 @@ function write_key_values(c, s, indentationLevel, rowMaxLength, lineBreak)
                 % Try to shorten post-key padding length.                
                 postKeyPaddingLength = postKeyPaddingLength - firstRowExcess;
                 if postKeyPaddingLength < 0
-                    warning('Can not line break properly (first row). (1)')
+                    warning('Can not line break properly (keyword assignment, first row). (1)')
                     postKeyPaddingLength = 0;
                 end
 
                 % Try to line-break again.
                 [str, firstRowExcess] = compose_non_object_key_assignment(key, value, postKeyPaddingLength, indentationStr, rowMaxLength, lineBreak);
                 if firstRowExcess > 0
-                    warning('Can not line break properly (first row). (2)')
+                    warning('Can not line break properly (keyword assignment, first row). (2)')
                 end
             end
             
