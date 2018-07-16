@@ -40,5 +40,7 @@ shortphase = archID;
 % 6. Output path
 % ====================================
 
-derivedpath = strrep(archivepath, 'RPCLAP-3', 'RPCLAP-5');
-derivedpath = strrep(derivedpath, 'CALIB',    'DERIV');
+% Derive path to new dataset. Only apply strrep to the directory name, not the entire path.
+[temp1,temp2,temp3] = fileparts(archivepath); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'RPCLAP-3', 'RPCLAP-5'));
+[temp1,temp2,temp3] = fileparts(derivedpath); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'CALIB',   'DERIV'));
+
