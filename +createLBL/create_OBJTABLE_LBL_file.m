@@ -10,7 +10,9 @@
 % tabFilePath                           : Path to TAB file.
 % LblData                               : Struct with the following fields.
 %       .indentationLength              :
-%       .KvlHeader                      : 
+%       .HeaderKvl                      : Key-value list describing PDS keywords in the "ODL header". Some mandatory
+%                                         keywords are added automatically by the code and must not overlap with these
+%                                         (assertion).
 %       .OBJTABLE                       : (OBJTABLE = "OBJECT = TABLE" segment)
 %           .DESCRIPTION                : Description for entire table (PDS keyword).
 %           .OBJCOL_list{i}             : Struct containing fields corresponding to various column PDS keywords.
@@ -36,9 +38,11 @@
 %                             NOTE: Function may abort in case of 'warning'/'nothing' if it can not recover.
 %
 %
+% NOTES
+% =====
 % NOTE: The caller is NOT supposed to surround key value strings with quotes, or units with </>.
 % The implementation should add that when appropriate.
-% NOTE: The implementation will add certain keywords to LblData.KvlHeader, and derive the values, and assume that
+% NOTE: The implementation will add certain keywords to LblData.HeaderKvl, and derive the values, and assume that
 % the caller has not set them. Error otherwise (assertion).
 %
 % NOTE: Previous implementations have added a DELIMITER=", " field (presumably not PDS compliant) in
@@ -102,7 +106,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns.
     BYTES_PER_LINEBREAK   = 2;                 % Carriage return + line feed.
     
-    PERMITTED_LBLDATA_FIELD_NAMES  = {'indentationLength', 'KvlHeader', 'OBJTABLE'};
+    PERMITTED_LBLDATA_FIELD_NAMES  = {'indentationLength', 'HeaderKvl', 'OBJTABLE'};
     % NOTE: Exclude COLUMNS, ROW_BYTES, ROWS.
     PERMITTED_OBJTABLE_FIELD_NAMES = {'DESCRIPTION', 'OBJCOL_list'};
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
@@ -123,10 +127,12 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     % Useful when changing field names.
     % --------------------------------------------------------------
     if ~isempty(setxor(fieldnames(LblData), PERMITTED_LBLDATA_FIELD_NAMES))
-        error('ERROR: Found illegal field name(s) in parameter "LblData".')
+        fnl = fieldnames(LblData);
+        error('ERROR: Found illegal field name(s) in parameter "LblData". fieldnames(LblData) = {%s}', sprintf('"%s"  ', fnl{:}))
     end
     if ~isempty(setxor(fieldnames(LblData.OBJTABLE), PERMITTED_OBJTABLE_FIELD_NAMES))
-        error('ERROR: Found illegal field name(s) in parameter "LblData.OBJTABLE".')
+        fnl = fieldnames(LblData.OBJTABLE);
+        error('ERROR: Found illegal field name(s) in parameter "LblData.OBJTABLE". fieldnames(LblData.OBJTABLE): %s', sprintf('"%s  "', fnl{:}))
     end
 
     
@@ -256,24 +262,24 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %===================================================================
     % Add keywords to the LBL "header" (before first OBJECT statement).
     %===================================================================
-    KvlHeaderAdd = [];   % NOTE: Can not initialize with "struct(...)". That gives an unintended result due to a special interpretation for arrays.
-    KvlHeaderAdd.keys   = {};
-    KvlHeaderAdd.values = {};
-    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'RECORD_TYPE',  'FIXED_LENGTH');   % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
-    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'RECORD_BYTES', sprintf('%i',   OBJTABLE_data.ROW_BYTES));
-    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'FILE_NAME',    sprintf('"%s"', lblFilename));    % Should be qouted.
-    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, '^TABLE',       sprintf('"%s"', tabFilename));    % Should be qouted.
-    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'PRODUCT_ID',   sprintf('"%s"', fileBasename));   % Should be qouted.
-    KvlHeaderAdd = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlHeaderAdd, 'FILE_RECORDS', sprintf('%i',   LblData.nTabFileRows));
+    HeaderAddKvl = [];   % NOTE: Can not initialize with "struct(...)". That gives an unintended result due to a special interpretation for arrays.
+    HeaderAddKvl.keys   = {};
+    HeaderAddKvl.values = {};
+    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'RECORD_TYPE',  'FIXED_LENGTH');   % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
+    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'RECORD_BYTES', sprintf('%i',   OBJTABLE_data.ROW_BYTES));
+    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'FILE_NAME',    sprintf('"%s"', lblFilename));    % Should be qouted.
+    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, '^TABLE',       sprintf('"%s"', tabFilename));    % Should be qouted.
+    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'PRODUCT_ID',   sprintf('"%s"', fileBasename));   % Should be qouted.
+    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'FILE_RECORDS', sprintf('%i',   LblData.nTabFileRows));
     
-    LblData.KvlHeader = EJ_lapdog_shared.utils.KVPL.merge(LblData.KvlHeader, KvlHeaderAdd);
+    LblData.HeaderKvl = EJ_lapdog_shared.utils.KVPL.merge(LblData.HeaderKvl, HeaderAddKvl);
     
     
     
     %=============================================
     % Construct SSL representing the LBL contents
     %=============================================
-    ssl = create_SSL_header(LblData.KvlHeader, HeaderOptions);
+    ssl = create_SSL_header(LblData.HeaderKvl, HeaderOptions);
     ssl = add_SSL_OBJECT(ssl, 'TABLE', create_OBJ_TABLE_content(OBJTABLE_data, LblData.nTabFileRows, BYTES_BETWEEN_COLUMNS));
 
 
@@ -443,7 +449,7 @@ function assert_nonempty_unquoted(str)
     if isempty(str)
         error('String value is empty.')
     end
-        
+
     % ASSERTION: No quotes.
     if ~isempty(strfind(str, '"'))
         error('String value contains quotes.')

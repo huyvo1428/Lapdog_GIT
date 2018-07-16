@@ -36,7 +36,7 @@ function write_A1P(kvlLblAll, HeaderOptions, index, der_struct, NO_ODL_UNIT, MIS
 
         lblData = [];
         lblData.indentationLength = indentationLength;
-        lblData.KvlHeader = kvlLbl;
+        lblData.HeaderKvl = kvlLbl;
         clear   kvlLbl   kvlLblCalib1
 
         %lblData.nTabFileRows                     = der_struct.rows(iFile);

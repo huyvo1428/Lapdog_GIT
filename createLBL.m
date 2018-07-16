@@ -451,7 +451,7 @@ for i = 1:length(stabindex)
 
         KvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(KvlLblCalib1, KvlLbl, 'require preexisting keys');
         
-        LblData.KvlHeader = KvlLbl;
+        LblData.HeaderKvl = KvlLbl;
         clear   KvlLbl KvlLblCalib1
         
         
@@ -640,7 +640,7 @@ for i = 1:length(blockTAB)
     KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
     KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
     KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
-    LblData.KvlHeader = KvlLbl;
+    LblData.HeaderKvl = KvlLbl;
     clear   KvlLbl
     
     
@@ -718,7 +718,7 @@ if generatingDeriv1
                     calib1LblPathList = {index(iIndexSrc).lblfile};
                     KvlLbl = createLBL.create_EST_LBL_header(estTabPath, calib1LblPathList, probeNbrList, KvlLbl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
                     
-                    LblData.KvlHeader = KvlLbl;
+                    LblData.HeaderKvl = KvlLbl;
                     clear   KvlLbl
                     
                 catch exception
@@ -737,7 +737,7 @@ if generatingDeriv1
                 % Add DESCRIPTION?!!
                 KvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(KvlLblCalib1, KvlLblAll, 'require preexisting keys');
                 
-                LblData.KvlHeader = KvlLbl;
+                LblData.HeaderKvl = KvlLbl;
                 clear   KvlLbl KvlLblCalib1
                 
             end   % if-else
