@@ -46,8 +46,9 @@ fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n')
 batch_control;
 
 % Derive path to new dataset. Only apply strrep to the directory name, not the entire path.
-[temp1,temp2,temp3] = fileparts(archivepath); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'RPCLAP-2', 'RPCLAP-99'));
-[temp1,temp2,temp3] = fileparts(derivedpath); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'EDITED',   'EDDER'));
+% Need to remove trailing slash, otherwise fileparts (+strrep+fullfile) does not work as intended.
+[temp1,temp2,temp3] = fileparts(regexprep(archivepath, '/$', '')); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'RPCLAP-2', 'RPCLAP-99'));
+[temp1,temp2,temp3] = fileparts(regexprep(derivedpath, '/$', '')); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'EDITED',   'EDDER'));
 
 % Set up PDS keywords etc:
 
