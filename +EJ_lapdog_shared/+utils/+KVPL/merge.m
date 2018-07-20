@@ -2,7 +2,7 @@
 % (1) Assumes that kvl1 and kvl2 have no keys in common (error otherwise), and
 % (2) return key-value pair list with the key-value pairs of kvl1 and kvl2 combined.
 %
-% NOTE: Compare KVPL.overwrite_values
+% NOTE: Compare EJ_lapdog_shared.utils.KVPL.overwrite_values.
 %
 % function kvlDest = merge(kvl1, kvl2)
 function   kvlDest = merge(kvl1, kvl2)

@@ -59,10 +59,10 @@
 function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInconsistencyPolicy)
     %
     % NOTE: CONCEIVABLE LBL FILE SPECIAL CASES that may have different requirements:
-    %    Data measurement files (DATA/)
-    %    Block lists   (Does require SPACECRAFT_CLOCK_START_COUNT etc.)
-    %    Geometry files
-    %    INDEX.LBL   => Does not require SPACECRAFT_CLOCK_START_COUNT etc.
+    %    - Data files (DATA/)
+    %    - Block lists   (Does require SPACECRAFT_CLOCK_START_COUNT etc.)
+    %    - Geometry files
+    %    - INDEX.LBL   => Does not require SPACECRAFT_CLOCK_START_COUNT etc.
     %
     % PROPOSAL: Only set/require keys that are common for all OBJECT=TABLE files (ODL standard, not PDS standard).
     %     PROPOSAL: Different requirements for different LBL files can be implemented in the form of wrapping functions.
@@ -476,7 +476,7 @@ end
 
 
 
-% Create SSL for the "header" (before the OBJECT = TABLE).
+% Create SSL consisting of "header" only (section before the OBJECT = TABLE).
 %
 % (1) Orders the keys
 % (2) Add quotes to specific, selected key values (if not already quoted).
@@ -500,7 +500,7 @@ function ssl = create_SSL_header(kvl, HeaderOptions)   % kvl = key-value list
     %
     % PROPOSAL: Determine which keywords should or should not have quotes. Force parameter values to not have quotes.
     %    CON: Another long list which might not capture all keywords.
-    
+
     % ASSERTION: Parameter error check
     if isempty(kvl.keys)                    % Not sure why checks for this specifically. Previously checked before calculating maxKeyLength.
         error('kvl.keys is empty.')
@@ -508,9 +508,9 @@ function ssl = create_SSL_header(kvl, HeaderOptions)   % kvl = key-value list
     if length(unique(kvl.keys)) ~= length(kvl.keys)
         error('Found doubles among the keys/ODL attribute names.')
     end
-    
-    
-    
+
+
+
     % Order keys.
     kvl = EJ_lapdog_shared.utils.KVPL.order_by_key_list(kvl, HeaderOptions.keyOrderList);
 
@@ -526,12 +526,12 @@ function ssl = create_SSL_header(kvl, HeaderOptions)   % kvl = key-value list
     for j = 1:length(kvl.keys)
         key   = kvl.keys{j};
         value = kvl.values{j};
-        
+
         % ASSERTION
         if ~ischar(value)
             error('(key-) value is not a MATLAB string:\n key = "%s", fopen(fid) = "%s"', key, fopen(fid))
         end
-        
+
         if ismember(key, HeaderOptions.forceQuotesKeysList) && ~any('"' == value)
             kvl.values{j} = ['"', value, '"'];
         end

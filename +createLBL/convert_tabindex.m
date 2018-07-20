@@ -20,6 +20,8 @@
 % Could not find any occurences of error message in any of the lap_agility logs (covering time interval 2014-06-13 -- 2016-06-16). /2016-06-16
 % NOTE: Old code contained precautions for the cases that tabindex was empty. Why? Remove? Assertion?
 function stabindex = convert_tabindex(tabindex)
+    % PROPOSAL: Assertions on content of tabindex (every record).
+    % PROPOSAL: Remove fields that are not used.
 
     % (Not assertion)
     if isempty(tabindex)
@@ -43,9 +45,9 @@ function stabindex = convert_tabindex(tabindex)
         'iIndexLast',      tabindex(:,9), ...   % Index into "index". Change name?
         'utcStop',         tabindex(:,4), ...
         'sctStop',         tabindex(:,5), ...
-        'nTabFileRows',    tabindex(:,6), ...
-        'nColumns',        tabindex(:,7), ...
-        'nTabBytesPerRow', tabindex(:,8) ...
+        'nColumns',        tabindex(:,7) ...    % Used for sweep tables, IxS (varying number of columns).
         );
+        %'nTabFileRows',    tabindex(:,6), ...   % Not used anymore (in createLBL).
+        %'nTabBytesPerRow', tabindex(:,8) ...    % Not used anymore (in createLBL).
 
 end

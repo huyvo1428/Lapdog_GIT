@@ -1,5 +1,5 @@
 %
-% Modify a column description struct to include a MISSING_CONSTANT.
+% Conditionally modify a LBL column description struct to include a MISSING_CONSTANT.
 %
 %
 % ARGUMENTS AND RETURN VALUES
@@ -20,7 +20,7 @@ function oc = optionally_add_MISSING_CONSTANT(addMissingConstant, missingConstan
     end    
     
     if addMissingConstant        
-        % ASSERTION
+        % ASSERTION: Make sure previous DESCRIPTION text ends properly so that a continuation can be added.
         if oc.DESCRIPTION(end) ~= '.'
             error('Preexisting un-amended DESCRIPTION does not end with period.')
         end

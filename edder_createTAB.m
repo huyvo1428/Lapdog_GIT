@@ -110,7 +110,7 @@ try
     %{ ,8} number of bytes per row (including CR+LF)
     %{ ,9} last index number
     
-    % NOTE: This is not the only location where tabindex is set, even for fields set here.
+    % NOTE: This is not the only location where tabindex is set, not even for fields set here.
     tabindex{end+1,1} = filename; %% Let's remember all TAB files we create
     tabindex{end,2} = filenamep; %%their shortform name
     tabindex{end,3} = tabind(1); %% and the first index number
@@ -222,8 +222,6 @@ try
                 else
                     
                     for (j=1:scanlength)       %print
-   
-                        
                         bytes=fprintf(twID,'%s, %16.6f, %14i, %14i\r\n'...
                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
 %                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
@@ -366,15 +364,15 @@ try
 %                     ylabel('I');
 %                     title('unedited sweep');
 %                     grid on;
-%                     
-%                     
+%
+%
 %                     subplot(2,2,3)
 %                     plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,3)))
 %                     xlabel('Vp [V]');
 %                     ylabel('I');
 %                     title('unedited sweep, factor 3&3 99% confidence, 99%confidene ');
 %                     grid on;
-%                     
+%
 %                     subplot(2,2,4)
 %                     plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,2,0.8)),'b',potbias,curArray,'r')
 %                     %        plot(potbias,curArray);

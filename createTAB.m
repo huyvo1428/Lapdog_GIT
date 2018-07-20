@@ -451,7 +451,7 @@ delfile = 1;
                 potout(1:2:2*length(reltime)) = reltime;
                 potout(2:2:2*length(reltime)) = potbias;
 
-                b1= fprintf(twID, '%14.7e, %14.7e\r\n', potout);
+                b1= fprintf(twID, '%14.7e, %14.7e\r\n', potout);   % Create BxS TAB file.
 
 %
             end %if first iteration +bugfix
@@ -567,7 +567,7 @@ delfile = 1;
                   %LDL and macrospecific currents apply to all data in
                   %macroblock (and in a file). Saturation only applies to a
                   %sweep. any(satur_ind) can be 0 or 1 from one sweep to 
-                  %the next, so qf_tot can vary ±400 between rows
+                  %the next, so qf_tot can vary ï¿½400 between rows
                 % qf=qualityF+400*any(satur_ind);
                  qualityF= qualityF+400*any(satur_ind);
                  
@@ -583,7 +583,7 @@ delfile = 1;
             
             
             
-            b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
+            b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);   % Write timestamps (2x2=4) + quality flag.
             b3 = fprintf(twID2,', %14.7e',curArray.'); %some steps could be "NaN" values if LDL macro
             b4 = fprintf(twID2, '\r\n');
 

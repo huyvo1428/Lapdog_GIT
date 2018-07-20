@@ -84,6 +84,23 @@
 %       PROPOSAL: ~create_E2C2D2 should only be allowed to overwrite such placeholder values (assertion).
 %   PROPOSAL: createLBL should NEVER set unused/overwritten keywords (not even to placeholder values).
 %       ~create_E2C2D2 should add the keys instead and check for collisions.
+%
+% PROPOSAL: Write function for obtaining number of columns in TAB file.
+%   PRO: Can use for obtaining number of IxS columns ==> Does not need corresponding tabindex field.
+%       PRO: Makes code more reliable.
+%   --
+%   PRO: Can use as assertion in create_OBJTABLE_LBL_file.
+%   PRO: Can simultaneously obtain nBytesPerRow and derive nRows (with file size).
+%       ==> Somewhat better TAB file assertion in create_OBJTABLE_LBL_file than using just column descriptions.
+%   CON: Slower.
+%   CON: Slightly unsafe. Would need to search for strings ', '.
+%
+% PROPOSAL: Make code independent of stabindex.utcStop, stabindex.sctStop by just using
+%           index(stabindex.iIndexFirst/Last) instead.
+%   PRO: Makes code more reliable.
+%   TODO-NEED-INFO: Need info if correct understanding of index timestamps.
+%
+% PROPOSAL: Read STOP_TIME from the last CALIB1/EDITED1 file, just like Calib1LblSs does.
 %===================================================================================================
 
 executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
@@ -103,7 +120,7 @@ global N_FINAL_PRESWEEP_SAMPLES
 NO_ODL_UNIT       = [];
 ODL_VALUE_UNKNOWN = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown. Should not be used for official deliveries.
 DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
-MISSING_CONSTANT = SATURATION_CONSTANT;    % NOTE: This constant must be reflected in the corresponding section in best_estimates!!!
+MISSING_CONSTANT = SATURATION_CONSTANT;
 %MISSING_CONSTANT_DESCRIPTION_AMENDMENT = sprintf('A value of %g refers to that the original value was saturated, or that it was an average over at least one saturated value.', MISSING_CONSTANT);
 ROSETTA_NAIF_ID  = -226;     % Used for SPICE.
 INDENTATION_LENGTH = 4;
@@ -571,26 +588,6 @@ for i = 1:length(stabindex)
 %                 LblData.ConsistencyCheck.nTabBytesPerRow = LblData.ConsistencyCheck.nTabBytesPerRow - 5;
 %             end
             
-            %------------------------------------------------------------------------------
-            % Recycle OBJCOL info/columns from CALIB LBL file (!) and then add one column.
-            %------------------------------------------------------------------------------
-%             ocl = Calib1LblSs.OBJECT___TABLE{1}.OBJECT___COLUMN;
-%             for iOc = 1:length(ocl)
-%                 oc = ocl{iOc};   % Shorten variable
-% 
-%                 % Remove START_BYTE (automatically derived) and FORMAT (forbidden by createLBL.create_OBJTABLE_LBL_file).
-%                 oc = rmfield(oc, 'START_BYTE');
-%                 if isfield(oc, 'FORMAT')
-%                     oc = rmfield(oc, 'FORMAT');  % Fails if fields does not exist.
-%                 end
-%                 
-%                 % Add UNIT for UTC_TIME since it does not seem to have it already in the CALIB1 LBL file.
-%                 if strcmp(oc.NAME, 'UTC_TIME') && ~isfield(oc, 'UNIT')
-%                     oc.UNIT = 'SECONDS';
-%                 end
-%                 ocl{iOc} = oc;
-%                 clear   oc
-%             end
             ocl = {};
             ocl{end+1} = struct('NAME', 'UTC_TIME', 'DATA_TYPE', 'TIME',       'UNIT', 'SECONDS', 'BYTES', 26, 'DESCRIPTION', 'UTC TIME');
             ocl{end+1} = struct('NAME', 'OBT_TIME', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECONDS', 'BYTES', 16, 'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
