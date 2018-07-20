@@ -9,6 +9,8 @@
 producerfullname='ERIK P G JOHANSSON';
 producershortname='EJ';
 
+global N_FINAL_PRESWEEP_SAMPLES
+N_FINAL_PRESWEEP_SAMPLES = 16;    % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
 
 % 2. Control section
 % ==================
@@ -20,9 +22,9 @@ fix_geom_bug = 1;  % To change signs of position and velocity coordinates
 % =============
 
 % Info for labels
-lbltime = '2016-08-18';  % Label revision time
+lbltime   = '2018-07-20';  % Label revision time
 lbleditor = 'EJ';
-lblrev = 'Initial release';
+lblrev    = 'Initial release';
 
 % 4. Dataset selection and description
 % ====================================

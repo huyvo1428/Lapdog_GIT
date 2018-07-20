@@ -410,7 +410,7 @@ delfile = 1;
             end
 
             step1 = index(tabind(i)).pre_sweep_samples; %some steps are not in actual sweep, but number is listed in LBL file
-            step2 = find(diff(scantemp{1,4}(1:end)),1,'first');
+      %     step2 = find(diff(scantemp{1,4}(1:end)),1,'first');
 
       %     if step1 > 40 %foolproofing this after 24 June 2016 bug
       %        step1 = step2;

@@ -91,6 +91,7 @@ prevWarningsSettings = warning('query');
 warning('on', 'all')
 
 global SATURATION_CONSTANT
+global N_FINAL_PRESWEEP_SAMPLES
 
 %========================================================================================
 % "Constants"
@@ -470,23 +471,37 @@ for i = 1:length(stabindex)
         %=======================================
         if (isSweep)
             
-            %=========================
-            % CASE: Sweep files (xxS)
-            %=========================
+            %==============================
+            % CASE: Sweep files (IxS, BxS)
+            %==============================
             
             if (isSweepTable)
+                % CASE: BxS
                 
                 LblData.OBJTABLE = [];
                 %LblData.ConsistencyCheck.nTabBytesPerRow = 32;   % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
-                LblData.OBJTABLE.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
+                LblData.OBJTABLE.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);   % Remove ref. to old DESCRIPTION? (Ex: D_SWEEP_P1_RAW_16BIT_BIP)
                 ocl = [];
-                ocl{end+1} = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS',    'DESCRIPTION', 'LAPSED TIME (S/C CLOCK TIME) FROM FIRST SWEEP MEASUREMENT');
-                ocl{end+1} = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr),  DATA_DATA_TYPE{:},        'BYTES', 14, DATA_UNIT_VOLTAGE{:}, 'DESCRIPTION', VOLTAGE_BIAS_DESC);
+                oc1 = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS');
+                oc2 = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr),  DATA_DATA_TYPE{:},        'BYTES', 14, DATA_UNIT_VOLTAGE{:});
+                if ~generatingDeriv1
+                    oc1.DESCRIPTION = sprintf(['Elapsed time (s/c clock time) from first sweep measurement. ', ...
+                        'Negative time refers to samples taken just before the actual sweep for technical reasons. ', ...
+                        'A value of %g refers to that there was no such pre-sweep sample for any sweep in this command block.'], MISSING_CONSTANT);
+                    oc1.MISSING_CONSTANT = MISSING_CONSTANT;
+                    oc2.DESCRIPTION = sprintf('Bias voltage. A value of %g refers to that the bias voltage is unknown (all pre-sweep bias voltages).', MISSING_CONSTANT);
+                    oc2.MISSING_CONSTANT = MISSING_CONSTANT;
+                else
+                    oc1.DESCRIPTION = 'Elapsed time (s/c clock time) from first sweep measurement.';
+                    oc2.DESCRIPTION = VOLTAGE_BIAS_DESC;
+                end                
+                ocl{end+1} = oc1;
+                ocl{end+1} = oc2;
                 LblData.OBJTABLE.OBJCOL_list = ocl;
                 clear   ocl
 
             else
-                % CASE: Sweep data (not sweep description table)
+                % CASE: IxS
 
                 bxsTabFilename = tabFilename;
                 bxsTabFilename(28) = 'B';
@@ -494,28 +509,39 @@ for i = 1:length(stabindex)
                 LblData.OBJTABLE = [];
                 %LblData.ConsistencyCheck.nTabBytesPerRow = stabindex(i).nTabBytesPerRow;
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
-                ocl = [];
-                ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-                ocl{end+1} = struct('NAME',  'STOP_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-                ocl{end+1} = struct('NAME', 'START_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
-                ocl{end+1} = struct('NAME',  'STOP_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT)');
+                ocl = {};
+                oc1 = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'Sweep start UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF.');
+                oc2 = struct('NAME',  'STOP_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION',  'Sweep stop UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF.');
+                oc3 = struct('NAME', 'START_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION', 'Sweep start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimalpoint).');
+                oc4 = struct('NAME',  'STOP_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION',  'Sweep stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimalpoint).');
+                if ~generatingDeriv1
+                    oc1.DESCRIPTION = [oc1.DESCRIPTION, sprintf(' This effectively refers to the %g''th sample.', N_FINAL_PRESWEEP_SAMPLES+1)];
+                    oc3.DESCRIPTION = [oc3.DESCRIPTION, sprintf(' This effectively refers to the %g''th sample.', N_FINAL_PRESWEEP_SAMPLES+1)];
+                end
+                ocl(end+1:end+4) = {oc1, oc2, oc3, oc4};                
                 if generatingDeriv1
                     ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (best) to 999.');
                 end
-
-                % NOTE/BUG: The file referenced in DESCRIPTION may have the wrong name since files are renamed by other code before delivery.
-                ocl{end+1} = createLBL.optionally_add_MISSING_CONSTANT(...
-                    generatingDeriv1, MISSING_CONSTANT, ...
-                    struct(...
+                % NOTE: The file referenced in column DESCRIPTION is expected to have the wrong name since files are renamed by other code
+                % before delivery. The delivery code should already correct for this.
+                oc = struct(...
                         'NAME', sprintf('P%i_SWEEP_CURRENT', probeNbr), DATA_DATA_TYPE{:}, 'ITEM_BYTES', 14, DATA_UNIT_CURRENT{:}, ...
                         'ITEMS', stabindex(i).nColumns - length(ocl), ...
-                        'DESCRIPTION', sprintf([...
+                        'MISSING_CONSTANT', MISSING_CONSTANT);
+                        
+                if ~generatingDeriv1
+                    oc.DESCRIPTION = sprintf([...
                             'One current for each of the voltage potential sweep steps described by %s. ', ...
-                            'Each current is the average over one or multiple measurements on a single potential step.'], bxsTabFilename)), ...
-                    sprintf([...
-                        'A value of %g refers to ', ...
-                        '(1) that the underlying set of samples contained at least one saturated value, and/or ', ...
-                        '(2) there were no samples which were not disturbed by RPCMIP left to make an average over.'], MISSING_CONSTANT));
+                            'A value of %g refers to that no such sample was ever taken.'], bxsTabFilename, MISSING_CONSTANT);
+                else
+                    oc.DESCRIPTION = sprintf([...
+                            'One current for each of the voltage potential sweep steps described by %s. ', ...
+                            'Each current is the average over one or multiple measurements on a single potential step. ', ...
+                            'A value of %g refers to ', ...
+                            '(1) that the underlying set of samples contained at least one saturated value, and/or ', ...
+                            '(2) there were no samples which were not disturbed by RPCMIP left to make an average over.'], bxsTabFilename, MISSING_CONSTANT);
+                end                    
+                ocl{end+1} = oc;
                 
                 LblData.OBJTABLE.OBJCOL_list = ocl;
                 clear   ocl oc
