@@ -5,17 +5,17 @@
 %
 % RETURN VALUES
 % =============
-% NOTE: s_str_lists preserves correctly formatted, non-implicit ODL contents (keys/values) "exactly", while s_simple
+% NOTE: ssl preserves correctly formatted, non-implicit ODL contents (keys/values) "exactly", while sSimple
 % does not but is easier to work with when retrieving specific values (with hard-coded "logical locations") instead.
-% s_str_lists : 
+% ssl : 
 %    "string-lists struct": Struct with ODL keys/values as arrays of strings, ODL OBJECT statements
 %    recursively in list of such objects.
 %    - Preserves exact order of everything.
 %    - "OBJECT = ...", but not "END_OBJECT = ...", are represented as key-value pairs.
-%       s_str.keys    : Cell vector of key names as strings
-%       s_str.values  : Cell vector of key values as strings, including any surrounding quotes
-%       s_str.objects : Cell vector of (1) empty components, and (2) the same type of structure, recursively.
-% s_simple : 
+%       ssl.keys    : Cell vector of key names as strings
+%       ssl.values  : Cell vector of key values as strings, including any surrounding quotes
+%       ssl.objects : Cell vector of (1) empty components, and (2) the same type of structure, recursively.
+% sSimple : 
 %    "simple struct": Struct with fields corresponding to ODL keys and values corresponding
 %    to ODL values, converted to matlab numbers and strings without quotes.
 %    ODL OBJECTS segments are stored as similar structs (recursively).
@@ -31,20 +31,20 @@
 %      Therefore one has to always use one index to break out of the cell, even
 %      if there is only one "substructure", e.g. "s.OBJECT___TABLE{1}.OBJECT___COLUMN{5}".
 %    Example:
-%      s_sim.PDS_VERSION_ID
-%      s_sim.RECORD_TYPE
+%      s.PDS_VERSION_ID
+%      s.RECORD_TYPE
 %      ...
-%      s_sim.OBJECT___TABLE{1}.INTERCHANGE_FORMAT
-%      s_sim.OBJECT___TABLE{1}.ROWS
+%      s.OBJECT___TABLE{1}.INTERCHANGE_FORMAT
+%      s.OBJECT___TABLE{1}.ROWS
 %      ...
-%      s_sim.OBJECT___TABLE{1}.OBJECT___COLUMN
-%      s_sim.OBJECT___TABLE{1}.OBJECT___COLUMN{1}.NAME
-%      s_sim.OBJECT___TABLE{1}.OBJECT___COLUMN{1}.START_BYTE
+%      s.OBJECT___TABLE{1}.OBJECT___COLUMN
+%      s.OBJECT___TABLE{1}.OBJECT___COLUMN{1}.NAME
+%      s.OBJECT___TABLE{1}.OBJECT___COLUMN{1}.START_BYTE
 %      ...
-%      s_sim.OBJECT___TABLE{1}.OBJECT___COLUMN{2}.NAME
-%      s_sim.OBJECT___TABLE{1}.OBJECT___COLUMN{2}.START_BYTE
+%      s.OBJECT___TABLE{1}.OBJECT___COLUMN{2}.NAME
+%      s.OBJECT___TABLE{1}.OBJECT___COLUMN{2}.START_BYTE
 %      ...
-% end_text_line_list : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
+% endTestRowsList : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
 %
 %
 % ODL FORMAT HANDLING
@@ -73,7 +73,7 @@
 %
 % Initially created by Erik P G Johansson, IRF Uppsala, 2014-11-18.
 %
-function [s_str_lists, s_simple, end_text_line_list] = read_ODL_to_structs(file_path)
+function [ssl, sSimple, endTestRowsList] = read_ODL_to_structs(filePath)
     %
     % QUESTION: How handle ODL/PDS distinction?
     % QUESTION: How handle ODL format errors?
@@ -88,28 +88,28 @@ function [s_str_lists, s_simple, end_text_line_list] = read_ODL_to_structs(file_
     % PROPOSAL: Reorg. code into (1) read file to cell array of rows, (2) interpret cell array of rows.
     %   PRO: Can more easily write test code.
     %   PRO: Can reuse file reading code.
-   
+    
     % Check if file (not directory) exists.
     % -------------------------------------
     % It is useful for the user to know which ODL file is missing so that he/she can more quickly
     % determine where in pds, lapdog etc. the original error lies (e.g. a ODL file produced by pds,
     % or lapdog code producing or I2L.LBL files, or A?S.LBL files, or EST.LBL files).
-    if (~exist(file_path, 'file'))
-        error('Can not find file: "%s"', file_path)
+    if (~exist(filePath, 'file'))
+        error('Can not find file: "%s"', filePath)
     end
     try
         % Read list of lines/rows. No parsing. 
-        line_list = read_file_to_line_list(file_path);
+        rowStrList = read_file_to_line_list(filePath);
     catch e
-        error('Can not read file: %s', file_path)
+        error('Can not read file: %s', filePath)
     end
     
     %try
-        [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_list);
-        [s_str_lists, s_simple, junk] = construct_structs_INTERNAL(kv_list, 1);
+        [kvl, endTestRowsList] = read_keys_values_list_INTERNAL(rowStrList);
+        [ssl, sSimple, junk]   = construct_structs_INTERNAL(kvl, 1);
     %catch e
-        %error([e.message, sprintf(' File "%s"', file_path)])
-        %e.message = [e.message, sprintf(' File "%s"', file_path)];
+        %error([e.message, sprintf(' File "%s"', filePath)])
+        %e.message = [e.message, sprintf(' File "%s"', filePath)];
         %rethrow(e)
     %end
 end
@@ -119,29 +119,29 @@ end
 % Extract assignments VARIABLE_NAME = VALUE from list of lines.
 % Empty lines and "END" are permitted but are not represented in the returned result.
 % Makes not other interpretation.
-function [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_list)
+function [kvl, endTestRowsList] = read_keys_values_list_INTERNAL(rowStrList)
     
     LINE_BREAK = sprintf('\r\n');   % String that represents line break in value strings.
     
     % Preallocate cell arrays. As large as possibly needed.
-    kv_list.keys   = cell(length(line_list), 1);
-    kv_list.values = cell(length(line_list), 1);
+    kvl.keys   = cell(length(rowStrList), 1);
+    kvl.values = cell(length(rowStrList), 1);
     
-    i_kv = 0;
-    i_line = 0;
+    iKv = 0;
+    iRow = 0;
     
     %----------------------------------------------------------------
     function next_line()
-        i_line = i_line + 1;
-        if i_line > length(line_list)
+        iRow = iRow + 1;
+        if iRow > length(rowStrList)
             error('Reached end of file sooner than syntax implied.')
         end
-        line = line_list{i_line};
+        rowStr = rowStrList{iRow};
     end
     %----------------------------------------------------------------
     
     state = 'new_statement';    % Value represents "where the algorithm thinks it is", "what it expects".
-    line = [];    % Must define to prevent overloading with some MATLAB function.
+    rowStr = [];    % Must define to prevent overloading with some MATLAB function.
     while true
             
         switch state
@@ -150,7 +150,7 @@ function [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_lis
             case 'new_statement'
 
                 next_line();
-                line_trimmed = strtrim(line);
+                line_trimmed = strtrim(rowStr);
                 if strcmp(line_trimmed, '')
                     % CASE: Empty line
                     state = 'new_statement';
@@ -158,11 +158,11 @@ function [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_lis
                     % CASE: "END"
                     state = 'end';
                 else
-                    i_comment1 = regexp(line, '/\*', 'once');
-                    if ~isempty(i_comment1)
-                        i_comment2 = regexp(line(i_comment1+2:end), '\*/', 'once');   % NOTE: Star is escaped with backslash.
+                    iComment1 = regexp(rowStr, '/\*', 'once');
+                    if ~isempty(iComment1)
+                        i_comment2 = regexp(rowStr(iComment1+2:end), '\*/', 'once');   % NOTE: Star is escaped with backslash.
                         if isempty(i_comment2)
-                            error('Row %i: Can not find end of comment.', i_line);
+                            error('Row %i: Can not find end of comment.', iRow);
                         end
                         state = 'new_statement';
                     else                    
@@ -173,62 +173,62 @@ function [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_lis
             case 'begin_assignment'
                 
                 % CASE: key = value
-                i_eq = regexp(line, '=', 'once');
-                if isempty(i_eq)
-                    error('Row %i: Can not find the expected equals ("=") character on the same row.', i_line)
+                iEq = regexp(rowStr, '=', 'once');
+                if isempty(iEq)
+                    error('Row %i: Can not find the expected equals ("=") character on the same row.', iRow)
                 end
                 
-                key = strtrim(line(1:(i_eq-1)));
-                line = line((i_eq+1):end);
+                key = strtrim(rowStr(1:(iEq-1)));
+                rowStr = rowStr((iEq+1):end);
                 
-                i_quote1 = regexp(line, '"', 'once');
-                if isempty(i_quote1)
+                iQuote1 = regexp(rowStr, '"', 'once');
+                if isempty(iQuote1)
                     % CASE: Unquoted value
                     
-                    value = strtrim(line);
+                    value = strtrim(rowStr);
                     state = 'key_value_done';
                     
                 else                    
                     % CASE: Quoted value
                     
-                    line = line(i_quote1:end);   % INCLUDE THE QUOTE!
+                    rowStr = rowStr(iQuote1:end);   % INCLUDE THE QUOTE!
                     
-                    i_quote2 = 1+regexp(line(2:end), '"', 'once');   % Search for SECOND quote.
-                    if ~isempty(i_quote2)
+                    iQuote2 = 1+regexp(rowStr(2:end), '"', 'once');   % Search for SECOND quote.
+                    if ~isempty(iQuote2)
                         % CASE: Second quote on the SAME line.
-                        value = line(1:i_quote2);    % INCLUDE THE QUOTE
+                        value = rowStr(1:iQuote2);    % INCLUDE THE QUOTE
                         state = 'key_value_done';
                     else
                         % CASE: Second quote on OTHER line.
-                        value = line;
+                        value = rowStr;
                         state = 'quoted_value_nonfirst_line';
                     end
-                    
+
                 end
 
             case 'quoted_value_nonfirst_line'
 
                 next_line();
-                i_quote2 = regexp(line, '"', 'once');
-                if isempty(i_quote2)
-                    value_addition = line;
+                iQuote2 = regexp(rowStr, '"', 'once');
+                if isempty(iQuote2)
+                    valueAddition = rowStr;
                     state = 'quoted_value_nonfirst_line';
                 else
-                    value_addition = line(1:i_quote2);   % INCLUDE THE QUOTE
+                    valueAddition = rowStr(1:iQuote2);   % INCLUDE THE QUOTE
                     state = 'key_value_done';
                 end
-                value = [value, LINE_BREAK, value_addition];
+                value = [value, LINE_BREAK, valueAddition];
 
             case 'key_value_done'
 
-                i_kv = i_kv + 1;
-                kv_list.values{i_kv} = value;
-                kv_list.keys{i_kv}   = key;
+                iKv = iKv + 1;
+                kvl.values{iKv} = value;
+                kvl.keys{iKv}   = key;
                 state = 'new_statement';
                 
             case 'end'
                 
-                end_text_line_list = line_list(i_line+1:end);
+                endTestRowsList = rowStrList(iRow+1:end);
                 break   % Break the while loop.
                 
             otherwise
@@ -241,43 +241,45 @@ function [kv_list, end_text_line_list] = read_keys_values_list_INTERNAL(line_lis
     end
 
     % Shorten cell arrays to remove unused entries (since these are preallocated variables).
-    kv_list.keys   = kv_list.keys(1:i_kv);
-    kv_list.values = kv_list.values(1:i_kv);
+    kvl.keys   = kvl.keys(1:iKv);
+    kvl.values = kvl.values(1:iKv);
 end
 
 %###################################################################################################
 
 %-------------------------------------------------------------------------------------------------
-% Convert lists of key-value assignments (only strings; kv_list.keys, kv_list.values)
+% Convert lists of key-value assignments (only strings; kvl.keys, kvl.values)
 % from an ODL file into two structs, each representing the entire file contents.
 %
-% Assumes complete kv_list for entire file, but will only analyze the "tree"
-% which has its "root" at i_first, i.e. either
+% Assumes complete kvl for entire file, but will only analyze the "tree"
+% which has its "root" at iFirst, i.e. either
 % (1) the entire list of key-value pairs, or
 % (2) the sequence between (but excluding) "OBJECT = ..." and the corresponding "END_OBJECT = ...".
 %
 % RECURSIVE
 %
-% kv_list = Unaltered key-value list representing an entire ODL file, or a part of it.
-%           Only includes "assignments" (excludes empty rows, END).
-% i_first = Index into kv_list fields where to start. Not an OBJECT statement which triggered
-%           the call to the function.
+% ARGUMENTS
+% =========
+% kvl    : Unaltered key-value list representing an entire ODL file, or a part of it.
+%          Only includes "assignments" (excludes empty rows, END).
+% iFirst : Index into kvl fields where to start. Not an OBJECT statement which triggered
+%          the call to the function.
 % 
-% i_last = The last index into kv_list fields which was analyzed.
+% iLast  : The last index into kvl fields which was analyzed.
 %          Excludes any ENB_OBJECT which triggered ending the function.
 %-------------------------------------------------------------------------------------------------
-function [s_str_lists, s_simple, i_last] = construct_structs_INTERNAL(kv_list, i_first)
+function [ssl, sSimple, iLast] = construct_structs_INTERNAL(kvl, iFirst)
 
-    s_simple = [];
+    sSimple = [];
 
-    s_str_lists         = [];
-    s_str_lists.keys    = {};
-    s_str_lists.values  = {};
-    s_str_lists.objects = {};
+    ssl         = [];
+    ssl.keys    = {};
+    ssl.values  = {};
+    ssl.objects = {};
     
-    if length(kv_list.keys) < 1
+    if length(kvl.keys) < 1
         error('Too few (less than one) key-value assignments.')
-    elseif ~strcmp(kv_list.keys{1}, 'PDS_VERSION_ID') || ~strcmp(kv_list.values{1}, 'PDS3')
+    elseif ~strcmp(kvl.keys{1}, 'PDS_VERSION_ID') || ~strcmp(kvl.values{1}, 'PDS3')
         % Extra check for "PDS_VERSION_ID = PDS3".
         % "Planetary Data System Standards Reference", Version 3.6 specifies that the first key-value
         % should always be this. This is included to be more sure that the code will fail/error
@@ -286,73 +288,73 @@ function [s_str_lists, s_simple, i_last] = construct_structs_INTERNAL(kv_list, i
     end
     
     
-    i = i_first;     % Current index into kv_list.
+    i = iFirst;     % Current index into kvl.
     while true
         
-        key   = kv_list.keys{i};
-        value = kv_list.values{i};
+        key   = kvl.keys{i};
+        value = kvl.values{i};
         %disp(['Reconstructed line : ', key, ' === ', value])  % DEBUG
         
         if strcmp(key, 'OBJECT')
             
-            [ss_str_lists, ss_simple, i_last] = construct_structs_INTERNAL(kv_list, i+1);    % NOTE: RECURSIVE CALL.
+            [ss_str_lists, ss_simple, iLast] = construct_structs_INTERNAL(kvl, i+1);    % NOTE: RECURSIVE CALL.
             
-            i = i_last + 1;
+            i = iLast + 1;
             
             %--------------
             % Error checks
             %--------------
-            if ~strcmp(kv_list.keys{i}, 'END_OBJECT')
+            if ~strcmp(kvl.keys{i}, 'END_OBJECT')
                 error('Found OBJECT statement without corresponding END_OBJECT statement.')
             end
             OBJECT_value = value;
-            END_OBJECT_value = kv_list.values{i};
+            END_OBJECT_value = kvl.values{i};
             if ~strcmp(OBJECT_value, END_OBJECT_value)
                 error('"OBJECT = %s" and "END_OBJECT = %s" do not match.', OBJECT_value, END_OBJECT_value)
             end
             
             %-----------------
-            % Update s_simple
+            % Update sSimple
             %-----------------
             % IMPLEMENTATION NOTE: There might be multiple OBJECTs of the same kind,
             % e.g. OBJECT = TABLE. Must therefore add to a cell array.
             skey = ['OBJECT___', value];
-            if ~isfield(s_simple, skey)
-                s_simple.(skey) = {ss_simple};         % Start new cell array.
+            if ~isfield(sSimple, skey)
+                sSimple.(skey) = {ss_simple};         % Start new cell array.
             else
-                s_simple.(skey){end+1} = ss_simple;    % Add to existing cell array.
+                sSimple.(skey){end+1} = ss_simple;    % Add to existing cell array.
             end
             
             %---------------------
             % Update ss_str_lists
             %---------------------
-            s_str_lists.keys{end+1}    = key;
-            s_str_lists.values{end+1}  = value;
-            s_str_lists.objects{end+1} = ss_str_lists;
+            ssl.keys{end+1}    = key;
+            ssl.values{end+1}  = value;
+            ssl.objects{end+1} = ss_str_lists;
             
         %elseif sum(strcmp(key, {'END_OBJECT', 'END'}))
         elseif sum(strcmp(key, {'END_OBJECT'}))
             
-            % Make s_str_lists' fields COLUMN vectors.
-            s_str_lists.keys    = s_str_lists.keys(:);
-            s_str_lists.values  = s_str_lists.values(:);
-            s_str_lists.objects = s_str_lists.objects(:);
+            % Make ssl' fields COLUMN vectors.
+            ssl.keys    = ssl.keys(:);
+            ssl.values  = ssl.values(:);
+            ssl.objects = ssl.objects(:);
             
-            i_last = i-1;
+            iLast = i-1;
             return                 % NOTE: Exit function (recursive calls).
             
         else
             skey   = derive_struct_key(key);
             svalue = derive_struct_value(value);
-            s_simple.(skey) = svalue;
+            sSimple.(skey) = svalue;
             
-            s_str_lists.keys{end+1}    = key;
-            s_str_lists.values{end+1}  = value;
-            s_str_lists.objects{end+1} = [];
+            ssl.keys{end+1}    = key;
+            ssl.values{end+1}  = value;
+            ssl.objects{end+1} = [];
         end
         
-        if i == length(kv_list.keys)
-            i_last = i - 1;
+        if i == length(kvl.keys)
+            iLast = i - 1;
             return
         end
         i = i+1;        
@@ -410,18 +412,18 @@ end
 
 % Has not managed to make importdata och textscan work with
 % empty rows, CR+LF, without delimiter, keeping leading and trailing whitespace.
-% E.g. line_list = importdata(file_path, '\n');
+% E.g. rowStrList = importdata(filePath, '\n');
 %
 % Handles both CR+LF and LF as linebreak.
-function line_list = read_file_to_line_list(file_path)
+function rowStrList = read_file_to_line_list(filePath)
 % PROPOSAL: Separate function file?
 
-    line_list = {};
-    fid = fopen(file_path);
-    line = fgetl(fid);
-    while ischar(line)        
-        line_list{end+1} = line;
-        line = fgetl(fid);
+    rowStrList = {};
+    fid = fopen(filePath);
+    rowStr = fgetl(fid);
+    while ischar(rowStr)        
+        rowStrList{end+1} = rowStr;
+        rowStr = fgetl(fid);
     end
     fclose(fid);
 end
