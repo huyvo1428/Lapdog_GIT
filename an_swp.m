@@ -72,7 +72,7 @@ ip = ip(ind);
 
 
 % Look for zero crossing interval:
-if((min(ip) >= 0) || (max(ip) <= 0))s
+if((min(ip) >= 0) || (max(ip) <= 0))
     % No zero crossing in this case
     lastneg = NaN;
     firstpos = NaN;
