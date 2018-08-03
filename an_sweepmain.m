@@ -605,19 +605,19 @@ try
                 
                 
                 if isnan(DP(k).Vph_knee(1))
-                dstr2 = sprintf(' %14.7e, %14.7e', DP(k).Vph_knee(1),DP(k).Te_exp_belowVknee(1));
-                
-                
-                
-                dstrtot=strcat(dstr1,dstr2);
-                % NOTE: Can not replace NaN etc with string "-1000" directly, since DVAL-NG inteprets that as an integer (?), which
-                % is incompatible with DATA_TYPE=ASCII_REAL.  /Erik P G Johansson
-                dstrtot=strrep(dstrtot,'  0.0000000e+00','       -1.0e+03'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
-                %dstrtot=strrep(dstrtot,'  NaN','-1000');
-                dstrtot=strrep(dstrtot,'     NaN','-1.0e+03');
-                %                         dstrtot=strrep(dstrtot,'  -Inf','-1.0e3');
-                %                         dstrtot=strrep(dstrtot,'   Inf','-1.0e3');
-                drow_bytes = fprintf(awID,'%s\r\n',dstrtot);
+                    dstr2 = sprintf(' %14.7e, %14.7e', DP(k).Vph_knee(1),DP(k).Te_exp_belowVknee(1));
+                    
+                    
+                    
+                    dstrtot=strcat(dstr1,dstr2);
+                    % NOTE: Can not replace NaN etc with string "-1000" directly, since DVAL-NG inteprets that as an integer (?), which
+                    % is incompatible with DATA_TYPE=ASCII_REAL.  /Erik P G Johansson
+                    dstrtot=strrep(dstrtot,'  0.0000000e+00','       -1.0e+03'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
+                    %dstrtot=strrep(dstrtot,'  NaN','-1000');
+                    dstrtot=strrep(dstrtot,'     NaN','-1.0e+03');
+                    %                         dstrtot=strrep(dstrtot,'  -Inf','-1.0e3');
+                    %                         dstrtot=strrep(dstrtot,'   Inf','-1.0e3');
+                    drow_bytes = fprintf(awID,'%s\r\n',dstrtot);
                 end
                 
                 
@@ -632,7 +632,7 @@ try
             der_struct.cols(i)      =7;
             der_struct.an_ind_id(i) =an_ind(i);
             der_struct.timing(i,1:4)=timing;
-            der_struct.bytes=drow_bytes;
+            %der_struct.bytes=drow_bytes;    % I do not think I need this variable. drow_bytes is also not always set ==>bug. /Erik P G Johansson 2018-08-03
                       
         end
 
