@@ -43,10 +43,9 @@ len = length(an_ind);
 k=0;
 b=0;
 try    
-    
     for i=1:len
         
-        fout={};  %fout is the array that will be printed.fout{:,end} will be a boolean print check, but is first saved as a
+        fout=cell(0,13);  %fout is the array that will be printed.fout{:,end} will be a boolean print check, but is first saved as a
         
         %names, folders
         fname = tabindex{an_ind(i),1};
