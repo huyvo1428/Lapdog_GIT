@@ -65,16 +65,16 @@ fprintf(1,'lapdog: %s\n',dynampath)
 
 indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
 fp = fopen(indexfile,'r');
-if(fp > 0)
-     fclose(fp);
-     load(indexfile);
-else
+%if(fp > 0)
+%     fclose(fp);
+%     load(indexfile);
+%else
     
     fprintf(1,'lapdog: calling indexgen\n')    
     indexgen;
     fprintf(1,'lapdog: splitting files at midnight..\n')   
     indexcorr;
-    
+
     
     folder= sprintf('%s/index',dynampath);
     if exist(folder,'dir')~=7
@@ -83,7 +83,7 @@ else
     
 
     save(indexfile,'index');
-end
+%end
 
 
 % Generate daily geometry files:
