@@ -1,5 +1,6 @@
 %
 % Conditionally modify a LBL column description struct to include a MISSING_CONSTANT.
+% Having this function simplifies createLBL.
 %
 %
 % ARGUMENTS AND RETURN VALUES

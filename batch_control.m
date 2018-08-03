@@ -22,9 +22,9 @@ fix_geom_bug = 1;  % To change signs of position and velocity coordinates
 % =============
 
 % Info for labels
-lbltime   = '2018-07-20';  % Label revision time
+lbltime   = '2018-08-03';  % Label revision time
 lbleditor = 'EJ';
-lblrev    = 'Initial release';
+lblrev    = 'Misc. descriptions clean-up';
 
 % 4. Dataset selection and description
 % ====================================
