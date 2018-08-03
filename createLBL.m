@@ -479,6 +479,7 @@ for i = 1:length(stabindex)
         isSweep       = (tabFilename(30)=='S');
         isSweepTable  = (tabFilename(28)=='B') && isSweep;
         isDensityMode = (tabFilename(28)=='I');
+        isEFieldMode  = (tabFilename(28)=='V');
         %isHf          = (tabFilename(30)=='H');
         
         %=======================================
@@ -611,10 +612,29 @@ for i = 1:length(stabindex)
                 clear   currentOc voltageOc
             else
                 % CASE: P3
-                error('This code segment has not been completed for P3.')
-                %ocl{end+1} = struct('NAME', 'P1_CURRENT', DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', CURRENT_MEAS_DESC);
-                %ocl{end+1} = struct('NAME', 'P2_CURRENT', DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', CURRENT_MEAS_DESC);
-                %ocl{end+1} = struct('NAME', 'P3_VOLTAGE', DATA_DATA_TYPE{:}, DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', VOLTAGE_BIAS_DESC);
+                %error('This code segment has not yet been completed for P3. Can not create LBL file for "%s".', stabindex(i).path)
+                if isDensityMode
+                    % This case occurs at least on 2005-03-04 (EAR1). Appears to be the only day with V3x data for the
+                    % entire mission. Appears to only happen for HF, but not LF.
+                    oc1 = struct('NAME', 'P1_P2_CURRENT', DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', 'MEASURED CURRENT DIFFERENCE.');
+                    oc2 = struct('NAME', 'P1_VOLTAGE',    DATA_DATA_TYPE{:}, DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', VOLTAGE_BIAS_DESC);
+                    oc3 = struct('NAME', 'P2_VOLTAGE',    DATA_DATA_TYPE{:}, DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', VOLTAGE_BIAS_DESC);
+                    
+                    oc1 = createLBL.optionally_add_MISSING_CONSTANT(generatingDeriv1, MISSING_CONSTANT, oc1, ...
+                        sprintf('A value of %g means that the original sample was saturated.', MISSING_CONSTANT));
+                elseif isEFieldMode
+                    % This case occurs at least on 2007-11-07 (EAR2), which appears to be the first day it occurs.
+                    % This case does appear to occur for HF, but not LF.
+                    oc1 = struct('NAME', 'P1_CURRENT',    DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', CURRENT_BIAS_DESC);
+                    oc2 = struct('NAME', 'P2_CURRENT',    DATA_DATA_TYPE{:}, DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', CURRENT_BIAS_DESC);
+                    oc3 = struct('NAME', 'P1_P2_VOLTAGE', DATA_DATA_TYPE{:}, DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', 'MEASURED VOLTAGE DIFFERENCE.');
+                    
+                    oc3 = createLBL.optionally_add_MISSING_CONSTANT(generatingDeriv1, MISSING_CONSTANT, oc3, ...
+                        sprintf('A value of %g means that the original sample was saturated.', MISSING_CONSTANT));
+                else
+                    error('Error, bad mode identifier in an_tabindex{%i,2} = san_tabindex(%i).filename = "%s".', i, i, san_tabindex(i).filename);
+                end
+                ocl(end+1:end+3) = {oc1; oc2; oc3};
             end
             if generatingDeriv1
                 ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'BYTES',  3, ...
@@ -836,12 +856,12 @@ if generatingDeriv1
                 elseif isEFieldMode
                     
                     if probeNbr == 3
-                        ocl2{end+1} = struct('NAME', 'P1_CURRENT_MEAN',    'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT');
-                        ocl2{end+1} = struct('NAME', 'P2_CURRENT_MEAN',    'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT');
-                        ocl2{end+1} = struct('NAME', 'P1_P2_VOLTAGE_MEAN', 'UNIT', 'VOLT',      'DESCRIPTION', ['MEASURED VOLTAGE DIFFERENCE MEAN. ', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
+                        ocl2{end+1} = struct('NAME', 'P1_CURRENT_MEAN',    DATA_UNIT_CURRENT{:}, 'DESCRIPTION', CURRENT_BIAS_DESC);
+                        ocl2{end+1} = struct('NAME', 'P2_CURRENT_MEAN',    DATA_UNIT_CURRENT{:}, 'DESCRIPTION', CURRENT_BIAS_DESC);
+                        ocl2{end+1} = struct('NAME', 'P1_P2_VOLTAGE_MEAN', DATA_UNIT_VOLTAGE{:}, 'DESCRIPTION', ['MEASURED VOLTAGE DIFFERENCE MEAN. ', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
                     else
-                        ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', probeNbr), 'UNIT', 'AMPERE',    'DESCRIPTION',      'BIAS CURRENT MEAN');
-                        ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', probeNbr), 'UNIT', 'VOLT',      'DESCRIPTION', ['MEASURED VOLTAGE MEAN', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_CURRENT_MEAN', probeNbr), DATA_UNIT_CURRENT{:}, 'DESCRIPTION',      'BIAS CURRENT MEAN');
+                        ocl2{end+1} = struct('NAME', sprintf('P%i_VOLTAGE_MEAN', probeNbr), DATA_UNIT_VOLTAGE{:}, 'DESCRIPTION', ['MEASURED VOLTAGE MEAN', mcDescrAmendment], 'MISSING_CONSTANT', MISSING_CONSTANT);
                     end
                     PSD_DESCRIPTION = 'PSD VOLTAGE SPECTRUM';
                     PSD_UNIT        = 'VOLT^2/Hz';
