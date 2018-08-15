@@ -418,7 +418,7 @@ try
             %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
             an_tabindex{end,4} = 1;                        % Number of rows
             an_tabindex{end,5} = length(freq);             % Number of columns
-            %an_tabindex{end,6} = an_ind(i);
+            an_tabindex{end,6} = an_ind(i);                % Indices into "index" data structure. Needed for LBL files.
             an_tabindex{end,7} = 'frequency';              % Type
             an_tabindex{end,8} = timing;
             an_tabindex{end,9} = f1+f2;
@@ -432,7 +432,7 @@ try
             
             
             
-            %an_tabindex{end,6} = an_ind(i);
+            an_tabindex{end,6} = an_ind(i);                % Indices into "index" data structure. Needed for LBL files.
             an_tabindex{end,7} = 'spectra'; %type
             an_tabindex{end,8} = timing;
             an_tabindex{end,9} = row_byte;

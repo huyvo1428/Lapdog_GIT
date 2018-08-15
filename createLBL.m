@@ -799,14 +799,32 @@ if generatingDeriv1
                 % CASE: Any type of file EXCEPT best estimates.
                 %===============================================
                 
+                iIndexFirst = stabindex(san_tabindex(i).iTabindex).iIndexFirst;
+                iIndexLast  = stabindex(san_tabindex(i).iTabindex).iIndexLast;
+        
                 [KvlLblCalib1, Calib1LblSs] = createLBL.read_LBL_file(...
                     index(san_tabindex(i).iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
                 
-                % Add DESCRIPTION?!!
-                KvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(KvlLblCalib1, KvlLblAll, 'require preexisting keys');
+                
+                % NOTE: One can obtain a stop/ending SCT value from index(stabindex(i).iIndexLast).sct1str; too, but experience
+                % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
+                % Example: LAP_20150503_210047_525_I2L.LBL
+                %SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLastXXX).sct0str(2), obt2sct(stabindexXXX(i).sctStop));
+                SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(stabindex(san_tabindex(i).iTabindex).sctStop));
+                
+                % BUG: Does not work for 32S. Too narrow time limits.
+                KvlLbl = KvlLblAll;
+                KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   Calib1LblSs.START_TIME);                                % UTC start time
+                KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    stabindex(san_tabindex(i).iTabindex).utcStop(1:23));    % UTC stop  time
+                KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', Calib1LblSs.SPACECRAFT_CLOCK_START_COUNT);
+                KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
+                
+                KvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(KvlLblCalib1, KvlLbl, 'require preexisting keys');
+                
+                
                 
                 LblData.HeaderKvl = KvlLbl;
-                clear   KvlLbl KvlLblCalib1
+                clear   KvlLbl KvlLblCalib1  % Calib1LblSs is used later (once).
                 
             end   % if-else
             
