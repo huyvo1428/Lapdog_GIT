@@ -20,6 +20,11 @@ IN.probe_A = 4*pi*IN.probe_r^2;
 IN.probe_cA = pi*IN.probe_r^2;
 
 
+IN.spisprobe_A= 0.0076791868;
+IN.spisprobe_r= sqrt(IN.spisprobe_A/(4*pi));
+IN.spisprobe_cA= pi*IN.spisprobe_r^2;
+
+
 
 
 

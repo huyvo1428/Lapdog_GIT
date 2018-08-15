@@ -83,6 +83,7 @@ out.v_ion    = NaN;
 out.ni_aion  = NaN;
 out.Vsc_aion = NaN;
 out.v_aion   = NaN;
+%out.P         =nan(1,2);
 
 upper_comparison_bool = true;
 %global ALG;
@@ -334,6 +335,7 @@ end
     out.mean = [mean(Ir) std(Ir)]; % offset
     out.Upa = [P_Up(1) a(2)];
     out.Upb = [P_Up(2) b(2)];
+    %out.P   = P_Vb;
     
 %     out.Vs(1) = (b(1)-assmpt.Iph0)/a(1);
 %     out.Vs(2) = out.Vs(1)-(b(1)-assmpt.Iph0+3e-9)/a(1);
