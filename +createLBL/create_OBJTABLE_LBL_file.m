@@ -193,7 +193,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
         end
         
         OBJCOL_namesList{end+1} = cd.NAME;
-        OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + nSubcolumns;
+        %OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + nSubcolumns;    % BUG? Misunderstanding of PDS standard?!!
+        OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + 1;              % CORRECT?
         OBJTABLE_data.ROW_BYTES = OBJTABLE_data.ROW_BYTES + cd.BYTES + BYTES_BETWEEN_COLUMNS;     % Multiple subcolumns (ITEMS) have already taken into account.
         
         OBJTABLE_data.OBJCOL_list{i} = cd;      % Return updated info to original data structure.
