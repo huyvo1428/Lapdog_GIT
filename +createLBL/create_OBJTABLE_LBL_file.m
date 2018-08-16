@@ -91,6 +91,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %
     % PROPOSAL: Read one TAB file row and count the number of strings ", ", infer number of columns, and use for
     %   consistency check.
+    %   CON: Not entirely rigorous.
     %
     % TODO-DECISION: How handle UNIT (optional according to PDS)
     %   PROPOSAL: (1) Require caller to set .UNIT and have 'N/A' (or []) represent absence of unit.
@@ -100,18 +101,9 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %       CON: Absence of UNIT can otherwise be interpreted as (1) forgetting to set it, or (2) absence of unit.
     %       PRO: Shorter calls.
     %   PROPOSAL: Only include UNIT (in LBL) if caller sets .UNIT to value other than 'N/A'.
-    %
-    % PROPOSAL: PERMITTED_OBJTABLE_FIELD_NAMES should be exact required set (+assertion).
-    %
-    % PROPOSAL: Reorg into separate function which creates and returns the SSL with only the needed fields.
-    %           Add header using standard SSL function(s) (needs to be created).
-    %   PRO: Easier to modify SSL in standardized fashion for not yet written LBL files.
-    %       Ex: ^ARCHIVE_CONTENT_DESC for geometry LBL files. (Never read and modified, only created.)
-    %   CON/PROBLEM: How/where force quotes? Key reordering (relative to keys required for OBJECT=TABLE)?
-    %       PROPOSAL: Standard function for adding header keys.
-    
 
-    
+
+
     %===========
     % Constants
     %===========
@@ -156,8 +148,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
         error('ERROR: Found illegal field name(s) in parameter "LblData.OBJTABLE". fieldnames(LblData.OBJTABLE): %s', sprintf('"%s  "', fnl{:}))
     end
 
-    
-    
+
+
     OBJTABLE_data = LblData.OBJTABLE;
 
     %-----------------------------------------------------------------------------------
@@ -366,6 +358,8 @@ end
 
 
 
+% Complement description of ONE column.
+%
 % NOTE: Function name somewhat misleading since it contains a lot of useful assertions that have nothing to do with
 % complementing the columnData struct.
 function [columnData, nSubcolumns] = complement_column_data(columnData, ...
@@ -374,6 +368,7 @@ function [columnData, nSubcolumns] = complement_column_data(columnData, ...
 
     cd = columnData;
 
+    assert(numel(cd) == 1)
     %---------------------------------------------------------------
     % ASSERTION: Only using permitted fields
     % --------------------------------------
@@ -413,7 +408,7 @@ function [columnData, nSubcolumns] = complement_column_data(columnData, ...
         warning_error___LOCAL(sprintf('Found "raised minus" in UNIT. This is assumed to be a typo. NAME="%s"; UNIT="%s"', cd.NAME, cd.UNIT), tabLblInconsistencyPolicy)
     end        
     assert_nonempty_unquoted(cd.UNIT)
-    
+
     %------------
     % Check NAME
     %------------
@@ -427,12 +422,10 @@ function [columnData, nSubcolumns] = complement_column_data(columnData, ...
         % NOTE 2016-07-22: The NAME value that triggers this error may come from a CALIB LBL file produced by pds, NAME = P1-P2_CURRENT/VOLTAGE.
         % pds should no longer produce this kind of LBL files since they violate the PDS standard but they may still occur in old data sets.
         % Therefore, there is also value in printing the file name since the user can then (maybe) determine if that is true.
-        warning_error___LOCAL(sprintf('Found disallowed character(s) "%s" in NAME. NAME="%s". (Replacing dash with underscore.)\n   File: %s', ...
+        warning_error___LOCAL(sprintf('Found disallowed character(s) "%s" in NAME. NAME="%s".\n   File: %s', ...
             usedDisallowedChars, cd.NAME, lblFilePath), tabLblInconsistencyPolicy)
-        
-        cd.NAME = strrep(cd.NAME, '-', '_');     % TEMPORARY.
     end
-    
+
     %-------------------
     % Check DESCRIPTION
     %-------------------

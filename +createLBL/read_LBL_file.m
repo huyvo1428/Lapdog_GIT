@@ -10,7 +10,7 @@
 %
 function [HeaderKvl, SimpleStruct] = read_LBL_file(filePath, deleteHeaderKeyList)
 %
-% PROPOSAL: Change name to something implying only reading CALIB LBL files?
+% PROPOSAL: Change name to something implying only reading EDDER/CALIB1 LBL files.
 %
 % PROPOSAL: Remove all quotes from values.
 %    CON: createLBL.write_LBL_header must determine which keys should have quotes. ==> Another long list which might not capture all keywords.

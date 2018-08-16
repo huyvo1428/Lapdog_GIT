@@ -34,12 +34,19 @@
 function [firstRowStringArray, lastRowStringArray, nBytesPerRow, nRows] = analyze_TAB_file(filePath, iFirstByteArray, iLastByteArray)
 % PROPOSAL: Move to delivery code if setting LBL start & stop time.
 %
+% PROPOSAL: Retrieve number of columns.
+%   PRO: Can set ITEMS automatically.
+%   CON: Does not work for empty files.
+%       PRO: Problem if treating empty files as possibly valid.
 % PROPOSAL: Separate read-first&last-row function (one or two).
 %
 % PROPOSAL: Separate functions for (1) verifying TAB file format (assertions) and (2) extracting data from first & last
 % row.
 %   PROPOSAL: Separate function for extracting first and last row. Could be used by above two functions separately, or
 %             once and then submitting the first & last row, for speed (needed?).
+%
+% PROPOSAL: Separate treatment of empty files since (the caller) can not say that the TAB file is inconsistent with the
+%       LBL file.
 
     temp     = dir(filePath);
     fileSize = temp.bytes;

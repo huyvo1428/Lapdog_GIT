@@ -10,7 +10,7 @@
 %
 % ARGUMENTS
 % =========
-% s_str_lists         : See EJ_lapdog_shared.PDS_utils.read_ODL_to_structs.
+% ssl                 : See EJ_lapdog_shared.PDS_utils.read_ODL_to_structs.
 % endRowsList         : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
 % contentRowMaxLength : Max row length, not counting line break.
 %                       NOTE: This is not a rigorous line breaking for everything; only some things. In particular does
@@ -19,7 +19,7 @@
 %
 % Initially created 2016-07-07 by Erik P G Johansson, IRF Uppsala, Sweden.
 %
-function write_ODL_from_struct(filePath, s_str_lists, endRowsList, indentationLength, contentRowMaxLength)
+function write_ODL_from_struct(filePath, ssl, endRowsList, indentationLength, contentRowMaxLength)
 %
 % PROPOSAL: Implement additional empty rows before/after OBJECT/END_OBJECT.
 %    NOTE: Only one row between END_OBJECT and OBJECT. ==> Non-trivial.
@@ -49,9 +49,9 @@ function write_ODL_from_struct(filePath, s_str_lists, endRowsList, indentationLe
         error('Failed to open file "%s": "%s"', filePath, errorMsg)
     end
     
-    write_key_values(c, s_str_lists, 0, contentRowMaxLength, LINE_BREAK)
+    write_key_values(c, ssl, 0, contentRowMaxLength, LINE_BREAK)
     
-    fprintf(c.fid, 'END\r\n');
+    fprintf(c.fid, ['END', LINE_BREAK]);
     
     for i=1:length(endRowsList)        
         fwrite(c.fid, [endRowsList{i}, LINE_BREAK]);
@@ -64,7 +64,7 @@ end
 
 % NOTE: Recursive function.
 % c : ??!!!
-% s : formatted as s_str_lists.
+% s : formatted as ssl.
 % rowMaxLength : Excludes length of line break.
 function write_key_values(c, s, indentationLevel, rowMaxLength, lineBreak)
 
@@ -120,10 +120,10 @@ function write_key_values(c, s, indentationLevel, rowMaxLength, lineBreak)
             % CASE: OBJECT key.
             
             % Print OBJECT with different "post-key" whitespace padding.
-            fprintf(c.fid, sprintf('%s%s = %s\r\n',   indentationStr, key, value));
+            fprintf(c.fid, sprintf('%s%s = %s%s',   indentationStr, key, value, lineBreak));
             
             write_key_values(c, object, indentationLevel+1, rowMaxLength, lineBreak);             % RECURSIVE CALL
-            fprintf(c.fid, sprintf('%sEND_OBJECT = %s\r\n',   indentationStr, value));
+            fprintf(c.fid, sprintf('%sEND_OBJECT = %s%s',   indentationStr, value, lineBreak));
         else
             error('Inconsistent combination of key, value and object.')
         end

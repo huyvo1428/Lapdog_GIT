@@ -15,7 +15,9 @@
         if ~all(ismember(keyList, kvl.keys))
             error('keyList is not a subset of kvl.keys.')
         end
-    elseif ~strcmp(policy, 'may have keys')
+    elseif strcmp(policy, 'may have keys')
+        ;   % Do nothing
+    else
         error('Value for parameter "policy" not valid.')
     end
         

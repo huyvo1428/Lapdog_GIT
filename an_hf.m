@@ -138,7 +138,7 @@ try
             end
             
             
-            
+
         end
         obs = find(diff(sind)>0)+1;
         obe = find(diff(sind)<0);
@@ -284,7 +284,7 @@ try
             
         end %for loop
             
-            
+
             check = cell2mat(fout(:,end));
             
             

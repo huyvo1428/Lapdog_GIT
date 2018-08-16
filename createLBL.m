@@ -141,6 +141,7 @@ global N_FINAL_PRESWEEP_SAMPLES
 % This means that it is known that the quantity has no unit rather than that the unit
 % is simply unknown at present.
 %========================================================================================
+DEBUG_ON = 0;
 NO_ODL_UNIT       = [];
 ODL_VALUE_UNKNOWN = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown. Should not be used for official deliveries.
 DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
@@ -148,7 +149,6 @@ MISSING_CONSTANT = SATURATION_CONSTANT;
 %MISSING_CONSTANT_DESCRIPTION_AMENDMENT = sprintf('A value of %g refers to that the original value was saturated, or that it was an average over at least one saturated value.', MISSING_CONSTANT);
 ROSETTA_NAIF_ID  = -226;     % Used for SPICE.
 INDENTATION_LENGTH = 4;
-DEBUG_ON = 1;
 %EAICD_FILE_NAME  = 'RO-IRFU-LAP-EAICD.PDF';    % NOTE: Must match EJ_rosetta.delivery.create_DOCINFO.m (EJ's code).
 
 
@@ -324,6 +324,7 @@ if DEBUG_ON
     GENERATE_FILE_FAIL_POLICY = 'message+stack trace';
     
     GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'error';
+    %AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
     AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
 else
     GENERATE_FILE_FAIL_POLICY = 'message';
@@ -473,9 +474,9 @@ for i = 1:length(stabindex)
         iIndexLast  = stabindex(i).iIndexLast;
         probeNbr    = index(iIndexFirst).probe;
         
-        %--------------------------
-        % Read the CALIB1 LBL file
-        %--------------------------
+        %--------------------------------
+        % Read the EDDER/CALIB1 LBL file
+        %--------------------------------
         [KvlLblCalib1, Calib1LblSs] = createLBL.read_LBL_file(...
             index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST);
 
@@ -776,7 +777,7 @@ if generatingDeriv1
                 try
                     %===============================================================
                     % NOTE: createLBL.create_EST_LBL_header(...)
-                    % sets certain LBL/ODL variables to handle collisions:
+                    %       sets certain LBL/ODL variables to handle collisions:
                     %    START_TIME / STOP_TIME,
                     %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
                     %===============================================================
@@ -957,8 +958,8 @@ if generatingDeriv1
                 LblData.OBJTABLE.DESCRIPTION = sprintf('MODEL FITTED ANALYSIS OF %s SWEEP FILE', stabindex(san_tabindex(i).iTabindex).filename);
                 
                 ocl1 = {};
-                ocl1{end+1} = struct('NAME', 'START_TIME(UTC)', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
-                ocl1{end+1} = struct('NAME', 'STOP_TIME(UTC)',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION',  'Stop time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
+                ocl1{end+1} = struct('NAME', 'START_TIME_UTC',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
+                ocl1{end+1} = struct('NAME', 'STOP_TIME_UTC',   'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION',  'Stop time of sweep. UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
                 ocl1{end+1} = struct('NAME', 'START_TIME_OBT',  'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Start time of sweep. SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT).');
                 ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION',  'Stop time of sweep. SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT).');
                 ocl1{end+1} = struct('NAME', 'Qualityfactor',   'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Quality factor from 0-100.');   % TODO: Correct?
@@ -967,12 +968,12 @@ if generatingDeriv1
                 ocl1{end+1} = struct('NAME', 'direction',       'UNIT', NO_ODL_UNIT, 'BYTES',  1, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
                 % ----- (NOTE: Switching from ocl1 to ocl2.) -----
                 ocl2 = {};
-                ocl2{end+1} = struct('NAME', 'old.Vsi',                'UNIT', 'V',         'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current. Older analysis method.');
-                ocl2{end+1} = struct('NAME', 'old.Vx',                 'UNIT', 'V',         'DESCRIPTION', 'Spacecraft potential + Te from electron current fit. Older analysis method.');
+                ocl2{end+1} = struct('NAME', 'old_Vsi',                'UNIT', 'V',         'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current. Older analysis method.');
+                ocl2{end+1} = struct('NAME', 'old_Vx',                 'UNIT', 'V',         'DESCRIPTION', 'Spacecraft potential + Te from electron current fit. Older analysis method.');
                 ocl2{end+1} = struct('NAME', 'Vsg',                    'UNIT', 'V',         'DESCRIPTION', 'Spacecraft potential from gaussian fit to second derivative.');
                 ocl2{end+1} = struct('NAME', 'sigma_Vsg',              'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for spacecraft potential from gaussian fit to second derivative.');
-                ocl2{end+1} = struct('NAME', 'old.Tph',                'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron temperature. Older analysis method.');
-                ocl2{end+1} = struct('NAME', 'old.Iph0',               'UNIT', 'A',         'DESCRIPTION', 'Photosaturation current. Older analysis method.');
+                ocl2{end+1} = struct('NAME', 'old_Tph',                'UNIT', 'eV',        'DESCRIPTION', 'Photoelectron temperature. Older analysis method.');
+                ocl2{end+1} = struct('NAME', 'old_Iph0',               'UNIT', 'A',         'DESCRIPTION', 'Photosaturation current. Older analysis method.');
                 ocl2{end+1} = struct('NAME', 'Vb_lastnegcurrent',      'UNIT', 'V',         'DESCRIPTION', 'bias potential below zero current.');
                 ocl2{end+1} = struct('NAME', 'Vb_firstposcurrent',     'UNIT', 'V',         'DESCRIPTION', 'bias potential above zero current.');
                 ocl2{end+1} = struct('NAME', 'Vbinfl',                 'UNIT', 'V',         'DESCRIPTION', 'Bias potential of inflection point in current.');

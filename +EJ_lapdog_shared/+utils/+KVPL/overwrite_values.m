@@ -1,13 +1,16 @@
 % 
-% For every key in kvlSrc,
-% (1) assumes that the same key DOES exist in kvlDest (error otherwise), and
-% (2) sets the corresponding value in kvlDest.
+% For every key in kvlSrc, try to set the corresponding key value in kvlDest if it exists.
 %
-% NOTE: Compare KVPL_add_kv_pairs
+%
+% NOTE: No keys will ever be added to the destination.
+% NOTE: Compare add_kv_pairs
+%
 %
 % ARGUMENTS
 % =========
-% policy : String. 'overwrite only when has keys', 'require preexisting keys'.
+% policy : String.
+%          'overwrite only when has keys' : If a key in kvlSrc is in kvlDest, then its value is overwritten. Otherwise the key in kvlSrc is ignored.
+%          'require preexisting keys'     : Every key in kvlSrc, must pre-exist kvlDest, otherwise error (assertion).
 %
 % function kvlDest = overwrite_values(kvlDest, kvlSrc, policy)
 function   kvlDest = overwrite_values(kvlDest, kvlSrc, policy)

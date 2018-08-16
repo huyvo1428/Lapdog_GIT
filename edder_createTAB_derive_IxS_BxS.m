@@ -38,8 +38,8 @@
 %
 % NOTE: As I recall, LAP_Px_INITIAL_SWEEP_SMPLS can be wrong sometimes (very, very large values). Unclear if bug in pds
 % or bitstream/TM. /Erik P G Johansson 2018-07-20.
-% NOTE: Function should be able to handle (correct for) one bad INITIAL_SWEEP_SMPLS value.
-% NOTE: Function should not be able to handle zero sweeps.
+% NOTE: This function should be able to handle (correct for) one bad INITIAL_SWEEP_SMPLS value within command block (due to pds bug).
+% NOTE: This function should not be able to handle zero sweeps.
 % IMLEMENTATION NOTE: Does not directly reference global variable N_FINAL_PRESWEEP_SAMPLES to simplify automatic testing.
 % Receives values via argument instead.
 %

@@ -45,7 +45,7 @@ function stabindex = convert_tabindex(tabindex)
         'iIndexLast',      tabindex(:,9), ...   % Index into "index". Change name?
         'utcStop',         tabindex(:,4), ...
         'sctStop',         tabindex(:,5), ...
-        'nColumns',        tabindex(:,7) ...    % Used for sweep tables, IxS (varying number of columns).
+        'nColumns',        tabindex(:,7) ...    % Used for sweep tables (IxS; varying number of columns).
         );
         %'nTabFileRows',    tabindex(:,6), ...   % Not used anymore (in createLBL).
         %'nTabBytesPerRow', tabindex(:,8) ...    % Not used anymore (in createLBL).
