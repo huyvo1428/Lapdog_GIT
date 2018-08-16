@@ -7,34 +7,39 @@
 %
 % ARGUMENTS
 % =========
-% tabFilePath                           : Path to TAB file.
-% LblData                               : Struct with the following fields.
-%       .indentationLength              :
-%       .HeaderKvl                      : Key-value list describing PDS keywords in the "ODL header". Some mandatory
-%                                         keywords are added automatically by the code and must not overlap with these
-%                                         (assertion).
-%       .OBJTABLE                       : (OBJTABLE = "OBJECT = TABLE" segment)
-%           .DESCRIPTION                : Description for entire table (PDS keyword).
-%           .OBJCOL_list{i}             : Struct containing fields corresponding to various column PDS keywords.
-%                                         (OBJCOL = "OBJECT = COLUMN" segment)
-%                                         NOTE: The order of the fields does not matter. The implementation specifies
-%                                               the order of keywords (within an OBJECT=COLUMN segment) in the label file.
-%                                         NOTE: ".FORMAT" explicitly forbidden.
+% tabFilePath                     : Path to TAB file.
+% LblData                         : Struct with the following fields.
+%       .indentationLength
+%       .HeaderKvl                : Key-value list describing PDS keywords in the "ODL header". Some mandatory
+%                                   keywords are added automatically by the code and must not overlap with these
+%                                   (assertion).
+%       .OBJTABLE                 : (OBJTABLE = "OBJECT = TABLE" segment)
+%           .DESCRIPTION          : Description for entire table (PDS keyword).
+%           .OBJCOL_list{i}       : Struct containing fields corresponding to various column PDS keywords.
+%                                   (OBJCOL = "OBJECT = COLUMN" segment)
+%                                   NOTE: The order of the fields does not matter. The implementation specifies
+%                                         the order of keywords (within an OBJECT=COLUMN segment) in the label file.
+%                                   NOTE: ".FORMAT" explicitly forbidden.
 %               .NAME
 %               .DATA_TYPE
-%               .UNIT                   : Replaced by standardized default value if empty. Automatically quoted.
-%                                         (Optional by PDS, required here)
-%               .DESCRIPTION            : Replaced by standardized default value if empty. Must not contains quotes.
-%                                         (Automatically quoted.)
-%               .MISSING_CONSTANT       : Optional
+%               .UNIT             : Replaced by standardized default value if empty. Automatically quoted.
+%                                   (Optional by PDS, required here)
+%               .DESCRIPTION      : Replaced by standardized default value if empty. Must not contains quotes.
+%                                   (Automatically quoted.)
+%               .MISSING_CONSTANT : Optional
 %               Either (1)
 %           	  .BYTES
 %               or (2)
 %                 .ITEMS
 %                 .ITEM_BYTES
+%               .useFor           : Optional. Cell array of strings representing LBL header PDS keywords. Code
+%                                   contains hardcoded info on how to extract the corresponding keyword values
+%                                   from the corresponding column.
+%                                   Permitted: START/STOP_TIME, SPACECRAFT_CLOCK_START/STOP_COUNT.
+% 
 % HeaderOptions             : Data on how to modify and check the LBL header keywords.
 % tabLblInconsistencyPolicy : 'warning', 'error', or 'nothing'.
-%                             Determines how to react in the event of inconsistencies.
+%                             Determines how to react in the event of inconsistencies between LBL and TAB file.
 %                             NOTE: Function may abort in case of 'warning'/'nothing' if it can not recover.
 %
 %
@@ -44,6 +49,7 @@
 % The implementation should add that when appropriate.
 % NOTE: The implementation will add certain keywords to LblData.HeaderKvl, and derive the values, and assume that
 % the caller has not set them. Error otherwise (assertion).
+% NOTE: Uses Lapdog's obt2sct function.
 %
 % NOTE: Previous implementations have added a DELIMITER=", " field (presumably not PDS compliant) in
 % agreement with Imperial College/Tony Allen to somehow help them process the files
@@ -52,9 +58,14 @@
 % (E-mail Tony Allen->Erik Johansson 2015-07-03 and that thread).
 %
 % NOTE: Not full general-purpose function for table files, since
-%       (1) ASSUMPTION: TAB files are constructed with a fixed number of byets between columns (and no bytes
+%       (1) ASSUMPTION: TAB files are constructed with a fixed number of bytes between columns (and no bytes
 %           before/after the first/last string).
 %       (2) Does not permit FORMAT field, and there are probably other PDS-keywords which are not supported by this code.
+%
+%
+% NAMING CONVENTIONS
+% ==================
+% T2PK : TAB file to PDS keyword. Functionality for retrieving LBL header PDS keyword values from TAB file.
 %
 function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInconsistencyPolicy)
     %
@@ -62,6 +73,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %    - Data files (DATA/)
     %    - Block lists   (Does require SPACECRAFT_CLOCK_START_COUNT etc.)
     %    - Geometry files
+    %    - HK files
     %    - INDEX.LBL   => Does not require SPACECRAFT_CLOCK_START_COUNT etc.
     %
     % PROPOSAL: Only set/require keys that are common for all OBJECT=TABLE files (ODL standard, not PDS standard).
@@ -111,7 +123,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     PERMITTED_OBJTABLE_FIELD_NAMES = {'DESCRIPTION', 'OBJCOL_list'};
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
     % NOTE: Includes both required and optional fields.
-    PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT'};
+    PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT', ...
+        'useFor'};
     
     %CONTENT_MAX_ROW_LENGTH         = 70;    % Excludes line break characters.
     CONTENT_MAX_ROW_LENGTH         = 1000;    % Excludes line break characters.
@@ -119,6 +132,14 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     % "Planetary Data Systems Standards Reference", Version 3.6, p12-11, section 12.3.4.
     % Applies to what PDS defines as identifiers, i.e. "values" without quotes.
     PDS_IDENTIFIER_PERMITTED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789';
+
+    % Constants for (optionally) converting TAB file contents into PDS keywords.
+    T2PK_OBT2SCCS_FUNC = @(x) ['1/', obt2sct(str2double(x))];    % No quotes. Quotes added later.
+    T2PK_PROCESSING_TABLE = struct(...
+        'pdsKeyword', {'START_TIME', 'STOP_TIME', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % LBL file header PDS keyword which will be assigned.
+        'convFunc',   {@(x) x,       @(x) x,      T2PK_OBT2SCCS_FUNC,             T2PK_OBT2SCCS_FUNC           }, ...    % Function string-->string that is applied to the TAB file value.
+        'iFlr',       {1,            2,           1,                              2                            });       % 1=First row, 2=Last row
+    % NOTE: Unit conversion function for UTC. ==> Does NOT truncate UTC decimals.
 
 
 
@@ -174,33 +195,49 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     % Calculate "ROW_BYTES" rather than take from argument.
     % NOTE: ROW_BYTES is only correct if fprintf prints correctly when creating the TAB file.
     %--------------------------------------------------------------------------------------------------
-    OBJTABLE_data.ROW_BYTES = 0;   % NOTE: Adds new field to structure.
     OBJTABLE_data.COLUMNS   = 0;   % NOTE: Adds new field to structure.
     OBJCOL_namesList = {};
+    t2pkArgsTable = struct('pdsKeyword', {}, 'iByteFirst', {}, 'iByteLast', {});
+    PDS_START_BYTE = 1;    % Used for deriving START_BYTE. Starts with one, not zero.
     for i = 1:length(OBJTABLE_data.OBJCOL_list)
         cd = OBJTABLE_data.OBJCOL_list{i};       % Temporarily shorten variable name: cd = column data
+        
+        % ASSERTION: Check common user/caller error.
+        if numel(cd) ~= 1
+            error('One column object is a non-one size array. Guess: Due to defining .useFor value with ~single curly brackets?')
+        end
         
         [cd, nSubcolumns] = complement_column_data(cd, ...
             PERMITTED_OBJCOL_FIELD_NAMES, BYTES_BETWEEN_COLUMNS, PDS_IDENTIFIER_PERMITTED_CHARS, ...
             lblFilePath, tabLblInconsistencyPolicy);
-        
-        % ASSERTION
+        cd.START_BYTE  = PDS_START_BYTE;
+
+        % ASSERTION: Keywords do not contain quotes.
         for fnCell = fieldnames(cd)'
             fn = fnCell{1};
             if ischar(cd.(fn)) && ~isempty(strfind(cd.(fn), '"'))
                 error('Keyword ("%s") value contains quotes.', fn)
             end
         end
-        
+
         OBJCOL_namesList{end+1} = cd.NAME;
         %OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + nSubcolumns;    % BUG? Misunderstanding of PDS standard?!!
-        OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + 1;              % CORRECT?
-        OBJTABLE_data.ROW_BYTES = OBJTABLE_data.ROW_BYTES + cd.BYTES + BYTES_BETWEEN_COLUMNS;     % Multiple subcolumns (ITEMS) have already taken into account.
+        OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + 1;              % CORRECT according to MB email 2018-08-08 and DVALNG. ITEMS<>1 still counts as 1 column here.
+        PDS_START_BYTE = PDS_START_BYTE + cd.BYTES + BYTES_BETWEEN_COLUMNS;
+        
+        % Collect information for T2PK functionality.
+        if isfield(cd, 'useFor')
+            for iT2pk = 1:numel(cd.useFor)    % PROPOSAL: Change name of for-loop variable.
+                t2pkArgsTable(end+1).pdsKeyword = cd.useFor{iT2pk};
+                t2pkArgsTable(end  ).iByteFirst = cd.START_BYTE;
+                t2pkArgsTable(end  ).iByteLast  = cd.START_BYTE + cd.BYTES - 1;
+            end
+        end
         
         OBJTABLE_data.OBJCOL_list{i} = cd;      % Return updated info to original data structure.
         clear cd
     end
-    OBJTABLE_data.ROW_BYTES = OBJTABLE_data.ROW_BYTES - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;
+    OBJTABLE_data.ROW_BYTES = (PDS_START_BYTE-1) - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;   % Adds new column to struct. -1 since PDS_START_BYTE=1 refers to first byte.
     
     %################################################################################################
     
@@ -231,7 +268,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
 %         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
 %     end
     
-    temp = dir(tabFilePath); tabFileSize = temp.bytes;
+%    temp = dir(tabFilePath); tabFileSize = temp.bytes;
     
     % ASSERTION: TAB file size is consistent with (indirectly) ROWS*ROW_BYTES.
 %     if tabFileSize ~= (OBJTABLE_data.ROW_BYTES * LblData.nTabFileRows)
@@ -243,21 +280,58 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
 %         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
 %     end
 
-    LblData.nTabFileRows = floor(tabFileSize / OBJTABLE_data.ROW_BYTES);
-    
-    % ASSERTION: TAB file size is consistent with bytes-per-row (integer multiple).
-    if rem(tabFileSize,OBJTABLE_data.ROW_BYTES) ~= 0
-        msg = sprintf(['TAB file size is not consistent with LBL file, "%s":\n', ...
-            '    tabFileSize                           = %g\n', ...
-            '    OBJTABLE_data.ROW_BYTES               = %g\n', ...
-            '    tabFileSize / OBJTABLE_data.ROW_BYTES = %g   (must be an integer)'], ...
-            tabFilePath, tabFileSize, OBJTABLE_data.ROW_BYTES, tabFileSize / OBJTABLE_data.ROW_BYTES);
-        warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
-    end
+%    LblData.nTabFileRows = floor(tabFileSize / OBJTABLE_data.ROW_BYTES);
     
     % ASSERTION: No quotes in OBJECT=TABLE DESCRIPTION keyword.
     assert_nonempty_unquoted(OBJTABLE_data.DESCRIPTION)
 
+    %################################################################################################
+
+    %---------------------------------------------
+    % Convert TAB file contents into PDS keywords
+    %---------------------------------------------
+    
+    % ASSERTION: Unique .useFor PDS keywords.
+    if numel(unique({t2pkArgsTable.pdsKeyword})) ~= numel({t2pkArgsTable.pdsKeyword})
+        error('Specified the same PDS keyword multiple times in ".useFor" fields.')
+    end
+    
+    [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({t2pkArgsTable.pdsKeyword}, {T2PK_PROCESSING_TABLE.pdsKeyword});
+
+    % ASSERTION: Arguments only specify implemented-for PDS keywords.
+    if numel(t2pkArgsTable) ~= numel(iT2pkProcTable)
+        error('Can not find hard-coded support for at least one of the PDS keywords specified in ".useFor" fields.')
+    end
+    
+    t2pkArgsTable = t2pkArgsTable(iT2pkArgsTable);    
+    t2pkExecTable = T2PK_PROCESSING_TABLE(iT2pkProcTable);
+    [t2pkExecTable(:).iByteFirst] = deal(t2pkArgsTable(:).iByteFirst);
+    [t2pkExecTable(:).iByteLast]  = deal(t2pkArgsTable(:).iByteLast);
+    
+    LblData.nTabFileRows = NaN;   % Field must be created in case deriving the value later fails.
+    try
+        rowStringArrayArray = {[], []};
+        [rowStringArrayArray{:}, nBytesPerRow, LblData.nTabFileRows] = createLBL.analyze_TAB_file(tabFilePath, [t2pkExecTable(:).iByteFirst], [t2pkExecTable(:).iByteLast]);
+        
+        % ASSERTION: Number of bytes per row.
+        if nBytesPerRow ~= OBJTABLE_data.ROW_BYTES
+            warning_error___LOCAL(sprintf('TAB file is inconsistent with LBL file. Bytes per row does not fit table description.\n    nBytesPerRow=%g\n    OBJTABLE_data.ROW_BYTES=%g\n    File: "%s"', ...
+                nBytesPerRow, OBJTABLE_data.ROW_BYTES, tabFilePath), tabLblInconsistencyPolicy)
+        end
+        
+        t2pkKvpl.keys   = {t2pkExecTable(:).pdsKeyword};
+        t2pkKvpl.values = {};
+        for iT2pk = 1:numel(t2pkKvpl.keys)
+            tabFileValueStr        = rowStringArrayArray{ t2pkExecTable(iT2pk).iFlr }{ iT2pk };
+            t2pkKvpl.values{end+1} = t2pkExecTable(iT2pk).convFunc( tabFileValueStr );
+        end
+        
+        % Update selected PDS keyword values.
+        LblData.HeaderKvl = EJ_lapdog_shared.utils.KVPL.overwrite_values(LblData.HeaderKvl, t2pkKvpl, 'require preexisting keys');
+    catch exc
+        warning_error___LOCAL(sprintf('TAB file is inconsistent with LBL file: "%s"', exc.message), tabLblInconsistencyPolicy)
+    end
+    
     %################################################################################################
 
     %===================================================================
@@ -267,21 +341,21 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     HeaderAddKvl.keys   = {};
     HeaderAddKvl.values = {};
     HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'RECORD_TYPE',  'FIXED_LENGTH');   % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
-    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'RECORD_BYTES', sprintf('%i',   OBJTABLE_data.ROW_BYTES));
+    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'RECORD_BYTES', sprintf( '%i',  OBJTABLE_data.ROW_BYTES));
     HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'FILE_NAME',    sprintf('"%s"', lblFilename));    % Should be qouted.
     HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, '^TABLE',       sprintf('"%s"', tabFilename));    % Should be qouted.
     HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'PRODUCT_ID',   sprintf('"%s"', fileBasename));   % Should be qouted.
-    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'FILE_RECORDS', sprintf('%i',   LblData.nTabFileRows));
+    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'FILE_RECORDS', sprintf( '%i',  LblData.nTabFileRows));
     
     LblData.HeaderKvl = EJ_lapdog_shared.utils.KVPL.merge(LblData.HeaderKvl, HeaderAddKvl);
-    
-    
-    
+
+
+
     %=============================================
     % Construct SSL representing the LBL contents
     %=============================================
     ssl = create_SSL_header(LblData.HeaderKvl, HeaderOptions);
-    ssl = add_SSL_OBJECT(ssl, 'TABLE', create_OBJ_TABLE_content(OBJTABLE_data, LblData.nTabFileRows, BYTES_BETWEEN_COLUMNS));
+    ssl = add_SSL_OBJECT(ssl, 'TABLE', create_OBJ_TABLE_content(OBJTABLE_data, LblData.nTabFileRows));
 
 
 
@@ -367,32 +441,27 @@ function [columnData, nSubcolumns] = complement_column_data(columnData, ...
     end
     % ASSERTION: Does not contain quotes.    
     assert_nonempty_unquoted(cd.DESCRIPTION)
-    
+
     columnData = cd;
 end
 
 
 
 % Create SSL for the content of the OBJECT=TABLE segment.
-function s = create_OBJ_TABLE_content(OBJTABLE_data, nTabFileRows, bytesBetweenColumns)
+function s = create_OBJ_TABLE_content(OBJTABLE_data, nTabFileRows)
     s = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
-    
+
     s = add_SSL(s, 'INTERCHANGE_FORMAT','%s',   'ASCII');
     s = add_SSL(s, 'ROWS',              '%d',   nTabFileRows);
     s = add_SSL(s, 'COLUMNS',           '%d',   OBJTABLE_data.COLUMNS);
     s = add_SSL(s, 'ROW_BYTES',         '%d',   OBJTABLE_data.ROW_BYTES);
     s = add_SSL(s, 'DESCRIPTION',       '"%s"', OBJTABLE_data.DESCRIPTION);
-    
-    PDS_START_BYTE = 1;    % Used for deriving START_BYTE. Starts with one, not zero.
+
     for i = 1:length(OBJTABLE_data.OBJCOL_list)           % Iterate over list of ODL OBJECT COLUMN
         columnData = OBJTABLE_data.OBJCOL_list{i};        % cd = column OBJTABLE_data
         
-        [s2, nSubcolumns] = create_OBJ_COLUMN_content(columnData, PDS_START_BYTE);
+        [s2, nSubcolumns] = create_OBJ_COLUMN_content(columnData);
         s = add_SSL_OBJECT(s, 'COLUMN', s2);
-        
-        PDS_START_BYTE = PDS_START_BYTE + nSubcolumns*columnData.BYTES + bytesBetweenColumns;
-        
-        %clear columnData
     end
 end
 
@@ -400,11 +469,11 @@ end
 
 % Create SSL for the content an OBJECT=COLUMN segment.
 % cd : Column data struct.
-function [s, nSubcolumns] = create_OBJ_COLUMN_content(cd, PDS_START_BYTE)
+function [s, nSubcolumns] = create_OBJ_COLUMN_content(cd)
     s = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
     
     s = add_SSL(s, 'NAME',       '%s', cd.NAME);
-    s = add_SSL(s, 'START_BYTE', '%i', PDS_START_BYTE);      % Move down to ITEMS?
+    s = add_SSL(s, 'START_BYTE', '%i', cd.START_BYTE);      % Move down to ITEMS?
     s = add_SSL(s, 'BYTES',      '%i', cd.BYTES);            % Move down to ITEMS?
     s = add_SSL(s, 'DATA_TYPE',  '%s', cd.DATA_TYPE);
     

@@ -842,13 +842,16 @@ if generatingDeriv1
                 
                 mcDescrAmendment = sprintf('A value of %g means that the underlying time period which was averaged over contained at least one saturated value.', MISSING_CONSTANT);
                 
+                % IMPLEMENTATION NOTE: Start & stop timestamps in header PDS keywords cover a smaller time interval than
+                % the actual content of downsampled files. Therefore using the actual content of the TAB file to derive
+                % these values.
                 LblData.OBJTABLE = [];
                 samplingRateSecondsStr = tabFilename(end-10:end-9);
                 % NOTE: Empirically, Calib1LblSs.DESCRIPTION is something technical, like "D_P1_TRNC_20_BIT_RAW_BIP". Keep?
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s %s SECONDS DOWNSAMPLED', Calib1LblSs.DESCRIPTION, samplingRateSecondsStr);
                 ocl = {};
-                ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF');
-                ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)');
+                ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF',                              'useFor', {{'START_TIME', 'STOP_TIME'}});
+                ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
                 
                 oc1 = struct('NAME', sprintf('P%i_CURRENT',        probeNbr), DATA_UNIT_CURRENT{:}, 'BYTES', 14, DATA_DATA_TYPE{:}, 'DESCRIPTION', 'AVERAGED CURRENT.');
                 oc2 = struct('NAME', sprintf('P%i_CURRENT_STDDEV', probeNbr), DATA_UNIT_CURRENT{:}, 'BYTES', 14, DATA_DATA_TYPE{:}, 'DESCRIPTION', 'CURRENT STANDARD DEVIATION.');
