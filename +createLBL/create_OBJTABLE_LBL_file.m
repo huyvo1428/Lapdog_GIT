@@ -35,7 +35,10 @@
 %               .useFor           : Optional. Cell array of strings representing LBL header PDS keywords. Code
 %                                   contains hardcoded info on how to extract the corresponding keyword values
 %                                   from the corresponding column.
-%                                   Permitted: START/STOP_TIME, SPACECRAFT_CLOCK_START/STOP_COUNT.
+%                                   Permitted:
+%                                       START_STOP, STOP_TIME             : Must be UTC column (at least 3 decimals).
+%                                       SPACECRAFT_CLOCK_START/STOP_COUNT : Must be OBT column.
+%                                       STOP_TIME_from_OBT                : Must be OBT column.
 % 
 % HeaderOptions             : Data on how to modify and check the LBL header keywords.
 % tabLblInconsistencyPolicy : 'warning', 'error', or 'nothing'.
@@ -107,6 +110,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %===========
     % Constants
     %===========
+    ROSETTA_NAIF_ID = -226;
     BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns.
     BYTES_PER_LINEBREAK   = 2;                 % Carriage return + line feed.
     
@@ -127,11 +131,13 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
 
     % Constants for (optionally) converting TAB file contents into PDS keywords.
     T2PK_OBT2SCCS_FUNC = @(x) ['1/', obt2sct(str2double(x))];    % No quotes. Quotes added later.
+    T2PK_UTC2UTC_FUNC  = @(x) [x(1:23)];                         % Has to truncate UTC second decimals according to DVAL-NG.
+    T2PK_OBT2UTC_FUNC  = @(x) [cspice_et2utc(cspice_scs2e(ROSETTA_NAIF_ID, obt2sct(str2double(x))), 'ISOC', 3)];    % 3 = 3 UTC second decimals
     T2PK_PROCESSING_TABLE = struct(...
-        'pdsKeyword', {'START_TIME', 'STOP_TIME', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % LBL file header PDS keyword which will be assigned.
-        'convFunc',   {@(x) x,       @(x) x,      T2PK_OBT2SCCS_FUNC,             T2PK_OBT2SCCS_FUNC           }, ...    % Function string-->string that is applied to the TAB file value.
-        'iFlr',       {1,            2,           1,                              2                            });       % 1=First row, 2=Last row
-    % NOTE: Unit conversion function for UTC. ==> Does NOT truncate UTC decimals.
+        'argConst',   {'START_TIME',      'STOP_TIME',       'STOP_TIME_from_OBT', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % Argument value.
+        'pdsKeyword', {'START_TIME',      'STOP_TIME',       'STOP_TIME',          'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % LBL file header PDS keyword which will be assigned.
+        'convFunc',   {T2PK_UTC2UTC_FUNC, T2PK_UTC2UTC_FUNC, T2PK_OBT2UTC_FUNC,    T2PK_OBT2SCCS_FUNC,             T2PK_OBT2SCCS_FUNC           }, ...    % Function string-->string that is applied to the TAB file value.
+        'iFlr',       {1,                 2,                 2,                    1,                              2                            });       % 1=First row, 2=Last row
 
 
 
@@ -189,7 +195,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %--------------------------------------------------------------------------------------------------
     OBJTABLE_data.COLUMNS   = 0;   % NOTE: Adds new field to structure.
     OBJCOL_namesList = {};
-    t2pkArgsTable = struct('pdsKeyword', {}, 'iByteFirst', {}, 'iByteLast', {});
+    t2pkArgsTable = struct('argConst', {}, 'iByteFirst', {}, 'iByteLast', {});
     PDS_START_BYTE = 1;    % Used for deriving START_BYTE. Starts with one, not zero.
     for i = 1:length(OBJTABLE_data.OBJCOL_list)
         cd = OBJTABLE_data.OBJCOL_list{i};       % Temporarily shorten variable name: cd = column data
@@ -220,7 +226,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
         % Collect information for T2PK functionality.
         if isfield(cd, 'useFor')
             for iT2pk = 1:numel(cd.useFor)    % PROPOSAL: Change name of for-loop variable.
-                t2pkArgsTable(end+1).pdsKeyword = cd.useFor{iT2pk};
+                t2pkArgsTable(end+1).argConst   = cd.useFor{iT2pk};
                 t2pkArgsTable(end  ).iByteFirst = cd.START_BYTE;
                 t2pkArgsTable(end  ).iByteLast  = cd.START_BYTE + cd.BYTES - 1;
             end
@@ -284,18 +290,18 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %---------------------------------------------
     
     % ASSERTION: Unique .useFor PDS keywords.
-    if numel(unique({t2pkArgsTable.pdsKeyword})) ~= numel({t2pkArgsTable.pdsKeyword})
+    if numel(unique({t2pkArgsTable.argConst})) ~= numel({t2pkArgsTable.argConst})
         error('Specified the same PDS keyword multiple times in ".useFor" fields.')
     end
     
-    [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({t2pkArgsTable.pdsKeyword}, {T2PK_PROCESSING_TABLE.pdsKeyword});
+    [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({t2pkArgsTable.argConst}, {T2PK_PROCESSING_TABLE.argConst});
 
-    % ASSERTION: Arguments only specify implemented-for PDS keywords.
+    % ASSERTION: Arguments only specify implemented-for argument constants.
     if numel(t2pkArgsTable) ~= numel(iT2pkProcTable)
-        error('Can not find hard-coded support for at least one of the PDS keywords specified in ".useFor" fields.')
+        error('Can not find hard-coded support for at least one of the values specified in ".useFor" fields.')
     end
     
-    t2pkArgsTable = t2pkArgsTable(iT2pkArgsTable);    
+    t2pkArgsTable = t2pkArgsTable(iT2pkArgsTable);    % Potentially modify the ordering so that it is consistent with t2pkExecTable.
     t2pkExecTable = T2PK_PROCESSING_TABLE(iT2pkProcTable);
     [t2pkExecTable(:).iByteFirst] = deal(t2pkArgsTable(:).iByteFirst);
     [t2pkExecTable(:).iByteLast]  = deal(t2pkArgsTable(:).iByteLast);

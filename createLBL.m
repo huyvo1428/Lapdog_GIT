@@ -851,8 +851,17 @@ if generatingDeriv1
                 % NOTE: Empirically, Calib1LblSs.DESCRIPTION is something technical, like "D_P1_TRNC_20_BIT_RAW_BIP". Keep?
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s %s SECONDS DOWNSAMPLED', Calib1LblSs.DESCRIPTION, samplingRateSecondsStr);
                 ocl = {};
-                ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF',                              'useFor', {{'START_TIME', 'STOP_TIME'}});
-                ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
+                % IMPLEMENTATION NOTE: The LBL start and stop timestamps of the source EDITED1/CALIB1 files often do
+                % NOT cover the time interval of the downsampled time series. This is due to downsampling creating its
+                % own timestamps. Must therefore actually read the LBL start & stop timestamps from the actual content
+                % of the TAB file.
+                % IMPLEMENTATION NOTE: Columns TIME_UTC and TIME_OBT match for the first timestamp, but not do not match
+                % well enough for the last timestamp for DVAL-NG not to give a warning. This is due to(?) the
+                % downsampling code taking some shortcuts in producing the sequence of OBT+UTC values, i.e. manually
+                % producing the series and NOT using SPICE for every such pair. Therefore using the last TIME_OBT value
+                % for both SPACECRAFT_CLOCK_STOP_COUNT and STOP_TIME.
+                ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF',                              'useFor', {{'START_TIME'}});
+                ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}});
                 
                 oc1 = struct('NAME', sprintf('P%i_CURRENT',        probeNbr), DATA_UNIT_CURRENT{:}, 'BYTES', 14, DATA_DATA_TYPE{:}, 'DESCRIPTION', 'AVERAGED CURRENT.');
                 oc2 = struct('NAME', sprintf('P%i_CURRENT_STDDEV', probeNbr), DATA_UNIT_CURRENT{:}, 'BYTES', 14, DATA_DATA_TYPE{:}, 'DESCRIPTION', 'CURRENT STANDARD DEVIATION.');
