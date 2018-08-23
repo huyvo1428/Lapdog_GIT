@@ -378,6 +378,7 @@ else
     CURRENT_BIAS_DESC =          'CURRENT BIAS.';
     CURRENT_MEAS_DESC = 'MEASURED CURRENT.';
 end
+QFLAG1_DESCRIPTION = 'QUALITY FLAG CONSISTING OF MULTIPLE BIT FLAGS. FROM 000 (BEST) TO 999 (WORST).';    % For older quality flag (version "1").
 
 
 
@@ -564,7 +565,7 @@ for i = 1:length(stabindex)
                 end
                 ocl(end+1:end+4) = {oc1, oc2, oc3, oc4};                
                 if generatingDeriv1
-                    ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                    ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 end
                 % NOTE: The file referenced in column DESCRIPTION is expected to have the wrong name since files are renamed by other code
                 % before delivery. The delivery code should already correct for this.
@@ -663,8 +664,8 @@ for i = 1:length(stabindex)
                 ocl(end+1:end+3) = {oc1; oc2; oc3};
             end
             if generatingDeriv1
-                ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'BYTES',  3, ...
-                    'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'BYTES',  3, ...
+                    'DESCRIPTION', QFLAG1_DESCRIPTION);
             end
             
             LblData.OBJTABLE.OBJCOL_list = ocl;
@@ -873,7 +874,7 @@ if generatingDeriv1
                 oc4 = createLBL.optionally_add_MISSING_CONSTANT(isEFieldMode,  MISSING_CONSTANT, oc4 , mcDescrAmendment);
                 ocl(end+1:end+4) = {oc1; oc2; oc3; oc4};
                 
-                ocl{end+1} = struct('NAME', 'QUALITY', 'BYTES', 3, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'BYTES', 3, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 
                 LblData.OBJTABLE.OBJCOL_list = ocl;
                 clear   ocl oc1 oc2 oc3 oc4
@@ -892,7 +893,7 @@ if generatingDeriv1
                 ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'SPECTRA STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
                 ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)');
                 ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_OBT',  'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)');
-                ocl1{end+1} = struct('NAME', 'QUALITY',                'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                ocl1{end+1} = struct('NAME', 'QUALITY_FLAG',           'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 %---------------------------------------------
                 ocl2 = {};
                 mcDescrAmendment = sprintf('A value of %g means that there was at least one saturated sample in the same time interval uninterrupted by RPCMIP disturbances.', MISSING_CONSTANT);
@@ -1113,7 +1114,7 @@ if generatingDeriv1
                 ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
                 ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT).');
                 ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT).');
-                ocl{end+1} = struct('NAME', 'QUALITY',            'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 ocl{end+1} = struct('NAME', 'npl',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-3',    'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of plasma number density.');
                 ocl{end+1} = struct('NAME', 'Te',                 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'eV',        'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of electron temperature.');
                 ocl{end+1} = struct('NAME', 'Vsc',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',         'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of spacecraft potential.');
