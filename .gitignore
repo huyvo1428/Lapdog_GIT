@@ -7,6 +7,8 @@
 *.TLS
 *.BSP
 *.TSC
+*.asv
+
 
 gout.txt
 gtimes.txt
@@ -50,3 +52,5 @@ macro204.m
 more23Sept_tests.m
 
 test_deleteme.m
+
+LP_Ion_curr_backup.m
