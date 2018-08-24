@@ -24,7 +24,7 @@ global assmpt;
 
 dynampath = strrep(mfilename('fullpath'),'/an_sweepmain','');
 kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
-paths();
+paths(); 
 
 cspice_furnsh(kernelFile);
 
@@ -87,8 +87,13 @@ try
         
         
         %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-        
-            Iarr(Iarr==SATURATION_CONSTANT)    = NaN;
+        satur_ind = Iarr==SATURATION_CONSTANT; % logical matrix which is true if any current is saturated (pds outputs -1000 as of 6/3 2018)
+        %Iarr(Iarr==SATURATION_CONSTANT)    = NaN;
+        Iarr(satur_ind) = NaN;% This should also work, so we don't have to
+        %do this twice
+        %
+        %note that this index needs special handling for V or /\ sweeps
+        %(see :if split), etc
         %-------------------------------------------------------------%
         
         % Classify "sweep" depending on voltage curve: one/two sweeps, up/down, where split.
@@ -118,9 +123,12 @@ try
             % Split data for first and second sweep in sweep pair.
             Vb2   = Vb(mind:end);
             Iarr2 = Iarr(mind:end,:);
+           % satur_ind2 = satur_ind(mind:end,:);%mirror Iarr treatment everywhere.
+            
 
             Vb   = Vb(1:mind);
             Iarr = Iarr(1:mind,:);
+           % satur_ind = satur_ind(1:mind,:); %mirror Iarr treatment everywhere.
 
             Tarr2 = Tarr;
             t_sweep_rel = scantemp2{1,1};     % Time, relative to beginning of sweep/pair sequence (one/two sweeps).
@@ -147,7 +155,7 @@ try
         [altitude,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
         clear junk
 
-        if strcmp(mode(2),'1'); %probe 1???
+        if strcmp(mode(2),'1') %probe 1
             %current (Elias) SAA = z axis, Anders = x axis.
             % *Anders values* (converted to the present solar aspect angle definition
             % by ADDING 90 degrees) :
@@ -237,6 +245,8 @@ try
         AP(len).vbinf    = [];
         AP(len).diinf    = [];
         AP(len).d2iinf   = [];
+        AP(len).Vz       = [];
+
 
         %EP = extra parameters, not from functions
 
@@ -391,6 +401,11 @@ try
             if (abs(SAA(1, 2*k-1)-SAA(1, 2*k)) >0.05) %rotation of more than 0.05 degrees  %arbitrary chosen value... seems decent
                 qf = qf+20; %rotation
             end
+            
+%             if (any(satur_ind(:,k))) 
+%                 qf = qf+400; % saturation flagging
+%             end
+            
 
             EP(k).split = 0;
             EP(k).SAA = mean(SAA(1,2*k-1:2*k));
@@ -436,6 +451,14 @@ try
                 if (abs(SAA(1, 2*k-1)-SAA(1, 2*k)) >0.05) %rotation of more than 0.01 degrees
                     qf = qf+20; %rotation
                 end
+                
+%                 
+%                 if (any(satur_ind2(:,k)))
+%                     qf = qf+400; % saturation flagging not necessary.
+%                     Done in createTAB and already in QF array
+%                 end
+                
+                
 
                 EP(m).split = split;  % 1 for V form, -1 for upside-down V
                 EP(m).SAA = mean(SAA(1,2*k-1:2*k));
@@ -486,7 +509,7 @@ try
         % DELIVERY) NOTIFY TONY ALLEN!
         fprintf(awID,strcat('START_TIME(UTC), STOP_TIME(UTC), START_TIME_OBT, STOP_TIME_OBT, Qualityfactor, SAA, Illumination, direction',...
         ', old.Vsi, old.Vx, Vsg, sigma_Vsg',...
-        ', old.Tph, old.Iph0, Vb_lastnegcurrent, Vb_firstposcurrent',...
+        ', old.Tph, old.Iph0, Vb_lastnegcurrent, Vz',...
         ', Vbinfl, dIinfl, d2Iinfl',...
         ', Iph0, Tph, Vsi, Vph_knee, sigma_Vph_knee, Te_linear, sigma_Te_linear, ne_linear, sigma_ne_linear',...
         ', ion_slope, sigma_ion_slope, ion_intersect, sigma_ion_intersect, e_slope, sigma_e_slope, e_intersect, sigma_e_intersect',...
@@ -511,7 +534,7 @@ try
 
             str1  = sprintf('%s, %s, %16s, %16s, %03i, %07.3f, %04.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
             str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs,  AP(k).vx,   DP(k).Vsg);
-            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).firstpos);
+            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).Vz);
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
             str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Iph0, DP(k).Tph, DP(k).Vsi(1), DP(k).Vph_knee, DP(k).Te, DP(k).ne);
             str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
@@ -572,22 +595,36 @@ try
             end
             
             
+         %   nanind=isnan(DP(:).Vph_knee(1));
+            
+            
+            
             for k=1:klen
                 
                 dstr1  = sprintf('%s, %s, %16s, %16s, %04i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf);
                 dstr2 = sprintf(' %14.7e, %14.7e', DP(k).Vph_knee(1),DP(k).Te_exp_belowVknee(1));
+       
                 
-                dstrtot=strcat(dstr1,dstr2);
-                dstrtot=strrep(dstrtot,'  0.0000000e+00','          -1000'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
-                dstrtot=strrep(dstrtot,'  NaN','-1000'); %
-                %                         dstrtot=strrep(dstrtot,'-Inf','-1000');
-                %                         dstrtot=strrep(dstrtot,'Inf','-1000');
+                if isnan(DP(k).Vph_knee(1))
+                    
+                    
+                    
+                    dstrtot=strcat(dstr1,dstr2);
+                    % NOTE: Can not replace NaN etc with string "-1000" directly, since DVAL-NG inteprets that as an integer (?), which
+                    % is incompatible with DATA_TYPE=ASCII_REAL.  /Erik P G Johansson
+                    dstrtot=strrep(dstrtot,'  0.0000000e+00','       -1.0e+03'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
+                    %dstrtot=strrep(dstrtot,'  NaN','-1000');
+                    dstrtot=strrep(dstrtot,'     NaN','-1.0e+03');
+                    %                         dstrtot=strrep(dstrtot,'  -Inf','-1.0e3');
+                    %                         dstrtot=strrep(dstrtot,'   Inf','-1.0e3');
+                end
                 drow_bytes = fprintf(awID,'%s\r\n',dstrtot);
+
                 
             end
             fclose(awID);
                                 
-            %der_struct=[];
+            der_struct=[];
             der_struct.file{i}      = dfile;
             der_struct.shortname{i} =strrep(dfile,rfolder,'');
             der_struct.firstind(i)  =tabindex{an_ind(i),3};
@@ -595,7 +632,7 @@ try
             der_struct.cols(i)      =7;
             der_struct.an_ind_id(i) =an_ind(i);
             der_struct.timing(i,1:4)=timing;
-            der_struct.bytes=drow_bytes;
+            der_struct.bytes=drow_bytes;    % I do not think I need this variable. drow_bytes is also not always set ==>bug. /Erik P G Johansson 2018-08-03
                       
         end
 

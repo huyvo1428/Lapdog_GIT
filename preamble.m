@@ -20,6 +20,11 @@ IN.probe_A = 4*pi*IN.probe_r^2;
 IN.probe_cA = pi*IN.probe_r^2;
 
 
+IN.spisprobe_A= 0.0076791868;
+IN.spisprobe_r= sqrt(IN.spisprobe_A/(4*pi));
+IN.spisprobe_cA= pi*IN.spisprobe_r^2;
+
+
 
 
 
@@ -101,7 +106,7 @@ LDLMACROS = hex2dec({'807','814','816','817','827','805','804','803','617','703'
 dname = strcat(archivepath,'/CATALOG/DATASET.CAT'); 
 dp = fopen(dname,'r');
 if dp == -1
-    error('Can not find DATASET.CAT (%s). This usually due to not being able to find the CALIB data set directory.', dname)
+    error('Can not find DATASET.CAT (%s). This usually due to not being able to find the CALIB data set directory.\n    Is the DATA_SET_ID target correct ("A", "C" etc)?', dname)
 end
 datasetcat = textscan(dp,'%s %s','Delimiter','=');
 fclose(dp);

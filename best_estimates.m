@@ -72,11 +72,13 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % PROPOSAL: Do not build up PO_table.
 %===========================================================================================
 
+    global SATURATION_CONSTANT
+
     try
         warnings_settings = warning('query');
         warning('on', 'all')
         
-        MISSING_CONSTANT = -1000;    % NOTE: This constant must be reflected in the corresponding section in createLBL!!!
+        MISSING_CONSTANT       = SATURATION_CONSTANT;
         MEMORY_USE_LOG_ENABLED = 0;  % Enable/disable memory usage log output. Printouts should be removed permanently some day.
         t_start = clock;             % NOTE: Not number of seconds, but [year month day hour minute seconds].
     
@@ -838,7 +840,7 @@ function data = read_IxLH_file_bias_voltage_INTERNAL(file_path, probe_nbr, memor
     try
         fid = fopen(file_path, 'r');
         if fid < 0
-            error(sprintf('Can not read file: %s', file_path))
+            error('Can not read file: %s', file_path)
         end
         %fprintf(1, 'Reading file: %s\n', file_path)       % DEBUG / Log message
         
@@ -888,7 +890,7 @@ function data = read_IxLH_file_bias_voltage_INTERNAL(file_path, probe_nbr, memor
             fprintf(1, 'read_IxLH_file_bias_voltage_INTERNAL: End of function (catch clause) - calling "whos file_contents"\n')
             whos file_contents   % DEBUG
         end
-        error(sprintf('Error occurred when reading IxL/IxH file "%s".\n', file_path))
+        error('Error occurred when reading IxL/IxH file "%s".\n', file_path)
     end
 end
 

@@ -27,6 +27,12 @@
 % 9. createLBL produces .LBL files for each generated file  (PDS archive
 %    specific file type)
 %
+% ARGUMENTS
+% =========
+% archpath        : Path to EDITED data set.
+% archID          : Abbreviated mission phase name, e.g. PRL.
+% missioncalendar : Path to pds' mission calendar file.
+%
 function [] = edder_lapdog(archpath, archID, missioncalendar)
 
 
@@ -39,8 +45,10 @@ fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n')
 
 batch_control;
 
-derivedpath = strrep(archivepath,'RPCLAP-2','RPCLAP-99');
-derivedpath = strrep(derivedpath,'EDITED','EDDER');
+% Derive path to new dataset. Only apply strrep to the directory name, not the entire path.
+% Need to remove trailing slash, otherwise fileparts (+strrep+fullfile) does not work as intended.
+[temp1,temp2,temp3] = fileparts(regexprep(archivepath, '/$', '')); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'RPCLAP-2', 'RPCLAP-99'));
+[temp1,temp2,temp3] = fileparts(regexprep(derivedpath, '/$', '')); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'EDITED',   'EDDER'));
 
 % Set up PDS keywords etc:
 
@@ -50,23 +58,23 @@ preamble;
 
 % Load or, if not defined, generate index:
 % fprintf(1,'lapdog: load indices if existing...')
-dynampath= mfilename('fullpath'); %find path & remove/lapdog from string
+dynampath = mfilename('fullpath'); %find path & remove/lapdog from string
 dynampath = dynampath(1:end-13);
 
 fprintf(1,'lapdog: %s\n',dynampath)
 
 indexfile = sprintf('%s/index/index_%s.mat',dynampath,archiveid);
 fp = fopen(indexfile,'r');
-if(fp > 0)
-     fclose(fp);
-     load(indexfile);
-else
+%if(fp > 0)
+%     fclose(fp);
+%     load(indexfile);
+%else
     
     fprintf(1,'lapdog: calling indexgen\n')    
     indexgen;
     fprintf(1,'lapdog: splitting files at midnight..\n')   
     indexcorr;
-    
+
     
     folder= sprintf('%s/index',dynampath);
     if exist(folder,'dir')~=7
@@ -75,7 +83,7 @@ else
     
 
     save(indexfile,'index');
-end
+%end
 
 
 % Generate daily geometry files:

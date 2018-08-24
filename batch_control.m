@@ -9,6 +9,8 @@
 producerfullname='ERIK P G JOHANSSON';
 producershortname='EJ';
 
+global N_FINAL_PRESWEEP_SAMPLES
+N_FINAL_PRESWEEP_SAMPLES = 16;    % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
 
 % 2. Control section
 % ==================
@@ -20,9 +22,9 @@ fix_geom_bug = 1;  % To change signs of position and velocity coordinates
 % =============
 
 % Info for labels
-lbltime = '2016-08-18';  % Label revision time
+lbltime   = '2018-08-03';  % Label revision time
 lbleditor = 'EJ';
-lblrev = 'Initial release';
+lblrev    = 'Misc. descriptions clean-up';
 
 % 4. Dataset selection and description
 % ====================================
@@ -40,5 +42,7 @@ shortphase = archID;
 % 6. Output path
 % ====================================
 
-derivedpath = strrep(archivepath,'RPCLAP-3','RPCLAP-5');
-derivedpath = strrep(derivedpath,'CALIB','DERIV');
+% Derive path to new dataset. Only apply strrep to the directory name, not the entire path.
+[temp1,temp2,temp3] = fileparts(archivepath); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'RPCLAP-3', 'RPCLAP-5'));
+[temp1,temp2,temp3] = fileparts(derivedpath); derivedpath = fullfile(temp1, strrep([temp2, temp3], 'CALIB',   'DERIV'));
+

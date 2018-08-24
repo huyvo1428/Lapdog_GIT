@@ -6,7 +6,7 @@
 function [] = an_hf(an_ind,tabindex,fileflag)
 
 global an_tabindex;
-            
+%global SATURATION_CONSTANT  %found a way to get around using this global
 diag = 0;
 
 plotpsd=[];
@@ -43,10 +43,9 @@ len = length(an_ind);
 k=0;
 b=0;
 try    
-    
     for i=1:len
         
-        fout={};  %fout is the array that will be printed.fout{:,end} will be a boolean print check, but is first saved as a
+        fout=cell(0,13);  %fout is the array that will be printed.fout{:,end} will be a boolean print check, but is first saved as a
         
         %names, folders
         fname = tabindex{an_ind(i),1};
@@ -139,7 +138,7 @@ try
             end
             
             
-            
+
         end
         obs = find(diff(sind)>0)+1;
         obe = find(diff(sind)<0);
@@ -161,37 +160,44 @@ try
         timing={scantemp{1,1}{obs(1)},scantemp{1,1}{obe(end)},scantemp{1,2}(obs(1)),scantemp{1,2}(obe(end))};
         
         a=[];
-        for b=1:length(obs) %loop each 6ms spectra subsample
+        for b=1:length(obs) %loop each 6ms spectra subsample. For it to be printed it has to be long enough and not contain any saturated values)
             a= [a;reltime(obe(b))-reltime(obs(b))];
-           if reltime(obe(b))-reltime(obs(b)) >3e-3*ffactor   %edit FKJN 18July2016 
-           %If subsample too small, disregard.
-          % if reltime(obe(b))-reltime(obs(b)) >(3e-3-0.1304)  %old line,
-          % what is the significance of -0.1304?  it seems completely out
-          % of place.     
+            if reltime(obe(b))-reltime(obs(b)) >3e-3*ffactor   %edit FKJN 18July2016
+                %If subsample too small, disregard.
+                % if reltime(obe(b))-reltime(obs(b)) >(3e-3-0.1304)  %old line,
+                % what is the significance of -0.1304?  it seems completely out
+                % of place.
                 
-                    ob = obs(b):obe(b);
+                ob = obs(b):obe(b);
+                
+                
+                
+                tstr= scantemp{1,1}(ob(1):ob(end));
+                sct= scantemp{1,2}(ob(1):ob(end));
+                
+                
+                if strcmp(fileflag,'V3H') %one more column for probe 3 files
+                    ib1=scantemp{1,3}(ob(1):ob(end));
+                    ib2=scantemp{1,4}(ob(1):ob(end));
                     
+                elseif strcmp(fileflag,'I3H')
                     
-                    
-                    tstr= scantemp{1,1}(ob(1):ob(end));
-                    sct= scantemp{1,2}(ob(1):ob(end));
-                    
-                    
-                    if strcmp(fileflag,'V3H') %one more column for probe 3 files
-                        ib1=scantemp{1,3}(ob(1):ob(end));
-                        ib2=scantemp{1,4}(ob(1):ob(end));
-                        
-                    elseif strcmp(fileflag,'I3H')
-                        
-                        vp1 =scantemp{1,4}(ob(1):ob(end));
-                        vp2 =scantemp{1,5}(ob(1):ob(end));
-                    end
-                    
-                    ib=scantemp{1,3}(ob(1):ob(end));
-                    vp=scantemp{1,end-1}(ob(1):ob(end));       % For probe 3, vp is scantemp{1,5}, otherwise {1,4}.
-                    qfarray = scantemp{1,end}(ob(1):ob(end));  % Quality factor, always at the end.
-                    
-                    
+                    vp1 =scantemp{1,4}(ob(1):ob(end));
+                    vp2 =scantemp{1,5}(ob(1):ob(end));
+                end
+                
+                ib=scantemp{1,3}(ob(1):ob(end));
+                vp=scantemp{1,end-1}(ob(1):ob(end));       % For probe 3, vp is scantemp{1,5}, otherwise {1,4}.
+                qfarray = scantemp{1,end}(ob(1):ob(end));  % Quality factor, always at the end.
+
+                %-----------------Saturation Handling 8/3 FKJN-------------------------------------%
+                if isempty(qfarray(qfarray > 399.9)) %400 is the saturation constant. if this value is below it, no measurement  is saturated. This way I don't have to remember the global paramter SATURATION_CONSTANT
+                 % i.e. if no value is saturated then continue, else ignore(won't be printed)  
+                
+               %  if isempty(ib(ib==SATURATION_CONSTANT)) && isempty(vp(vp==SATURATION_CONSTANT)) % if no value is saturated then continue, else ignore(won't be printed)  
+               %  if ~(any(isnan(ib)) || any(isnan(vp))) % if any is saturated then ignore, else continue
+                %----------------------------------------------------------------------------------%
+
                     
                     lens = length(vp);
                     
@@ -200,8 +206,8 @@ try
                         
                         %vpred = vp - mean(vp);
                         
-                        P= polyfit(1:length(vp),vp,1);
-                        vpred = vp - polyval(P,1:length(vp));
+                        P= polyfit(1:lens,vp.',1);
+                        vpred = vp - polyval(P,1:lens).';
                         
                         %       lens = length(vp);
                         [psd,freq] = pwelch(vpred,hanning(lens),[], nfft, fsamp);
@@ -212,7 +218,11 @@ try
                         
                         
                         
-                        ibred = ib - mean(ib);
+                        %ibred = ib - mean(ib);
+                        P= polyfit(1:lens,ib.',1);
+                        ibred = ib - polyval(P,1:lens).';
+                        
+                        
                         [psd,freq] = pwelch(ibred,hanning(lens),[], nfft, fsamp);
                         
                         %[psd,freq] = pwelch(ib,[],[],nfft,18750);
@@ -269,16 +279,17 @@ try
                     
                     fout(end+1,1:13)={tstr{1,1},tstr{end,1},sct(1),sct(end),qfarray,mean(ib),mean(ib1),mean(ib2),mean(vp),mean(vp1),mean(vp2),psd,sind(obs(b))};
                     
-                end%if long enough
-                
-            end %for loop
+                end%if non-saturated / NAN
+            end%if long enough
             
+        end %for loop
             
+
             check = cell2mat(fout(:,end));
             
             
             
-            indcheck = find(diff(check));
+           % indcheck = find(diff(check));
             
             avgind =[];
             for k = 1:length(check) %print checker loop & average some values if we're doing burst mode
@@ -308,7 +319,7 @@ try
                         %fout{k,end-1}= mean(reshape(cell2mat(fout(avgind,end-1)),length(avgind),length(freq)),1).'; %avg psd values over wavesnapshot block
                         fout{k,end-1}= mean(reshape(cell2mat(fout(avgind,end-1)),length(freq),length(avgind)),2).'; %avg psd values over wavesnapshot block
                         
-                        %                    fout{k,end-1}= mean(cell2mat(fout(avgind,end-1)),2); %avg psd values over wavesnapshot block
+                        %fout{k,end-1}= mean(cell2mat(fout(avgind,end-1)),2); %avg psd values over wavesnapshot block
                     end
                     avgind=[];
                 end
@@ -407,7 +418,7 @@ try
             %an_tabindex{end,3} = an_ind(1); %first calib data file index of first derived file in this set
             an_tabindex{end,4} = 1;                        % Number of rows
             an_tabindex{end,5} = length(freq);             % Number of columns
-            %an_tabindex{end,6} = an_ind(i);
+            an_tabindex{end,6} = an_ind(i);                % Indices into "index" data structure. Needed for LBL files.
             an_tabindex{end,7} = 'frequency';              % Type
             an_tabindex{end,8} = timing;
             an_tabindex{end,9} = f1+f2;
@@ -421,7 +432,7 @@ try
             
             
             
-            %an_tabindex{end,6} = an_ind(i);
+            an_tabindex{end,6} = an_ind(i);                % Indices into "index" data structure. Needed for LBL files.
             an_tabindex{end,7} = 'spectra'; %type
             an_tabindex{end,8} = timing;
             an_tabindex{end,9} = row_byte;

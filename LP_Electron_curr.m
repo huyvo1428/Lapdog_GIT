@@ -133,7 +133,11 @@ bot = floor(ind(1)+l_ind*SM_Above_Vknee +0.5);
 % spacecraft potential. The function floor rounds
 % the calling parameter to the nearest integer
 % towards minus infinity.
-bot= bot -1 + find(I(bot:end)>0,1,'first');    %only choose currents above 0
+
+
+bot= bot -1 + find(I(bot:end)>0,1,'first');    %only choose currents above 0 
+
+
 %choose starting point some points away from Vsc and has a positive
 %current value.
 
@@ -145,6 +149,25 @@ if (isempty(ind) || length(ind) < 2)
     %all values negative
     return
 end
+
+
+if max(I(bot:len)) > 9e-7 % %We can afford to ignore some datapoints for these very sharp currents
+
+    curr_limit = 4e-7;
+    
+    bot= bot -1 + find(I(bot:end)>curr_limit,1,'first');    %only choose currents above 0 (or curr_limit) for large current. We can afford to ignore some datapoints for these very sharp currents
+    
+    ind2 = bot:len; % Only the first ALG.SM_Below_Vs*100% above the spacecraft potential is now
+    
+    if (isempty(ind2) || length(ind2) < 2)
+        %all values negative
+    else
+        
+        ind=ind2;
+        
+    end
+end
+
 
 
 

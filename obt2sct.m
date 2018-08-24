@@ -1,13 +1,15 @@
-% Convert OBT time (true decimal point) to the SCT number part (not reset count, string).
+% Convert OBT time (true decimal point) to the SCT/SCCS number part (not reset count, string).
 % Compare sct2obt.m
 %
-% Return value: String, e.g. 386207924.64832 where decimals are "fake".
 %
-% ARGUMENTS
-% =========
-% Value : OBT as a double (true decimals).
 %
-% NOTE: Here SCT = SCS = "Spacecraft clock string" (SPICE uses that terminology.)
+% ARGUMENTS AND RETURN VALUE
+% ==========================
+% value   : OBT as a double (true decimals).
+% sct_str : String, e.g. 386207924.64832 where decimals are "fake". NOTE: No reset count.
+%
+%
+% NOTE: Here SCT = SCCS = "Spacecraft clock string" (SPICE uses that terminology.)
 % ===================== OLD COMMENTS BELOW ==========================
 %
 % NOTE: THERE IS NO OBT2SCT DOESN'T GENERATE A FULL SCT STRING, IT OUTPUTS

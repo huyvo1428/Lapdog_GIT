@@ -160,7 +160,7 @@ if ge(remake_index,0) %remake index ~=-1
 	
         substring = '/usr/local/src/cronworkfolder/';
         %newstring= '/data/LAP_ARCHIVE/';
-        fprintf(1,'replacing substring type 2...\n');
+        %fprintf(1,'replacing substring type 2...\n');
 
        % index = struct_string_replace(index,substring,newstring); %third party code
         

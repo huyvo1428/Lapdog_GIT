@@ -72,11 +72,9 @@ try
     % Now with hardcoded current offset (possibly due to a constant stray
     % current during calibration which is not present during measurements)
     %probably unnecessary, but good practice.
-    CURRENTOFFSET = 0;
-    CURRENTO1 = 0;
-    CURRENTO2 = 0;
-    
-    
+    %CURRENTOFFSET = 0;
+    %CURRENTO1 = 0;
+    %CURRENTO2 = 0;
     
 %     if fileflag(2) =='1'
 %         CURRENTOFFSET = -1.8E-9;
@@ -88,9 +86,9 @@ try
 %     end
 %     
     
-    CURRENTOFFSET = 0;
-    CURRENTO1 = 0;
-    CURRENTO2 = 0;
+    %CURRENTOFFSET = 0;
+    %CURRENTO1 = 0;
+    %CURRENTO2 = 0;
     
     
     filename = sprintf('%sRPCLAP_%s_%s_%03x_%s.TAB', tabfolder, datestr(macrotime,'yyyymmdd'), datestr(macrotime,'HHMMSS'), macroNo, fileflag);
@@ -98,8 +96,8 @@ try
     twID = fopen(filename,'w');
     
     global tabindex;  %global index
-    global LDLMACROS; %global constant list
-    
+    %global LDLMACROS; %global constant list
+
     
     %tabindex has format:
     %{ ,1} filename
@@ -112,7 +110,7 @@ try
     %{ ,8} number of bytes per row (including CR+LF)
     %{ ,9} last index number
     
-    % NOTE: This is not the only location where tabindex is set, even for fields set here.
+    % NOTE: This is not the only location where tabindex is set, not even for fields set here.
     tabindex{end+1,1} = filename; %% Let's remember all TAB files we create
     tabindex{end,2} = filenamep; %%their shortform name
     tabindex{end,3} = tabind(1); %% and the first index number
@@ -137,7 +135,7 @@ try
             
 
             
-%------------------- EDDER DOESN'T NEED OFFSET CORRECTSIONS, nor SWEEPWINDOW DELETION------------------------%  FKJN 16/1 2018          
+%------------------- EDDER DOESN'T NEED OFFSET CORRECTIONS, nor SWEEP WINDOW DELETION------------------------%  FKJN 16/1 2018          
             if fileflag(2) =='3' % read file probe 3
                  scantemp = textscan(trID,'%s%f%f%f%f','delimiter',',');
 
@@ -224,8 +222,6 @@ try
                 else
                     
                     for (j=1:scanlength)       %print
-   
-                        
                         bytes=fprintf(twID,'%s, %16.6f, %14i, %14i\r\n'...
                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
 %                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
@@ -256,12 +252,12 @@ try
                     
                 end
                 
-            end
+            end   % if
             
             fclose(trID);
             clear scantemp scanlength
-        end
-    else %% if sweep, do:
+        end    % for i=...
+    else %% if sweep, do:      
         
         filename2 = filename;
         filename2(end-6) = 'I'; %current data file name according to convention%
@@ -271,44 +267,45 @@ try
         twID2 = fopen(filename2,'w');
         
         
-        
-        
-        for(i=1:len); % read&write loop iterate over all files, create B*S.TAB and I*S.TAB
-            qualityF = 0;     % qualityfactor initialised!
+        edited1ColumnsListList = {};
+        for(i=1:len); % Read & write loop iterate over multiple EDITED1 sweep files; create B*S.TAB and I*S.TAB
+            %qualityF = 0;     % qualityfactor initialised!
             trID = fopen(index(tabind(i)).tabfile);
             
             if trID > 0
                 scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
                 fclose(trID); %close read file
+                edited1ColumnsListList{i} = scantemp;
             else
                 fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
                 break
             end % if I/O error
+            
+
                         
             step1 = index(tabind(i)).pre_sweep_samples; %some steps are not in actual sweep, but number is listed in LBL file
-            step2 = find(diff(scantemp{1,4}(1:end)),1,'first');
+            %step2 = find(diff(scantemp{1,4}(1:end)),1,'first');
             
             %     if step1 > 40 %foolproofing this after 24 June 2016 bug
             %        step1 = step2;
             %        continue; %continue passes control to the next iteration of a for or while loop. It skips any remaining statements in the body of the loop for the current iteration. The program continues execution from the next iteration. continue applies only to the body of the loop where it is called. In nested loops, continue skips remaining statements only in the body of the loop in which it occurs.
             %      end
             
-            scantemp{1,1}(1:step1)    = [];
+            scantemp{1,1}(1:step1)    = [];      
             scantemp{1,2}(1:step1)    = [];
             scantemp{1,3}(1:step1)    = [];
             scantemp{1,4}(1:step1)    = [];
-
 
             if (i==1) %do this only once + bugfix
                 
                 %first values are problematic, often not in the sweep at all since
                 %spacecraft starts recording too early
-                
 
                 %[potbias, junk, ic] = unique(scantemp{1,4}(:),'stable'); %group potbias uniquely,get mean
                 
                 %slightly more complicated way of getting the mean
-                nStep= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
+                %nStep= find(diff(scantemp{1,4}(1:end)),1,'first'); %find the number of measurements on each sweep
+                nStep = 1;   % Always interpret sweeps as having one sample per sweep step. -- Simplest way to modify code while retaining "comparability" with DERIV code.
                 inter = 1+ floor((0:1:length(scantemp{1,2})-1)/nStep).'; %find which values to average together
                 
                 potbias = accumarray(inter,scantemp{1,4}(:),[],@mean); %average
@@ -319,16 +316,15 @@ try
                 potout(1:2:2*length(reltime)) = reltime;
                 potout(2:2:2*length(reltime)) = potbias;
                 
-                b1= fprintf(twID,'%14i, %14i\r\n',potout);
-      
+                %b1= fprintf(twID,'%14.7e, %14i\r\n',potout);   % Create BxS TAB file.
                 
             end %if first iteration +bugfix
             
             
 %------------------- EDDER DOESN'T NEED LDL CORRECTIONS------------------------%  FKJN 16/1 2018                     
             %checks if macro is LDL macro, and downsamples current measurement
-            if any(ismember(macroNo,LDLMACROS)) %if macro is any of the LDL macros
-                qualityF = qualityF+40; %LDL macro measurement
+%            if any(ismember(macroNo,LDLMACROS)) %if macro is any of the LDL macros
+%                qualityF = qualityF+40; %LDL macro measurement
 %                 %filter LDL sweep for noisy points. the last two number
 %                 %dictate how heavy filtering is needed. 3 & 1 are good from
 %                 %experience.
@@ -341,7 +337,7 @@ try
 %                     qualityF = qualityF +2; %lower samplesize quality marker
 %                 %else
 %                 %  curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
-            end%LDLMACROS
+%            end%LDLMACROS
 
 
 
@@ -368,15 +364,15 @@ try
 %                     ylabel('I');
 %                     title('unedited sweep');
 %                     grid on;
-%                     
-%                     
+%
+%
 %                     subplot(2,2,3)
 %                     plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,3)))
 %                     xlabel('Vp [V]');
 %                     ylabel('I');
 %                     title('unedited sweep, factor 3&3 99% confidence, 99%confidene ');
 %                     grid on;
-%                     
+%
 %                     subplot(2,2,4)
 %                     plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),potbias,nStep,2,0.8)),'b',potbias,curArray,'r')
 %                     %        plot(potbias,curArray);
@@ -384,33 +380,46 @@ try
 %                     ylabel('I');
 %                     title('unedited sweep, factor 2&0.8');
 %                     grid on;
-%                     
-%                     
-%                     
+%
+%
+%
 %                 end
-                
 
-            
-            curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
+            %curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
 
             %------------------- EDDER DOESN'T NEED OFFSET CORRECTIONS------------------------%  FKJN 16/1 2018                     
 
           %  curArray=curArray+ CURRENTOFFSET;
             
-            b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);
-            b3 = fprintf(twID2,', %14i',curArray.'); %some steps could be "NaN" values if LDL macro
-            b4 = fprintf(twID2,'\r\n');
+            % Write timestamps (2x2=4). (No quality flag as in DERIV1.)
+            %b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end));
+            % Write actual sweep samples.
+            %b3 = fprintf(twID2,', %14i',curArray.'); %some steps could be "NaN" values if LDL macro
+            %b4 = fprintf(twID2,'\r\n');
             
             %%Finalise
             
             if (i==len) %if last iteration
                 
+                % DEBUG
+                % -------- Generate IxS+BxS files separately - New implementation. --------
+                % Useful for being able to produce both old and new IxS & BxS files simultaneuosly.
+                %BxS_fid = fopen([filename,  '_new'], 'w');
+                %IxS_fid = fopen([filename2, '_new'], 'w');
+                %[IxS_nBytesPerRow, IxS_nColumns BxS_nBytesPerRow] = write_IxS_BxS(edited1ColumnsListList, IxS_fid, BxS_fid, [index(tabind(:)).pre_sweep_samples]);
+                %fclose(BxS_fid);
+                %fclose(IxS_fid);
+                %------------------------------------------------------------------------
+                
+                [IxS_nBytesPerRow, IxS_nColumns, BxS_nBytesPerRow] = write_IxS_BxS(edited1ColumnsListList, twID2, twID, [index(tabind(:)).pre_sweep_samples]);
+                
                 tabindex(end,4:7)= {scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),length(potbias),2}; %one index for bias voltages
-                tabindex{end,8}=b1;
+                %tabindex{end,8}=b1;   % File size, but should be bytes-per-row.
+                tabindex{end,8}=BxS_nBytesPerRow;   % File size, but should be bytes-per-row.
                 
-                
-                tabindex(end+1,1:7)={filename2,strrep(filename2,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len,length(potbias)+5};
-                tabindex{end,8} = b2+b3+b4;
+                tabindex(end+1,1:7) = {filename2, strrep(filename2,tabfolder,''), tabind(1), scantemp{1,1}{end,1}(1:23), scantemp{1,2}(end), len, IxS_nColumns};   % Removed quality flag.
+                %tabindex{end,8} = b2+b3+b4;
+                tabindex{end,8} = IxS_nBytesPerRow;
                 tabindex{end,9} = tabind(end);
                 %           tabindex(end+1,1:6)={filename3,strrep(filename3,tabfolder,''),tabind(1),scantemp{1,1}{end,1}(1:23),scantemp{1,2}(end),len};
                 %one index for currents and two timestamps
@@ -420,14 +429,17 @@ try
                 %%remember stop time in universal time (WITH ONLY 3 DECIMALS!)
                 %and spaceclock time for sweep current data, store number of
                 %rows & no of columns (+4)
-            end
+            end    % if
             
             clear scantemp;
-        end
-        fclose(twID2); %write file nr 2, condensed data, terminated asap
+        end    % for i=...   Iterate over EDITED1 files.
+        
+        
+        fclose(twID2); %write file nr 2 (IxS), condensed data, terminated asap
+        
         
     end
-    fclose(twID); %write file nr 1
+    fclose(twID); %write file nr 1 
     
     
     
@@ -455,3 +467,33 @@ end
 
 
 
+function [IxS_nBytesPerRow, IxS_nColumns, BxS_nBytesPerRow] = write_IxS_BxS(edited1ColumnsListList, IxS_fid, BxS_fid, INITIAL_SWEEP_SMPLS_array)
+    global N_FINAL_PRESWEEP_SAMPLES   % IMPLEMENTATION NOTE: Not put in edder_createTAB_derive_IxS_BxS to facilitate automatic testing.
+    global SATURATION_CONSTANT
+    MISSING_CONSTANT = SATURATION_CONSTANT;
+    
+    [BxS_relativeTime, BxS_voltageArray, IxS_utc12, IxS_obt12, IxS_currentArrays] = ...
+        edder_createTAB_derive_IxS_BxS(...
+        cellfun(@(c) (c{1}), edited1ColumnsListList, 'UniformOutput', false), ...
+        cellfun(@(c) (c{2}), edited1ColumnsListList, 'UniformOutput', false), ...
+        cellfun(@(c) (c{3}), edited1ColumnsListList, 'UniformOutput', false), ...
+        cellfun(@(c) (c{4}), edited1ColumnsListList, 'UniformOutput', false), ...        
+        INITIAL_SWEEP_SMPLS_array, ...
+        N_FINAL_PRESWEEP_SAMPLES, MISSING_CONSTANT);
+        
+        potout(1:2:2*length(BxS_relativeTime)) = BxS_relativeTime;
+        potout(2:2:2*length(BxS_relativeTime)) = BxS_voltageArray;
+        fprintf(BxS_fid,'%14.7e, %14i\r\n', potout);   % Create BxS TAB file.
+        BxS_nBytesPerRow = NaN;   % Not bothered setting correctly since should not be needed by createLBL.
+    
+        for i = 1:numel(edited1ColumnsListList)
+            % Write timestamps (2x2=4). (No quality flag as in DERIV1.)
+            b2 = fprintf(IxS_fid,'%s, %s, %16.6f, %16.6f', IxS_utc12{1}{i}, IxS_utc12{2}{i}, IxS_obt12{1}(i), IxS_obt12{2}(i));
+            % Write actual sweep samples.
+            b3 = fprintf(IxS_fid,', %14i',IxS_currentArrays{i}); %some steps could be "NaN" values if LDL macro
+            b4 = fprintf(IxS_fid,'\r\n');
+        end
+        IxS_nBytesPerRow = b2 + b3 + b4;
+        IxS_nColumns = 4 + length(IxS_currentArrays{1});
+
+end
