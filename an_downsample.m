@@ -51,11 +51,11 @@ try
         scantemp=textscan(arID,'%s%f%f%f%d','delimiter',',');
         fclose(arID);
         
-%                     %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-%                     %apparently an if/else case is 2.13 times faster than querying
-%                     %both columns
-                    scantemp{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT)    = NaN;
-%                     %-------------------------------------------------------------%
+%       %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+%       %apparently an if/else case is 2.13 times faster than querying
+%       %both columns
+        scantemp{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT) = NaN;
+%       %-------------------------------------------------------------%
         
         UTCpart1 = scantemp{1,1}{1,1}(1:11);
         

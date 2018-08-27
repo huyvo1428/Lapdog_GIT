@@ -11,7 +11,7 @@
 % tabLblInconsistencyPolicy : String. As defined in createLBL.create_OBJTABLE_LBL_file.
 %
 %
-function write_A1P(kvlLblAll, HeaderOptions, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, indentationLength, dontReadHeaderKeyList, tabLblInconsistencyPolicy)
+function write_A1P(kvlLblAll, HeaderOptions, cotlfSettings, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, dontReadHeaderKeyList, tabLblInconsistencyPolicy)
 %
 % PROPOSAL: Do not write LBL file. Return ~lblData instead.
 %   CON: Would be nice to have all dependence on "der_struct" here.
@@ -19,7 +19,8 @@ function write_A1P(kvlLblAll, HeaderOptions, index, der_struct, NO_ODL_UNIT, MIS
     for iFile = 1:numel(der_struct.file)
         startStopTimes = der_struct.timing(iFile, :);
         
-        iIndex = der_struct.firstind(iFile);        
+        
+        iIndex = der_struct.firstind(iFile);
         
         %--------------------------
         % Read the CALIB1 LBL file
@@ -37,7 +38,6 @@ function write_A1P(kvlLblAll, HeaderOptions, index, der_struct, NO_ODL_UNIT, MIS
         kvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(kvlLblCalib1, kvlLbl, 'require preexisting keys');
 
         lblData = [];
-        lblData.indentationLength = indentationLength;
         lblData.HeaderKvl = kvlLbl;
         clear   kvlLbl   kvlLblCalib1
 
@@ -59,7 +59,7 @@ function write_A1P(kvlLblAll, HeaderOptions, index, der_struct, NO_ODL_UNIT, MIS
         lblData.OBJTABLE.OBJCOL_list = ocl;
         clear   ocl
         
-        createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, lblData, HeaderOptions, tabLblInconsistencyPolicy);
+        createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, lblData, HeaderOptions, cotlfSettings, tabLblInconsistencyPolicy);
         clear   lblData
         
     end   % for

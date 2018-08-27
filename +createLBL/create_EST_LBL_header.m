@@ -15,6 +15,9 @@
 % 
 %
 % ASSUMES: The two LBL files have identical header keys on identical positions (line numbers)!
+%
+%
+% Initially created <=2017 by Erik P G Johansson, IRF Uppsala.
 %==============================================================================================
 function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, probeNbrList, KvlOverwrite, deleteHeaderKeyList)
 %
