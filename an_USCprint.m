@@ -2,7 +2,12 @@
 function [] = an_USCprint(USCfname,USCshort,time_arr,foutarr, index_nr_of_firstfile,timing,probenr,mode)
 
 
+
+fprintf(1,'%s',time_arr{1,1}(1,:));
+
+
 global usc_tabindex
+global target
 
 
 %%%--------illumination check------------------------%%%
@@ -11,7 +16,7 @@ kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
 paths(); 
 
 cspice_furnsh(kernelFile);
-[junk,SEA,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
+[junk,SEA,SAA]=orbit('Rosetta',time_arr{1,1},target,'ECLIPJ2000','preloaded');
 cspice_kclear;
 
 
@@ -34,7 +39,7 @@ else
     Phi23 = 107;
     illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
 end
-SEA_OK = abs(SEA)<1; %  <1 degree  = nominal pointing
+SEA_OK = abs(SEA)<1; %  0 ±1 degree  = nominal pointing
 illuminati(~SEA_OK)=0.3;
 
 dark_ind=illuminati<0.9;
@@ -60,7 +65,7 @@ if strcmp(mode,'vfloat')
             
             
             
-            row_byte= fprintf(awID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),foutarr{1,5}(j),qvalue,sum(foutarr{1,8}(j)));
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),foutarr{1,5}(j),qvalue,sum(foutarr{1,8}(j)));
             N_rows = N_rows + 1;
         end%if
         

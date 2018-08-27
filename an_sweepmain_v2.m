@@ -1,8 +1,8 @@
 % Analyses sweeps, utilising modded version of Anders an_swp code, and other
 % methods.
-function [XXP] = an_sweepmain(an_ind,tabindex,targetfullname)
+function [XXP] = an_sweepmain_v2(an_ind,tabindex,targetfullname)
 
-global an_tabindex der_struct;
+global an_tabindex ;
 global target;
 global diag_info
 global CO IN     % Physical & instrumental constants
@@ -572,7 +572,8 @@ try
                 XXP_struct.Iph0(j,1:2)=DP(j).Iph0;
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
                 XXP_struct.qf(j,1)=EP(j).qf;
-               
+                XXP_struct.lum(j,1)=EP(j).lum;
+
                 
             end
            % nan_ind=isnan(XXP_struct.ionslope); XXP_struct.ionslope(nan_ind)=SATURATION_CONSTANT;

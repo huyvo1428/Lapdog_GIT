@@ -1,4 +1,4 @@
-function []= an_downsample(an_ind,tabindex,intval)
+function []= an_downsample(an_ind,intval,tabindex,index)
 %function []= an_downsample(an_ind,tabindex,intval)
 
 %%count = 0;
@@ -46,7 +46,7 @@ try
     for i=1:length(an_ind)     % Iterate over files (indices).
         
         macroNo=index(tabindex{an_ind(i) ,3}).macro;
-        macroNostr=dex2hex(macroNo);
+        %macroNodex=dec2hex(macroNo);
         %macroNostr=dec2hex(index(tabindex{an_ind(i) ,3}).macro);
         %          dec2hex(index(tabindex{ind_V1L(1),3}).macro)
         
@@ -119,7 +119,8 @@ try
         
         vmu = accumarray(inter,scantemp{1,4}(:),[],@mean,NaN);
         vsd = accumarray(inter,scantemp{1,4}(:),[],@std);
-        qf  = accumarray(inter,scantemp{1,5}(:),[],@(x) sum(unique(x)));
+%        qf  = accumarray(inter,scantemp{1,5}(:),[],@(x) sum(unique(x)));
+        qf  = accumarray(inter,scantemp{1,5}(:),[],@(x) frejonbitor(x));
         
         
         switch mode   %find bias changes and fix terrible std function
@@ -270,7 +271,7 @@ try
                 % Don't print zero values.
             else
                 
-                row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e, %05i\r\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j),sum(foutarr{1,8}(j)));
+                row_byte= fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e, %05i\r\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j),sum(foutarr{1,8}(j)));
 
                 N_rows = N_rows + 1;
             end%if
@@ -289,6 +290,8 @@ try
         an_tabindex{end,9} = row_byte;                
         fclose(awID);
         
+        
+        fprintf(1,'checking %x, vs %x',macroNo,VFLOATMACROS(1))
         if ismember(macroNo,VFLOATMACROS)
             
             
@@ -336,5 +339,22 @@ end   % try-catch
 
 end   %function
 
+
+function x=frejonbitor(A)
+
+len = length(A);
+x=A(1);
+
+if len>1
+
+    for i = 1:len
+    x=bitor(x,A(i));
+    end
+end
+
+
+
+
+end
 
 

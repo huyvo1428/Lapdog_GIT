@@ -2,12 +2,15 @@
 
 function []= an_outputscience(XXP)
 global SATURATION_CONSTANT;
+global ASW_tabindex
+ASW_tabindex=[];
+
 iph0conditions=[];
 iph0conditions.I_Vb=-17.0;%V from generating lap1 vector.
 iph0conditions.I_Vb_eps=1.0;%V epsilon, from generating lap1vector
-iph0conditions.time_window=3*60*60;%s  time window
+iph0conditions.time_window=1*60*60;%s  time window
 iph0conditions.time_samples=20;%minimum samples in time window
-iph0conditions.samples=20;%Samples minimum.
+iph0conditions.samples=11;%Samples minimum.
 iph0conditions.CONT = +1.51e-9;
 %default value of CONT = +1.51e-9;
 % for i= 1:XXP(1).info.nroffiles
@@ -21,18 +24,19 @@ iph0conditions.CONT = +1.51e-9;
 %     'asm_ion_slope' 'old_Vx' 'old_Vsi' 'Vsi' 'macroId' 'ion_slope' 'curr' 'B'...
 %     'asm_ne_5eV' 'asm_ni_v_dep'};
 
-dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0'};
+dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf'};
 infoflds= {'macroId'};
-PXP= struct_cleanup(XXP,infoflds,dataflds);
+PHO= struct_cleanup(XXP,infoflds,dataflds);
 
-PXP= niklas_iph0_resampled(PXP,iph0conditions);
+PHO= PHOTABFILE(PHO,iph0conditions,XXP);
 
 
 for i = 1:XXP(1).info.nroffiles %AXP generation!
     len =length(XXP(i).data.Tarr(:,1));
     filename=XXP(i).info.file;
     filename(end-6:end-4)='ASW';
-    %twID = fopen(filename,'w');
+    
+    twID = fopen(filename,'w+');
     
     dummy_ne=SATURATION_CONSTANT;
     dummy_Te_XCAL=SATURATION_CONSTANT;
@@ -49,14 +53,26 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         str4=sprintf(' %14.7e, %2.1f,',dummy_v_ion,dummy_qv);
         str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv);
         str6=sprintf(' %14.7e, %2.1f,',dummy_Te_XCAL,dummy_qv);
-        str7=sprintf(' %s',XXP(i).qf);
+        str7=sprintf(' %14.7e, %2.1f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
+        str8=sprintf(' %05i',XXP(i).data.qf(j));
         
-        strtot=strcat(str1,str2,str3,str4,str5,str6,str7);
-    %    row_bytes= fprintf(twID,'%s',strtot);
+        strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
+        row_bytes= fprintf(twID,'%s\r\n',strtot);
     end
-    XXP(i).info.row_bytes = row_bytes; 
-    XXP(i).info.AXPread_me=  "code used to generate this file: str1=sprintf('%s, %s, %16s, %16s',XXP(i).data.Tarr{1,:});        str2=sprintf(' %14.7e, %2.1f,',dummy_ne,dummy_qv);str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv); str4=sprintf(' %14.7e, %2.1f,',dummy_v_ion,dummy_qv); str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv);str6=sprintf(' %14.7e, %2.1f,',dummy_Te_XCAL,dummy_qv); str7=sprintf(' %s',dummy_qualityflag);";
-    %fclose(twID);
+    folder = strrep(XXP(i).info.file,XXP(i).info.shortname,'');
+    
+    ASW_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
+    ASW_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
+    %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
+    ASW_tabindex(end).no_of_rows = len;                % length(foutarr{1,3}); % Number of rows
+    ASW_tabindex(end).no_of_columns = 15;            % Number of columns
+    % usc_tabindex{end,6] = an_ind(i);
+    ASW_tabindex(end).type = 'ASW'; % Type
+    ASW_tabindex(end).timing = XXP(i).info.timing;
+    ASW_tabindex(end).row_byte = row_bytes;
+    
+    ASW_tabindex(end).ASWread_me=  "code used to generate this file: str1=sprintf('%s, %s, %16s, %16s',XXP(i).data.Tarr{1,:});        str2=sprintf(' %14.7e, %2.1f,',dummy_ne,dummy_qv);str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv); str4=sprintf(' %14.7e, %2.1f,',dummy_v_ion,dummy_qv); str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv);str6=sprintf(' %14.7e, %2.1f,',dummy_Te_XCAL,dummy_qv); str7=sprintf(' %s',dummy_qualityflag);";
+    fclose(twID);
 end
 end
 
@@ -83,12 +99,14 @@ end
 
 
 
-function lapfile_with_iph0_niklas = niklas_iph0_resampled(lapstruct,conditions)
+function resampled = PHOTABFILE(lapstruct,conditions,XXP)
 %takes a SORTED struct with A1S fields, groups them and computes iph0 via
 %niklas multi sweep method.
+global PHO_tabindex
+global SATURATION_CONSTANT;
 
-lapfile_with_iph0_niklas= fixlap1_cont_iph0(lapstruct,conditions.CONT); % check for contamination & prepare output
-
+out= fixlap1_cont_iph0(lapstruct,conditions.CONT); % check for contamination & prepare output
+an_diag = 0;
 
 %niklas iph_calc.m revisited
 
@@ -98,11 +116,18 @@ resampled.curr=[];
 resampled.ion_slope=[]; 
 resampled.conds=conditions;
 
-%resampled.median.iph0=[];
-%resampled.median.sigma_iph0=[];
-%resampled.mean.iph0=[];
-%resampled.mean.sigma_iph0=[];
 
+%%%--------illumination check------------------------%%%
+dynampath = strrep(mfilename('fullpath'),'/an_outputscience','');
+kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
+paths(); 
+
+cspice_furnsh(kernelFile);
+
+
+
+
+intval = resampled.conds.time_window;%seconds
 
 
 % 
@@ -113,45 +138,69 @@ resampled.conds=conditions;
 % resampled.conds.time_samples=10;%minimum samples in time window
 % resampled.conds.samples=10;%Samples minimum.
 % 
-
-
-    t_start=lapstruct.t0(1);%minimum if the list is SORTED. otherwise shit will hit the fan.
-    count=0;
-    row=0;
-    groupind=[];
-for i =1:length(lapstruct.B) % find w
-    
-    
-    if lapstruct.t0(i)-t_start > resampled.conds.time_window %e.g. 2*60*60seconds
-            row=row+1;
-
+      %  UTCpart1= XXP(1).info.timing{1,1}(1:11);
+        %UTCpart1 = scantemp{1,1}{1,1}(1:11);
+      %  utc_str= XXP(1).timing{1,1};
+      %  utc_str= XXP(1).info.timing{1,1};%this is start of file
+        % utc_str=XXP(1).data.Tarr{1,1}; %this is start of first sweep data point, slightly different
+  
+        utc_str=cspice_et2utc(lapstruct.t0(1),'ISOC',6);
         
-        if count > resampled.conds.time_samples %save index
-            resampled.ind(row,1:length(groupind))=groupind;
-        else
-            %ignore, too few samples.            
-        end
         
-        %reinitialise variables
-        count = 0;
-        groupind=[];
-        t_start=lapstruct.t0(i);        
-    else
-        count=count+1;
-        groupind=[groupind;i];
-    end
-   
+        % Set starting spaceclock time to (UTC) 00:00:00.000000
+        ah= str2double(utc_str(12:13));
+        am= str2double(utc_str(15:16));
+        as= str2double(utc_str(18:end));
+
+       % ah =str2double(scantemp{1,1}{1,1}(12:13));
+       % am =str2double(scantemp{1,1}{1,1}(15:16));
+       % as =str2double(scantemp{1,1}{1,1}(18:end)); %including fractions of seconds
+        hms = ah*3600 + am*60 + as;
+        %tday0=scantemp{1,2}(1)-hms; %%UTC and Spaceclock must be correctly defined
+        t_obt0= str2double(XXP(1).data.Tarr{1,3})-hms; %%epoch UTC and Spaceclock must be correctly defined
+        t_et0= lapstruct.t0(1)-hms; %%epoch, UTC and Spaceclock must be correctly defined
+
+     %t0 is "et" time of each measurement (start of sweep)
+     inter = 1 + floor((lapstruct.t0(:) - t_et0)/intval); %prepare subset selection to accumarray
+     
+
+startind=inter(1);
+groupind=[];
+
+
+
+rowcount=0;
+qf_array  = accumarray(inter,lapstruct.qf,[],@(x) frejonbitor(unique(x)));
+
+
+%len=row; % row is incremented to max row nr, but incase I forget.
+%for i=1:len
+k=0;
+%for i = inter(1):inter(end)
+%sometimes lapstruct.t0 is not sorted...?
+%t_etz=floor(t_et0+(intval* (min(inter):max(inter)))+0.5);%maybe slightly incorrect. ugh.
+t_etz=t_et0+intval/2+(intval* (min(inter):max(inter)));%midpoint of interval                                        
+
+t_obtz= t_obt0 +intval/2+(intval* (min(inter):max(inter)));%midpoint of interval
+t_utc= cspice_et2utc(t_etz(:).'+0.5, 'ISOC', 6);% buffer up with 0.5 second, before UTC conversion, and then round to closest second later in function
+t_matlab_date=nan(length(t_etz),1);
+for i = 1:length(t_etz)
+    t_matlab_date(i)=datenum(strrep(t_utc(i,:),'T',' '));
 end
 
-len=row; % row is incremented to max row nr, but incase I forget.
-for i=1:len
     
+  %  save ~/matlabdump_utc.mat t_utc t_matlab_date
     
-    indz= resampled.ind(i,:); % a lot of extra zeroes in resampled.ind... need to get rid of them.
-    indz(indz==0)=[]; %array of grouped indices. 
+for i = min(inter):max(inter) %main for loop
+
+    k=k+1;
+    indz=find(inter==i);
+
+    
+    %indz= resampled.ind(i,:); % a lot of extra zeroes in resampled.ind... need to get rid of them.
+   % indz(indz==0)=[]; %array of grouped indices. 
     if ~isempty(indz)
     colz=1:length(indz);
-    
     
     %%single sweep method resampling
     
@@ -159,18 +208,24 @@ for i=1:len
     %resampled.median.sigma_iph0(i)=nanstd(lapstruct.Iph0(indz));
     %resampled.mean.iph0(i)=nanmean(lapstruct.Iph0(indz));
     %resampled.mean.sigma_iph0(i)=nanstd(lapstruct.Iph0(indz));
-        
     %%
-    curr = lapstruct.curr(indz);
-    ion_slope = lapstruct.ion_slope(indz); %need non structure variables.
-    resampled.t0(i,colz) = lapstruct.t0(indz);    
-    resampled.t_epoch(i)=mean(resampled.t0(indz));
+    
+    resampled.curr(k,colz)=lapstruct.curr(indz);
+    curr= resampled.curr(k,colz).';
+    %curr = lapstruct.curr(indz);
+    resampled.ion_slope(k,colz)=lapstruct.ion_slope(indz,1);
+    ion_slope = resampled.ion_slope(k,colz).';
+   % ion_slope = lapstruct.ion_slope(indz,1); %need non structure variables.
+    resampled.t0(k,colz) = lapstruct.t0(indz);    
+    resampled.t_epochmean(k)=mean(resampled.t0(k,colz));
+    resampled.t_epoch(k)=t_et0+intval*i;
+    resampled.t_OBT(k) = t_obt0 + intval*i;
   %  resampled.macroId = mean(lapstruct.macroId(indz));
     
     %remove shadowed, and unrealistic ionslopes
     
-    delind=find((lapstruct.Illumination(indz)<0.9 | lapstruct.ion_slope(indz) <0 | isnan(lapstruct.ion_slope(indz))| isnan(lapstruct.curr(indz))));
-        
+    %delind=find((lapstruct.lum(indz)<0.9) | ion_slope <0 | isnan(ion_slope) | isnan(curr));
+    delind=(lapstruct.lum(indz)<0.9) | ion_slope <0 | isnan(ion_slope) | isnan(curr);   
     curr(delind)=[]; %delind is the indexes of the group of index indz which are invalid
     ion_slope(delind)=[];
     
@@ -187,78 +242,183 @@ for i=1:len
 
 
 %        ind2 = (abs(polyval(P,ion_slope)-curr) > 3.5*rms_tmp) | (abs(ion_slope-nanmedian(ion_slope))>1*nanstd(ion_slope));
-        outlierind = (abs(curr-nanmedian(curr))> 3*nanstd(curr))| (abs(ion_slope-nanmedian(ion_slope))>1*nanstd(ion_slope));
+%         outlierind = (abs(curr-nanmedian(curr))> 3*nanstd(curr))| (abs(ion_slope-nanmedian(ion_slope))>1*nanstd(ion_slope));
+% 
+%         %outliers indicate that the plasma and ion current changed
+%         %substantially or that the ion_slope estimate was poorly made                     
+% 
+%         curr(outlierind)=[];
+%         ion_slope(outlierind)=[];
+%         
+%        % pfit = polyfit(currprim,curr,1);
+%               
+        % if  ge(length(curr),resampled.conds.samples) 
+           %[P2,S2]= polyfit(ion_slope,curr,1);
+           
+           [P2, outliers,S2] = fit_ols_ESD(ion_slope, curr); %new fitting routine with outlier removal.
 
-        %outliers indicate that the plasma and ion current changed
-        %substantially or that the ion_slope estimate was poorly made                     
-
-        curr(outlierind)=[];
-        ion_slope(outlierind)=[];
-        
-       % pfit = polyfit(currprim,curr,1);
-       
-       if  ge(length(curr),resampled.conds.samples)
-           [P2,S2]= polyfit(ion_slope,curr,1);
-           resampled.P(i,1:2) = P2;
+           resampled.P(k,1:2) = P2;
            %resampled.S(i) = S2;
-       end
+      % end
         
         
-        if ge(length(curr),resampled.conds.samples) && P2(1) < 0 %; %if length >= 10 e.g. 
+      if an_diag
+      
+          figure(2001);plot(ion_slope,curr,'o',ion_slope,polyval(P2,ion_slope),ion_slope,polyval(polyfit(ion_slope,curr,1),ion_slope),'-b')
+          ax=gca;
+          legend('data','fit OLS ESD','polyfit')
+          ax.XLabel.String='ion slope [A/V]';
+          ax.YLabel.String='current [A]';
+          hline(P2(2),'-','Iph0');
+          grid on;
+
+          
+      end
+      
+      
+      
+        %if too few points remain after outlier removal, or the slope is
+        %unphysical, enter nan values. else:
+        if ge(length(curr(~outliers)),resampled.conds.samples) && P2(1) < 0 %; %if length >= 10 e.g. 
+        %if ge(length(curr),resampled.conds.samples) && P2(1) < 0 %; %if length >= 10 e.g. 
             
             
-            resampled.iph0(i) = P2(2);% this is apparently iph0.
+            resampled.iph0(k) = P2(2);% this is apparently iph0.
             try
                 S2.sigma = sqrt(diag(inv(S2.R)*inv(S2.R')).*S2.normr.^2./S2.df);
-                resampled.iph0_sigma(i) = S2.sigma(2);
+                resampled.iph0_sigma(k) = S2.sigma(2);
                 
             catch err %horrible try catch.
-                resampled.iph0_sigma(i) = nan;
+                resampled.iph0_sigma(k) = nan;
             end
             
-            resampled.iph0_sigma(i) = S2.sigma(2);
+            %resampled.iph0_sigma(i) = S2.sigma(2);
         else
-            resampled.iph0(i) = nan;% fill with nan.
-            resampled.iph0_sigma(i) = nan;
+            resampled.iph0(k) = SATURATION_CONSTANT;% fill with nan.
+            resampled.iph0_sigma(k) = nan;
             
         end
         
     else
         
-        resampled.iph0(i) = nan;% fill with nan.
-        resampled.iph0_sigma(i) = nan;
-        resampled.P(i,1:2) = nan;
+        resampled.iph0(k) = SATURATION_CONSTANT;% fill with nan.
+        resampled.iph0_sigma(k) = nan;
+        resampled.P(k,1:2) = nan;
         
     end
     
-
-         
-%         if length(currprim) > 6 & pfit(1) < 0
-%             iph0=[iph0 pfit(2)]; %The sought Iph0 current is the intersection of the polynomial p with the "y-axis"
-%         %elseif  length(currprim) > 3 & pfit(1) > 0.03
-%             %iph0=[iph0 nanmean(curr)] %Sometimes the slope is positive but the values in the right range, just to try
-%         else
-%             iph0=[iph0 NaN];
-%         end
-%         macro=[macro sweep(i).macroname(1)];
-%         rms = [rms std(polyval(pfit,currprim)-curr)];
-%         N=[N length(curr)];
-% 
     
+    %% add to file
+       
+    
+    
+
     
     end
-end
+    
+
+    dirY = datestr(t_matlab_date(k),'YYYY');
+    dirM = upper(datestr(t_matlab_date(k),'mmm'));
+    dirD = strcat('D',datestr(t_matlab_date(k),'dd'));
+
+%    dirY = datestr(resampled.t_epoch(k),'YYYY');
+%    dirM = upper(datestr(resampled.t_epoch(k),'mmm'));
+%    dirD = strcat('D',datestr(resampled.t_epoch(k),'dd'));
+    folder = strcat(XXP(1).info.derivedpath,dirY,'/',dirM,'/',dirD,'/');
+    
+    filename = sprintf('%sRPCLAP_%s_000000_30M_PHO.TAB',folder,datestr(t_matlab_date(k),'yyyymmdd'));
+%         
+%     
+%     if k>1 && ~strcmp(datestr(resampled.t_epoch(k-1),'dd'), datestr(resampled.t_epoch(k),'dd')) %%new calendar day? (won't check j==1)
+%         %   newfile =false;
+%         twID = fopen(filename,'w');
+%         
+%     PHO_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
+%     PHO_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
+%     %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
+%     PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
+%     PHO_tabindex(end).no_of_columns = 5;            % Number of columns
+%     % usc_tabindex{end,6] = an_ind(i);
+%     PHO_tabindex(end).type = 'USC'; % Type
+%     PHO_tabindex(end).timing = timing;
+%     PHO_tabindex(end).row_byte = row_byte;
+%         
+%         rowcount=0;
+% 
+%     else
+%         twID = fopen(filename,'a+'); %new file.
+%     end
+%    % utc= cspice_et2utc(resampled.t_epoch(k), 'ISOC', 6);
+%     
+%    % row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i', utc, resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
+%        
+%
+    if ~(exist(folder,'dir')~=7) %folder doesn't exist, we've gone outside of archive
 
 
 
+        if k>1 && ~strcmp(datestr(t_matlab_date(k-1),'dd'), datestr(t_matlab_date(k),'dd')) %%new calendar day? (won't check j==1)
+            %   newfile =false;
+            fclose(twID); %close old file
+            
+            twID = fopen(filename,'w'); %open a new file, filename is now a different string.
+            PHO_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
+            PHO_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
+            %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
+            PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
+            PHO_tabindex(end).no_of_columns = 5;            % Number of columns
+            % usc_tabindex{end,6] = an_ind(i);
+            PHO_tabindex(end).type = 'USC'; % Type
+            %PHO_tabindex(end).timing = timing;
+            PHO_tabindex(end).row_byte = row_byte;
+
+            rowcount=0;
+           % fprintf(1,'w+ opening file: %s\r\n',filename)
+
+        else
 
 
+            twID = fopen(filename,'a+'); %new file.
+           %fprintf(1,'a+ opening file: %s\r\n',filename)
+        end
 
+        dummy_qv=0.5;
 
-lapfile_with_iph0_niklas.resampled=resampled; %add to output
+        if (isempty(indz) && (rowcount>0))   % nothing here & file open. fill with SATURATION_CONSTANT
+           % t_utc(end-8:end)='59.999797';
+            t_utc(k,end-8:end)='00.000000';
 
-end
+            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), t_obtz(k), SATURATION_CONSTANT,0,qf_array(k));
+            %rowcount=rowcount+1
 
+        elseif (~isempty(indz))
+            t_utc(k,end-8:end)='00.000000';
+            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
+            %rowcount=rowcount+1
+
+        else
+            %first file in array, no valid points.
+
+        end
+    end%folder doesn't exist, we've gone outside of archive
+
+%         if(~isempty(indz))  % Print values!
+% 
+%             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i', utc, resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
+%             rowcount=rowcount+1;
+% 
+% 
+%         else % nothing here. fill with SATURATION_CONSTANT
+%             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i', utc, t_obtz(k), SATURATION_CONSTANT,0,qf_array(k));
+%             rowcount=rowcount+1;
+% 
+% 
+%         end%print value or NaN
+
+end%main loop
+ cspice_kclear;
+
+end%function
 
 function lapstruct_fixed = fixlap1_cont_iph0(lapstruct,CONT)
 %default value of CONT = +1.51e-9;
@@ -326,7 +486,7 @@ std1=[];
 
 for j=1:length(dataraw)
 
-    j
+  %  j
     if j <2
         
         
@@ -362,7 +522,7 @@ for j=1:length(dataraw)
        
         end
         for k=1:datalenflds
-            k
+      %      k
           %  meand1.(sprintf('%s',fields{1,k})) = [[meand1.(sprintf('%s',fields{1,k}))];nanmean([dataraw(j).(sprintf('%s',fields{1,k}))])];
           %  mediand1.(sprintf('%s',fields{1,k})) =[[mediand1.(sprintf('%s',fields{1,k}))];nanmedian([dataraw(j).(sprintf('%s',fields{1,k}))])];
             lapfile.(sprintf('%s',datafields{1,k})) = [[lapfile.(sprintf('%s',datafields{1,k}))];[dataraw(j).data.(sprintf('%s',datafields{1,k}))]];
@@ -388,118 +548,6 @@ end
 end
 
 
-function out= PXPTABfile(PXP)
-%this file needs all lapa1s.t0, DP.ion_slope in archive
-%,also. This file needs the potential and current value closest to e.g.
-%-17Vb for each sweep.
-
-
-ind_temp=PXP.resampled.ind(1,:);
-indz(ind_temp==0)=[];
-
-
-%t0=XXP.t0(indz(1,:));
-%t1=XXP.t0(indz(end,:));
-
-utcstart=PXP.Tarr(indz(1,:),1);
-utcstop=PXP.Tarr(indz(2,:),1);
-
-PXP.Tarr(5,1)
-%indz=XXP.resampled.ind(1,:); %first index in each file
-
-
-t0 = datenum(strrep(utcstart,'T',' '));
-
-
-dirY = datestr(t0,'YYYY');
-dirM = upper(datestr(t0,'mmm'));
-dirD = strcat('D',datestr(t0,'dd'));
-tabfolder = strcat(PXP(1).info.derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
-
-
-
-
-
-
-
-
-global SATURATION_CONSTANT
-
-iph0 =SATURATION_CONSTANT;
-iph0_qv=1;
-
-
-
-
-klen= 1;
-
-
-%%print
-
-
-
-
-
-for j= 1:length(t0)
-    
-    filename = sprintf('%sRPCLAP%s_%s_000000_30M_XXP.TAB',fpath,datestr(t0(j),'yymmdd'));
-        
-    
-    if j>1 && ~strcmp(datestr(t0(j-1),'dd'), datestr(t0(j),'dd')) %%new calendar day? (won't check j==1)
-        %   newfile =false;
-        twID = fopen(filename,'w');
-        xcalfile.list{end+1,1} =filename;
-    else
-        twID = fopen(filename,'a+'); %new file.
-    end
-    
-
-    %         UTC, MIP_filtered_ne, LAPasmne5ev, ionV, XcalTe, LAP Te, Iph0,
-    %          macroID, MIP_instant_ne, Vph_knee
-    fprintf(twID,'%.19s, %14.7e, %14.7e, %14.7e, %16.6f, %16.6f, %14.7e, %3d, %14.7e, %16.6f\r\n',...
-        xcalfile.t_utc(j,1:end-1),XCAL.mipnefilt(j), LAP.asm_ne_5eV(j),XCAL.ionV(j),XCAL.Te(j),LAP.Te_exp_belowVknee(j),LAP.Iph0(j),LAP.macroId(j),XCAL.MIP_instant_ne(j),LAP.Vph_knee(j));
-    
-    fclose(twID); %write file nr 1
-    
-    
-end
-         
-         for k=1:klen
-             
-             dstr1  = sprintf('%s, %s, %16s, %16s, %04i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf);
-             dstr2 = sprintf(' %14.7e, %14.7e', DP(k).Vph_knee(1),DP(k).Te_exp_belowVknee(1));
-             if isnan(DP(k).Vph_knee(1))                 
-                 dstrtot=strcat(dstr1,dstr2);
-                 dstrtot=strrep(dstrtot,'  0.0000000e+00','       -1.0e+03'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
-                 dstrtot=strrep(dstrtot,'     NaN','-1.0e+03');                
-             end
-             
-             
-             
-             
-             drow_bytes = fprintf(awID,'%s\r\n',dstrtot);
-
-         end
-            fclose(awID);
-                                
-            der_struct=[];
-%             der_struct.file{i}      = dfile;
-%             der_struct.shortname{i} =strrep(dfile,rfolder,'');
-%             der_struct.firstind(i)  =tabindex{an_ind(i),3};
-%             der_struct.rows(i)      =klen;
-%             der_struct.cols(i)      =7;
-%             der_struct.an_ind_id(i) =an_ind(i);
-%             der_struct.timing(i,1:4)=timing;
-%             der_struct.bytes=drow_bytes;
-%                       
-            
-            
-            out= der_struct;
-
-
-
-
-end
 
 
 
@@ -512,3 +560,20 @@ function out= UXPfile(var_ind)
 end
 
 
+
+function x=frejonbitor(A)
+
+len = length(A);
+x=A(1);
+
+if len>1
+
+    for i = 1:len
+    x=bitor(x,A(i));
+    end
+end
+
+
+
+
+end

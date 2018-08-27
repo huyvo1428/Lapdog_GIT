@@ -189,7 +189,7 @@ Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note 
 %Ie0 = exp(b);
 
 
-[P, S] = polyfit(Vpr,Ir,1);
+[P, S, mu] = polyfit(Vpr,Ir,1); %mu added for less polyfit warnings...
 PVb = P;
 PVb(2) = P(1)*Vsc+P(2); %remove Vsc from fit
 
