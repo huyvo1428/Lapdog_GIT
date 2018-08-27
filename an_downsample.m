@@ -25,14 +25,17 @@ foutarr=cell(1,7);
 % low sample size(for avgs) = +2
 % some zeropadding(for psd) = +2
 
+
+
 i=1; %
 j=0;
-global SATURATION_CONSTANT
+global SATURATION_CONSTANT VFLOATMACROS
 
 try
         %fileflag = tabindex{an_ind(i),1}(end-6:end-4);
     
         mode = tabindex{an_ind(i),1}(end-6);
+        probenr = str2double(tabindex{an_ind(i),1}(end-5));
 
         if mode =='V'  % Voltage  data
             test_column = 4;
@@ -41,6 +44,11 @@ try
         end
     
     for i=1:length(an_ind)     % Iterate over files (indices).
+        
+        macroNo=index(tabindex{an_ind(i) ,3}).macro;
+        macroNostr=dex2hex(macroNo);
+        %macroNostr=dec2hex(index(tabindex{an_ind(i) ,3}).macro);
+        %          dec2hex(index(tabindex{ind_V1L(1),3}).macro)
         
         arID = fopen(tabindex{an_ind(i),1},'r');
         if arID < 0
@@ -261,7 +269,9 @@ try
                 %fprintf(awID,'%s, %16.6f,,,,\r\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j));
                 % Don't print zero values.
             else
-                row_byte= fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e, %03i\r\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j),sum(foutarr{1,8}(j)));
+                
+                row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e, %05i\r\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j),sum(foutarr{1,8}(j)));
+
                 N_rows = N_rows + 1;
             end%if
             
@@ -276,11 +286,26 @@ try
         an_tabindex{end,6} = an_ind(i);
         an_tabindex{end,7} = 'downsample'; % Type
         an_tabindex{end,8} = timing;
-        an_tabindex{end,9} = row_byte;
-        
-        
+        an_tabindex{end,9} = row_byte;                
         fclose(awID);
-        clear foutarr  %not really needed, will not exist outside of function anyway.
+        
+        if ismember(macroNo,VFLOATMACROS)
+            
+            
+            USCfname= tabindex{an_ind(i),1};
+            USCfname(end-6:end-4)='USC';
+            USCshort=strrep(USCfname,affolder,'');
+            an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,probenr,'vfloat');
+            
+            
+            
+            
+            
+        end
+        
+        
+        
+        
         
         
         
@@ -290,7 +315,8 @@ try
         
         
         
-        
+        clear foutarr  %not really needed, will not exist outside of function anyway.
+
         
     end%for main loop
     
@@ -309,13 +335,6 @@ catch err
 end   % try-catch
 
 end   %function
-
-
-
-
-
-
-
 
 
 

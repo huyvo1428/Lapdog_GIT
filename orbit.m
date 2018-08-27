@@ -162,12 +162,30 @@ basis_n = basis*R_0;
 %%%
 % Find direction of the sun in S/C frame:
 sun_sc = cspice_spkpos('Sun', et, 'ROS_SPACECRAFT', 'LT+S', object);
-sun_sc_s = S(sun_sc);
+%sun_sc_s = S(sun_sc);
 % sun_sc_n = sun_sc/sun_sc_s(1)*R_0; % normalization
 
+
+%%% FKJN EDIT, also output SEA(Xi), Solar elevation angle.
 %%%
 % Solar aspect angle (w.r.t z-axis in S/C frame, '+' above y-z plane, '-' below)
-Phi = sun_sc_s(2,:)*180/pi.*sign(pi-sun_sc_s(3,:));
+%Phi = sun_sc_s(2,:)*180/pi.*sign(pi-sun_sc_s(3,:));
+    %%%
+    % Transform to spherical coordinates about y-axis (i.e. x,y,z -> z,x,y):
+    [sun_sc_az, sun_sc_el, junk] = cart2sph(sun_sc(3,:), sun_sc(1,:), sun_sc(2,:));
+
+    %%%
+    % Solar aspect angle (w.r.t z-axis in S/C frame, '+' above y-z plane, '-' below)
+    Phi = rad2deg(sun_sc_az);
+
+    %%%
+    % Solar elevation angle (w.r.t x-z-plane in S/C frame, [-90,+90], '+' above x-z plane, '-' below)
+    Xi = rad2deg(sun_sc_el);
+
+
+
+
+
 
 %% Find RPC-LAP illumination conditions
 % This is only done when _object_ is Rosetta:
@@ -423,7 +441,7 @@ elseif (nargout == 1)
 elseif (nargout == 2)
     varargout = {altitude, latitude};
 elseif (nargout == 3)
-    varargout = {altitude, latitude, Phi};
+    varargout = {altitude, Xi, Phi};
 elseif (nargout == 4)
     varargout = {altitude, latitude, Phi, et};
 end

@@ -31,14 +31,14 @@ PXP= niklas_iph0_resampled(PXP,iph0conditions);
 for i = 1:XXP(1).info.nroffiles %AXP generation!
     len =length(XXP(i).data.Tarr(:,1));
     filename=XXP(i).info.file;
-    filename(end-6:end-4)='AXP';
+    filename(end-6:end-4)='ASW';
     %twID = fopen(filename,'w');
     
     dummy_ne=SATURATION_CONSTANT;
     dummy_Te_XCAL=SATURATION_CONSTANT;
     dummy_qv=1.0;
     dummy_v_ion=SATURATION_CONSTANT;
-    dummy_qualityflag='XXXXXX1'
+    %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
     for j = 1:len
         
         
@@ -49,7 +49,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         str4=sprintf(' %14.7e, %2.1f,',dummy_v_ion,dummy_qv);
         str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv);
         str6=sprintf(' %14.7e, %2.1f,',dummy_Te_XCAL,dummy_qv);
-        str7=sprintf(' %s',dummy_qualityflag);
+        str7=sprintf(' %s',XXP(i).qf);
         
         strtot=strcat(str1,str2,str3,str4,str5,str6,str7);
     %    row_bytes= fprintf(twID,'%s',strtot);

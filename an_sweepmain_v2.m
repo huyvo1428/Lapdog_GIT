@@ -152,17 +152,29 @@ try
 
         % 'preloaded' is a dummy entry, just so orbit realises spice kernels
         % are already loaded.
-        [altitude,junk,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
+        [altitude,SEA,SAA]=orbit('Rosetta',Tarr(1:2,:),target,'ECLIPJ2000','preloaded');
         clear junk
+ 
 
         if strcmp(mode(2),'1') %probe 1
-            %current (Elias) SAA = z axis, Anders = x axis.
-            % *Anders values* (converted to the present solar aspect angle definition
-            % by ADDING 90 degrees) :
-            Phi11 = 131;
-            Phi12 = 181;
+            
+            
+                   %%%
+        % *Anders values* (converted to the present solar aspect angle definition
+        % by ADDING 90 degrees):
+        %
+           Phi11 = 131;
+           Phi12 = 181;
 
-            illuminati = ((SAA < Phi11) | (SAA > Phi12));
+        %%%
+        % *My values* (from photoemission study):
+           % Phi11 = 131.2;%degrees
+            %Phi12 = 179.2;
+            %lap1_ill = ((Phi < Phi11) | (Phi > Phi12));
+
+            SAA_OK = ((SAA < Phi11) | (SAA > Phi12)); %1 = sunlit
+            illuminati = SAA_OK;
+            
 
         else %we will hopefully never have sweeps with probe number "3"
 
@@ -176,8 +188,10 @@ try
             illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
             % illuminati = illuminati - 0.6*((SAA > Phi22) & (SAA < Phi23));
         end
-
-
+        
+        SEA_OK = abs(SEA)<1; %  <1 degree  = nominal pointing
+        illuminati(~SEA_OK)=0.3;
+        %clear SEA_OK SAA_OK;
 
         len = length(Iarr(1,:));     % Number of sweeps/pairs. Should be identical to N_sp. Kept for now.
         %  cspice_str2et(
@@ -557,7 +571,8 @@ try
                 XXP_struct.Te_exp_belowVknee(j,1:2)=DP_asm(j).Te_exp_belowVknee;
                 XXP_struct.Iph0(j,1:2)=DP(j).Iph0;
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
-                
+                XXP_struct.qf(j,1)=EP(j).qf;
+               
                 
             end
            % nan_ind=isnan(XXP_struct.ionslope); XXP_struct.ionslope(nan_ind)=SATURATION_CONSTANT;

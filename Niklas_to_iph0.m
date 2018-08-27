@@ -69,7 +69,7 @@ filename='iph0_probe1_temp.txt';
 
 twID = fopen(filename,'w');
 
-%                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %03i\r\n'...
+%                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %05i\r\n'...
 %                            ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),qualityF);
 
 

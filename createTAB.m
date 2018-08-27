@@ -351,7 +351,7 @@ delfile = 1;
                                   
 
                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %03i\r\n'...
+                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %05i\r\n'...
                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),scantemp{1,5}(j),qf(j)); %edit FKJN 8/3 2018. qualityF --> qf(j)
                     end
                 else
@@ -359,7 +359,7 @@ delfile = 1;
                     for (j=1:scanlength)       %print
 
                         %bytes = fprintf(twID,'%s,%16.6f,%14.7e,%14.7e,\r\n',scantemp{1,1}{j,1}(1:23),scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j));
-                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %03i\r\n'...
+                        fprintf(twID,'%s, %16.6f, %14.7e, %14.7e, %05i\r\n'...
                             ,scantemp{1,1}{j,1},scantemp{1,2}(j),scantemp{1,3}(j),scantemp{1,4}(j),qf(j)); %edit FKJN 8/3 2018. qualityF --> qf(j)
                     end%for
                 end%if fileflag
@@ -583,7 +583,7 @@ delfile = 1;
             
             
             
-            b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %03i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);   % Write timestamps (2x2=4) + quality flag.
+            b2 = fprintf(twID2,'%s, %s, %16.6f, %16.6f, %05i',scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end),qualityF);   % Write timestamps (2x2=4) + quality flag.
             b3 = fprintf(twID2,', %14.7e',curArray.'); %some steps could be "NaN" values if LDL macro
             b4 = fprintf(twID2, '\r\n');
 

@@ -245,10 +245,10 @@ try
                     %
                     %              %       fout={fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2)};
                     %
-                    %                     %fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
+                    %                     %fprintf(awID,'%s, %s, %16.6f, %16.6f, %05i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
                     %                 else
                     %              %       fout = {fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp)};
-                    %               %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
+                    %               %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %05i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
                     %                 end %if
                     
                 else
@@ -353,11 +353,11 @@ try
             if fout{k,end} %last index should be file checker
                 if strcmp(fileflag(1),'V')
                     if  fileflag(2) =='3'
-                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7},fout{k,8},fout{k,9});
+                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %05i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,7},fout{k,8},fout{k,9});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                         b3= fprintf(awID,'\r\n');
                     else
-                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
+                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %05i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                         b3= fprintf(awID,'\r\n');
                         
@@ -367,21 +367,21 @@ try
                     
                     if fileflag(2) =='3'
                         
-                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
+                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %05i, %14.7e, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,10},fout{k,11});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                         b3= fprintf(awID,'\r\n');
                         
                         
-                        %fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
+                        %fprintf(awID,'%s, %s, %16.6f, %16.6f, %05i, %14.7e, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp1),mean(vp2));
                     else
-                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
+                        b1= fprintf(awID,'%s, %s, %16.6f, %16.6f, %05i, %14.7e, %14.7e',fout{k,1},fout{k,2},fout{k,3},fout{k,4},sum(unique(fout{k,5})),fout{k,6},fout{k,9});
                         b2= fprintf(awID,', %14.7e',fout{k,end-1}.');
                         b3= fprintf(awID,'\r\n');
                         
                         %dlmwrite(sname,fout{k,end-1}.','-append','precision', '%14.7e', 'delimiter', ','); %appends to end of row, column 5. pretty neat.
                         
                         %       fout = {fout;tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp)};
-                        %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %03i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
+                        %      fprintf(awID,'%s, %s, %16.6f, %16.6f, %05i, %14.7e, %14.7e,',tstr{1,1},tstr{end,1},sct(1),sct(end),qf,mean(ib),mean(vp));
                     end %if
                     
                 end
