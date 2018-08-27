@@ -76,12 +76,8 @@ try
         bot = 1;
     end
     
-%<<<<<<< Updated upstream
     rind = ind(bot):ind(end); %this could be even more empty
     rind = rind(I(rind)>0); %ignore stray negatives...
-%=======
- rind = ind(bot):ind(end); %this could be even more empty if everything is below zero (not good)
-%>>>>>>> Stashed changes
     
 catch err    
     return

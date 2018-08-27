@@ -369,6 +369,8 @@ try
             EP(k).qf = qf;
             EP(k).dir = upd(1);
 
+            % Anders LP sweep analysis
+            AP(k) = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(k).lum);
 
             
             
@@ -425,6 +427,8 @@ try
                 EP(m).tstamp = Tarr2{4,k};
                 EP(m).qf = qf;
                 EP(m).dir = upd(2);
+
+                AP(m) = an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr2{1,k}),mode(2),EP(m).lum);
 
 
                 if k>1
@@ -530,7 +534,7 @@ try
             info_struct=[];
             info_struct.file      =wfile;
             info_struct.shortname =strrep(wfile,rfolder,'');
-            info_struct.derivedpath=rfolder(1:end-12);
+            info_struct.derivedpath=rfolder(1:end-13);
             info_struct.rows      =klen;
             %der_struct.an_ind_id(i) =an_ind(i);
             info_struct.timing=timing;
@@ -541,11 +545,11 @@ try
             
             for j=1:klen
                 XXP_struct.Tarr(j,1:4)=EP(j).Tarr;
-                XXP_struct.t0 = cspice_str2et(XXP_struct.Tarr(j,1));
+                XXP_struct.t0(j,1) = cspice_str2et(XXP_struct.Tarr(j,1));%now
                 %XXP_struct.t0 = irf_time(XXP_struct.Tarr{j,1},'utc>tt');
                 XXP_struct.ion_slope(j,1:2)=DP(j).ion_slope;
-                XXP_struct.curr(j)=EP(j).curr;
-                XXP_struct.B(j)=EP(j).B;
+                XXP_struct.curr(j,1)=EP(j).curr;
+                XXP_struct.B(j,1)=EP(j).B;
                 XXP_struct.ion_slope(j,1:2)=DP(j).ion_slope;
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
                 XXP_struct.Vz(j,1:2)=AP(j).Vz;

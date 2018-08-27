@@ -25,13 +25,14 @@ dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0'};
 infoflds= {'macroId'};
 PXP= struct_cleanup(XXP,infoflds,dataflds);
 
+PXP= niklas_iph0_resampled(PXP,iph0conditions);
 
 
 for i = 1:XXP(1).info.nroffiles %AXP generation!
     len =length(XXP(i).data.Tarr(:,1));
     filename=XXP(i).info.file;
     filename(end-6:end-4)='AXP';
-    twID = fopen(filename,'w');
+    %twID = fopen(filename,'w');
     
     dummy_ne=SATURATION_CONSTANT;
     dummy_Te_XCAL=SATURATION_CONSTANT;
@@ -51,11 +52,11 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         str7=sprintf(' %s',dummy_qualityflag);
         
         strtot=strcat(str1,str2,str3,str4,str5,str6,str7);
-        row_bytes= fprintf(twID,'%s',strtot);
+    %    row_bytes= fprintf(twID,'%s',strtot);
     end
     XXP(i).info.row_bytes = row_bytes; 
     XXP(i).info.AXPread_me=  "code used to generate this file: str1=sprintf('%s, %s, %16s, %16s',XXP(i).data.Tarr{1,:});        str2=sprintf(' %14.7e, %2.1f,',dummy_ne,dummy_qv);str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv); str4=sprintf(' %14.7e, %2.1f,',dummy_v_ion,dummy_qv); str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv);str6=sprintf(' %14.7e, %2.1f,',dummy_Te_XCAL,dummy_qv); str7=sprintf(' %s',dummy_qualityflag);";
-    fclose(twID);
+    %fclose(twID);
 end
 end
 
@@ -97,10 +98,10 @@ resampled.curr=[];
 resampled.ion_slope=[]; 
 resampled.conds=conditions;
 
-resampled.median.iph0=[];
-resampled.median.sigma_iph0=[];
-resampled.mean.iph0=[];
-resampled.mean.sigma_iph0=[];
+%resampled.median.iph0=[];
+%resampled.median.sigma_iph0=[];
+%resampled.mean.iph0=[];
+%resampled.mean.sigma_iph0=[];
 
 
 
@@ -154,10 +155,10 @@ for i=1:len
     
     %%single sweep method resampling
     
-    resampled.median.iph0(i)=nanmedian(lapstruct.Iph0(indz));
-    resampled.median.sigma_iph0(i)=nanstd(lapstruct.Iph0(indz));
-    resampled.mean.iph0(i)=nanmean(lapstruct.Iph0(indz));
-    resampled.mean.sigma_iph0(i)=nanstd(lapstruct.Iph0(indz));
+   % resampled.median.iph0(i)=nanmedian(lapstruct.Iph0(indz));
+    %resampled.median.sigma_iph0(i)=nanstd(lapstruct.Iph0(indz));
+    %resampled.mean.iph0(i)=nanmean(lapstruct.Iph0(indz));
+    %resampled.mean.sigma_iph0(i)=nanstd(lapstruct.Iph0(indz));
         
     %%
     curr = lapstruct.curr(indz);
@@ -325,6 +326,7 @@ std1=[];
 
 for j=1:length(dataraw)
 
+    j
     if j <2
         
         
@@ -348,7 +350,7 @@ for j=1:length(dataraw)
         
     else
         
-          lapfile.Tarr=horzcat(lapfile.Tarr, dataraw(j).data.Tarr); %special case for this parameter
+          lapfile.Tarr=vertcat(lapfile.Tarr, dataraw(j).data.Tarr); %special case for this parameter
 
         
 
@@ -360,6 +362,7 @@ for j=1:length(dataraw)
        
         end
         for k=1:datalenflds
+            k
           %  meand1.(sprintf('%s',fields{1,k})) = [[meand1.(sprintf('%s',fields{1,k}))];nanmean([dataraw(j).(sprintf('%s',fields{1,k}))])];
           %  mediand1.(sprintf('%s',fields{1,k})) =[[mediand1.(sprintf('%s',fields{1,k}))];nanmedian([dataraw(j).(sprintf('%s',fields{1,k}))])];
             lapfile.(sprintf('%s',datafields{1,k})) = [[lapfile.(sprintf('%s',datafields{1,k}))];[dataraw(j).data.(sprintf('%s',datafields{1,k}))]];
