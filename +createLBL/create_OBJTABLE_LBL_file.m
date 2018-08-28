@@ -262,40 +262,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     if length(unique(OBJCOL_namesList)) ~= length(OBJCOL_namesList)
         error('Found doubles among the ODL column names.')
     end
-    
-    % -------------------------------------------------------------------------
-    % ASSERTIONS: Consistency checks on (1) nbr of columns, (2) bytes per row.
-    % -------------------------------------------------------------------------
-%     if (OBJTABLE_data.COLUMNS ~= LblData.ConsistencyCheck.nTabColumns)
-%         msg =       sprintf('lblFilePath = %s\n', lblFilePath);
-%         msg = [msg, sprintf('OBJTABLE_data.COLUMNS (derived)      = %i\n', OBJTABLE_data.COLUMNS)];
-%         msg = [msg, sprintf('LblData.ConsistencyCheck.nTabColumns = %i\n', LblData.ConsistencyCheck.nTabColumns)];
-%         msg = [msg,         'OBJTABLE_data.COLUMNS deviates from the consistency check value.'];
-%         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
-%     end
-%     if OBJTABLE_data.ROW_BYTES ~= LblData.ConsistencyCheck.nTabBytesPerRow
-%         msg =       sprintf('lblFilePath = %s\n', lblFilePath);
-%         msg = [msg, sprintf('OBJTABLE_data.ROW_BYTES (derived)        = %i\n', OBJTABLE_data.ROW_BYTES)];
-%         msg = [msg, sprintf('LblData.ConsistencyCheck.nTabBytesPerRow = %i\n', LblData.ConsistencyCheck.nTabBytesPerRow)];
-%         msg = [msg,         'OBJTABLE_data.ROW_BYTES deviates from the consistency check value.'];
-%         
-%         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
-%     end
-    
-%    temp = dir(tabFilePath); tabFileSize = temp.bytes;
-    
-    % ASSERTION: TAB file size is consistent with (indirectly) ROWS*ROW_BYTES.
-%     if tabFileSize ~= (OBJTABLE_data.ROW_BYTES * LblData.nTabFileRows)
-%         msg = sprintf(['TAB file size is not consistent with LBL file, "%s":\n', ...
-%             '    tabFileSize             = %g\n', ...
-%             '    OBJTABLE_data.ROW_BYTES = %g\n', ...
-%             '    LblData.nTabFileRows    = %g'], ...
-%             tabFilePath, tabFileSize, OBJTABLE_data.ROW_BYTES, LblData.nTabFileRows);
-%         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
-%     end
-
-%    LblData.nTabFileRows = floor(tabFileSize / OBJTABLE_data.ROW_BYTES);
-    
+   
     % ASSERTION: No quotes in OBJECT=TABLE DESCRIPTION keyword.
     assert_nonempty_unquoted(OBJTABLE_data.DESCRIPTION)
 

@@ -310,9 +310,6 @@ for i = 1:length(stabindex)
     try
         
         LblData = [];
-        %LblData.ConsistencyCheck.nTabColumns = stabindex(i).nColumns;
-        % "LblData.ConsistencyCheck.nTabBytesPerRow" can not be set centrally here
-        % since it is hardcoded for some TAB file types.
         
         %=========================================
         %
@@ -374,7 +371,6 @@ for i = 1:length(stabindex)
                 % CASE: BxS
                 
                 LblData.OBJTABLE = [];
-                %LblData.ConsistencyCheck.nTabBytesPerRow = 32;   % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);   % Remove ref. to old DESCRIPTION? (Ex: D_SWEEP_P1_RAW_16BIT_BIP)
                 ocl = [];
                 oc1 = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS');     % NOTE: Always ASCII_REAL, including for EDDER!!!
@@ -402,7 +398,6 @@ for i = 1:length(stabindex)
                 bxsTabFilename(28) = 'B';
 
                 LblData.OBJTABLE = [];
-                %LblData.ConsistencyCheck.nTabBytesPerRow = stabindex(i).nTabBytesPerRow;
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
                 ocl = {};
                 oc1 = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'Sweep start UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF.');
@@ -449,22 +444,6 @@ for i = 1:length(stabindex)
 
             LblData.OBJTABLE = [];
             LblData.OBJTABLE.DESCRIPTION = Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION;    % BUG: Possibly double quotation marks.
-            
-            %-----------------------------------------------------------------------------
-            % HARD-CODED constants, to account for that these values are not set by other
-            % Lapdog code as they are for other data products.
-            %-----------------------------------------------------------------------------
-%             if probeNbr ~= 3
-%                 LblData.ConsistencyCheck.nTabColumns     =  5;
-%                 LblData.ConsistencyCheck.nTabBytesPerRow = 83;
-%             else
-%                 LblData.ConsistencyCheck.nTabColumns     =  6;
-%                 LblData.ConsistencyCheck.nTabBytesPerRow = 99;
-%             end
-%             if ~generatingDeriv1
-%                 LblData.ConsistencyCheck.nTabColumns     = LblData.ConsistencyCheck.nTabColumns     - 1;
-%                 LblData.ConsistencyCheck.nTabBytesPerRow = LblData.ConsistencyCheck.nTabBytesPerRow - 5;
-%             end
 
             ocl = {};
             ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECONDS', 'BYTES', 26, 'DESCRIPTION', 'UTC TIME');
@@ -541,10 +520,6 @@ end    % for
 for i = 1:length(blockTAB)
     
     LblData = [];
-    %LblData.ConsistencyCheck.nTabColumns     =  3;
-    %LblData.ConsistencyCheck.nTabBytesPerRow = 55;                   % NOTE: HARDCODED! TODO: Fix.
-    
-    
     
     %==============================================
     %
@@ -603,11 +578,6 @@ if generatingDeriv1
             isEFieldMode  = (mode(1) == 'V');
             
             LblData = [];
-            %LblData.nTabFileRows = san_tabindex(i).nTabFileRows;
-            %LblData.ConsistencyCheck.nTabBytesPerRow = san_tabindex(i).nTabBytesPerRow;
-            %LblData.ConsistencyCheck.nTabColumns     = san_tabindex(i).nTabColumns;
-            
-            
             
             %=========================================
             %
