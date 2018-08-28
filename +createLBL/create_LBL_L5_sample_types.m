@@ -13,8 +13,21 @@ function create_LBL_L5_sample_types(deriv1Path)
     
     
     objInfoList = EJ_lapdog_shared.utils.glob_files_dirs(deriv1Path, {'.*', '.*', '.*', '.*.TAB'});
+    C = createLBL.constants;
     
     
+    
+    % TEMPORARY source constants.
+    lbltime   = '2018-08-03';  % Label revision time
+    lbleditor = 'EJ';
+    lblrev    = 'Misc. descriptions clean-up';
+    LblHeaderKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
+    LblHeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pairs(LblHeaderKvpl, {...
+        'START_TIME',                   ''; ...
+        'STOP_TIME',                    ''; ...
+        'SPACECRAFT_CLOCK_START_COUNT', ''; ...
+        'SPACECRAFT_CLOCK_STOP_COUNT',  '' });    
+            
     for i = 1:numel(objInfoList)    
         tabFilePath = objInfoList(i).fullPath;
         lblFilePath = regexprep(tabFilePath, '.TAB$', '.LBL');
@@ -24,7 +37,6 @@ function create_LBL_L5_sample_types(deriv1Path)
         if ~exist(lblFilePath, 'file')
             fprintf('Found no corresponding LBL file - Trying to create one\n');        
         
-            LblHeaderKvpl = struct('keys', {}, 'values', {});             % TEMP
             canClassifyTab = createLBL.create_LBL_file(tabFilePath, LblHeaderKvpl);
             
             if ~canClassifyTab

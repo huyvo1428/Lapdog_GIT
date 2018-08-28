@@ -33,7 +33,7 @@
 %
 % Initially created 2018-08-21 by Erik P G Johansson, IRF Uppsala.
 %
-function canClassifyTab = create_LBL_file(tabFilePath, LblHeaderKvpl)
+function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     % NOTE: Generalizing to EDITED1/CALIB1 data types requires distinguising EDDER / DERIV1.
     % PROPOSAL: Remake into class
     %   PRO: Can have constants, shared over functions.
@@ -58,8 +58,17 @@ function canClassifyTab = create_LBL_file(tabFilePath, LblHeaderKvpl)
     QVALUE_DESCRIPTION = 'Quality value in the range 0 (worst) to 1 (best). Corresponds to goodness of fit or how well the model fits the data.';
     MC_DESC            = sprintf(' A value of %e refers to that there is no value.', C.MISSING_CONSTANT);
     
+
     % NOTE: Need to have start & stop timestamps so that write_OBJTABLE_LBL_file can fill them in.
-    EMPTY_LBL_HEADER_KVPL = struct('keys', {{'START_TIME', 'STOP_TIME', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}}, 'values', {{'', '', '', ''}});
+    %EMPTY_LBL_HEADER_KVPL = struct('keys', {{'START_TIME', 'STOP_TIME', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}}, 'values', {{'', '', '', ''}});
+    
+    % TEMPORARY source constants.
+    lbltime   = '2018-08-03';  % Label revision time
+    lbleditor = 'EJ';
+    lblrev    = 'Misc. descriptions clean-up';
+    LblAllKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
+    KvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(OldLblHeaderKvpl, LblAllKvpl, 'require preexisting keys');
+    
 
     
     
@@ -81,11 +90,12 @@ function canClassifyTab = create_LBL_file(tabFilePath, LblHeaderKvpl)
 
         LblData = [];
         LblData.OBJTABLE = [];
+        LblData.HeaderKvl = KvlLbl;
+            
         if     strcmp(timeStr, '000000') && strcmp(msd, '30M_PHO')
 
             canClassifyTab = 1;
             
-            LblData.HeaderKvl = EMPTY_LBL_HEADER_KVPL;            
             LblData.OBJTABLE.DESCRIPTION = 'Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).';
             
             ocl = [];
@@ -102,7 +112,6 @@ function canClassifyTab = create_LBL_file(tabFilePath, LblHeaderKvpl)
 
             canClassifyTab = 1;
 
-            LblData.HeaderKvl = EMPTY_LBL_HEADER_KVPL;
             LblData.OBJTABLE.DESCRIPTION = 'Spacecraft potential derived from either (1) photoelectron knee in sweep, or (2) floating potential measurement (individual sample). Time interval can thus refer to either sweep or individual sample.';
             
             ocl = [];
@@ -117,7 +126,6 @@ function canClassifyTab = create_LBL_file(tabFilePath, LblHeaderKvpl)
             
             canClassifyTab = 1;
 
-            LblData.HeaderKvl = EMPTY_LBL_HEADER_KVPL;
             LblData.OBJTABLE.DESCRIPTION = 'Miscellaneous physical high-level quantities derived from individual sweeps.';
 
             ocl = [];
@@ -140,7 +148,6 @@ function canClassifyTab = create_LBL_file(tabFilePath, LblHeaderKvpl)
             
             canClassifyTab = 1;
 
-            LblData.HeaderKvl = EMPTY_LBL_HEADER_KVPL;
             LblData.OBJTABLE.DESCRIPTION = 'Plasma density derived from individual fix-bias density mode (current) measurements.';
 
             ocl = [];
