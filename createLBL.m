@@ -268,7 +268,7 @@ else
     CURRENT_BIAS_DESC =          'CURRENT BIAS.';
     CURRENT_MEAS_DESC = 'MEASURED CURRENT.';
 end
-    QFLAG1_DESCRIPTION = 'QUALITY FLAG CONSTRUCTED AS THE SUM OF MULTIPLE TERMS, DEPENDING ON WHAT QUALITY RELATED EFFECTS ARE PRESENT. FROM 000 (BEST) TO 999 (WORST).';    % For older quality flag (version "1").
+QFLAG1_DESCRIPTION = 'QUALITY FLAG CONSTRUCTED AS THE SUM OF MULTIPLE TERMS, DEPENDING ON WHAT QUALITY RELATED EFFECTS ARE PRESENT. FROM 00000 (BEST) TO 99999 (WORST).';    % For older quality flag (version "1").
 
 
 
@@ -1004,13 +1004,13 @@ end    % if generatingDeriv1
 
 
 
-%=================================================
-%
-% Create LBL files for files in der_struct (A1P).
-%
-%=================================================
 if generatingDeriv1
     try
+        %=================================================
+        %
+        % Create LBL files for files in der_struct (A1P). - DISABLED
+        %
+        %=================================================
         global der_struct    % Global variable with info on A1P files.
         if ~isempty(der_struct)
             % IMPLEMENTATION NOTE: "der_struct" is only defined/set when running Lapdog DERIV. However, since it is a
@@ -1018,14 +1018,22 @@ if generatingDeriv1
             % der_struct.file{iFile} will contain paths to a DERIV-data set. May thus lead to overwriting LBL files in
             % DERIV data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
             % EDDER.
-            createLBL.write_A1P(LblAllKvpl, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, ...
-                DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            %createLBL.write_A1P(LblAllKvpl, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, ...
+            %    DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         end
         
     catch exception
         createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY)
         fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',exception.message);
     end
+    
+    %==============================================================
+    %
+    % Create LBL files for PHO, USC, ASW, NPL files. (DERIV1 only)
+    %
+    %==============================================================
+    % TEMPORARY SOLUTION.
+    createLBL.create_LBL_L5_sample_types(derivedpath)
 end
 
 

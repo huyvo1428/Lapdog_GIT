@@ -218,7 +218,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
         
         % ASSERTION: Check common user/caller error.
         if numel(cd) ~= 1
-            error('One column object is a non-one size array. Guess: Due to defining .useFor value with ~single curly brackets?')
+            error('One column object is a non-one size array. Guess: Due to defining .useFor value with "struct" command and ~single curly brackets. Must be double curly braces due to MATLAB syntax.')
         end
         
         [cd, nSubcolumns] = complement_column_data(cd, ...
