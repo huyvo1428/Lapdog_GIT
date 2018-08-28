@@ -71,7 +71,6 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     ASW_tabindex(end).timing = XXP(i).info.timing;
     ASW_tabindex(end).row_byte = row_bytes;
     
-    ASW_tabindex(end).ASWread_me=  "code used to generate this file: str1=sprintf('%s, %s, %16s, %16s',XXP(i).data.Tarr{1,:});        str2=sprintf(' %14.7e, %2.1f,',dummy_ne,dummy_qv);str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv); str4=sprintf(' %14.7e, %2.1f,',dummy_v_ion,dummy_qv); str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv);str6=sprintf(' %14.7e, %2.1f,',dummy_Te_XCAL,dummy_qv); str7=sprintf(' %s',dummy_qualityflag);";
     fclose(twID);
 end
 end
