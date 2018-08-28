@@ -415,7 +415,7 @@ for i = 1:length(stabindex)
                 end
                 ocl(end+1:end+4) = {oc1, oc2, oc3, oc4};                
                 if generatingDeriv1
-                    ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
+                    ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 end
                 % NOTE: The file referenced in column DESCRIPTION is expected to have the wrong name since files are renamed by other code
                 % before delivery. The delivery code should already correct for this.
@@ -514,7 +514,7 @@ for i = 1:length(stabindex)
                 ocl(end+1:end+3) = {oc1; oc2; oc3};
             end
             if generatingDeriv1
-                ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'BYTES',  3, ...
+                ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'BYTES',  5, ...
                     'DESCRIPTION', QFLAG1_DESCRIPTION);
             end
             
@@ -722,7 +722,7 @@ if generatingDeriv1
                 oc4 = createLBL.optionally_add_MISSING_CONSTANT(isEFieldMode,  MISSING_CONSTANT, oc4 , mcDescrAmendment);
                 ocl(end+1:end+4) = {oc1; oc2; oc3; oc4};
                 
-                ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'BYTES', 3, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
+                ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'BYTES', 5, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 
                 LblData.OBJTABLE.OBJCOL_list = ocl;
                 clear   ocl oc1 oc2 oc3 oc4
@@ -741,7 +741,7 @@ if generatingDeriv1
                 ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
                 ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)');
                 ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_OBT',  'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)');
-                ocl1{end+1} = struct('NAME', 'QUALITY_FLAG',           'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', QFLAG1_DESCRIPTION);
+                ocl1{end+1} = struct('NAME', 'QUALITY_FLAG',           'UNIT', NO_ODL_UNIT, 'BYTES',  5, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 %---------------------------------------------
                 ocl2 = {};
                 mcDescrAmendment = sprintf('A value of %g means that there was at least one saturated sample in the same time interval uninterrupted by RPCMIP disturbances.', MISSING_CONSTANT);
