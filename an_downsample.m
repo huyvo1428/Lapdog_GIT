@@ -343,12 +343,13 @@ end   %function
 function x=frejonbitor(A)
 
 len = length(A);
-x=A(1);
+x=uint32(A(1));
+
 
 if len>1
 
     for i = 1:len
-    x=bitor(x,A(i));
+    x=bitor(x,uint32(A(i)));
     end
 end
 

@@ -75,27 +75,6 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 end
 end
 
-% 
-% 
-%             info_struct=[];
-%             info_struct.file      =wfile;
-%             info_struct.shortname =strrep(wfile,rfolder,'');
-%             info_struct.rows      =klen;
-%             info_struct.timing=timing;
-%             info_struct.macroid=diagmacro;
-%             
-%             for j=1:klen
-%                 XXP_struct.Tarr(j,1:4)=EP(j).Tarr;
-%                 XXP_struct.ion_slope(j,1:2)=DP(j).ion_slope;
-%                 XXP_struct.ion_slope(j,1:2)=DP(j).ion_slope;
-%                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
-%                 XXP_struct.Vz(j,1:2)=AP(j).Vz;
-%                 XXP_struct.Vsi(j,1:2)=DP(j).Vsi;
-%                 XXP_struct.Te_exp_belowVknee(j,1:2)=DP_asm(j).Te_exp_belowVknee;
-%                 XXP_struct.Iph0(j,1:2)=DP(j).Iph0;
-%                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
-
-
 
 
 function resampled = PHOTABFILE(lapstruct,conditions,XXP)
@@ -490,17 +469,13 @@ for j=1:length(dataraw)
         
         
         for k=1:infolenflds
-           % meand1.(sprintf('%s',fields{1,k})) =nanmean([dataraw(j).(sprintf('%s',fields{1,k}))]);
             lapfile.(sprintf('%s',infofields{1,k})) =[dataraw(j).info.(sprintf('%s',infofields{1,k}))];
-           % mediand1.(sprintf('%s',fields{1,k})) =nanmedian([dataraw(j).(sprintf('%s',fields{1,k}))]);
 
         end
         
                 
         for k=1:datalenflds
-           % meand1.(sprintf('%s',fields{1,k})) =nanmean([dataraw(j).(sprintf('%s',fields{1,k}))]);
             lapfile.(sprintf('%s',datafields{1,k})) =[dataraw(j).data.(sprintf('%s',datafields{1,k}))];
-           % mediand1.(sprintf('%s',fields{1,k})) =nanmedian([dataraw(j).(sprintf('%s',fields{1,k}))]);
 
         end
         
@@ -514,17 +489,12 @@ for j=1:length(dataraw)
         
 
         for k=1:infolenflds
-          %  meand1.(sprintf('%s',fields{1,k})) = [[meand1.(sprintf('%s',fields{1,k}))];nanmean([dataraw(j).(sprintf('%s',fields{1,k}))])];
-          %  mediand1.(sprintf('%s',fields{1,k})) =[[mediand1.(sprintf('%s',fields{1,k}))];nanmedian([dataraw(j).(sprintf('%s',fields{1,k}))])];
-            lapfile.(sprintf('%s',infofields{1,k})) = [[lapfile.(sprintf('%s',infofields{1,k}))];[dataraw(j).info.(sprintf('%s',infofields{1,k}))]];
+          lapfile.(sprintf('%s',infofields{1,k})) = [[lapfile.(sprintf('%s',infofields{1,k}))];[dataraw(j).info.(sprintf('%s',infofields{1,k}))]];
             
        
         end
         for k=1:datalenflds
-      %      k
-          %  meand1.(sprintf('%s',fields{1,k})) = [[meand1.(sprintf('%s',fields{1,k}))];nanmean([dataraw(j).(sprintf('%s',fields{1,k}))])];
-          %  mediand1.(sprintf('%s',fields{1,k})) =[[mediand1.(sprintf('%s',fields{1,k}))];nanmedian([dataraw(j).(sprintf('%s',fields{1,k}))])];
-            lapfile.(sprintf('%s',datafields{1,k})) = [[lapfile.(sprintf('%s',datafields{1,k}))];[dataraw(j).data.(sprintf('%s',datafields{1,k}))]];
+           lapfile.(sprintf('%s',datafields{1,k})) = [[lapfile.(sprintf('%s',datafields{1,k}))];[dataraw(j).data.(sprintf('%s',datafields{1,k}))]];
             
        
         end
@@ -563,12 +533,13 @@ end
 function x=frejonbitor(A)
 
 len = length(A);
-x=A(1);
+x=uint32(A(1));
+
 
 if len>1
 
     for i = 1:len
-    x=bitor(x,A(i));
+    x=bitor(x,uint32(A(i)));
     end
 end
 
