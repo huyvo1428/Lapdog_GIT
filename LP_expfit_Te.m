@@ -76,12 +76,8 @@ try
         bot = 1;
     end
     
-%<<<<<<< Updated upstream
     rind = ind(bot):ind(end); %this could be even more empty
     rind = rind(I(rind)>0); %ignore stray negatives...
-%=======
- rind = ind(bot):ind(end); %this could be even more empty if everything is below zero (not good)
-%>>>>>>> Stashed changes
     
 catch err    
     return
@@ -128,7 +124,7 @@ for i=1:8
 end
 
 
-[P,junk]= polyfit(V_w,log(I_w),1); %sigma calculation doesn't make sense with weighted fit. Do sigma analysis on Ir,Vr fit
+[P,junk,mu]= polyfit(V_w,log(I_w),1); %sigma calculation doesn't make sense with weighted fit. Do sigma analysis on Ir,Vr fit
 
 
 
@@ -136,7 +132,7 @@ Te = 1/P(1); %small slope -> large Te, Te<0 -> unphysical
 Ie0 = exp(P(2));
 
 try  %super risky sigma calculation. 
-    [Ps,S]= polyfit(Vr,log(Ir),1);
+    [Ps,S,mu]= polyfit(Vr,log(Ir),1);
 
     S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
     

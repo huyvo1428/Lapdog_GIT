@@ -405,7 +405,7 @@ try %try the dynamic solution first, then the static.
 
         phind = find(Vdagger < 6 & Vdagger>0);
 
-        [phpol,S]=polyfit(Vdagger(phind),log(abs(Iph(phind))),1);
+        [phpol,S,mu]=polyfit(Vdagger(phind),log(abs(Iph(phind))),1);
         S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df);
 
         Tph = -1/phpol(1);

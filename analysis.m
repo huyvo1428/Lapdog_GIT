@@ -37,15 +37,37 @@ ind_I1S= find(strcmp('I1S', antype));
 ind_I2S= find(strcmp('I2S', antype));
 
 
+
+% load_lapdog_runspis=0;
+% 
+% if load_lapdog_runspis
+%     load(dumplapdog_runspis.mat)
+% else
+%     save dump_lapdog_runspis
+% end
+
+
 fprintf(1,'Analysing sweeps\n')
 
 if(~isempty(ind_I1S))
-    an_sweepmain(ind_I1S,tabindex,targetfullname);
+    [XXP]=an_sweepmain_v2(ind_I1S,tabindex,targetfullname);
 end 
 
 if(~isempty(ind_I2S))
-    an_sweepmain(ind_I2S,tabindex,targetfullname); 
+    fprintf(1,'Skipping Analysing LAP2 sweeps\n')
+%    an_sweepmain(ind_I2S,tabindex,targetfullname); 
 end
+
+
+
+
+
+fprintf(1,'Outputting Science\n')
+if(~isempty(ind_I1S))
+    an_outputscience(XXP)
+end 
+
+
 
 
 
@@ -53,23 +75,23 @@ fprintf(1,'Downsampling low frequency measurements\n')
 
 if(~isempty(ind_I1L))
     %an_downsample(ind_I1L,tabindex,8)
-    an_downsample(ind_I1L,tabindex,32)
+    an_downsample(ind_I1L,32,tabindex,index)
 end
  
 if(~isempty(ind_I2L))
    % an_downsample(ind_I2L,tabindex,8)
-    an_downsample(ind_I2L,tabindex,32)
+    an_downsample(ind_I2L,32,tabindex,index)
 end
 
 
 if(~isempty(ind_V1L))
    % an_downsample(ind_V1L,tabindex,8)
-    an_downsample(ind_V1L,tabindex,32)
+    an_downsample(ind_V1L,32,tabindex,index)
 end
  
 if(~isempty(ind_V2L))
   %  an_downsample(ind_V2L,tabindex,8)
-    an_downsample(ind_V2L,tabindex,32)
+    an_downsample(ind_V2L,32,tabindex,index)
 end 
 
 

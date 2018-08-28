@@ -168,7 +168,7 @@ Ir = Ir(ind);       % rest of the data points are, again, discarded.
 % in a least-squares sense. P is a row vector of length
 % 2 containing the polynomial coefficients in descending
 % powers, P(1)*Vi+P(2)
-[P_Vb,S] = polyfit(Vr,Ir,1);
+[P_Vb,S,mu] = polyfit(Vr,Ir,1);
 
 %% upper ion current comparison
 % This is basically the same thing, again although a bit higher on the
@@ -203,7 +203,7 @@ end
 
 
 if upper_comparison_bool
-    [P_Vb_upper,S_upper] = polyfit(Vr_upper,Ir_upper,1);
+    [P_Vb_upper,S_upper,mu] = polyfit(Vr_upper,Ir_upper,1);
     
     if P_Vb_upper(1) > P_Vb(1)
         % Do comparison Y/N? & is the upper ion current slope more positive than the
