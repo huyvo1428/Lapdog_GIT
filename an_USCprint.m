@@ -53,6 +53,7 @@ USCwID= fopen(USCfname,'w');
 N_rows = 0;
 
 if strcmp(mode,'vfloat')
+    factor=-1; 
     for j =1:length(foutarr{1,3})
         
         if foutarr{1,7}(j)~=1 %check if measurement data exists on row
@@ -65,7 +66,7 @@ if strcmp(mode,'vfloat')
             
             
             
-            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),foutarr{1,5}(j),qvalue,sum(foutarr{1,8}(j)));
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),factor*foutarr{1,5}(j),qvalue,sum(foutarr{1,8}(j)));
             N_rows = N_rows + 1;
         end%if
         
@@ -84,7 +85,8 @@ if strcmp(mode,'vfloat')
     usc_tabindex(end).row_byte = row_byte;
     
 else
-    
+    factor=1;
+
     fprintf(1,'error, wrong mode: %s\r\n',mode');
 end
 
