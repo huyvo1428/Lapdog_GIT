@@ -35,7 +35,7 @@ try
         %fileflag = tabindex{an_ind(i),1}(end-6:end-4);
     
         mode = tabindex{an_ind(i),1}(end-6);
-        probenr = str2double(tabindex{an_ind(i),1}(end-5));
+
 
         if mode =='V'  % Voltage  data
             test_column = 4;
@@ -44,7 +44,9 @@ try
         end
     
     for i=1:length(an_ind)     % Iterate over files (indices).
+
         
+        probenr = str2double(tabindex{an_ind(i),1}(end-5));
         macroNo=index(tabindex{an_ind(i) ,3}).macro;
         %macroNodex=dec2hex(macroNo);
         %macroNostr=dec2hex(index(tabindex{an_ind(i) ,3}).macro);
