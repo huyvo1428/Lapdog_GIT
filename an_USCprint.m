@@ -25,8 +25,6 @@ if strcmp(mode,'vfloat')
             %if foutarr{1,6}(j)/foutarr{1,5}(j)) <0.5, qvalue = 1- foutarr{1,6}(j)/foutarr{1,5}(j))
             qvalue=max(1-abs((foutarr{1,6}(j)/foutarr{1,5}(j))),0.5);
             
-            
-            
             row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),factor*foutarr{1,5}(j),qvalue,sum(foutarr{1,8}(j)));
             N_rows = N_rows + 1;
         end%if
