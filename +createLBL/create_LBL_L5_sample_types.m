@@ -73,5 +73,8 @@ function create_LBL_L5_sample_types(deriv1Path)
         end
         
         canClassifyTab = createLBL.create_LBL_file(tabFilePath, LblHeaderKvpl);
+        if canClassifyTab
+            fprintf('Created LBL file for "%s"\n', tabFilename);
+        end
     end
 end

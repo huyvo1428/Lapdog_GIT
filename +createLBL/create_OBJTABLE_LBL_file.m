@@ -69,6 +69,9 @@
 %           before/after the first/last string).
 %       (2) Does not permit FORMAT field, and there are probably other PDS-keywords which are not supported by this code.
 %
+% ASSUMPTION: Metakernel (time conversion) loaded if setting timestamps from columns requiring time conversion (so far
+% only STOP_TIME_from_OBT).
+%
 %
 % IMPLEMENTATION NOTES
 % ====================
@@ -141,16 +144,15 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns. Lapdog convention.
     BYTES_PER_LINEBREAK   = 2;                 % Carriage return + line feed.
     
-    
     % Constants for (optionally) converting TAB file contents into PDS keywords.
     T2PK_OBT2SCCS_FUNC = @(x) ['1/', obt2sct(str2double(x))];    % No quotes. Quotes added later.
     T2PK_UTC2UTC_FUNC  = @(x) [x(1:23)];                         % Has to truncate UTC second decimals according to DVAL-NG.
     T2PK_OBT2UTC_FUNC  = @(x) [cspice_et2utc(cspice_scs2e(ROSETTA_NAIF_ID, obt2sct(str2double(x))), 'ISOC', 3)];    % 3 = 3 UTC second decimals
     T2PK_PROCESSING_TABLE = struct(...
-        'argConst',   {'START_TIME',      'STOP_TIME',       'STOP_TIME_from_OBT', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % Argument value.
+        'argConst',   {'START_TIME',      'STOP_TIME',       'STOP_TIME_from_OBT', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % Argument value (cell array component of field ".useFor").
         'pdsKeyword', {'START_TIME',      'STOP_TIME',       'STOP_TIME',          'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % LBL file header PDS keyword which will be assigned.
         'convFunc',   {T2PK_UTC2UTC_FUNC, T2PK_UTC2UTC_FUNC, T2PK_OBT2UTC_FUNC,    T2PK_OBT2SCCS_FUNC,             T2PK_OBT2SCCS_FUNC           }, ...    % Function string-->string that is applied to the TAB file value.
-        'iFlr',       {1,                 2,                 2,                    1,                              2                            });       % 1=First row, 2=Last row
+        'iFlr',       {1,                 2,                 2,                    1,                              2                            });       % 1=First row, 2=Last row. FLR = First/Last Row.
 
 
 
