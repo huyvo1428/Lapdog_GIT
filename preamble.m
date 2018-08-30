@@ -97,8 +97,16 @@ end
 global LDLMACROS;
 LDLMACROS = hex2dec({'807','814','816','817','827','805','804','803','617','703','704','715','716'});    % NOTE: Must use cell array with strings for hex2dec ({} not []).
 
+
+
+
 global VFLOATMACROS;
-VFLOATMACROS = hex2dec({'802','410','816','817','827','805','804','803','617','703','704','715','716'});    % NOTE: Must use cell array with strings for hex2dec ({} not []).
+
+VFLOATMACROS{1} = hex2dec({'410','411','412','413','416','616','710','715','716','801','802','910'});    % NOTE: Must use cell array with strings for hex2dec ({} not []).
+%VFLOATMACROS(:,2) = hex2dec({'410','415','417','615','617','710','801','802','910'});
+VFLOATMACROS{2} = hex2dec({'415','417','615','617','710','801','802','910'});
+
+
 
 global usc_tabindex
 usc_tabindex=[];

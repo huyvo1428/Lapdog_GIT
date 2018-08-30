@@ -230,11 +230,11 @@ if upper_comparison_bool
         if Rsq_low_temp-Rsq_upper_temp/2 > Rsq_upper_temp       
 %        if Rsq_low < Rsq_upper  % Upper fit was much better, so let's pretend that's what we did all along.
             fprintf(1,'ion sweep region changed, Rsq_low was =%5.3e,Rsq_upper was =%5.3e ',Rsq_low,Rsq_upper)
-            fprintf(1,'V & I = \n');
-            fprintf(1,'%e,',V);
-            fprintf(1,'\n');
-            fprintf(1,'%e,',I);
-            fprintf(1,'\n');
+           % fprintf(1,'V & I = \n');
+           % fprintf(1,'%e,',V);
+           % fprintf(1,'\n');
+            %fprintf(1,'%e,',I);
+            %fprintf(1,'\n');
 
             P_Vb= P_Vb_upper;
             S = S_upper;

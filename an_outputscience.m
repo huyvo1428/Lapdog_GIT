@@ -4,6 +4,7 @@ function []= an_outputscience(XXP)
 global SATURATION_CONSTANT;
 global ASW_tabindex
 ASW_tabindex=[];
+CONT_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926];
 
 iph0conditions=[];
 iph0conditions.I_Vb=-17.0;%V from generating lap1 vector.
@@ -37,6 +38,15 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     filename(end-6:end-4)='ASW';
     
     twID = fopen(filename,'w+');
+    
+    %quickfix for ASW
+    if ismember(XXP(i).info.macroId,CONT_macros)
+        XXP(i).data.Iph0(:,1)=XXP(i).data.Iph0(:,1)+iph0conditions.CONT;
+    end
+    XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=SATURATION_CONSTANT;
+    
+    %fix contamination issues)
+    
     
     dummy_ne=SATURATION_CONSTANT;
     dummy_Te_XCAL=SATURATION_CONSTANT;
@@ -96,8 +106,8 @@ resampled.conds=conditions;
 
 
 %%%--------illumination check------------------------%%%
-dynampath = strrep(mfilename('fullpath'),'/an_outputscience','');
-kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
+dynampath = strrep(mfilename('fullpath'),'an_outputscience','');
+kernelFile = strcat(dynampath,'metakernel_rosetta.txt');
 paths(); 
 
 cspice_furnsh(kernelFile);
@@ -122,13 +132,13 @@ intval = resampled.conds.time_window;%seconds
       %  utc_str= XXP(1).info.timing{1,1};%this is start of file
         % utc_str=XXP(1).data.Tarr{1,1}; %this is start of first sweep data point, slightly different
   
-        utc_str=cspice_et2utc(lapstruct.t0(1),'ISOC',6);
+        utc_str=cspice_et2utc(lapstruct.t0(1),'ISOC',6)
         
         
         % Set starting spaceclock time to (UTC) 00:00:00.000000
-        ah= str2double(utc_str(12:13));
-        am= str2double(utc_str(15:16));
-        as= str2double(utc_str(18:end));
+        ah= str2double(utc_str(12:13))
+        am= str2double(utc_str(15:16))
+        as= str2double(utc_str(18:end))
 
        % ah =str2double(scantemp{1,1}{1,1}(12:13));
        % am =str2double(scantemp{1,1}{1,1}(15:16));
@@ -159,7 +169,9 @@ k=0;
 %t_etz=floor(t_et0+(intval* (min(inter):max(inter)))+0.5);%maybe slightly incorrect. ugh.
 t_etz=t_et0+intval/2+(intval* (min(inter):max(inter)));%midpoint of interval                                        
 
-t_obtz= t_obt0 +intval/2+(intval* (min(inter):max(inter)));%midpoint of interval
+%                               ((1:3600*24/intval)-0.5)*intval
+
+t_obtz= t_obt0 +intval+(intval*(min(inter):max(inter)));%midpoint of interval
 t_utc= cspice_et2utc(t_etz(:).'+0.5, 'ISOC', 6);% buffer up with 0.5 second, before UTC conversion, and then round to closest second later in function
 t_matlab_date=nan(length(t_etz),1);
 for i = 1:length(t_etz)
@@ -304,7 +316,7 @@ for i = min(inter):max(inter) %main for loop
 %    dirD = strcat('D',datestr(resampled.t_epoch(k),'dd'));
     folder = strcat(XXP(1).info.derivedpath,dirY,'/',dirM,'/',dirD,'/');
     
-    filename = sprintf('%sRPCLAP_%s_000000_30M_PHO.TAB',folder,datestr(t_matlab_date(k),'yyyymmdd'));
+    filename = sprintf('%sRPCLAP_%s_000000_60M_PHO.TAB',folder,datestr(t_matlab_date(k),'yyyymmdd'));
 %         
 %     
 %     if k>1 && ~strcmp(datestr(resampled.t_epoch(k-1),'dd'), datestr(resampled.t_epoch(k),'dd')) %%new calendar day? (won't check j==1)
@@ -340,6 +352,9 @@ for i = min(inter):max(inter) %main for loop
             fclose(twID); %close old file
             
             twID = fopen(filename,'w'); %open a new file, filename is now a different string.
+            
+
+            
             PHO_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
             PHO_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
             %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
@@ -367,17 +382,22 @@ for i = min(inter):max(inter) %main for loop
             t_utc(k,end-8:end)='00.000000';
 
             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), t_obtz(k), SATURATION_CONSTANT,0,qf_array(k));
-            %rowcount=rowcount+1
+            rowcount=rowcount+1;
 
         elseif (~isempty(indz))
             t_utc(k,end-8:end)='00.000000';
             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
-            %rowcount=rowcount+1
+            rowcount=rowcount+1;
 
         else
             %first file in array, no valid points.
 
         end
+        
+        
+        
+        
+        
     end%folder doesn't exist, we've gone outside of archive
 
 %         if(~isempty(indz))  % Print values!
@@ -394,6 +414,19 @@ for i = min(inter):max(inter) %main for loop
 %         end%print value or NaN
 
 end%main loop
+
+
+for i = 1:length(PHO_tabindex)%clean up empty files
+    
+    if PHO_tabindex(i).no_of_rows == 0
+        D= dir(PHO_tabindex(i).fname);
+        
+        fprintf(1,'%s size is %i',PHO_tabindex(i).fname,D.bytes);
+        delete PHO_tabindex(end).fname;
+    end
+end
+
+
  cspice_kclear;
 
 end%function
@@ -428,7 +461,6 @@ cont_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926
 ind=ismember(lapstruct.macroId,cont_macros);
 
 lapstruct_fixed.Iph0(ind)=lapstruct_fixed.Iph0(ind)+CONT;
-
 lapstruct_fixed.curr(ind,:) = lapstruct.curr(ind,:)+CONT;
 
 end
@@ -516,9 +548,10 @@ end
 
 end
 
+function out = fixlapstruct(lapstruct,CONT)
 
 
-
+end
 
 function out= UXPfile(var_ind)
 %this file needs all Vph_knee*, and all Vfloat measurements in archive.
