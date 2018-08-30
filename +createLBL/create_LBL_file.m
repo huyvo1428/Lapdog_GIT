@@ -90,7 +90,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
         LblData = [];
         LblData.OBJTABLE = [];
             
-        if     strcmp(timeStr, '000000') && strcmp(msd, '30M_PHO')
+        if     strcmp(timeStr, '000000') && strcmp(msd, '60M_PHO')
 
             canClassifyTab = 1;
             
