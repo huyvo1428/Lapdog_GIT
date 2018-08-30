@@ -3,31 +3,31 @@
 %
 % Initially created 2018-07-10 by Erik P G Johansson.
 %
-function Kvl = assert_KVPL(Kvl)
+function Kvpl = assert_KVPL(Kvpl)
     % TODO-DECISION: Include "normalization"?
     % PROPOSAL: Check for strings in keys, unique keys.
     
     % ASSERTION
-    EJ_lapdog_shared.utils.assert.struct(Kvl, {'keys', 'values'})
-    %if ~isempty(setxor(fieldnames(Kvl), {'keys', 'values'}))
+    EJ_lapdog_shared.utils.assert.struct(Kvpl, {'keys', 'values'})
+    %if ~isempty(setxor(fieldnames(Kvpl), {'keys', 'values'}))
     %    error('Argument KVPL does not contain the fields of a legal KVPL.')
     %end    
-    if ~is_vector(Kvl.keys)
-        error('Argument Kvl.keys has illegal dimensions.')
+    if ~is_vector(Kvpl.keys)
+        error('Argument Kvpl.keys has illegal dimensions.')
     end    
-    if ~is_vector(Kvl.values)
-        error('Argument Kvl.values has illegal dimensions.')
+    if ~is_vector(Kvpl.values)
+        error('Argument Kvpl.values has illegal dimensions.')
     end    
     
-    if ~(length(Kvl.keys) == length(Kvl.values))
+    if ~(length(Kvpl.keys) == length(Kvpl.values))
         error('Argument KVPL fields have different array sizes.')
     end
     
     
     
     % NORMALIZE
-    Kvl.keys   = Kvl.keys(:);
-    Kvl.values = Kvl.values(:);
+    Kvpl.keys   = Kvpl.keys(:);
+    Kvpl.values = Kvpl.values(:);
 end
 
 

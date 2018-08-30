@@ -5,7 +5,7 @@
 % Create LBL file for a given Lapdog TAB file (i.e. ONE file that begins with "RPCLAP_").
 %
 % Derives type of Lbl file from the TAB filename.
-% Initially intended for new TAB file types: PXP, UXP, AXP.
+% Initially intended for new TAB file types: PHO, USC, ASW, NPL.
 %
 %
 % DESIGN/ARCHITECTURE INTENT
@@ -43,6 +43,8 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     %
     % PROPOSAL: Quality value DESCRIPTION should connect to/mention the variable for which it applies.
     %
+    % PROPOSAL: Different LABEL_REVISION_NOTE for different file types.
+    %
     % TODO: Update for new data files (4).
     % TODO: Replace "UNFINISHED" keyword values.
     % TODO: PDS Keywords from MB, DATA_SET_PARAMETER_NAME
@@ -59,17 +61,14 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     MC_DESC            = sprintf(' A value of %e refers to that there is no value.', C.MISSING_CONSTANT);
     
 
-    % NOTE: Need to have start & stop timestamps so that write_OBJTABLE_LBL_file can fill them in.
-    %EMPTY_LBL_HEADER_KVPL = struct('keys', {{'START_TIME', 'STOP_TIME', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}}, 'values', {{'', '', '', ''}});
-    
+
     % TEMPORARY source constants.
     lbltime   = '2018-08-03';  % Label revision time
     lbleditor = 'EJ';
     lblrev    = 'Misc. descriptions clean-up';
     LblAllKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
-    KvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(OldLblHeaderKvpl, LblAllKvpl, 'require preexisting keys');
+    LblKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(OldLblHeaderKvpl, LblAllKvpl, 'require preexisting keys');
     
-
     
     
     [parentDir, fileBasename, fileExt] = fileparts(tabFilePath);
@@ -83,18 +82,21 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
         % Therefore, the regex has to allow both upper and lower case.
         
         % NOTE: strread throws exception if the pattern does not match.
-        [dateJunk, timeStr, macroOrSupportType, dataType] = strread(tabFilename, 'RPCLAP_%[^_]_%[^_]_%[^_]_%[^.].TAB');        
+        [dateJunk, timeStr, macroOrSupportType, dataType] = strread(tabFilename, 'RPCLAP_%[^_]_%[^_]_%[^_]_%[^.].TAB');
         msd1 = macroOrSupportType{1};
         msd2 = dataType{1};
         msd = [msd1, '_', msd2];
 
         LblData = [];
         LblData.OBJTABLE = [];
-        LblData.HeaderKvl = KvlLbl;
             
         if     strcmp(timeStr, '000000') && strcmp(msd, '30M_PHO')
 
             canClassifyTab = 1;
+            
+            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
+            %    {'DATA_SET_PARAMETER_NAME', '{"PHOTOSATURATION CURRENT"}'; ...
+            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
             
             LblData.OBJTABLE.DESCRIPTION = 'Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).';
             
@@ -105,7 +107,9 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
             %ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_STOP_COUNT'}});
             ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF.',                           'useFor', {{'START_TIME', 'STOP_TIME'}});
             ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
-            ocl{end+1} = struct('NAME', 'I_PH0',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE',    'DESCRIPTION', ['Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).', MC_DESC]);
+            ocl{end+1} = struct('NAME', 'I_PH0',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE',    'DESCRIPTION', ...
+                ['Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).', MC_DESC], ...
+                'MISSING_CONSTANT', C.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'I_PH0_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',        'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
@@ -114,13 +118,19 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
 
             canClassifyTab = 1;
 
-            LblData.OBJTABLE.DESCRIPTION = 'Spacecraft potential derived from either (1) photoelectron knee in sweep, or (2) floating potential measurement (individual sample). Time interval can thus refer to either sweep or individual sample.';
+            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
+            %    {'DATA_SET_PARAMETER_NAME', '{"SPACECRAFT POTENTIAL"}'; ...
+            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
+            
+            LblData.OBJTABLE.DESCRIPTION = 'Proxy for spacecraft potential, derived from either (1) zero current crossing in sweep, or (2) floating potential measurement (downsampled). Time interval can thus refer to either sweep or individual sample.';
             
             ocl = [];
             % NOTE: UTC with 3 decimals for unknown reason.
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF. Middle point for sweeps.',                              'useFor', {{'START_TIME', 'STOP_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point). Middle point for sweeps.', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
-            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      'DESCRIPTION', ['Proxy for spacecraft potential derived from either (1) photoelectron knee in sweep, or (2) floating potential measurement (individual sample), depending on available data.', MC_DESC]);
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF. Middle point for sweeps.',                              'useFor', {{'START_TIME'}});
+            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point). Middle point for sweeps.', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}});
+            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      'DESCRIPTION', ...
+                ['Proxy for spacecraft potential derived from either (1) photoelectron knee in sweep, or (2) floating potential measurement (downsampled), depending on available data.', MC_DESC], ...
+                'MISSING_CONSTANT', C.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
@@ -129,6 +139,12 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
             
             canClassifyTab = 1;
 
+            % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
+            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
+            %    {'DATA_SET_PARAMETER_NAME', '{"ELECTRON DENSITY", "PHOTOSATURATION CURRENT", "ION BULK VELOCITY", "ELECTRON TEMPERATURE"}'; ...
+            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP", "RPCMIP"}'});
+            
+            % ASW = Analyzed sweep parameters
             LblData.OBJTABLE.DESCRIPTION = 'Miscellaneous physical high-level quantities derived from individual sweeps.';
 
             ocl = [];
@@ -138,18 +154,29 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
             ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_STOP_COUNT'}});
             %ocl{end+1} = struct('NAME', 'TIME_UTC',                      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF. Middle point of sweep.',                           'useFor', {{'START_TIME', 'STOP_TIME'}});
             %ocl{end+1} = struct('NAME', 'TIME_OBT',                      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point). Middle point of sweep.', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
-            ocl{end+1} = struct('NAME', 'N_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'cm**-3',    'DESCRIPTION', ['Electron density derived from individual sweep.', MC_DESC]);
+            ocl{end+1} = struct('NAME', 'N_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'cm**-3',    'DESCRIPTION', ['Electron density derived from individual sweep.', MC_DESC], ...
+                'MISSING_CONSTANT', C.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'N_E_QUALITY_VALUE',             'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'I_PH0',                         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE',    'DESCRIPTION', ['Photosaturation current derived from individual sweep.', MC_DESC]);
+            ocl{end+1} = struct('NAME', 'I_PH0',                         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE',    'DESCRIPTION', ...
+                ['Photosaturation current derived from individual sweep.', MC_DESC], ...
+                'MISSING_CONSTANT', C.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'I_PH0_QUALITY_VALUE',           'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'V_ION_BULK_XCAL',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'm/s',       'DESCRIPTION', ['Ion bulk speed derived from individual sweep (speed; always non-negative scalar). Cross-calibrated with RPCMIP.', MC_DESC]); % UNFINISHED
+            ocl{end+1} = struct('NAME', 'V_ION_BULK_XCAL',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'm/s',       ...
+                'DESCRIPTION', ['Ion bulk speed derived from individual sweep (speed; always non-negative scalar). Cross-calibrated with RPCMIP.', MC_DESC], ...
+                'MISSING_CONSTANT', C.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'V_ION_BULK_XCAL_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'T_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'eV',        'DESCRIPTION', ['Electron temperature derived from exponential part of sweep.', MC_DESC]);
+            ocl{end+1} = struct('NAME', 'T_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'eV',        ...
+                'DESCRIPTION', ['Electron temperature derived from exponential part of sweep.', MC_DESC], ...
+                'MISSING_CONSTANT', C.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'T_E_QUALITY_VALUE',             'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'T_E_XCAL',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'eV',        'DESCRIPTION', ['Electron temperature, derived by by using linear part of sweep and density measurement from RPCMIP.', MC_DESC]); % UNFINISHED
+            ocl{end+1} = struct('NAME', 'T_E_XCAL',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'eV',        ...
+                'DESCRIPTION', ['Electron temperature, derived by using the linear part of the electron current of the sweep, and density measurement from RPCMIP.', MC_DESC], ...
+                'MISSING_CONSTANT', C.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'T_E_XCAL_QUALITY_VALUE',        'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'V_PH_EL_KNEE',                  'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      'DESCRIPTION', ['Photoelectron knee potential.', MC_DESC]);   % UNFINISHED
-            ocl{end+1} = struct('NAME', 'V_PH_EL_KNEE_QUALITY_VALUE',    'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
+            ocl{end+1} = struct('NAME', 'V_PH_KNEE',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      ...
+                'DESCRIPTION', ['Photoelectron knee potential.', MC_DESC], ...
+                'MISSING_CONSTANT', C.MISSING_CONSTANT);
+            ocl{end+1} = struct('NAME', 'V_PH_KNEE_QUALITY_VALUE',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                  'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
 
@@ -157,12 +184,23 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
             
             canClassifyTab = 1;
 
+            % MB states:
+            % """"PLASMA DENSITY [cross-calibration from ion and electron density; in the label, put ELECTRON DENSITY,
+            % ION DENSITY and PLASMA DENSITY]""""            
+            % TODO-NEED-INFO: Use above?
+            
+            %LblKvpl = KVPL_overwrite_add(LblKvpl, {...
+            %        'DATA_SET_PARAMETER_NAME', '{"ELECTRON_DENSITY", "ION DENSITY", "PLASMA DENSITY"}'; ...
+            %        'CALIBRATION_SOURCE_ID',   '{"RPCLAP", "RPCMIP"}'});
+            
             LblData.OBJTABLE.DESCRIPTION = 'Plasma density derived from individual fix-bias density mode (current) measurements.';
 
             ocl = [];
             ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF.',                           'useFor', {{'START_TIME', 'STOP_TIME'}});
             ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
-            ocl{end+1} = struct('NAME', 'N_PL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'cm**-3',    'DESCRIPTION', ['Electron density derived from individual fix-bias density mode (current) measurements.', MC_DESC]);
+            ocl{end+1} = struct('NAME', 'N_PL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'cm**-3',    'DESCRIPTION', ...
+                ['Plasma density derived from individual fix-bias density mode (current) measurements. Parameter derived from low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', MC_DESC], ...
+                'MISSING_CONSTANT', C.MISSING_CONSTANT); 
             ocl{end+1} = struct('NAME', 'QUALITY_VALUE',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',   'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
@@ -178,10 +216,20 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     
     
     if canClassifyTab
+        LblData.HeaderKvl = LblKvpl;
         createLBL.create_OBJTABLE_LBL_file(tabFilePath, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, TAB_LBL_INCONSISTENCY_POLICY);
     else
         %error('Can not identify type of TAB file: "%s"', tabFilePath)
         ;
     end
     
+end
+
+
+
+% Convenience function for shortening & clarifying code.
+function Kvpl = KVPL_overwrite_add(Kvpl, kvplContentCellArray)
+    Kvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(Kvpl, ...
+        EJ_lapdog_shared.utils.KVPL.create(kvplContentCellArray), ...
+        'add if not preexisting');
 end

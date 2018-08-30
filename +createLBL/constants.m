@@ -5,7 +5,7 @@
 %
 % IMPLEMENTATION NOTE
 % ===================
-% Reasons for using a singleton class (instead of static methods):
+% Reasons for using a singleton class (instead of static methods & fields):
 % 1) Can use properties/instance variables for "caching" values. Do not want to use persistent variables since they
 % cause trouble when testing. NOTE: There are no proper static variables in MATLAB.
 % 2) Can split up (structure, organize) configuration and validation code in methods.
@@ -34,6 +34,8 @@ classdef constants < handle
         % Used by createLBL.create_OBJTABLE_LBL_file
         COTLF_HEADER_OPTIONS   % Set in constructor
     end
+    
+    
     
     methods
         function obj = constants()
@@ -201,9 +203,13 @@ classdef constants < handle
             obj.COTLF_HEADER_OPTIONS = struct('keyOrderList', {KEY_ORDER_LIST}, 'forbiddenKeysList', {FORBIDDEN_KEYS}, 'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
         end
         
+        
+        
     %end    % methods
     
     %methods(Static)
+    
+    
         
         % Construct list of key-value pairs to use for all LBL files.
         % -----------------------------------------------------------
@@ -220,7 +226,8 @@ classdef constants < handle
         % DERIV1 LBL files with e.g. "pvv label".
         
         function LblAllKvpl = get_LblAllKvpl(obj, LABEL_REVISION_NOTE)
-            % PROPOSAL: Rewrite to use erikpgjohansson.utils.KVPL.add_kv_pairs.
+            % PROPOSAL: Rewrite to use EJ_lapdog_shared.utils.KVPL.create.
+            % PROPOSAL: Use generate_PDS_data?
 
             % ASSERTION
             if ~isempty(regexp(LABEL_REVISION_NOTE, '"', 'once'))

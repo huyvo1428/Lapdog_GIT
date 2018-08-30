@@ -1,5 +1,5 @@
 % 
-% For every key in kvlSrc, try to set the corresponding key value in kvlDest if it exists.
+% For every key in KvplSrc, try to set the corresponding key value in KvplDest if it exists.
 %
 %
 % NOTE: No keys will ever be added to the destination.
@@ -9,11 +9,12 @@
 % ARGUMENTS
 % =========
 % policy : String.
-%          'overwrite only when has keys' : If a key in kvlSrc is in kvlDest, then its value is overwritten. Otherwise the key in kvlSrc is ignored.
-%          'require preexisting keys'     : Every key in kvlSrc, must pre-exist kvlDest, otherwise error (assertion).
+%          'overwrite only when has keys' : If a key in KvplSrc is in KvplDest, then its value is overwritten. Otherwise the key in KvplSrc is ignored.
+%          'add if not preexisting'       : If a key in KvplSrc is in KvplDest, then its value is overwritten. Otherwise the key+value are added to KvplDest.
+%          'require preexisting keys'     : Every key in KvplSrc, must pre-exist KvplDest, otherwise error (assertion).
 %
-% function kvlDest = overwrite_values(kvlDest, kvlSrc, policy)
-function   kvlDest = overwrite_values(kvlDest, kvlSrc, policy)
+% function KvplDest = overwrite_values(KvplDest, KvplSrc, policy)
+function   KvplDest = overwrite_values(KvplDest, KvplSrc, policy)
 %
 % PROPOSAL: New name. Want something that implies only preexisting keys, and overwriting old values.
 %   set_values
@@ -24,29 +25,45 @@ function   kvlDest = overwrite_values(kvlDest, kvlSrc, policy)
 
 switch(policy)
     case 'overwrite only when has keys'
-        requireOverwrite = 0;
+        errorIfNotPreexisting = 0;
+        addIfNotPreexisting   = 0;
+    case 'add if not preexisting'
+        errorIfNotPreexisting = 0;
+        addIfNotPreexisting   = 1;
     case 'require preexisting keys'
-        requireOverwrite = 1;
+        errorIfNotPreexisting = 1;
+        addIfNotPreexisting   = 0;   % Should be irrelevant.
     otherwise
         error('Illegal "policy" argument.')
 end
 
-for iKvSrc = 1:length(kvlSrc.keys)
+
+
+for iKvSrc = 1:length(KvplSrc.keys)
     
-    keySrc   = kvlSrc.keys{iKvSrc};
-    valueSrc = kvlSrc.values{iKvSrc};
-    iKvlDest = find(strcmp(keySrc, kvlDest.keys));
+    keySrc   = KvplSrc.keys{iKvSrc};
+    valueSrc = KvplSrc.values{iKvSrc};
+    iKvplDest = find(strcmp(keySrc, KvplDest.keys));
     
-    if isempty(iKvlDest)
+    if isempty(iKvplDest)
+        % CASE: KvplSrc key is NOT in KvplDest.
+        
         % ASSERTION
-        if requireOverwrite
-            error('ERROR: Tries to set key that does not yet exist in kvlDest: (key, value) = (%s, %s)', keySrc, valueSrc);
+        if errorIfNotPreexisting
+            error('ERROR: Tries to set key that does not yet exist in KvplDest: (key, value) = (%s, %s)', keySrc, valueSrc);
+        elseif addIfNotPreexisting
+            KvplDest.keys{end+1}   = keySrc;
+            KvplDest.values{end+1} = valueSrc;
         end
-    elseif numel(iKvlDest) == 1
-        % CASE: There is exactly one of the key that was sought.
-        kvlDest.values{iKvlDest} = valueSrc;      % No error ==> Set value.
+    elseif numel(iKvplDest) == 1
+        % CASE: KvplSrc key is exactly ONCE in KvplDest.
+        
+        KvplDest.values{iKvplDest} = valueSrc;      % No error ==> Set value.
     else
-        error('ERROR: Found multiple keys with the same value in kvlDest: (key, value) = (%s, %s)', keySrc, valueSrc);
+        % CASE: KvplSrc key is multiple times in KvplDest.
+        
+        % ASSERTION
+        error('ERROR: Found multiple keys with the same value in KvplDest: (key, value) = (%s, %s)', keySrc, valueSrc);
     end
     
 end
