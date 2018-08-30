@@ -5,6 +5,7 @@ function []= an_downsample(an_ind,intval,tabindex,index)
 %oldUTCpart1 ='shirley,you must be joking';
 
 global an_tabindex;
+global target
 
 %antemp ='';
 
@@ -26,7 +27,7 @@ foutarr=cell(1,7);
 % some zeropadding(for psd) = +2
 
 
-
+hold_flag=0;
 i=1; %
 j=0;
 global SATURATION_CONSTANT VFLOATMACROS
@@ -292,16 +293,126 @@ try
         an_tabindex{end,9} = row_byte;                
         fclose(awID);
         
-        
-        fprintf(1,'checking %x, vs %x',macroNo,VFLOATMACROS(1))
-        if ismember(macroNo,VFLOATMACROS)
+        %%%%-----------------USC CHECK------------------------------------%
+        %fprintf(1,'checking %x, vs %x',macroNo,VFLOATMACROS(:,probenr))
+        if  mode =='V' && ismember(macroNo,VFLOATMACROS{probenr})
+                  
+            %%%--------illumination check------------------------%%%
+            dynampath = strrep(mfilename('fullpath'),'/an_downsample','');
+            kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
+            paths();
             
+            cspice_furnsh(kernelFile);
             
+            tfoutarr
+            foutarr
+                
+            
+            lent = length(foutarr{1,7});
+            
+            [junk,SEA,SAA]=orbit('Rosetta',tfoutarr{1,1},target,'ECLIPJ2000','preloaded');
+            cspice_kclear;
+            
+            SEA=SEA(1:lent); %fix
+            SAA=SAA(1:lent);
+            
+         % *Elias values* (from photoemission study):
+            if probenr==1
+                Phi11 = 131.2;
+                Phi12 = 179.2;
+                illuminati = ((SAA < Phi11) | (SAA > Phi12));
+                                
+            else 
+                Phi21 = 18;
+                Phi22 = 82;
+                Phi23 = 107;
+                illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
+            end
+            SEA_OK = abs(SEA)<1; %  0 ?1 degree  = nominal pointing
+            illuminati(~SEA_OK)=0.3;
+
+            dark_ind=illuminati<0.9;
+            foutarr{1,7}(dark_ind)=0; %won't be printed.
+            %%%----------------------------------------------%%%
+            
+
             USCfname= tabindex{an_ind(i),1};
             USCfname(end-6:end-4)='USC';
             USCshort=strrep(USCfname,affolder,'');
-            an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,probenr,'vfloat');
             
+            if ismember(macroNo,VFLOATMACROS{1}(ismember(VFLOATMACROS{1},VFLOATMACROS{2})))
+            %is LAP2 % LAP1 floating in this macro? 710,910,802,801...            
+            %then we need to save the data, wait for the next iteration (which, since it's a sorted list, will hold the corresponding probe number)
+            
+            
+                if(hold_flag) %ugh have to check which probe to use.
+
+                    %time_arr{1,1}(j,:)
+                    hold_flag = 0; %reset
+                    
+                    if probenr==1
+                        
+                        foutarr_1=foutarr;
+                        tfoutarr_1=tfoutarr;
+                        
+                    else
+                        
+                        foutarr_2=foutarr;
+                        tfoutarr_2=tfoutarr;
+                    end
+                        fprintf(1,'\n tfoutarr_2{1,1}(1,:)=%s \n tfoutarr_1{1,1}(1,:)=%s \n', tfoutarr_2{1,1}(1,:),tfoutarr_1{1,1}(1,:));
+                        fprintf(1,'\n tfoutarr_2{1,1}(end,:)=%s \n tfoutarr_1{1,1}(end,:)=%s \n', tfoutarr_2{1,1}(end,:),tfoutarr_1{1,1}(end,:));
+
+                        %tfoutarr
+                        %tfoutarr_1
+                        %tfoutarr_2
+                        %probenr
+
+                        %length(dark_ind)
+                        
+                    foutarr_1{1,8}=foutarr_1{1,8}+100;
+                    foutarr_2{1,8}=foutarr_2{1,8}+200; %eh, don't need
+                    %this
+                    
+                    replaceind_lap1= (foutarr_1{1,7}(:)~=1);
+                    ok_tokeeplap2 = (foutarr_2{1,7}(:)==1);
+                    %the indices that are ok to keep is replaceind_lap1
+                    if length(foutarr_1{1,7})~=length(foutarr_2{1,7})
+                        fprintf(1,'error wrong lengths %i vs lap2 %i',length(foutarr_1{1,7}),length(foutarr_2{1,7}))
+                    
+                    indz=replaceind_lap1&ok_tokeeplap2;
+
+                    %initialise foutarr.
+                        foutarr=foutarr_1; %default == probe 1.
+                        tfoutarr=tfoutarr_1; %default == probe 1.
+
+                        foutarr{1,5}(indz)=foutarr_2{1,5}(indz);%
+                        foutarr{1,8}(indz)=foutarr_2{1,8}(indz);   %here we went from LAP1 to LAP2, change flag                                             
+
+                    
+                    an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,'vfloat');
+                    end
+                    
+                    clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 
+                    
+                else
+                    if probenr==1
+                        foutarr_1=foutarr;
+                        tfoutarr_1=tfoutarr;
+                    else
+                        foutarr_2=foutarr;
+                        tfoutarr_2=tfoutarr; %I only need this to debug
+                    end
+                    
+                    hold_flag = 1; 
+
+                end
+            
+            else%no problem, just output data.
+                
+            an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,'vfloat');
+            
+            end
             
             
             
@@ -320,7 +431,7 @@ try
         
         
         
-        clear foutarr  %not really needed, will not exist outside of function anyway.
+        clear foutarr tfoutarr %not really needed, will not exist outside of function anyway.
 
         
     end%for main loop

@@ -1,54 +1,15 @@
 
-function [] = an_USCprint(USCfname,USCshort,time_arr,foutarr, index_nr_of_firstfile,timing,probenr,mode)
+function [] = an_USCprint(USCfname,USCshort,time_arr,foutarr, index_nr_of_firstfile,timing,mode)
 
 
 
-fprintf(1,'%s',time_arr{1,1}(1,:));
+%fprintf(1,'%s',time_arr{1,1}(1,:));
 
 
 global usc_tabindex
-global target
 
 
-%%%--------illumination check------------------------%%%
-dynampath = strrep(mfilename('fullpath'),'/an_USCprint','');
-kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
-paths(); 
-
-cspice_furnsh(kernelFile);
-[junk,SEA,SAA]=orbit('Rosetta',time_arr{1,1},target,'ECLIPJ2000','preloaded');
-cspice_kclear;
-
-
-
-   % *My values* (from photoemission study):
-           % Phi11 = 131.2;%degrees
-            %Phi12 = 179.2;
-if probenr==1
-    Phi11 = 131;
-    Phi12 = 181;
-    illuminati = ((SAA < Phi11) | (SAA > Phi12));
-
-    % *Anders values* (+90 degrees)
-    
-else
-    
-    
-    Phi21 = 18;
-    Phi22 = 82;
-    Phi23 = 107;
-    illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
-end
-SEA_OK = abs(SEA)<1; %  0 ±1 degree  = nominal pointing
-illuminati(~SEA_OK)=0.3;
-
-dark_ind=illuminati<0.9;
-foutarr{1,7}(dark_ind)=1; %won't be printed.
-%%%----------------------------------------------%%% 
-
-
-
-fprintf(1,'printing: %s \r\n',USCfname)
+%fprintf(1,'printing: %s \r\n',USCfname)
 USCwID= fopen(USCfname,'w');
 N_rows = 0;
 
