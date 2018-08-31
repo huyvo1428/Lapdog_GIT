@@ -38,13 +38,13 @@ ind_I2S= find(strcmp('I2S', antype));
 
 
 
- load_lapdog_runspis=0;
+ %load_lapdog_runspis=0;
  
- if load_lapdog_runspis
-     load(dumplapdog_runspis.mat)
-else
-     save dump_lapdog_runspis
- end
+ %if load_lapdog_runspis
+ %    load(dumplapdog_runspis.mat)
+%else
+ %    save dump_lapdog_runspis
+% end
 
 
 fprintf(1,'Analysing sweeps\n')

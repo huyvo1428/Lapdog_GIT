@@ -379,7 +379,7 @@ try
                     %the indices that are ok to keep is replaceind_lap1
                     if length(foutarr_1{1,7})~=length(foutarr_2{1,7})
                         fprintf(1,'error wrong lengths %i vs lap2 %i',length(foutarr_1{1,7}),length(foutarr_2{1,7}))
-                    
+                    end
                     indz=replaceind_lap1&ok_tokeeplap2;
 
                     %initialise foutarr.
@@ -391,7 +391,7 @@ try
 
                     
                     an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,'vfloat');
-                    end
+                    
                     
                     clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 
                     
