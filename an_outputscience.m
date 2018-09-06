@@ -30,7 +30,6 @@ dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf'};
 infoflds= {'macroId'};
 PHO= struct_cleanup(XXP,infoflds,dataflds);
 
-PHO= PHOTABFILE(PHO,iph0conditions,XXP);
 
 
 for i = 1:XXP(1).info.nroffiles %AXP generation!
@@ -84,19 +83,27 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     
     fclose(twID);
     
-        if  ~ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{1}) && ~ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{2})
+        if  any(ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{1})) || any(ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{2}))
+            
+            
+        else% no Vfloat here, let's print Vz
             %if there's no vfloat measurements
             USCfname=filename;
             filename(end-6:end-4)='USC';
             USCshort = strrep(filename,folder,'');
             
-            an_USCprint(USCfname,USCshort,XXP(i).data,NaN,NaN,timing,'vz');
+            an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
 
         end
         
     
     
 end
+
+
+PHO= PHOTABFILE(PHO,iph0conditions,XXP);
+
+
 end
 
 
@@ -361,9 +368,10 @@ for i = min(inter):max(inter) %main for loop
 
 
 
+        
         if k>1 && ~strcmp(datestr(t_matlab_date(k-1),'dd'), datestr(t_matlab_date(k),'dd')) %%new calendar day? (won't check j==1)
             %   newfile =false;
-            fclose(twID); %close old file
+            fclose('all') ; %close old file
             
             twID = fopen(filename,'w'); %open a new file, filename is now a different string.
             
@@ -559,19 +567,6 @@ end
 
 %lapfile.mean=meand1;
 %lapfile.median=mediand1;
-
-end
-
-function out = fixlapstruct(lapstruct,CONT)
-
-
-end
-
-function out= UXPfile(var_ind)
-%this file needs all Vph_knee*, and all Vfloat measurements in archive.
-%or AP.Vz, V_sc from ion slope
-%or DP.Vsi 
-
 
 end
 

@@ -618,12 +618,18 @@ try
             info_struct.timing=timing;
             info_struct.macroId=str2double(diagmacro);
             info_struct.nroffiles=length(an_ind);
+            info_struct.firstind= tabindex{an_ind(i),3};
             % XXP_struct.Tarr{i}=Tarrcat;
             %  XXP_struct.Tarr=XXP_struct.Tarr;
             
+            t_diff = (EP(k).Tarr{1,3}-EP(k).Tarr{1,4})/2;
             for j=1:klen
                 XXP_struct=[];
                 XXP_struct.Tarr(j,1:4)=EP(j).Tarr;
+
+                XXP_struct.Tarr_mid{j,1}=    cspice_et2utc(   cspice_str2et(XXP_struct.Tarr{j,1}) + t_diff, 'ISOC', 6);    % spm = sweep pair middle
+                XXP_struct.Tarr_mid{j,2}=   XXP_struct.Tarr{j,3}+t_diff;
+
                 XXP_struct.t0(j,1) = cspice_str2et(XXP_struct.Tarr(j,1));%now
                 %XXP_struct.t0 = irf_time(XXP_struct.Tarr{j,1},'utc>tt');
                 XXP_struct.ion_slope(j,1:2)=DP(j).ion_slope;

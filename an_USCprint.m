@@ -44,7 +44,7 @@ switch mode
     usc_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
     usc_tabindex(end).no_of_columns = 5;            % Number of columns
     % usc_tabindex{end,6] = an_ind(i);
-    usc_tabindex(end).type = 'USC'; % Type
+    usc_tabindex(end).type = 'Vfloat'; % Type
     usc_tabindex(end).timing = timing;
     usc_tabindex(end).row_byte = row_byte;
     
@@ -53,16 +53,33 @@ switch mode
     case 'vz'
         factor=1;
 
+        %Vz= data_arr.Vz;
+        %time= data_arr.Tarr_mid
+        qvalue=0.7;
         
         for j = 1:length(data_arr.Vz)
             
             
-            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),factor*data_arr{1,5}(j),qvalue,sum(data_arr{1,8}(j)));
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid(j,:),factor*data_arr.Vz(j),qvalue,data_arr.Vz(j));
             N_rows = N_rows + 1;  
             
             
         end
         
+
+        
+        
+    usc_tabindex(end+1).fname = USCfname;                   % Start new line of an_tabindex, and record file name
+    usc_tabindex(end).fnameshort = USCshort; % shortfilename
+    usc_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
+    usc_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
+    usc_tabindex(end).no_of_columns = 5;            % Number of columns
+    % usc_tabindex{end,6] = an_ind(i);
+    usc_tabindex(end).type = 'Vz'; % Type
+    usc_tabindex(end).timing = timing;
+    usc_tabindex(end).row_byte = row_byte;
+    
+    
         
         
 end
@@ -73,5 +90,4 @@ end
     %fprintf(1,'error, wrong mode: %s\r\n',mode');
 end
 
-end
 

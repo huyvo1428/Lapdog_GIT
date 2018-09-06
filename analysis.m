@@ -39,15 +39,6 @@ ind_I2S= find(strcmp('I2S', antype));
 
 
 
- %load_lapdog_runspis=0;
- 
- %if load_lapdog_runspis
- %    load(dumplapdog_runspis.mat)
-%else
- %    save dump_lapdog_runspis
-% end
-
-
 fprintf(1,'Analysing sweeps\n')
 
 if(~isempty(ind_I1S))
@@ -55,11 +46,20 @@ if(~isempty(ind_I1S))
 end 
 
 if(~isempty(ind_I2S))
-%    fprintf(1,'Skipping Analysing LAP2 sweeps\n')
-    an_sweepmain(ind_I2S,tabindex,targetfullname); 
+    fprintf(1,'Skipping Analysing LAP2 sweeps\n')
+%    an_sweepmain(ind_I2S,tabindex,targetfullname); 
 end
 
 
+
+
+load_lapdog_runspis=0;
+ 
+if load_lapdog_runspis
+    load(dumplapdog_runspis.mat)
+else
+    save dump_lapdog_runspis
+end
 
 
 
