@@ -9,7 +9,6 @@
 % =========
 % tabFilePath                     : Path to TAB file.
 % LblData                         : Struct with the following fields.
-%       .indentationLength
 %       .HeaderKvl                : Key-value list describing PDS keywords in the "ODL header". Some mandatory
 %                                   keywords are added automatically by the code and must not overlap with these
 %                                   (assertion).
@@ -35,9 +34,17 @@
 %               .useFor           : Optional. Cell array of strings representing LBL header PDS keywords. Code
 %                                   contains hardcoded info on how to extract the corresponding keyword values
 %                                   from the corresponding column.
-%                                   Permitted: START/STOP_TIME, SPACECRAFT_CLOCK_START/STOP_COUNT.
-% 
-% HeaderOptions             : Data on how to modify and check the LBL header keywords.
+%                                   Permitted:
+%                                       START_STOP, STOP_TIME             : Must be UTC column (at least 3 decimals).
+%                                       SPACECRAFT_CLOCK_START/STOP_COUNT : Must be OBT column.
+%                                       STOP_TIME_from_OBT                : Must be OBT column.
+% HeaderOptions             : Struct/class. Data on how to modify and check the LBL header keywords. Every field is a
+%                             cell array of strings.
+%   .forceQuotesKeyList
+%   .keyOrderList
+%   .forbiddenKeysList
+% Settings
+%   .indentationLength
 % tabLblInconsistencyPolicy : 'warning', 'error', or 'nothing'.
 %                             Determines how to react in the event of inconsistencies between LBL and TAB file.
 %                             NOTE: Function may abort in case of 'warning'/'nothing' if it can not recover.
@@ -62,12 +69,21 @@
 %           before/after the first/last string).
 %       (2) Does not permit FORMAT field, and there are probably other PDS-keywords which are not supported by this code.
 %
+% ASSUMPTION: Metakernel (time conversion) loaded if setting timestamps from columns requiring time conversion (so far
+% only STOP_TIME_from_OBT).
+%
+%
+% IMPLEMENTATION NOTES
+% ====================
+% This function could possibly be useful outside of Lapdog (like in EJ's delivery code). It should therefore avoid
+% calling Lapdog-specific code, e.g. createLBL.constants.
+%
 %
 % NAMING CONVENTIONS
 % ==================
 % T2PK : TAB file to PDS keyword. Functionality for retrieving LBL header PDS keyword values from TAB file.
 %
-function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInconsistencyPolicy)
+function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings, tabLblInconsistencyPolicy)
     %
     % NOTE: CONCEIVABLE LBL FILE SPECIAL CASES that may have different requirements:
     %    - Data files (DATA/)
@@ -101,16 +117,15 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %       CON: Absence of UNIT can otherwise be interpreted as (1) forgetting to set it, or (2) absence of unit.
     %       PRO: Shorter calls.
     %   PROPOSAL: Only include UNIT (in LBL) if caller sets .UNIT to value other than 'N/A'.
+    %
+    % PROPOSAL: Read indentation length from central constants class.
 
 
 
     %===========
     % Constants
     %===========
-    BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns.
-    BYTES_PER_LINEBREAK   = 2;                 % Carriage return + line feed.
-    
-    PERMITTED_LBLDATA_FIELD_NAMES  = {'indentationLength', 'HeaderKvl', 'OBJTABLE'};
+    PERMITTED_LBLDATA_FIELD_NAMES  = {'HeaderKvl', 'OBJTABLE'};
     % NOTE: Exclude COLUMNS, ROW_BYTES, ROWS.
     PERMITTED_OBJTABLE_FIELD_NAMES = {'DESCRIPTION', 'OBJCOL_list'};
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
@@ -118,20 +133,26 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT', ...
         'useFor'};
     
-    %CONTENT_MAX_ROW_LENGTH         = 70;    % Excludes line break characters.
-    CONTENT_MAX_ROW_LENGTH         = 1000;    % Excludes line break characters.
-    
     % "Planetary Data Systems Standards Reference", Version 3.6, p12-11, section 12.3.4.
     % Applies to what PDS defines as identifiers, i.e. "values" without quotes.
     PDS_IDENTIFIER_PERMITTED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789';
-
+    
+    ROSETTA_NAIF_ID = -226;
+    %CONTENT_MAX_ROW_LENGTH         = 79;    % Number excludes line break characters.
+    CONTENT_MAX_ROW_LENGTH         = 1000;    % Number excludes line break characters.
+    
+    BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns. Lapdog convention.
+    BYTES_PER_LINEBREAK   = 2;                 % Carriage return + line feed.
+    
     % Constants for (optionally) converting TAB file contents into PDS keywords.
     T2PK_OBT2SCCS_FUNC = @(x) ['1/', obt2sct(str2double(x))];    % No quotes. Quotes added later.
+    T2PK_UTC2UTC_FUNC  = @(x) [x(1:23)];                         % Has to truncate UTC second decimals according to DVAL-NG.
+    T2PK_OBT2UTC_FUNC  = @(x) [cspice_et2utc(cspice_scs2e(ROSETTA_NAIF_ID, obt2sct(str2double(x))), 'ISOC', 3)];    % 3 = 3 UTC second decimals
     T2PK_PROCESSING_TABLE = struct(...
-        'pdsKeyword', {'START_TIME', 'STOP_TIME', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % LBL file header PDS keyword which will be assigned.
-        'convFunc',   {@(x) x,       @(x) x,      T2PK_OBT2SCCS_FUNC,             T2PK_OBT2SCCS_FUNC           }, ...    % Function string-->string that is applied to the TAB file value.
-        'iFlr',       {1,            2,           1,                              2                            });       % 1=First row, 2=Last row
-    % NOTE: Unit conversion function for UTC. ==> Does NOT truncate UTC decimals.
+        'argConst',   {'START_TIME',      'STOP_TIME',       'STOP_TIME_from_OBT', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % Argument value (cell array component of field ".useFor").
+        'pdsKeyword', {'START_TIME',      'STOP_TIME',       'STOP_TIME',          'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % LBL file header PDS keyword which will be assigned.
+        'convFunc',   {T2PK_UTC2UTC_FUNC, T2PK_UTC2UTC_FUNC, T2PK_OBT2UTC_FUNC,    T2PK_OBT2SCCS_FUNC,             T2PK_OBT2SCCS_FUNC           }, ...    % Function string-->string that is applied to the TAB file value.
+        'iFlr',       {1,                 2,                 2,                    1,                              2                            });       % 1=First row, 2=Last row. FLR = First/Last Row.
 
 
 
@@ -146,6 +167,9 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     if ~isempty(setxor(fieldnames(LblData.OBJTABLE), PERMITTED_OBJTABLE_FIELD_NAMES))
         fnl = fieldnames(LblData.OBJTABLE);
         error('ERROR: Found illegal field name(s) in parameter "LblData.OBJTABLE". fieldnames(LblData.OBJTABLE): %s', sprintf('"%s  "', fnl{:}))
+    end
+    if ~isscalar(LblData.HeaderKvl)
+        error('LblData.HeaderKvl is not scalar.')    % Common error to initialize empty KVPL the wrong way.
     end
 
 
@@ -189,14 +213,14 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %--------------------------------------------------------------------------------------------------
     OBJTABLE_data.COLUMNS   = 0;   % NOTE: Adds new field to structure.
     OBJCOL_namesList = {};
-    t2pkArgsTable = struct('pdsKeyword', {}, 'iByteFirst', {}, 'iByteLast', {});
+    t2pkArgsTable = struct('argConst', {}, 'iByteFirst', {}, 'iByteLast', {});
     PDS_START_BYTE = 1;    % Used for deriving START_BYTE. Starts with one, not zero.
     for i = 1:length(OBJTABLE_data.OBJCOL_list)
         cd = OBJTABLE_data.OBJCOL_list{i};       % Temporarily shorten variable name: cd = column data
         
         % ASSERTION: Check common user/caller error.
         if numel(cd) ~= 1
-            error('One column object is a non-one size array. Guess: Due to defining .useFor value with ~single curly brackets?')
+            error('One column object is a non-one size array. Guess: Due to defining .useFor value with "struct" command and ~single curly brackets. Must be double curly braces due to MATLAB syntax.')
         end
         
         [cd, nSubcolumns] = complement_column_data(cd, ...
@@ -220,7 +244,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
         % Collect information for T2PK functionality.
         if isfield(cd, 'useFor')
             for iT2pk = 1:numel(cd.useFor)    % PROPOSAL: Change name of for-loop variable.
-                t2pkArgsTable(end+1).pdsKeyword = cd.useFor{iT2pk};
+                t2pkArgsTable(end+1).argConst   = cd.useFor{iT2pk};
                 t2pkArgsTable(end  ).iByteFirst = cd.START_BYTE;
                 t2pkArgsTable(end  ).iByteLast  = cd.START_BYTE + cd.BYTES - 1;
             end
@@ -240,40 +264,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     if length(unique(OBJCOL_namesList)) ~= length(OBJCOL_namesList)
         error('Found doubles among the ODL column names.')
     end
-    
-    % -------------------------------------------------------------------------
-    % ASSERTIONS: Consistency checks on (1) nbr of columns, (2) bytes per row.
-    % -------------------------------------------------------------------------
-%     if (OBJTABLE_data.COLUMNS ~= LblData.ConsistencyCheck.nTabColumns)
-%         msg =       sprintf('lblFilePath = %s\n', lblFilePath);
-%         msg = [msg, sprintf('OBJTABLE_data.COLUMNS (derived)      = %i\n', OBJTABLE_data.COLUMNS)];
-%         msg = [msg, sprintf('LblData.ConsistencyCheck.nTabColumns = %i\n', LblData.ConsistencyCheck.nTabColumns)];
-%         msg = [msg,         'OBJTABLE_data.COLUMNS deviates from the consistency check value.'];
-%         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
-%     end
-%     if OBJTABLE_data.ROW_BYTES ~= LblData.ConsistencyCheck.nTabBytesPerRow
-%         msg =       sprintf('lblFilePath = %s\n', lblFilePath);
-%         msg = [msg, sprintf('OBJTABLE_data.ROW_BYTES (derived)        = %i\n', OBJTABLE_data.ROW_BYTES)];
-%         msg = [msg, sprintf('LblData.ConsistencyCheck.nTabBytesPerRow = %i\n', LblData.ConsistencyCheck.nTabBytesPerRow)];
-%         msg = [msg,         'OBJTABLE_data.ROW_BYTES deviates from the consistency check value.'];
-%         
-%         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
-%     end
-    
-%    temp = dir(tabFilePath); tabFileSize = temp.bytes;
-    
-    % ASSERTION: TAB file size is consistent with (indirectly) ROWS*ROW_BYTES.
-%     if tabFileSize ~= (OBJTABLE_data.ROW_BYTES * LblData.nTabFileRows)
-%         msg = sprintf(['TAB file size is not consistent with LBL file, "%s":\n', ...
-%             '    tabFileSize             = %g\n', ...
-%             '    OBJTABLE_data.ROW_BYTES = %g\n', ...
-%             '    LblData.nTabFileRows    = %g'], ...
-%             tabFilePath, tabFileSize, OBJTABLE_data.ROW_BYTES, LblData.nTabFileRows);
-%         warning_error___LOCAL(msg, tabLblInconsistencyPolicy)
-%     end
-
-%    LblData.nTabFileRows = floor(tabFileSize / OBJTABLE_data.ROW_BYTES);
-    
+   
     % ASSERTION: No quotes in OBJECT=TABLE DESCRIPTION keyword.
     assert_nonempty_unquoted(OBJTABLE_data.DESCRIPTION)
 
@@ -284,18 +275,18 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
     %---------------------------------------------
     
     % ASSERTION: Unique .useFor PDS keywords.
-    if numel(unique({t2pkArgsTable.pdsKeyword})) ~= numel({t2pkArgsTable.pdsKeyword})
+    if numel(unique({t2pkArgsTable.argConst})) ~= numel({t2pkArgsTable.argConst})
         error('Specified the same PDS keyword multiple times in ".useFor" fields.')
     end
     
-    [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({t2pkArgsTable.pdsKeyword}, {T2PK_PROCESSING_TABLE.pdsKeyword});
+    [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({t2pkArgsTable.argConst}, {T2PK_PROCESSING_TABLE.argConst});
 
-    % ASSERTION: Arguments only specify implemented-for PDS keywords.
+    % ASSERTION: Arguments only specify implemented-for argument constants.
     if numel(t2pkArgsTable) ~= numel(iT2pkProcTable)
-        error('Can not find hard-coded support for at least one of the PDS keywords specified in ".useFor" fields.')
+        error('Can not find hard-coded support for at least one of the values specified in ".useFor" fields.')
     end
     
-    t2pkArgsTable = t2pkArgsTable(iT2pkArgsTable);    
+    t2pkArgsTable = t2pkArgsTable(iT2pkArgsTable);    % Potentially modify the ordering so that it is consistent with t2pkExecTable.
     t2pkExecTable = T2PK_PROCESSING_TABLE(iT2pkProcTable);
     [t2pkExecTable(:).iByteFirst] = deal(t2pkArgsTable(:).iByteFirst);
     [t2pkExecTable(:).iByteLast]  = deal(t2pkArgsTable(:).iByteLast);
@@ -353,7 +344,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, tabLblInc
 
     % Log message
     %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
-    EJ_lapdog_shared.PDS_utils.write_ODL_from_struct(lblFilePath, ssl, {}, LblData.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
+    EJ_lapdog_shared.PDS_utils.write_ODL_from_struct(lblFilePath, ssl, {}, settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
 end
 
 
@@ -365,6 +356,8 @@ end
 function [columnData, nSubcolumns] = complement_column_data(columnData, ...
         PERMITTED_OBJCOL_FIELD_NAMES, BYTES_BETWEEN_COLUMNS, PDS_IDENTIFIER_PERMITTED_CHARS, ...
         lblFilePath, tabLblInconsistencyPolicy)
+    
+    EMPTY_UNIT_DEFAULT = 'N/A';
 
     cd = columnData;
 
@@ -399,7 +392,7 @@ function [columnData, nSubcolumns] = complement_column_data(columnData, ...
     % Check UNIT
     %------------
     if isempty(cd.UNIT)
-        cd.UNIT = 'N/A';     % NOTE: Should add quotes later.
+        cd.UNIT = EMPTY_UNIT_DEFAULT;     % NOTE: Should add quotes later.
     end    
     % ASSERTIONS
     % Check for presence of "raised minus" in UNIT.

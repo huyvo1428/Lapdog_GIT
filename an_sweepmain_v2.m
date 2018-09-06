@@ -622,6 +622,7 @@ try
             %  XXP_struct.Tarr=XXP_struct.Tarr;
             
             for j=1:klen
+                XXP_struct=[];
                 XXP_struct.Tarr(j,1:4)=EP(j).Tarr;
                 XXP_struct.t0(j,1) = cspice_str2et(XXP_struct.Tarr(j,1));%now
                 %XXP_struct.t0 = irf_time(XXP_struct.Tarr{j,1},'utc>tt');

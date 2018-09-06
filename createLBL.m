@@ -1,7 +1,7 @@
 
 %function createLBL_main(derivedpath, datasetid, shortphase, datasetname, ...
 %        lbltime, lbleditor, lblrev, ...
-%        producerfullname, producershortname, targetfullname, targettype, missionphase, tabindex, blockTAB, index, an_tabindex)
+%        producerfullname, producershortname, targetfullname, targettype, missionphase, tabindex, blockTAB, index, an_tabindex, der_struct)
 
 %
 % Create .LBL files for all .TAB files.
@@ -10,7 +10,7 @@
 % VARIABLE NAMING CONVENTIONS
 % ===========================
 % OCL = Object Column List
-% KVL = Key-Value (pair) List
+% KVL, KVPL = Key-Value (pair) List
 
 %===================================================================================================
 % PROPOSAL/TODO: Have one MISSING_CONSTANT for createLBL.m and one for ~best_estimates.m.
@@ -24,31 +24,6 @@
 %   PRO: Are not up-to-date and generate errors/warnings which are typically ignored.
 %
 %
-%
-% PROPOSAL: Move different sections into separate functions.
-%   PRO: No need to clear variables.
-%   PRO: Smaller code sections.
-%   PROPOSAL: for-loops, or that which is iterated over.
-%
-% PROPOSAL: Make into script that simply calls separate main function (other file).
-%   PRO: Better encapsulation/modularization.
-%   PRO: Can use own variable names.
-%   PRO: Better for testing since arguments are more transparent.
-%   PRO: Can have local functions (instead of separate files).
-%   CON: Too many arguments (16).
-%       PROPOSAL: Set struct which is passed to function.
-%   --
-%   PROPOSAL: Move some +createLB/* functions into it.
-%   PROPOSAL: Do not reference any global variables in main function.
-%       CON/PROBLEM: der_struct is not defined for non-EDDER and can thus not just be added as argument.
-%
-% TODO: Make work with EDDER and DERIV at the same time.
-%   TODO: Make sure DATA_SET_ID is correct.
-%       NOTE: 2018-03-26: Ex:
-%           Directory RO-C-RPCLAP-99-TDDG-EDDER-V0.1/
-%           DATA_SET_ID="RO-A-RPCLAP-3-AST2-CALIB-V2.0 ??" (including question marks)
-%       PROPOSAL: Set by ro_create_delivery.
-%           NOTE: Might already be done.
 %
 % TODO-DECISION: What kind of information should be set in
 %   (1) createLBL, and
@@ -68,7 +43,7 @@
 %   PROPOSAL:
 %       Lapdog/createLBL should handle:
 %           - Philosophically:
-%               - All metadata which naturally (could) vary between individdual data products (not just between PDS data sets)
+%               - All metadata which naturally (could) vary between individual data products (not just between PDS data sets)
 %                   Ex: TODO-DECISION: Common within PDS data set, i.e. DATA_SET_ID/-NAME, 
 %               - All metadata close to the TAB contents.
 %           - Explicitly: 
@@ -77,15 +52,17 @@
 %       ~create_E2C2D2 should handle
 %           - Philosophically: Metadata which has to do with how to select Lapdog/Edder data products to be included in
 %             delivery data sets.
-%       NOTE: Assumes that all delivery/PDS data sets pass through ~create_E2C2D2.
+%       NOTE: Assumes that all delivery/PDS datasets pass through ~create_E2C2D2.
 %
 %   PROPOSAL: Values NOT set by createLBL, should be set to invalid placeholder values, e.g. ^EAICD_DESC = <unset>.
 %       PRO: Makes it clear in createLBL what information is not set (but not the reverse).
 %       PROPOSAL: ~create_E2C2D2 should only be allowed to overwrite such placeholder values (assertion).
 %   PROPOSAL: createLBL should NEVER set unused/overwritten keywords (not even to placeholder values).
 %       ~create_E2C2D2 should add the keys instead and check for collisions.
+%       CON: create_E2C2D2 has to know which keywords that which have to be added.
 %
 % PROPOSAL: Write function for obtaining number of columns in TAB file.
+%   NOTE: Bad for combining TAB file assertions and extracting values from TAB file.
 %   PRO: Can use for obtaining number of IxS columns ==> Does not need corresponding tabindex field.
 %       PRO: Makes code more reliable.
 %   --
@@ -125,6 +102,85 @@
 %       PROPOSAL: Argument which selects: "bias", "meas"
 %   PROPOSAL: Take hard-coded constants struct "C" as argument.
 %       TODO-DECISION: Should struct depend on EDDER/DERIV1 or contain info for both?
+%
+% PROPOSAL: Move different sections into separate functions.
+%   PRO: No need to clear variables.
+%   PRO: Smaller code sections.
+%   PROPOSAL: for-loops, or that which is iterated over.
+%
+% PROPOSAL: Make into script that simply calls separate main function (other file).
+%   PRO: Better encapsulation/modularization.
+%   PRO: Can use own variable names.
+%   PRO: Better for testing since arguments are more transparent.
+%   PRO: Can have local functions (instead of separate files).
+%   CON: Too many arguments (16).
+%       PROPOSAL: Set struct which is passed to function.
+%   --
+%   PROPOSAL: Move some +createLBL/* functions into it.
+%   PROPOSAL: Do not reference any global variables in main function.
+%       CON/PROBLEM: der_struct is not defined for non-EDDER and can thus not just be added as argument.
+%
+%
+%
+% PROPOSAL: Make into separate, independent code that can be run separately from Lapdog, but also as a part of it.
+%   Set start & stop timestamps from TAB contents, not EDITED1/CALIB1 files.
+%   Find and identify types of files by iterating through DERIV1 data set.
+%   NOTE: In naive implementation:
+%       - Would/could NOT make use of any table with information on TAB files: blockTAB, index, tabindex, an_tabindex, der_struct.
+%         Other arguments could be ~hardcoded or submitted (or reorganized).
+%   	- ~Current dependence: function createLBL_main(derivedpath, datasetid, shortphase, datasetname, ...
+%         lbltime, lbleditor, lblrev, ...
+%         producerfullname, producershortname, targetfullname, targettype, missionphase, tabindex, blockTAB, index,
+%         an_tabindex, der_struct)
+%   --
+%   TODO-DECISION: Relationship with delivery code?
+%       Still modify LBL files in delivery code? (change TAB+LBL filenames; search-and-replace filenames in DESCRIPTION; more?)
+%       ~Shared code for recognizing & classifying files?!
+%       PROPOSAL: Be able to call both before and after TAB+LBL name modification: Call from both Lapdog and delivery
+%           code, with different filename prefixes?
+%   --
+%   PRO: Useful for re-running separately from Lapdog.
+%       Ex: When preparing deliveries, and having lots of large datasets at the same time.
+%           ==> Prohibitive processing time.
+%       Ex: After bugfixes.
+%       Ex: After reconfiguring
+%           Ex: New DESCRIPTION, UNIT, columns etc.
+%       Ex: Amending/refactoring code.
+%   CON: Can not read the OBJECT = TABLE DESCRIPTION (not among the LBL header keys).
+%   CON: Can not read all the technical LBL header PDS keywords (directly) from EDITED1/CALIB1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%       PROPOSAL: Some way choosing wether to retrieve LBL header PDS keywords from (1) EDITED1/CALIB1 (Lapdog), or (2) DERIV1 (running separately).
+%           NOTE: Implies still using Lapdog data structs for Lapdog runs.
+%   CON: EST LBL requires knowledge of which set of probes was used.
+%       CON: EST is low priority since it will probably not be used.
+%   --
+%   PROPOSAL: Preparatory code refactoring.
+%       (1) Make as independent as possible of Lapdog data structs: blockTAB, index, an_tabindex, der_struct.
+%       (2) Make completely independent of Lapdog data structs: Identify DERIV1 TAB files by recursing over directory structure.
+%   PROPOSAL: Dumb-downed implementation: Have lapdog.m (createLBL?) save MATLAB workspace; Reload it to re-run
+%             createLBL.
+%       CON: Lapdog data structs contain absolute paths. ==> Will not work if moving datasets.
+%   PROPOSAL: Functions:
+%           - create_LBL_File: Create one LBL file given arguments: Path to TAB file, LBL header PDS keywords, start & stop timestamps (2x2), OBJECT=TABLE DESCRIPTION.
+%             Type of file is deduced from TAB filename. Hard-coded info used to call createLBL.create_OBJTABLE_LBL_file
+%             (just like createLBL).
+%           When used by Lapdog:
+%               - createLBL iterates over Lapdog data structs (tabindex etc; like now).
+%               - Obtains LBL header keywords (incl. start & stop timestamps) and OBJECT=TABLE: DESCRIPTION.
+%               - Calls create_LBL_file to create individual LBL files.
+%           When used by delivery code:
+%               - Copy, rename selected TAB & LBL files (do not modify).
+%               - For copied TAB & LBL file pairs: read LBL file to obtain LBL header keywords, then call create_LBL_file and overwrite LBL file with new version.
+%           When used for updating LBL files of EDDER/DERIV1 dataset (without rrunning Lapdog):
+%               - Iterate over day subdirectories
+%               - For every TAB file found, read the LBL file: Extract LBL header keywords and OBJECT=TABLE: DESCRIPTION.
+%           When used for generating initial new sample L5 LBL files (there is no ~an_tabindex equivalent):
+%               - Iterate over day subdirectories.
+%               - For every TAB file without a LBL file, call create_LBL_file with only standard LBL headers.
+%                 create_LBL_file will tell if it cannot classify the file.
+%       CON: Difficult to compare LBL files before (EDDER/DERIV1) and after (EDITED2/CALIB2/DERIV2), since different
+%            filenames.
+% 
+% PROPOSAL: LABEL_REVISION_NOTE.
 %===================================================================================================
 
 executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
@@ -145,175 +201,9 @@ DEBUG_ON = 0;
 NO_ODL_UNIT       = [];
 ODL_VALUE_UNKNOWN = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown. Should not be used for official deliveries.
 DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
-MISSING_CONSTANT = SATURATION_CONSTANT;
-%MISSING_CONSTANT_DESCRIPTION_AMENDMENT = sprintf('A value of %g refers to that the original value was saturated, or that it was an average over at least one saturated value.', MISSING_CONSTANT);
-ROSETTA_NAIF_ID  = -226;     % Used for SPICE.
-INDENTATION_LENGTH = 4;
-%EAICD_FILE_NAME  = 'RO-IRFU-LAP-EAICD.PDF';    % NOTE: Must match EJ_rosetta.delivery.create_DOCINFO.m (EJ's code).
-
-
-
-%==================================================================
-% LBL Header keys which should preferably come in a certain order.
-% Not all of them are required to be present.
-%==================================================================
-% Keywords which are quite independent of type of file.
-GENERAL_KEY_ORDER_LIST = { ...
-    'PDS_VERSION_ID', ...    % The PDS standard requires this to be first, I think.
-    ...
-    'RECORD_TYPE', ...
-    'RECORD_BYTES', ...
-    'FILE_RECORDS', ...
-    'FILE_NAME', ...
-    '^TABLE', ...
-    'DATA_SET_ID', ...
-    'DATA_SET_NAME', ...
-    'DATA_QUALITY_ID', ...
-    'MISSION_ID', ...
-    'MISSION_NAME', ...
-    'MISSION_PHASE_NAME', ...
-    'PRODUCER_INSTITUTION_NAME', ...
-    'PRODUCER_ID', ...
-    'PRODUCER_FULL_NAME', ...
-    'LABEL_REVISION_NOTE', ...
-    'PRODUCT_ID', ...
-    'PRODUCT_TYPE', ...
-    'PRODUCT_CREATION_TIME', ...
-    'INSTRUMENT_HOST_ID', ...
-    'INSTRUMENT_HOST_NAME', ...
-    'INSTRUMENT_NAME', ...
-    'INSTRUMENT_ID', ...
-    'INSTRUMENT_TYPE', ...
-    'INSTRUMENT_MODE_ID', ...
-    'INSTRUMENT_MODE_DESC', ...
-    'TARGET_NAME', ...
-    'TARGET_TYPE', ...
-    'PROCESSING_LEVEL_ID', ...
-    'START_TIME', ...
-    'STOP_TIME', ...
-    'SPACECRAFT_CLOCK_START_COUNT', ...
-    'SPACECRAFT_CLOCK_STOP_COUNT', ...
-    'DESCRIPTION'};
-% Keywords which refer to very specific settings.
-RPCLAP_KEY_ORDER_LIST = { ...
-    'ROSETTA:LAP_TM_RATE', ...
-    'ROSETTA:LAP_BOOTSTRAP', ...
-    ...
-    'ROSETTA:LAP_FEEDBACK_P1', ...
-    'ROSETTA:LAP_P1_ADC20', ...
-    'ROSETTA:LAP_P1_ADC16', ...
-    'ROSETTA:LAP_P1_RANGE_DENS_BIAS', ...
-    'ROSETTA:LAP_P1_STRATEGY_OR_RANGE', ...
-    'ROSETTA:LAP_P1_RX_OR_TX', ...
-    'ROSETTA:LAP_P1_ADC16_FILTER', ...
-    'ROSETTA:LAP_IBIAS1', ...
-    'ROSETTA:LAP_VBIAS1', ...
-    'ROSETTA:LAP_P1_BIAS_MODE', ...
-    'ROSETTA:LAP_P1_INITIAL_SWEEP_SMPLS', ...
-    'ROSETTA:LAP_P1_SWEEP_PLATEAU_DURATION', ...
-    'ROSETTA:LAP_P1_SWEEP_STEPS', ...
-    'ROSETTA:LAP_P1_SWEEP_START_BIAS', ...
-    'ROSETTA:LAP_P1_SWEEP_FORMAT', ...
-    'ROSETTA:LAP_P1_SWEEP_RESOLUTION', ...
-    'ROSETTA:LAP_P1_SWEEP_STEP_HEIGHT', ...
-    'ROSETTA:LAP_P1_ADC16_DOWNSAMPLE', ...
-    'ROSETTA:LAP_P1_DENSITY_FIX_DURATION', ...
-    ...
-    'ROSETTA:LAP_FEEDBACK_P2', ...
-    'ROSETTA:LAP_P2_ADC20', ...
-    'ROSETTA:LAP_P2_ADC16', ...
-    'ROSETTA:LAP_P2_RANGE_DENS_BIAS', ...
-    'ROSETTA:LAP_P2_STRATEGY_OR_RANGE', ...
-    'ROSETTA:LAP_P2_RX_OR_TX', ...
-    'ROSETTA:LAP_P2_ADC16_FILTER', ...
-    'ROSETTA:LAP_IBIAS2', ...
-    'ROSETTA:LAP_VBIAS2', ...
-    'ROSETTA:LAP_P2_BIAS_MODE', ...
-    'ROSETTA:LAP_P2_INITIAL_SWEEP_SMPLS', ...
-    'ROSETTA:LAP_P2_SWEEP_PLATEAU_DURATION', ...
-    'ROSETTA:LAP_P2_SWEEP_STEPS', ...
-    'ROSETTA:LAP_P2_SWEEP_START_BIAS', ...
-    'ROSETTA:LAP_P2_SWEEP_FORMAT', ...
-    'ROSETTA:LAP_P2_SWEEP_RESOLUTION', ...
-    'ROSETTA:LAP_P2_SWEEP_STEP_HEIGHT', ...
-    'ROSETTA:LAP_P2_ADC16_DOWNSAMPLE', ...
-    'ROSETTA:LAP_P2_DENSITY_FIX_DURATION', ...
-    ...
-    'ROSETTA:LAP_P1P2_ADC20_STATUS', ...
-    'ROSETTA:LAP_P1P2_ADC20_MA_LENGTH', ...
-    'ROSETTA:LAP_P1P2_ADC20_DOWNSAMPLE'
-    };
-KEY_ORDER_LIST = [GENERAL_KEY_ORDER_LIST, RPCLAP_KEY_ORDER_LIST];
-
-% Give error if encountering any of these keys.
-% Useful for obsoleted keys that should not exist anymore.
-FORBIDDEN_KEYS = { ...
-    'ROSETTA:LAP_INITIAL_SWEEP_SMPLS', ...
-    'ROSETTA:LAP_SWEEP_PLATEAU_DURATION', ...
-    'ROSETTA:LAP_SWEEP_STEPS', ...
-    'ROSETTA:LAP_SWEEP_START_BIAS', ...
-    'ROSETTA:LAP_SWEEP_FORMAT', ...
-    'ROSETTA:LAP_SWEEP_RESOLUTION', ...
-    'ROSETTA:LAP_SWEEP_STEP_HEIGHT'};
-
-%         ADD_QUOTES_KEYS = { ...
-%             'DESCRIPTION', ...
-%             'SPACECRAFT_CLOCK_START_COUNT', ...
-%             'SPACECRAFT_CLOCK_STOP_COUNT', ...
-%             'INSTRUMENT_MODE_DESC', ...
-%             'ROSETTA:LAP_TM_RATE', ...
-%             'ROSETTA:LAP_BOOTSTRAP', ...
-%             'ROSETTA:LAP_FEEDBACK_P1', ...
-%             'ROSETTA:LAP_FEEDBACK_P2', ...
-%             'ROSETTA:LAP_P1_ADC20', ...
-%             'ROSETTA:LAP_P1_ADC16', ...
-%             'ROSETTA:LAP_P1_RANGE_DENS_BIAS', ...
-%             'ROSETTA:LAP_P1_STRATEGY_OR_RANGE', ...
-%             'ROSETTA:LAP_P1_RX_OR_TX', ...
-%             'ROSETTA:LAP_P1_ADC16_FILTER', ...
-%             'ROSETTA:LAP_P1_BIAS_MODE', ...
-%             'ROSETTA:LAP_P2_ADC20', ...
-%             'ROSETTA:LAP_P2_ADC16', ...
-%             'ROSETTA:LAP_P2_RANGE_DENS_BIAS', ...
-%             'ROSETTA:LAP_P2_STRATEGY_OR_RANGE', ...
-%             'ROSETTA:LAP_P2_RX_OR_TX', ...
-%             'ROSETTA:LAP_P2_ADC16_FILTER', ...
-%             'ROSETTA:LAP_P2_BIAS_MODE', ...
-%             'ROSETTA:LAP_P1P2_ADC20_STATUS', ...
-%             'ROSETTA:LAP_P1P2_ADC20_MA_LENGTH', ...
-%             'ROSETTA:LAP_P1P2_ADC20_DOWNSAMPLE', ...
-%             'ROSETTA:LAP_VBIAS1', ...
-%             'ROSETTA:LAP_VBIAS2', ...
-%             ...
-%             'ROSETTA:LAP_P1_INITIAL_SWEEP_SMPLS', ...
-%             'ROSETTA:LAP_P1_SWEEP_PLATEAU_DURATION', ...
-%             'ROSETTA:LAP_P1_SWEEP_STEPS', ...
-%             'ROSETTA:LAP_P1_SWEEP_START_BIAS', ...
-%             'ROSETTA:LAP_P1_SWEEP_FORMAT', ...
-%             'ROSETTA:LAP_P1_SWEEP_RESOLUTION', ...
-%             'ROSETTA:LAP_P1_SWEEP_STEP_HEIGHT', ...
-%             'ROSETTA:LAP_P1_ADC16_DOWNSAMPLE', ...
-%             'ROSETTA:LAP_SWEEPING_P1', ...
-%             ...
-%             'ROSETTA:LAP_P2_FINE_SWEEP_OFFSET', ...
-%             'ROSETTA:LAP_P2_INITIAL_SWEEP_SMPLS', ...
-%             'ROSETTA:LAP_P2_SWEEP_PLATEAU_DURATION', ...
-%             'ROSETTA:LAP_P2_SWEEP_STEPS', ...
-%             'ROSETTA:LAP_P2_SWEEP_START_BIAS', ...
-%             'ROSETTA:LAP_P2_SWEEP_FORMAT', ...
-%             'ROSETTA:LAP_P2_SWEEP_RESOLUTION', ...
-%             'ROSETTA:LAP_P2_SWEEP_STEP_HEIGHT', ...
-%             'ROSETTA:LAP_P2_ADC16_DOWNSAMPLE', ...
-%             'ROSETTA:LAP_SWEEPING_P2', ...
-%             'ROSETTA:LAP_P2_FINE_SWEEP_OFFSET'};
-
-% Keys for which quotes are added to the value if the values does not already have quotes.
-FORCE_QUOTE_KEYS = {...
-    'DESCRIPTION', ...
-    'SPACECRAFT_CLOCK_START_COUNT', ...
-    'SPACECRAFT_CLOCK_STOP_COUNT'};
-
-LBL_HEADER_OPTIONS = struct('keyOrderList', {KEY_ORDER_LIST}, 'forbiddenKeysList', {FORBIDDEN_KEYS}, 'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
+MISSING_CONSTANT          = SATURATION_CONSTANT;   % Change name.
+C = createLBL.constants();
+COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
 
 
 
@@ -378,49 +268,11 @@ else
     CURRENT_BIAS_DESC =          'CURRENT BIAS.';
     CURRENT_MEAS_DESC = 'MEASURED CURRENT.';
 end
+QFLAG1_DESCRIPTION = 'QUALITY FLAG CONSTRUCTED AS THE SUM OF MULTIPLE TERMS, DEPENDING ON WHAT QUALITY RELATED EFFECTS ARE PRESENT. FROM 00000 (BEST) TO 99999 (WORST).';    % For older quality flag (version "1").
 
 
 
-%====================================================================================================
-% Construct list of key-value pairs to use for all LBL files.
-% -----------------------------------------------------------
-% Keys must not collide with keys set for specific file types.
-% For file types that read CALIB LBL files, must overwrite old keys(!).
-% 
-% NOTE: Only keys that already exist in the CALIB files that are read (otherwise intentional error)
-%       and which are thus overwritten.
-% NOTE: Might not be complete.
-% NOTE: Contains many hardcoded constants, but not only.
-%====================================================================================================
-KvlLblAll = [];
-KvlLblAll.keys = {};
-KvlLblAll.values = {};
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PDS_VERSION_ID',            'PDS3');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'DATA_QUALITY_ID',           '"1"');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCT_TYPE',              '"DDR"');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PROCESSING_LEVEL_ID',       '"5"');
-
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
-%KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_ID',               producershortname);
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_HOST_ID',        'RO');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'INSTRUMENT_ID',             'RPCLAP');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'TARGET_TYPE',               sprintf('"%s"', targettype));
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'MISSION_ID',                'ROSETTA');
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
-KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
-% ^EAICD_DESC = Filename of file under DOCUMENT directory (or subdirectory under it) in final PDS-compliant data set.
-% NOT relative path, NOT data product name.
-%KvlLblAll = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLblAll, '^EAICD_DESC',               sprintf('"%s"', EAICD_FILE_NAME));
+LblAllKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
 
 
 
@@ -458,10 +310,6 @@ for i = 1:length(stabindex)
     try
         
         LblData = [];
-        LblData.indentationLength = INDENTATION_LENGTH;
-        %LblData.ConsistencyCheck.nTabColumns = stabindex(i).nColumns;
-        % "LblData.ConsistencyCheck.nTabBytesPerRow" can not be set centrally here
-        % since it is hardcoded for some TAB file types.
         
         %=========================================
         %
@@ -487,7 +335,7 @@ for i = 1:length(stabindex)
         % Example: LAP_20150503_210047_525_I2L.LBL
         SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(stabindex(i).sctStop));
         
-        KvlLbl = KvlLblAll;
+        KvlLbl = LblAllKvpl;
         KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   Calib1LblSs.START_TIME);        % UTC start time
         KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    stabindex(i).utcStop(1:23));    % UTC stop  time
         KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', Calib1LblSs.SPACECRAFT_CLOCK_START_COUNT);
@@ -523,7 +371,6 @@ for i = 1:length(stabindex)
                 % CASE: BxS
                 
                 LblData.OBJTABLE = [];
-                %LblData.ConsistencyCheck.nTabBytesPerRow = 32;   % NOTE: HARDCODED! Can not trivially take value from creation of file and read from tabindex.
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s Sweep step bias and time between each step', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);   % Remove ref. to old DESCRIPTION? (Ex: D_SWEEP_P1_RAW_16BIT_BIP)
                 ocl = [];
                 oc1 = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS');     % NOTE: Always ASCII_REAL, including for EDDER!!!
@@ -551,7 +398,6 @@ for i = 1:length(stabindex)
                 bxsTabFilename(28) = 'B';
 
                 LblData.OBJTABLE = [];
-                %LblData.ConsistencyCheck.nTabBytesPerRow = stabindex(i).nTabBytesPerRow;
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s', Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
                 ocl = {};
                 oc1 = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'Sweep start UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF.');
@@ -564,7 +410,7 @@ for i = 1:length(stabindex)
                 end
                 ocl(end+1:end+4) = {oc1, oc2, oc3, oc4};                
                 if generatingDeriv1
-                    ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                    ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 end
                 % NOTE: The file referenced in column DESCRIPTION is expected to have the wrong name since files are renamed by other code
                 % before delivery. The delivery code should already correct for this.
@@ -598,22 +444,6 @@ for i = 1:length(stabindex)
 
             LblData.OBJTABLE = [];
             LblData.OBJTABLE.DESCRIPTION = Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION;    % BUG: Possibly double quotation marks.
-            
-            %-----------------------------------------------------------------------------
-            % HARD-CODED constants, to account for that these values are not set by other
-            % Lapdog code as they are for other data products.
-            %-----------------------------------------------------------------------------
-%             if probeNbr ~= 3
-%                 LblData.ConsistencyCheck.nTabColumns     =  5;
-%                 LblData.ConsistencyCheck.nTabBytesPerRow = 83;
-%             else
-%                 LblData.ConsistencyCheck.nTabColumns     =  6;
-%                 LblData.ConsistencyCheck.nTabBytesPerRow = 99;
-%             end
-%             if ~generatingDeriv1
-%                 LblData.ConsistencyCheck.nTabColumns     = LblData.ConsistencyCheck.nTabColumns     - 1;
-%                 LblData.ConsistencyCheck.nTabBytesPerRow = LblData.ConsistencyCheck.nTabBytesPerRow - 5;
-%             end
 
             ocl = {};
             ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECONDS', 'BYTES', 26, 'DESCRIPTION', 'UTC TIME');
@@ -663,17 +493,17 @@ for i = 1:length(stabindex)
                 ocl(end+1:end+3) = {oc1; oc2; oc3};
             end
             if generatingDeriv1
-                ocl{end+1} = struct('NAME', 'QUALITY', 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'BYTES',  3, ...
-                    'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'BYTES',  5, ...
+                    'DESCRIPTION', QFLAG1_DESCRIPTION);
             end
             
             LblData.OBJTABLE.OBJCOL_list = ocl;
             clear   ocl
         end
         
-        createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LblData, LBL_HEADER_OPTIONS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+        createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         clear   LblData
-        
+
     catch exception
         createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY);
         fprintf(1,'lapdog: Skipping LBL file (tabindex)index - Continuing\n');
@@ -690,11 +520,6 @@ end    % for
 for i = 1:length(blockTAB)
     
     LblData = [];
-    LblData.indentationLength = INDENTATION_LENGTH;
-    %LblData.ConsistencyCheck.nTabColumns     =  3;
-    %LblData.ConsistencyCheck.nTabBytesPerRow = 55;                   % NOTE: HARDCODED! TODO: Fix.
-    
-    
     
     %==============================================
     %
@@ -704,11 +529,11 @@ for i = 1:length(blockTAB)
     %==============================================
     START_TIME = datestr(blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
     STOP_TIME  = datestr(blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
-    KvlLbl = KvlLblAll;
+    KvlLbl = LblAllKvpl;
     KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   START_TIME);       % UTC start time
     KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
-    KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
-    KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
+    KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(C.ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
+    KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(C.ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
     LblData.HeaderKvl = KvlLbl;
     clear   KvlLbl
     
@@ -728,7 +553,7 @@ for i = 1:length(blockTAB)
     LblData.OBJTABLE.OBJCOL_list = ocl;
     clear   ocl
     
-    createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LblData, LBL_HEADER_OPTIONS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+    createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
     clear   LblData
     
 end   % for
@@ -753,12 +578,6 @@ if generatingDeriv1
             isEFieldMode  = (mode(1) == 'V');
             
             LblData = [];
-            LblData.indentationLength = INDENTATION_LENGTH;
-            %LblData.nTabFileRows = san_tabindex(i).nTabFileRows;
-            %LblData.ConsistencyCheck.nTabBytesPerRow = san_tabindex(i).nTabBytesPerRow;
-            %LblData.ConsistencyCheck.nTabColumns     = san_tabindex(i).nTabColumns;
-            
-            
             
             %=========================================
             %
@@ -772,7 +591,7 @@ if generatingDeriv1
                 %======================
                 
                 %TAB_file_info = dir(san_tabindex(i).path);
-                KvlLbl = KvlLblAll;
+                KvlLbl = LblAllKvpl;
                 KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
                 try
                     %===============================================================
@@ -814,7 +633,7 @@ if generatingDeriv1
                 SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(stabindex(san_tabindex(i).iTabindex).sctStop));
                 
                 % BUG: Does not work for 32S. Too narrow time limits.
-                KvlLbl = KvlLblAll;
+                KvlLbl = LblAllKvpl;
                 KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'START_TIME',                   Calib1LblSs.START_TIME);                                % UTC start time
                 KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'STOP_TIME',                    stabindex(san_tabindex(i).iTabindex).utcStop(1:23));    % UTC stop  time
                 KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', Calib1LblSs.SPACECRAFT_CLOCK_START_COUNT);
@@ -851,8 +670,17 @@ if generatingDeriv1
                 % NOTE: Empirically, Calib1LblSs.DESCRIPTION is something technical, like "D_P1_TRNC_20_BIT_RAW_BIP". Keep?
                 LblData.OBJTABLE.DESCRIPTION = sprintf('%s %s SECONDS DOWNSAMPLED', Calib1LblSs.DESCRIPTION, samplingRateSecondsStr);
                 ocl = {};
-                ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF',                              'useFor', {{'START_TIME', 'STOP_TIME'}});
-                ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
+                % IMPLEMENTATION NOTE: The LBL start and stop timestamps of the source EDITED1/CALIB1 files often do
+                % NOT cover the time interval of the downsampled time series. This is due to downsampling creating its
+                % own timestamps. Must therefore actually read the LBL start & stop timestamps from the actual content
+                % of the TAB file.
+                % IMPLEMENTATION NOTE: Columns TIME_UTC and TIME_OBT match for the first timestamp, but not do not match
+                % well enough for the last timestamp for DVAL-NG not to give a warning. This is due to(?) the
+                % downsampling code taking some shortcuts in producing the sequence of OBT+UTC values, i.e. manually
+                % producing the series and NOT using SPICE for every such pair. Therefore using the last TIME_OBT value
+                % for both SPACECRAFT_CLOCK_STOP_COUNT and STOP_TIME.
+                ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC TIME YYYY-MM-DD HH:MM:SS.FFF',                              'useFor', {{'START_TIME'}});
+                ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}});
                 
                 oc1 = struct('NAME', sprintf('P%i_CURRENT',        probeNbr), DATA_UNIT_CURRENT{:}, 'BYTES', 14, DATA_DATA_TYPE{:}, 'DESCRIPTION', 'AVERAGED CURRENT.');
                 oc2 = struct('NAME', sprintf('P%i_CURRENT_STDDEV', probeNbr), DATA_UNIT_CURRENT{:}, 'BYTES', 14, DATA_DATA_TYPE{:}, 'DESCRIPTION', 'CURRENT STANDARD DEVIATION.');
@@ -864,7 +692,7 @@ if generatingDeriv1
                 oc4 = createLBL.optionally_add_MISSING_CONSTANT(isEFieldMode,  MISSING_CONSTANT, oc4 , mcDescrAmendment);
                 ocl(end+1:end+4) = {oc1; oc2; oc3; oc4};
                 
-                ocl{end+1} = struct('NAME', 'QUALITY', 'BYTES', 3, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'BYTES', 5, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 
                 LblData.OBJTABLE.OBJCOL_list = ocl;
                 clear   ocl oc1 oc2 oc3 oc4
@@ -880,10 +708,10 @@ if generatingDeriv1
                 %---------------------------------------------
                 ocl1 = {};
                 ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-                ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'SPECTRA STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
+                ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECONDS',   'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
                 ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)');
                 ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_OBT',  'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT)');
-                ocl1{end+1} = struct('NAME', 'QUALITY',                'UNIT', NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                ocl1{end+1} = struct('NAME', 'QUALITY_FLAG',           'UNIT', NO_ODL_UNIT, 'BYTES',  5, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 %---------------------------------------------
                 ocl2 = {};
                 mcDescrAmendment = sprintf('A value of %g means that there was at least one saturated sample in the same time interval uninterrupted by RPCMIP disturbances.', MISSING_CONSTANT);
@@ -1104,7 +932,7 @@ if generatingDeriv1
                 ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
                 ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT).');
                 ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMAL POINT).');
-                ocl{end+1} = struct('NAME', 'QUALITY',            'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
+                ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', QFLAG1_DESCRIPTION);
                 ocl{end+1} = struct('NAME', 'npl',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'CM**-3',    'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of plasma number density.');
                 ocl{end+1} = struct('NAME', 'Te',                 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'eV',        'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of electron temperature.');
                 ocl{end+1} = struct('NAME', 'Vsc',                'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'V',         'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of spacecraft potential.');
@@ -1129,7 +957,7 @@ if generatingDeriv1
             
             
             
-            createLBL.create_OBJTABLE_LBL_file(san_tabindex(i).path, LblData, LBL_HEADER_OPTIONS, tabLblInconsistencyPolicy);
+            createLBL.create_OBJTABLE_LBL_file(san_tabindex(i).path, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
             clear   LblData   tabLblInconsistencyPolicy
             
             
@@ -1146,13 +974,13 @@ end    % if generatingDeriv1
 
 
 
-%=================================================
-%
-% Create LBL files for files in der_struct (A1P).
-%
-%=================================================
 if generatingDeriv1
     try
+        %=================================================
+        %
+        % Create LBL files for files in der_struct (A1P). - DISABLED
+        %
+        %=================================================
         global der_struct    % Global variable with info on A1P files.
         if ~isempty(der_struct)
             % IMPLEMENTATION NOTE: "der_struct" is only defined/set when running Lapdog DERIV. However, since it is a
@@ -1160,14 +988,22 @@ if generatingDeriv1
             % der_struct.file{iFile} will contain paths to a DERIV-data set. May thus lead to overwriting LBL files in
             % DERIV data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
             % EDDER.
-            createLBL.write_A1P(KvlLblAll, LBL_HEADER_OPTIONS, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, INDENTATION_LENGTH, ...
-                DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            %createLBL.write_A1P(LblAllKvpl, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, ...
+            %    DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         end
         
     catch exception
         createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY)
         fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',exception.message);
     end
+    
+    %==============================================================
+    %
+    % Create LBL files for PHO, USC, ASW, NPL files. (DERIV1 only)
+    %
+    %==============================================================
+    % TEMPORARY SOLUTION.
+    createLBL.create_LBL_L5_sample_types(derivedpath)
 end
 
 

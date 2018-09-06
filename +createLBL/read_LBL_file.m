@@ -4,20 +4,20 @@
 %
 % ARGUMENTS AND RETURN VALUES
 % ===========================
-% HeaderKvl           : Key-value (pair) list
-% deleteHeaderKeyList : Cell array of keys which are removed if found (must not be found).
-% 
+% deleteHeaderKeyList : Cell array of keys which are removed from HeaderKvl, if found.
+% HeaderKvl           : Key-value (pair) list. Quotes are kept. 
+% LblSs               : Quotes are removed
 %
-function [HeaderKvl, SimpleStruct] = read_LBL_file(filePath, deleteHeaderKeyList)
+function [HeaderKvl, LblSs] = read_LBL_file(filePath, deleteHeaderKeyList)
 %
 % PROPOSAL: Change name to something implying only reading EDDER/CALIB1 LBL files.
 %
-% PROPOSAL: Remove all quotes from values.
+% PROPOSAL: Remove all quotes from values in header.
 %    CON: createLBL.write_LBL_header must determine which keys should have quotes. ==> Another long list which might not capture all keywords.
 
-    % NOTE: LblSsl       keeps   quotes.
-    %       SimpleStruct removes quotes.
-    [LblSsl, SimpleStruct] = EJ_lapdog_shared.PDS_utils.read_ODL_to_structs(filePath);   % Read CALIB LBL file.
+    % NOTE: LblSsl keeps   quotes.
+    %       LblSs  removes quotes.
+    [LblSsl, LblSs] = EJ_lapdog_shared.PDS_utils.read_ODL_to_structs(filePath);   % Read CALIB LBL file.
     HeaderKvl = [];
     HeaderKvl.keys   = LblSsl.keys  (1:end-1);    % NOTE: LblSsl includes OBJECT = TABLE as last key-value pair.
     HeaderKvl.values = LblSsl.values(1:end-1);
