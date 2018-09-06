@@ -1,5 +1,5 @@
 
-function [] = an_USCprint(USCfname,USCshort,time_arr,foutarr, index_nr_of_firstfile,timing,mode)
+function [] = an_USCprint(USCfname,USCshort,time_arr,data_arr, index_nr_of_firstfile,timing,mode)
 
 
 
@@ -13,19 +13,23 @@ global usc_tabindex
 USCwID= fopen(USCfname,'w');
 N_rows = 0;
 
-if strcmp(mode,'vfloat')
-    factor=-1; 
-    for j =1:length(foutarr{1,3})
+switch mode
         
-        if foutarr{1,7}(j)~=1 %check if measurement data exists on row
+        
+    case 'vfloat'        
+%if strcmp(mode,'vfloat')
+    factor=-1; 
+    for j =1:length(data_arr{1,3})
+        
+        if data_arr{1,7}(j)~=1 %check if measurement data exists on row
             %fprintf(awID,'%s, %16.6f,,,,\r\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j));
             % Don't print zero values.
         else
             %if foutarr{1,6}(j)/foutarr{1,5}(j)) >0.5, qvalue = 0.5
             %if foutarr{1,6}(j)/foutarr{1,5}(j)) <0.5, qvalue = 1- foutarr{1,6}(j)/foutarr{1,5}(j))
-            qvalue=max(1-abs((foutarr{1,6}(j)/foutarr{1,5}(j))),0.5);
+            qvalue=max(1-abs((data_arr{1,6}(j)/data_arr{1,5}(j))),0.5);
             
-            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),factor*foutarr{1,5}(j),qvalue,sum(foutarr{1,8}(j)));
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),factor*data_arr{1,5}(j),qvalue,sum(data_arr{1,8}(j)));
             N_rows = N_rows + 1;
         end%if
         
@@ -43,10 +47,29 @@ if strcmp(mode,'vfloat')
     usc_tabindex(end).timing = timing;
     usc_tabindex(end).row_byte = row_byte;
     
-else
-    factor=1;
+    
+    
+    case 'vz'
+        factor=1;
 
-    fprintf(1,'error, wrong mode: %s\r\n',mode');
+        
+        for j = 1:length(data_arr.Vz)
+            
+            
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),factor*data_arr{1,5}(j),qvalue,sum(data_arr{1,8}(j)));
+            N_rows = N_rows + 1;  
+            
+            
+        end
+        
+        
+        
+end
+
+%elseif  strcmp(mode,'vfloat')
+
+
+    %fprintf(1,'error, wrong mode: %s\r\n',mode');
 end
 
 end

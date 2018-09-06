@@ -229,7 +229,7 @@ if upper_comparison_bool
         %Ie_(exp). If both fits are good, than the Rsq_upper_temp is a very low value, and would not be heavily weighted against.
         if Rsq_low_temp-Rsq_upper_temp/2 > Rsq_upper_temp       
 %        if Rsq_low < Rsq_upper  % Upper fit was much better, so let's pretend that's what we did all along.
-            fprintf(1,'ion sweep region changed, Rsq_low was =%5.3e,Rsq_upper was =%5.3e ',Rsq_low,Rsq_upper)
+            fprintf(1,'ion sweep region changed, Rsq_low was =%5.3f,Rsq_upper was =%5.3f ',Rsq_low,Rsq_upper)
            % fprintf(1,'V & I = \n');
            % fprintf(1,'%e,',V);
            % fprintf(1,'\n');

@@ -5,6 +5,7 @@ global SATURATION_CONSTANT;
 global ASW_tabindex
 ASW_tabindex=[];
 CONT_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926];
+global VFLOATMACROS
 
 iph0conditions=[];
 iph0conditions.I_Vb=-17.0;%V from generating lap1 vector.
@@ -82,6 +83,19 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     ASW_tabindex(end).row_byte = row_bytes;
     
     fclose(twID);
+    
+        if  ~ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{1}) && ~ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{2})
+            %if there's no vfloat measurements
+            USCfname=filename;
+            filename(end-6:end-4)='USC';
+            USCshort = strrep(filename,folder,'');
+            
+            an_USCprint(USCfname,USCshort,XXP(i).data,NaN,NaN,timing,'vz');
+
+        end
+        
+    
+    
 end
 end
 
