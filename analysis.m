@@ -38,14 +38,6 @@ ind_I2S= find(strcmp('I2S', antype));
 
 
 
- %load_lapdog_runspis=0;
- 
- %if load_lapdog_runspis
- %    load(dumplapdog_runspis.mat)
-%else
- %    save dump_lapdog_runspis
-% end
-
 
 fprintf(1,'Analysing sweeps\n')
 
@@ -59,6 +51,15 @@ if(~isempty(ind_I2S))
 end
 
 
+
+
+load_lapdog_runspis=0;
+ 
+if load_lapdog_runspis
+    load(dumplapdog_runspis.mat)
+else
+    save dump_lapdog_runspis
+end
 
 
 
@@ -118,8 +119,8 @@ if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
 
 fprintf(1, 'Best estimates\n')
 %save(['~/temp_MATLAB/temp.', shortphase, '.allVarsBeforeBestEstmimates.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
-an_tabindex = best_estimates(an_tabindex, tabindex, index, obe);
+%an_tabindex = best_estimates(an_tabindex, tabindex, index, obe);
 
 
 
-fprintf(1, '%s (incl. best_estimates): %.0f s (elapsed wall time)\n', mfilename, etime(clock, t_start_analysis));
+%fprintf(1, '%s (incl. best_estimates): %.0f s (elapsed wall time)\n', mfilename, etime(clock, t_start_analysis));

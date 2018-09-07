@@ -471,9 +471,13 @@ delfile = 1;
                 %filter LDL sweep for noisy points. the last two number
                 %dictate how heavy filtering is needed. 3 & 1 are good from
                 %experience.
-
-                curArray= sweepcorrection(scantemp{1,3}(:),nStep,0.1,1);
-
+                if any(ismember(macroNo,hex2dec({'807','817','827','617'})))%turns out that these BM macros needs some looser filtering
+                    curArray= sweepcorrection(scantemp{1,3}(:),nStep,3,3,1);
+                else
+                    curArray= sweepcorrection(scantemp{1,3}(:),nStep,1,1,0);
+                end
+                
+                
                 if nStep> 1  %if nStep == 1, then nanmean will not work as intended and just output a single value
              %     curArray= sweepcorrection(scantemp{1,3}(:),potbias,nStep,3,1);
                     curArray = nanmean(curArray,1); %final downsampled product
@@ -567,7 +571,7 @@ delfile = 1;
                   %LDL and macrospecific currents apply to all data in
                   %macroblock (and in a file). Saturation only applies to a
                   %sweep. any(satur_ind) can be 0 or 1 from one sweep to 
-                  %the next, so qf_tot can vary �400 between rows
+                  %the next, so qf_tot can vary 400 between rows
                 % qf=qualityF+400*any(satur_ind);
                  qualityF= qualityF+400*any(satur_ind);
                  

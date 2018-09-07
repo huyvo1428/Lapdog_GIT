@@ -522,20 +522,84 @@ try
         wfile= rfile;
         wfile(end-6)='A';
         
-%         if split
-%             Tarrcat = horzcat(Tarr,Tarr);
-%             [junk testind3]= sort(Tarrcat(4,:));
-%             Tarrcat2=Tarrcat(:,ind);
-%             Tarrcat=Tarrcat(:,testind3); % any differences between these two?
-%             
-%             
-%         else
-%             
-%             Tarrcat=Tarr;
-%         end
-%         
-        
-        
+
+               awID= fopen(wfile,'w');
+ 
+
+        % IF THIS HEADER IS REMOVED (WHICH IT SHOULD BE BEFORE ESA
+        % DELIVERY) NOTIFY TONY ALLEN!
+        fprintf(awID,strcat('START_TIME(UTC), STOP_TIME(UTC), START_TIME_OBT, STOP_TIME_OBT, Qualityfactor, SAA, Illumination, direction',...
+        ', old.Vsi, old.Vx, Vsg, sigma_Vsg',...
+        ', old.Tph, old.Iph0, Vb_lastnegcurrent, Vz',...
+        ', Vbinfl, dIinfl, d2Iinfl',...
+        ', Iph0, Tph, Vsi, Vph_knee, sigma_Vph_knee, Te_linear, sigma_Te_linear, ne_linear, sigma_ne_linear',...
+        ', ion_slope, sigma_ion_slope, ion_intersect, sigma_ion_intersect, e_slope, sigma_e_slope, e_intersect, sigma_e_intersect',...
+        ', ion_Vb_intersect, sigma_ion_Vb_intersect, e_Vb_intersect, sigma_e_Vb_intersect',...
+        ', Tphc, nphc, phc_slope, sigma_phc_slope, phc_intersect, sigma_phc_intersect',...
+        ', ne_5eV, ni_v_dep, ni_v_indep, v_ion, Te_exp, sigma_Te_exp, ne_exp, sigma_ne_exp, Rsquared_linear, Rsquared_exp',...
+        ', Vbar, sigma_Vbar',...
+        ', ASM_Iph0, ASM_Tph, asm_Vsi, asm_Te_linear, asm_sigma_Te_linear, asm_ne_linear, sigma_asm_ne_linear',...
+        ', asm_ion_slope, asm_sigma_ion_slope, asm_ion_intersect, asm_sigma_ion_intersect, asm_e_slope, asm_sigma_e_slope, asm_e_intersect, asm_sigma_e_intersect',...
+        ', asm_ion_Vb_intersect, asm_sigma_ion_Vb_intersect, asm_e_Vb_intersect, asm_sigma_e_Vb_intersect',...
+        ', asm_Tphc, asm_nphc, asm_phc_slope, asm_sigma_phc_slope, asm_phc_intersect, asm_sigma_phc_intersect',...
+        ', asm_ne_5eV, asm_ni_v_dep, asm_ni_v_indep, asm_v_ion, asm_Te_exp, asm_sigma_Te_exp, asm_ne_exp, asm_sigma_ne_exp, asm_Rsquared_linear, asm_Rsquared_exp',...
+        ', ASM_m_ion, ASM_Z_ion, ASM_v_ion, Vsc_ni_ne, asm_Vsc_ni_ne',...
+        ', Vsc_aion, ni_aion, v_aion, asm_Vsc_aion, asm_ni_aion, asm_v_aion',...
+        ', Te_exp_belowVknee, sigma_Te_exp_belowVknee, ne_exp_belowVknee, sigma_ne_exp_belowVknee, asm_Te_exp_belowVknee, asm_sigma_Te_exp_belowVknee, asm_ne_exp_belowVknee, asm_sigma_ne_exp_belowVknee',...
+        ', Vsg_lowAc, sigma_Vsg_lowAc, Vph_knee_lowAc, sigma_Vph_knee_lowAc, Vbar_lowAc, sigma_Vbar_lowAc',...
+        '\r\n'));
+
+        % fpformat = '%s, %s, %05i, %07.4f, %03.2f, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e  %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e\n';
+        for k=1:klen
+            % print variables to file. separated into substrings.
+
+            str1  = sprintf('%s, %s, %16s, %16s, %05i, %07.3f, %04.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
+            str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs,  AP(k).vx,   DP(k).Vsg);
+            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).Vz);
+            str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
+            str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Iph0, DP(k).Tph, DP(k).Vsi(1), DP(k).Vph_knee, DP(k).Te, DP(k).ne);
+            str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
+            str7  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_Vb_intersect,DP(k).e_Vb_intersect);
+            str8  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).Tphc,DP(k).nphc,DP(k).phc_slope,DP(k).phc_intersect);                                                                                                      %NB DP(k).Te_exp is vector size 2, so two ouputs.
+            str9  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', EP(k).ne_5eV, DP(k).ni_1comp, DP(k).ni_2comp, DP(k).v_ion, DP(k).Te_exp, DP(k).ne_exp, DP(k).Rsq.linear, DP(k).Rsq.exp);
+            str10 = sprintf(' %14.7e, %14.7e,',DP(k).Vbar);
+            str11 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).Iph0,DP_asm(k).Tph,DP_asm(k).Vsi(1),DP_asm(k).Te,DP_asm(k).ne);
+            str12 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).ion_slope,DP_asm(k).ion_intersect,DP_asm(k).e_slope,DP_asm(k).e_intersect);
+            str13 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', DP_asm(k).ion_Vb_intersect, DP_asm(k).e_Vb_intersect);
+            str14 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP_asm(k).Tphc,DP_asm(k).nphc,DP_asm(k).phc_slope,DP_asm(k).phc_intersect);
+            str15 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',EP(k).asm_ne_5eV,DP_asm(k).ni_1comp,DP_asm(k).ni_2comp,DP_asm(k).v_ion,DP_asm(k).Te_exp,DP_asm(k).ne_exp,DP_asm(k).Rsq.linear,DP_asm(k).Rsq.exp);
+            str16 = sprintf(' %03i, %02i, %14.7e, %14.7e, %14.7e,',assmpt.ionM,assmpt.ionZ,assmpt.vram,EP(k).Vsc_ni_ne,EP(k).asm_Vsc_ni_ne);
+            str17 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Vsc_aion,DP(k).ni_aion,DP(k).v_aion,DP_asm(k).Vsc_aion,DP_asm(k).ni_aion,DP_asm(k).v_aion);
+            str18 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Te_exp_belowVknee, DP(k).ne_exp_belowVknee, DP_asm(k).Te_exp_belowVknee, DP_asm(k).ne_exp_belowVknee);            
+            str19 = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e', DP(k).Vsg_lowAc, DP(k).Vph_knee_lowAc,DP(k).Vbar_lowAc);
+
+
+            strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9,str10,str11,str12,str13,str14,str15,str16,str17,str18,str19);
+
+            strtot=strrep(strtot,'  0.0000000e+00','            NaN'); % ugly fix, but this fixes the ni = 0 problem in the least code heavy way & probably most efficient way.
+            strtot=strrep(strtot,'-Inf',' NaN');
+            strtot=strrep(strtot,'Inf','NaN');
+            %strtot=strrep(strtot,'NaN','   ');
+
+            %If you need to change NaN to something (e.g. N/A, as accepted by Rosetta Archiving Guidelines) change it here!
+
+            row_bytes = fprintf(awID,'%s\r\n',strtot);
+
+        end
+        fclose(awID);
+
+        an_tabindex{end+1,1} = wfile;                   % start new line of an_tabindex, and record file name
+        an_tabindex{end,2} = strrep(wfile,rfolder,'');  % shortfilename
+        an_tabindex{end,3} = tabindex{an_ind(i),3};     % first calib data file index
+        %an_tabindex{end,3} = an_ind(1);                % First calib data file index of first derived file in this set
+        an_tabindex{end,4} = klen; % Number of rows
+        an_tabindex{end,5} = 112;  % Number of columns
+        an_tabindex{end,6} = an_ind(i);
+        an_tabindex{end,7} = 'sweep'; % Type
+        an_tabindex{end,8} = timing;
+        an_tabindex{end,9} = row_bytes;
+
+
         
         
         
@@ -554,12 +618,18 @@ try
             info_struct.timing=timing;
             info_struct.macroId=str2double(diagmacro);
             info_struct.nroffiles=length(an_ind);
+            info_struct.firstind= tabindex{an_ind(i),3};
             % XXP_struct.Tarr{i}=Tarrcat;
             %  XXP_struct.Tarr=XXP_struct.Tarr;
             
+            t_diff = (EP(k).Tarr{1,3}-EP(k).Tarr{1,4})/2;
             for j=1:klen
                 XXP_struct=[];
                 XXP_struct.Tarr(j,1:4)=EP(j).Tarr;
+
+                XXP_struct.Tarr_mid{j,1}=    cspice_et2utc(   cspice_str2et(XXP_struct.Tarr{j,1}) + t_diff, 'ISOC', 6);    % spm = sweep pair middle
+                XXP_struct.Tarr_mid{j,2}=   XXP_struct.Tarr{j,3}+t_diff;
+
                 XXP_struct.t0(j,1) = cspice_str2et(XXP_struct.Tarr(j,1));%now
                 %XXP_struct.t0 = irf_time(XXP_struct.Tarr{j,1},'utc>tt');
                 XXP_struct.ion_slope(j,1:2)=DP(j).ion_slope;
@@ -698,7 +768,7 @@ try
 %                       
 %         end
 
-        
+
         
         
         %clear output structs before looping again

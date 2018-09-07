@@ -174,9 +174,9 @@ Ir = Ir(ind);       % rest of the data points are, again, discarded.
 % This is basically the same thing, again although a bit higher on the
 % sweep. So less comments
 % extra comparison after elias findings of spurious slopes
-top_upper = floor(l_ind*0.75 +0.5); %
+top_upper = floor(l_ind*0.70 +0.5); %
 
-test= floor(l_ind*0.4 +0.5):top_upper; %  from 40% to 75%... 
+test= floor(l_ind*0.3 +0.5):top_upper; %  from 30% to 75%... 
 %this is such a fickle programming language. Need to be test all this very
 %carefullly
 if(isempty(test) || length(test) < 2 )
@@ -213,7 +213,9 @@ if upper_comparison_bool
         %electron retarding current. Let's compute R^2 and see which fit was
         %objectively better.
         
-        q_ind = 1:floor(l_ind*0.75+0.5);
+        q_ind = 2:floor(l_ind*0.7+0.5); %ignore first step, check 70%...
+        q_ind(isnan(I(q_ind)))=[]; %remove nans...
+        if isempty(q_ind);        q_ind = 2:floor(l_ind*0.7+0.5); end %ugh, foolproof. 
         I_diff_low   = I(q_ind) - polyval(P_Vb,V(q_ind)); %
         I_diff_upper = I(q_ind) - polyval(P_Vb_upper,V(q_ind));
         
@@ -229,15 +231,16 @@ if upper_comparison_bool
         %Ie_(exp). If both fits are good, than the Rsq_upper_temp is a very low value, and would not be heavily weighted against.
         if Rsq_low_temp-Rsq_upper_temp/2 > Rsq_upper_temp       
 %        if Rsq_low < Rsq_upper  % Upper fit was much better, so let's pretend that's what we did all along.
-            fprintf(1,'ion sweep region changed, Rsq_low was =%5.3e,Rsq_upper was =%5.3e ',Rsq_low,Rsq_upper)
-           % fprintf(1,'V & I = \n');
-           % fprintf(1,'%e,',V);
-           % fprintf(1,'\n');
-            %fprintf(1,'%e,',I);
-            %fprintf(1,'\n');
 
+            fprintf(1,'ion sweep region changed, Rsq_low was =%5.3f,Rsq_upper was =%5.3f,Vknee=%f, P_Vb_lower was %e %e',Rsq_low,Rsq_upper,Vknee,P_Vb(1),P_Vb(2))
+            fprintf(1,'V & I = \n');
+            fprintf(1,'%e,',V);
+           fprintf(1,'\n');
+            fprintf(1,'%e,',I);
+            fprintf(1,'\n');
+            
             P_Vb= P_Vb_upper;
-            S = S_upper;
+            S = S_upper;            
         end %% Otherwise, this comparison has no impact below this line
         
     end
@@ -272,11 +275,14 @@ P_Up(2) = P_Vb(2) - P_Vb(1)*Vknee; %same slope, but intersect if ions are functi
 out.a = a;
 
 
-if (a(2) > 1) || (a(1) < 0)   % if error is large (!) or slope is in the wrong direction (unphysical)
+small_current_test= diff(polyval(P_Vb,[V(2),V(floor(l_ind*0.7+0.5))],1))<3e-10; %does the current increase more than the instrument sensitivity during this interval?
+    %if not, flag
+
+if (a(2) > 1) || small_current_test   % if error is large (!), current tiny or  slope is in the wrong direction (unphysical)
 
     a = [0 0];   % no slope
     b = [mean(Ir) std(Ir)];   % offset
-    out.Q(1) = 1;
+    out.Q(1) = 1; %low ion current or negative slope.
 
     P_Vp(1) = a(1); % no slope
     P_Vp(2) = b(1);

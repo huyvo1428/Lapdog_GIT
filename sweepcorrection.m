@@ -6,7 +6,7 @@
 % curArray must have nSteps current measurements at each potential step
 % except the last entries.
 % note: potBias is no longer in use, remove?
-function [curOut] = sweepcorrection(curArray,nSteps,largeK,smallK)
+function [curOut] = sweepcorrection(curArray,nSteps,largeK,smallK,BM)
 
 
 curOut = vec2mat(curArray,nSteps,NaN).'; %reformat curArray to matrix, fill with NaN values if needed on last steps
@@ -15,6 +15,12 @@ len = length(curOut);
 
 sSpan = ceil(0.08*len);  % hard rloess filter span
 sSpan = max(sSpan,6);  %HORRIBLE BUG IF SPAN == 5!!! (or 4)
+%sSpan = 6;
+if BM
+    sSpan=6;
+end
+
+    
 
 test1 = smooth(nanmean(curOut,1),sSpan,'rloess').'; %very hard smoothening, ignore 'rogue values'
 

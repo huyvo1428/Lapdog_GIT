@@ -924,7 +924,7 @@ catch err
     fprintf(1,'V & I = \n');
     fprintf(1,'%e,',V);
     fprintf(1,'\n');
-    fprintf(1,'%e,',Is);
+    fprintf(1,'%e,',I);
 
     DP.Quality = sum(Q)+200;
 
