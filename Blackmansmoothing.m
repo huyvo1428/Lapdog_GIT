@@ -37,14 +37,24 @@ if ~isempty(nanind) %
         badextrapflag =1; %let's flag this awful extrapolation        
         for i=1:length(nanind)
             ind=nanind(i);
-            if ind<5
+            if ind<9
                 extrapind=ind+1:ind+10; %extrapolate backwards
             else
                 extrapind=ind-8:ind-1; %extrapolate forwards.
             end
             %extrapolate from already extrapolated values...
-            skipnanindz = extrapind(~isnan(I_z(extrapind)));
-            I_z(ind)=interp1(V(skipnanindz), I_z(skipnanindz),V(ind),'linear','extrap'); 
+           
+            extrapind(isnan(I_z(extrapind)))=[];
+            if ~(isempty(extrapind))
+            
+            I_z(ind)=interp1(V(extrapind), I_z(extrapind),V(ind),'linear','extrap'); 
+            else
+                I_filtered= Iz;
+                fprintf(1,'8 NaN in a row. Give up\n')
+                return;
+            end
+            
+                
         end
     end
 end
