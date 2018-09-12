@@ -29,6 +29,7 @@ iph0conditions.CONT = +1.51e-9;
 dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf'};
 infoflds= {'macroId'};
 PHO= struct_cleanup(XXP,infoflds,dataflds);
+PHO= PHOTABFILE(PHO,iph0conditions,XXP);
 
 
 
@@ -46,7 +47,8 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=SATURATION_CONSTANT;
     
     %fix contamination issues)
-    
+    path_to_mat_file='MIP_v10ithink.mat';
+    XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
     
     dummy_ne=SATURATION_CONSTANT;
     dummy_Te_XCAL=SATURATION_CONSTANT;
@@ -61,7 +63,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         str2=sprintf(' %14.7e, %2.1f,',dummy_ne,dummy_qv);
         str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv);
         str4=sprintf(' %14.7e, %2.1f,',dummy_v_ion,dummy_qv);
-        str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv);
+        str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.asm_Te_exp_belowVknee(j,1),dummy_qv);
         str6=sprintf(' %14.7e, %2.1f,',dummy_Te_XCAL,dummy_qv);
         str7=sprintf(' %14.7e, %2.1f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
         str8=sprintf(' %05i',XXP(i).data.qf(j));
@@ -89,7 +91,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         else% no Vfloat here, let's print Vz
             %if there's no vfloat measurements
             USCfname=filename;
-            filename(end-6:end-4)='USC';
+            USCfname(end-6:end-4)='USC';
             USCshort = strrep(filename,folder,'');
             
             an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
@@ -101,7 +103,6 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 end
 
 
-PHO= PHOTABFILE(PHO,iph0conditions,XXP);
 
 
 end
@@ -589,3 +590,68 @@ end
 
 
 end
+
+
+function XCAL= XCAL_lapdog(LAP,path_to_matfile)
+
+load path_to_matfile MIP; %loads MIP variable from file
+if isempty(MIP)
+
+    'error MIP empty'
+    
+end
+
+global CO IN SATURATION_CONSTANT
+
+assmpt=[];
+assmpt.ionM=19;%a.u.
+assmpt.vram=550;%m/s
+% try
+%     preamble;
+% catch err
+% end
+
+delind=isnan(MIP.ne);
+
+MIP.t_epoch(delind)=[];
+MIP.ne(delind)=[];
+
+
+pseudo_ind = interp1(LAP.t0,1:length(LAP.t1),MIP.t_epoch);
+%pseudo ind interpolates 
+%indzz=abs(shit-floor(shit+0.5))< 2e-3; %some arbitrary limit, looks good enough. 
+filt_inds=abs(pseudo_ind-floor(pseudo_ind+0.5))< 3e-3; %%% 2e-3 WORKssome arbitrary limit, looks good enough. 
+% a limit of 2e-3 WORKS, but we can increase it slightly to be sure. 1e-3
+% makes us miss 4 points within 1 second.
+
+XCAL=[];
+XCAL.mipnefilt=MIP.ne(filt_inds);
+XCAL.mipne_threshold=MIP.ne_threshold(filt_inds);
+XCAL.mipID=MIP.ID(filt_inds);
+XCAL.t1=MIP.t_epoch(filt_inds);
+%XCAL.t1 = LAP.t1;
+
+
+pts_to_check=pseudo_ind(filt_inds);
+%indz=[];
+for i = 1:length(pts_to_check)
+
+    lap_ind=floor(pts_to_check(i)+0.5);
+    if min(abs(LAP.t0(floor(pts_to_check(i)+0.5))-XCAL.t1(i)))>1
+        %'shit'
+         % indz=vertcat(indz,i);
+        %fprintf(1,'diff is %d sec k=%d, i = %d \n',abs(LAP.t1(floor(pts_to_check(i)+0.5))-XCAL.t1(i)),k,i);        
+    else
+
+   XCAL.ionV(i) = XCAL.mipnefilt(i)*2*IN.probe_cA*(CO.e).^2/(assmpt.ionM*CO.mp*LAP.ion_slope(lap_ind)*1e-6);
+   XCAL.Te(i) = 5* (XCAL.mipnefilt(i)/LAP.ne_5eV(lap_ind)).^2; %
+    end
+
+end
+
+
+
+
+
+end
+

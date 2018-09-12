@@ -30,7 +30,7 @@ switch mode
             %if foutarr{1,6}(j)/foutarr{1,5}(j)) <0.5, qvalue = 1- foutarr{1,6}(j)/foutarr{1,5}(j))
             qvalue=max(1-abs((data_arr{1,6}(j)/data_arr{1,5}(j))),0.5);
             
-            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),factor*data_arr{1,5}(j),qvalue,sum(data_arr{1,8}(j)));
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),factor*data_arr{1,5}(j),qvalue,data_arr{1,8}(j));
             N_rows = N_rows + 1;
         end%if
         
@@ -51,17 +51,17 @@ switch mode
     
     
     case 'vz'
-        factor=1;
+        factor=-1;
 
         %Vz= data_arr.Vz;
         %time= data_arr.Tarr_mid
-        qvalue=0.7;
+        %qvalue=0.7;
         
-        for j = 1:length(data_arr.Vz)
+        for j = 1:length(data_arr.qf)
             
-            
-            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid(j,:),factor*data_arr.Vz(j),qvalue,data_arr.Vz(j));
-            N_rows = N_rows + 1;  
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j,1),data_arr.Vz(j,2),data_arr.qf(j));            
+            %row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j),qvalue,data_arr.qf(j));
+            N_rows = N_rows + 1;
             
             
         end
