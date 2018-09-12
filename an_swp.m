@@ -35,7 +35,8 @@ AP.probe    = NaN;
 AP.vbinf    = NaN;
 AP.diinf    = NaN;
 AP.d2iinf   = NaN;
-AP.Vz       = NaN; %zero-crossing estimate
+AP.Vz       = nan(1,2); %zero-crossing estimate
+AP.Vz(2)=0.5;
        
 diag = 0;  % Set to one if diagnostic
 if(diag)
@@ -82,6 +83,16 @@ else
     lastneg = max(find(ip<0));
     firstpos = min(find(ip>0));
     
+
+    
+    if lastneg>firstpos
+        %then there are multiple zero crossings, extrapolation is more
+        %risky
+        AP.Vz(2)=0.5;
+    else
+        AP.Vz(2)=0.8; %good fit might not be perfect anyway.
+    end
+    
 %     if length(ip)>lastneg && ~isnan(ip(lastneg+1))
 % 
 %         ind_vz=[lastneg;lastneg+1];
@@ -94,7 +105,7 @@ else
     ind_vz=min([max([lastneg-3;1]),firstpos]):max([min([lastneg+3;length(ip)])],firstpos);%stay within limits, but use firstpositive location also. It might be before or after lastneg, depending on the noise
     %ind_vz=max([lastneg-3;1]):min([lastneg+3;length(ip)]);%stay within limits
     ind_vz(isnan(ip(ind_vz)))=[]; %remove nans
-    AP.Vz=interp1(ip(ind_vz),vb(ind_vz),0,'linear','extrap');
+    AP.Vz(1)=interp1(ip(ind_vz),vb(ind_vz),0,'linear','extrap');
 
 %        P=polyfit(ip(ind_vz),vb(ind_vz),1);
 %        AP.Vz=polyval(P,0);

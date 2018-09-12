@@ -555,7 +555,7 @@ try
 
             str1  = sprintf('%s, %s, %16s, %16s, %05i, %07.3f, %04.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
             str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs,  AP(k).vx,   DP(k).Vsg);
-            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).Vz);
+            str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).Vz(1));
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);
             str5  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,', DP(k).Iph0, DP(k).Tph, DP(k).Vsi(1), DP(k).Vph_knee, DP(k).Te, DP(k).ne);
             str6  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e,',DP(k).ion_slope,DP(k).ion_intersect,DP(k).e_slope,DP(k).e_intersect);
@@ -622,30 +622,34 @@ try
             % XXP_struct.Tarr{i}=Tarrcat;
             %  XXP_struct.Tarr=XXP_struct.Tarr;
             
-            t_diff = (EP(k).Tarr{1,3}-EP(k).Tarr{1,4})/2;
-            for j=1:klen
+            t_diff = (str2double(EP(1).Tarr{1,4})-str2double(EP(1).Tarr{1,3}))/2;
+          %  t_diff
+          %      save EP_dump EP 
                 XXP_struct=[];
+
+            for j=1:klen
                 XXP_struct.Tarr(j,1:4)=EP(j).Tarr;
 
                 XXP_struct.Tarr_mid{j,1}=    cspice_et2utc(   cspice_str2et(XXP_struct.Tarr{j,1}) + t_diff, 'ISOC', 6);    % spm = sweep pair middle
-                XXP_struct.Tarr_mid{j,2}=   XXP_struct.Tarr{j,3}+t_diff;
+                XXP_struct.Tarr_mid{j,2}=   str2double(XXP_struct.Tarr(j,3))+t_diff;
 
-                XXP_struct.t0(j,1) = cspice_str2et(XXP_struct.Tarr(j,1));%now
+                XXP_struct.t0(j,1) = cspice_str2et(XXP_struct.Tarr{j,1});%now
                 %XXP_struct.t0 = irf_time(XXP_struct.Tarr{j,1},'utc>tt');
                 XXP_struct.ion_slope(j,1:2)=DP(j).ion_slope;
                 XXP_struct.curr(j,1)=EP(j).curr;
                 XXP_struct.B(j,1)=EP(j).B;
-                XXP_struct.ion_slope(j,1:2)=DP(j).ion_slope;
+                XXP_struct.asm_ion_slope(j,1:2)=DP_asm(j).ion_slope;
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
                 XXP_struct.Vz(j,1:2)=AP(j).Vz;
                 XXP_struct.Vsi(j,1:2)=DP(j).Vsi;
-                XXP_struct.Te_exp_belowVknee(j,1:2)=DP_asm(j).Te_exp_belowVknee;
+                XXP_struct.asm_Te_exp_belowVknee(j,1:2)=DP_asm(j).Te_exp_belowVknee;
                 XXP_struct.Iph0(j,1:2)=DP(j).Iph0;
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
                 XXP_struct.qf(j,1)=EP(j).qf;
                 XXP_struct.lum(j,1)=EP(j).lum;
+                XXP_struct.ne_5eV=EP(j).ne_5eV;
+                XXP_struct.asm_ne_5eV=EP(j).asm_ne_5eV;
 
-                
             end
            % nan_ind=isnan(XXP_struct.ionslope); XXP_struct.ionslope(nan_ind)=SATURATION_CONSTANT;
             nan_ind=isnan(XXP_struct.Vph_knee); XXP_struct.Vph_knee(nan_ind)=SATURATION_CONSTANT;
@@ -674,7 +678,6 @@ try
             
         end%probenr
         
-
            %EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}
 
 %     
@@ -772,7 +775,7 @@ try
         
         
         %clear output structs before looping again
-        clear AP DP EP
+        clear AP DP EP DP_asm
         
     end  % for every sweep file
 

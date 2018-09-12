@@ -321,8 +321,10 @@ try
                 Phi11 = 131.2;
                 Phi12 = 179.2;
                 illuminati = ((SAA < Phi11) | (SAA > Phi12));
-                                
+               foutarr{1,8}=foutarr{1,8}+100;
+                               
             else 
+                foutarr{1,8}=foutarr{1,8}+200;
                 Phi21 = 18;
                 Phi22 = 82;
                 Phi23 = 107;
@@ -358,10 +360,10 @@ try
                     else
                         
                         foutarr_2=foutarr;
-                        tfoutarr_2=tfoutarr;
+                        %tfoutarr_2=tfoutarr; %only need this for debug
                     end
-                        fprintf(1,'\n tfoutarr_2{1,1}(1,:)=%s \n tfoutarr_1{1,1}(1,:)=%s \n', tfoutarr_2{1,1}(1,:),tfoutarr_1{1,1}(1,:));
-                        fprintf(1,'\n tfoutarr_2{1,1}(end,:)=%s \n tfoutarr_1{1,1}(end,:)=%s \n', tfoutarr_2{1,1}(end,:),tfoutarr_1{1,1}(end,:));
+                       % fprintf(1,'\n tfoutarr_2{1,1}(1,:)=%s \n tfoutarr_1{1,1}(1,:)=%s \n', tfoutarr_2{1,1}(1,:),tfoutarr_1{1,1}(1,:));
+                        %fprintf(1,'\n tfoutarr_2{1,1}(end,:)=%s \n tfoutarr_1{1,1}(end,:)=%s \n', tfoutarr_2{1,1}(end,:),tfoutarr_1{1,1}(end,:));
 
                         %tfoutarr
                         %tfoutarr_1
@@ -370,10 +372,7 @@ try
 
                         %length(dark_ind)
                         
-                    foutarr_1{1,8}=foutarr_1{1,8}+100;
-                    foutarr_2{1,8}=foutarr_2{1,8}+200; %eh, don't need
-                    %this
-                    
+
                     replaceind_lap1= (foutarr_1{1,7}(:)~=1);
                     ok_tokeeplap2 = (foutarr_2{1,7}(:)==1);
                     %the indices that are ok to keep is replaceind_lap1
@@ -401,7 +400,7 @@ try
                         tfoutarr_1=tfoutarr;
                     else
                         foutarr_2=foutarr;
-                        tfoutarr_2=tfoutarr; %I only need this to debug
+                       % tfoutarr_2=tfoutarr; %I only need this to debug
                     end
                     
                     hold_flag = 1; 
