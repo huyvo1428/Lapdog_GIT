@@ -33,7 +33,7 @@
 %
 % Initially created 2018-08-21 by Erik P G Johansson, IRF Uppsala.
 %
-function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
+function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING_CONSTANT, nFinalPresweepSamples)
     % NOTE: Generalizing to EDITED1/CALIB1 data types requires distinguising EDDER / DERIV1.
     % PROPOSAL: Remake into class
     %   PRO: Can have constants, shared over functions.
@@ -54,16 +54,20 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     % TODO: PDS Keywords from MB, DATA_SET_PARAMETER_NAME
     %   E.g. http://chury.sp.ph.ic.ac.uk/rpcwiki/Archiving/EnhancedArchivingTeleconMinutes2018x09x04
     % TODO: "Use the keyword CALIBRATION_SOURCE_ID with one or several values like the example below: CALIBRATION_SOURCE_ID = {“RPCLAP”,“RPCMIP”} "
+    
+    % TEMPORARY
+    %MISSING_CONSTANT = -1000;
+    %N_FINAL_PRESWEEP_SAMPLES = 16;
+    generatingDeriv1 = 1;
+    
+    
 
     C = createLBL.constants();
+    defs = createLBL.definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples);             % TEMP: Use constants.
     COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
 
     TAB_LBL_INCONSISTENCY_POLICY = 'error';
-    C2.NO_ODL_UNIT               = [];
-    C2.QFLAG1_DESCRIPTION = 'QUALITY FLAG CONSTRUCTED AS THE SUM OF MULTIPLE TERMS, DEPENDING ON WHAT QUALITY RELATED EFFECTS ARE PRESENT. FROM 00000 (BEST) TO 99999 (WORST).';    % For older quality flag (version "1").
-    C2.QVALUE_DESCRIPTION = 'Quality value in the range 0 (worst) to 1 (best). Corresponds to goodness of fit or how well the model fits the data.';
-    C2.MC_DESC            = sprintf(' A value of %e refers to that there is no value.', C.MISSING_CONSTANT);
-    
+
 
 
     % TEMPORARY source constants.
@@ -102,7 +106,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
             %    {'DATA_SET_PARAMETER_NAME', '{"PHOTOSATURATION CURRENT"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
             
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_PHO_data(C, C2);
+            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_PHO_data();
             
         elseif strcmp(msd2, 'USC')
 
@@ -112,7 +116,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
             %    {'DATA_SET_PARAMETER_NAME', '{"SPACECRAFT POTENTIAL"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
             
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_USC_data(C, C2);
+            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_USC_data();
 
         elseif strcmp(msd2, 'ASW')
             
@@ -123,7 +127,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
             %    {'DATA_SET_PARAMETER_NAME', '{"ELECTRON DENSITY", "PHOTOSATURATION CURRENT", "ION BULK VELOCITY", "ELECTRON TEMPERATURE"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP", "RPCMIP"}'});
             
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_ASW_data(C, C2);
+            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_ASW_data();
 
         elseif strcmp(msd2, 'NPL')
             
@@ -138,7 +142,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
             %        'DATA_SET_PARAMETER_NAME', '{"ELECTRON_DENSITY", "ION DENSITY", "PLASMA DENSITY"}'; ...
             %        'CALIBRATION_SOURCE_ID',   '{"RPCLAP", "RPCMIP"}'});
             
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_NLP_data(C, C2);
+            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_NLP_data();
             
         else 
             canClassifyTab = 0;
@@ -158,6 +162,9 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
         ;
     end
     
+    
+    
+    clear defs
 end
 
 

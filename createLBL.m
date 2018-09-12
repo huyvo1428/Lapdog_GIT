@@ -1,4 +1,3 @@
-
 %function createLBL_main(derivedpath, datasetid, shortphase, datasetname, ...
 %        lbltime, lbleditor, lblrev, ...
 %        producerfullname, producershortname, targetfullname, targettype, missionphase, tabindex, blockTAB, index, an_tabindex, der_struct)
@@ -181,14 +180,13 @@
 %            filenames.
 % 
 % PROPOSAL: LABEL_REVISION_NOTE.
+%
+% PROPOSAL: EST has its own try-catch. Absolish(?)
 %===================================================================================================
 
 executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
 prevWarningsSettings = warning('query');
 warning('on', 'all')
-
-global SATURATION_CONSTANT
-global N_FINAL_PRESWEEP_SAMPLES
 
 %========================================================================================
 % "Constants"
@@ -198,13 +196,9 @@ global N_FINAL_PRESWEEP_SAMPLES
 % is simply unknown at present.
 %========================================================================================
 C = createLBL.constants();
-C2 = [];
 DEBUG_ON = 1;
 DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
 COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
-C2.NO_ODL_UNIT    = [];
-C2.ODL_VALUE_UNKNOWN = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown. Should not be used for official deliveries.
-C2.MISSING_CONSTANT  = SATURATION_CONSTANT;   % Change name.
 
 
 
@@ -245,31 +239,9 @@ end
 
 
 
-% Set PDS keywords to use for column descriptions which differ between EDITED2/EDDER and DERIV/CALIB2
-% ---------------------------------------------------------------------------------------------------
-% IMPLEMENTATION NOTE: Some are meant to be used on the form C2.DATA_UNIT_CURRENT{:} in object column description struct declaration/assignment, "... = struct(...)".
-% This makes it possible to optionally omit the keyword, besides shortening the assignment when non-empty. This is not
-% currently used though.
-% NOTE: Also useful for standardizing the values used, even for values which are only used for e.g. DERIV1 but not EDDER.
-if generatingDeriv1
-    C2.DATA_DATA_TYPE    = {'DATA_TYPE', 'ASCII_REAL'};
-    C2.DATA_UNIT_CURRENT = {'UNIT', 'AMPERE'};
-    C2.DATA_UNIT_VOLTAGE = {'UNIT', 'VOLT'};
-    C2.VOLTAGE_BIAS_DESC =          'CALIBRATED VOLTAGE BIAS.';
-    C2.VOLTAGE_MEAS_DESC = 'MEASURED CALIBRATED VOLTAGE.';
-    C2.CURRENT_BIAS_DESC =          'CALIBRATED CURRENT BIAS.';
-    C2.CURRENT_MEAS_DESC = 'MEASURED CALIBRATED CURRENT.';
-else
-    % CASE: EDDER run
-    C2.DATA_DATA_TYPE    = {'DATA_TYPE', 'ASCII_INTEGER'};
-    C2.DATA_UNIT_CURRENT = {'UNIT', 'N/A'};
-    C2.DATA_UNIT_VOLTAGE = {'UNIT', 'N/A'};
-    C2.VOLTAGE_BIAS_DESC =          'VOLTAGE BIAS.';
-    C2.VOLTAGE_MEAS_DESC = 'MEASURED VOLTAGE.';
-    C2.CURRENT_BIAS_DESC =          'CURRENT BIAS.';
-    C2.CURRENT_MEAS_DESC = 'MEASURED CURRENT.';
-end
-C2.QFLAG1_DESCRIPTION = 'QUALITY FLAG CONSTRUCTED AS THE SUM OF MULTIPLE TERMS, DEPENDING ON WHAT QUALITY RELATED EFFECTS ARE PRESENT. FROM 00000 (BEST) TO 99999 (WORST).';    % For older quality flag (version "1").
+global SATURATION_CONSTANT
+global N_FINAL_PRESWEEP_SAMPLES
+defs = createLBL.definitions(generatingDeriv1, SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES);
 
 
 
@@ -362,6 +334,7 @@ for i = 1:length(stabindex)
         % LBL file: Create OBJECT TABLE section
         %
         %=======================================
+        LblData.OBJTABLE = [];
         if (isSweep)
             
             %==============================
@@ -371,8 +344,7 @@ for i = 1:length(stabindex)
             if (isSweepTable)
                 % CASE: BxS
                 
-                LblData.OBJTABLE = [];
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_BxS_data(C2, probeNbr, generatingDeriv1, Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_BxS_data(probeNbr, Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
                 
             else     % if (isSweepTable) ...
                 % CASE: IxS
@@ -380,9 +352,8 @@ for i = 1:length(stabindex)
                 bxsTabFilename = tabFilename;
                 bxsTabFilename(28) = 'B';
 
-                LblData.OBJTABLE = [];
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_IxS_data(...
-                    C2, generatingDeriv1, probeNbr, Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION, bxsTabFilename, stabindex(i).nColumns, N_FINAL_PRESWEEP_SAMPLES);
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_IxS_data(...
+                    probeNbr, Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION, bxsTabFilename, stabindex(i).nColumns);
                 
             end   % if (isSweepTable) ... else ...
 
@@ -391,9 +362,8 @@ for i = 1:length(stabindex)
             % CASE: Anything EXCEPT sweep files (NOT [IB]xS) <==> [IV]x[HL]
             %===============================================================
 
-            LblData.OBJTABLE = [];
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_IVxHL_data(...
-                C2, generatingDeriv1, isDensityMode, probeNbr, Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
+            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_IVxHL_data(...
+                isDensityMode, probeNbr, Calib1LblSs.OBJECT___TABLE{1}.DESCRIPTION);
         end
         
         createLBL.create_OBJTABLE_LBL_file(stabindex(i).path, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
@@ -438,7 +408,7 @@ for i = 1:length(blockTAB)
     % LBL file: Create OBJECT TABLE section
     %=======================================
     
-    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_BLKLIST_data(C2);
+    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_BLKLIST_data();
     
     createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
     clear   LblData
@@ -476,6 +446,7 @@ if generatingDeriv1
                 %======================
                 % CASE: Best estimates
                 %======================
+                % NOTE: Has its  own try-catch statement. (Why?)
                 
                 %TAB_file_info = dir(san_tabindex(i).path);
                 KvlLbl = LblAllKvpl;
@@ -543,61 +514,31 @@ if generatingDeriv1
             %
             %=======================================
             
-            if strcmp(san_tabindex(i).dataType, 'downsample')   %%%%%%%% DOWNSAMPLED FILE %%%%%%%%%%%%%%%
-                
-                
-                
-                
-                % IMPLEMENTATION NOTE: Start & stop timestamps in header PDS keywords cover a smaller time interval than
-                % the actual content of downsampled files. Therefore using the actual content of the TAB file to derive
-                % these values.
-                LblData.OBJTABLE = [];
+            LblData.OBJTABLE = [];
+            if strcmp(san_tabindex(i).dataType, 'downsample')   %%%%%%%% DOWNSAMPLED FILE %%%%%%%%%%%%%%%                
                 
                 samplingRateSecondsStr = tabFilename(end-10:end-9);
                 samplingRateSeconds = str2double(tabFilename(end-10:end-9));
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_IVxD_data(C2, probeNbr, Calib1LblSs.DESCRIPTION, samplingRateSeconds, isDensityMode, isEFieldMode);
-                
-                
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_IVxD_data(probeNbr, Calib1LblSs.DESCRIPTION, samplingRateSeconds, isDensityMode, isEFieldMode);
                 
             elseif strcmp(san_tabindex(i).dataType, 'spectra')   %%%%%%%%%%%%%%%% SPECTRA FILE %%%%%%%%%%
                 
-                
-                
-                LblData.OBJTABLE = [];
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_PSD_data(C2, probeNbr, isDensityMode, isEFieldMode, san_tabindex(i).nTabColumns, mode);
-                
-                
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_PSD_data(probeNbr, isDensityMode, isEFieldMode, san_tabindex(i).nTabColumns, mode);
                 
             elseif  strcmp(san_tabindex(i).dataType, 'frequency')    %%%%%%%%%%%% FREQUENCY FILE %%%%%%%%%
                 
-                
-                
                 psdTabFilename = strrep(san_tabindex(i).filename, 'FRQ', 'PSD');
-                
-                LblData.OBJTABLE = [];
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_FRQ_data(san_tabindex(i).nTabColumns, psdTabFilename);
-
-
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_FRQ_data(san_tabindex(i).nTabColumns, psdTabFilename);
 
             elseif  strcmp(san_tabindex(i).dataType, 'sweep')    %%%%%%%%%%%% SWEEP ANALYSIS FILE %%%%%%%%%
 
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_AxS_data(stabindex(san_tabindex(i).iTabindex).filename);
 
-
-                LblData.OBJTABLE = [];
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_AxS_data(C2, stabindex(san_tabindex(i).iTabindex).filename);
-                
                 tabLblInconsistencyPolicy = AxS_TAB_LBL_INCONSISTENCY_POLICY;   % NOTE: Different policy for A?S.LBL files.
-                
-                
                 
             elseif  strcmp(san_tabindex(i).dataType,'best_estimates')    %%%%%%%%%%%% BEST ESTIMATES FILE %%%%%%%%%%%%
                 
-                
-                
-                LblData.OBJTABLE = [];
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_EST_data(C2);
-                
-                
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_EST_data();
                 
             else
                 
@@ -616,9 +557,9 @@ if generatingDeriv1
             createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY)
             fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
         end    % try-catch
-        
-        
-        
+
+
+
     end    % for
 end    % if generatingDeriv1
 
@@ -638,7 +579,7 @@ if generatingDeriv1
             % der_struct.file{iFile} will contain paths to a DERIV-data set. May thus lead to overwriting LBL files in
             % DERIV data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
             % EDDER.
-            %createLBL.write_A1P(LblAllKvpl, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, index, der_struct, C2.NO_ODL_UNIT, C2.MISSING_CONSTANT, ...
+            %createLBL.write_A1P(LblAllKvpl, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, index, der_struct, ...
             %    DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         end
         
@@ -653,7 +594,7 @@ if generatingDeriv1
     %
     %==============================================================
     % TEMPORARY SOLUTION.
-    createLBL.create_LBL_L5_sample_types(derivedpath)
+    createLBL.create_LBL_L5_sample_types(derivedpath, SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES)
 end
 
 
@@ -662,4 +603,6 @@ cspice_unload(metakernelFile);
 warning(prevWarningsSettings)
 fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, executionBeginDateVec));
 
-%end   % createLBL_main
+
+
+clear defs    % Not technically required, but useful when debugging and frequently modifying the corresponding class.
