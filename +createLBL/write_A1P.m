@@ -12,9 +12,15 @@
 %
 %
 function write_A1P(kvlLblAll, HeaderOptions, cotlfSettings, index, der_struct, NO_ODL_UNIT, MISSING_CONSTANT, dontReadHeaderKeyList, tabLblInconsistencyPolicy)
-%
-% PROPOSAL: Do not write LBL file. Return ~lblData instead.
-%   CON: Would be nice to have all dependence on "der_struct" here.
+    %
+    % PROPOSAL: Do not write LBL file. Return ~lblData instead.
+    %   CON: Would be nice to have all dependence on "der_struct" here.
+    
+    C2 = [];
+    C2.NO_ODL_UNIT      = NO_ODL_UNIT;
+    C2.MISSING_CONSTANT = MISSING_CONSTANT;
+    
+
     
     for iFile = 1:numel(der_struct.file)
         startStopTimes = der_struct.timing(iFile, :);
@@ -34,33 +40,17 @@ function write_A1P(kvlLblAll, HeaderOptions, cotlfSettings, index, der_struct, N
         kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));        % UTC stop time
         kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', startStopTimes{3});
         kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  startStopTimes{4});
-
+        
         kvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(kvlLblCalib1, kvlLbl, 'require preexisting keys');
-
+        
         lblData = [];
         lblData.HeaderKvl = kvlLbl;
         clear   kvlLbl   kvlLblCalib1
-
-        %lblData.nTabFileRows                     = der_struct.rows(iFile);
-        %lblData.ConsistencyCheck.nTabBytesPerRow = der_struct.bytes;
-        %lblData.ConsistencyCheck.nTabColumns     = der_struct.cols(iFile);
         
         lblData.OBJTABLE = [];
-        lblData.OBJTABLE.DESCRIPTION = 'ANALYZED PROBE 1 PARAMETERS';
-        
-        ocl = [];
-        ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-        ocl{end+1} = struct('NAME',  'STOP_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP UTC TIME YYYY-MM-DD HH:MM:SS.FFFFFF');
-        ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'START SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
-        ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION',  'STOP SPACECRAFT ONBOARD TIME SSSSSSSSS.FFFFFF (TRUE DECIMALPOINT).');
-        ocl{end+1} = struct('NAME', 'QUALITY',            'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  4, 'UNIT', NO_ODL_UNIT, 'DESCRIPTION', 'QUALITY FACTOR FROM 000 (BEST) TO 999.');
-        ocl{end+1} = struct('NAME', 'Vph_knee',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',         'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Potential at probe position from photoelectron current knee (gaussian fit of second derivative).');
-        ocl{end+1} = struct('NAME', 'Te_exp_belowVknee',  'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT', 'MISSING_CONSTANT', MISSING_CONSTANT, 'DESCRIPTION', 'Electron temperature from an exponential fit to the slope of the retardation region of the electron current.');
-        lblData.OBJTABLE.OBJCOL_list = ocl;
-        clear   ocl
+        [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_A1P_data(C2);
         
         createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, lblData, HeaderOptions, cotlfSettings, tabLblInconsistencyPolicy);
-        clear   lblData
         
     end   % for
     

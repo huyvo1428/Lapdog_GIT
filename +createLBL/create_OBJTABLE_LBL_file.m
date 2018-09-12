@@ -58,12 +58,6 @@
 % the caller has not set them. Error otherwise (assertion).
 % NOTE: Uses Lapdog's obt2sct function.
 %
-% NOTE: Previous implementations have added a DELIMITER=", " field (presumably not PDS compliant) in
-% agreement with Imperial College/Tony Allen to somehow help them process the files
-% It appears that at least part of the reason was to make it possible to parse the files before
-% we used ITEM_OFFSET+ITEM_BYTES correctly. DELIMITER IS NO LONGER NEEDED AND HAS BEEN PHASED OUT!
-% (E-mail Tony Allen->Erik Johansson 2015-07-03 and that thread).
-%
 % NOTE: Not full general-purpose function for table files, since
 %       (1) ASSUMPTION: TAB files are constructed with a fixed number of bytes between columns (and no bytes
 %           before/after the first/last string).
@@ -312,7 +306,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
         % Update selected PDS keyword values.
         LblData.HeaderKvl = EJ_lapdog_shared.utils.KVPL.overwrite_values(LblData.HeaderKvl, t2pkKvpl, 'require preexisting keys');
     catch exc
-        warning_error___LOCAL(sprintf('TAB file is inconsistent with LBL file: "%s"', exc.message), tabLblInconsistencyPolicy)
+        warning_error___LOCAL(sprintf('TAB file "%s" is inconsistent with LBL file: "%s"', tabFilename, exc.message), tabLblInconsistencyPolicy)
     end
     
     %################################################################################################

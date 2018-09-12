@@ -1,5 +1,5 @@
 %
-% Create LBL files for TAB files PHO, USC, ASW, NPL.
+% Standalone program for creating LBL files for TAB files PHO, USC, ASW, NPL.
 %
 % Iterates over the TAB files of a DERIV1 dataset. For TAB files that do not have LBL files, try to create LBL files
 % (will only succeed for types that create_LBL_file can handle).
