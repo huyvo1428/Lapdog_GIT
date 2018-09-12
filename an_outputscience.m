@@ -47,8 +47,8 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=SATURATION_CONSTANT;
     
     %fix contamination issues)
-    path_to_mat_file='MIP_v10ithink.mat';
-    XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
+    path_to_mat_file='MIP_v03.mat';
+    %XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
     
     dummy_ne=SATURATION_CONSTANT;
     dummy_Te_XCAL=SATURATION_CONSTANT;

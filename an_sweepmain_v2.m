@@ -655,7 +655,7 @@ try
             nan_ind=isnan(XXP_struct.Vph_knee); XXP_struct.Vph_knee(nan_ind)=SATURATION_CONSTANT;
             nan_ind=isnan(XXP_struct.Vz);       XXP_struct.Vz(nan_ind)=SATURATION_CONSTANT;
             nan_ind=isnan(XXP_struct.Vsi);      XXP_struct.Vsi(nan_ind)=SATURATION_CONSTANT;
-            nan_ind=isnan(XXP_struct.Te_exp_belowVknee);XXP_struct.Te_exp_belowVknee(nan_ind)=SATURATION_CONSTANT;          
+            nan_ind=isnan(XXP_struct.asm_Te_exp_belowVknee);XXP_struct.asm_Te_exp_belowVknee(nan_ind)=SATURATION_CONSTANT;          
            % nan_ind=isnan(XXP_struct.Iph0);     XXP_struct.Iph0(nan_ind)=SATURATION_CONSTANT;          
             nan_ind=isnan(XXP_struct.Vph_knee); XXP_struct.Vph_knee(nan_ind)=SATURATION_CONSTANT;
             
