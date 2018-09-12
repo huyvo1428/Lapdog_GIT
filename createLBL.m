@@ -197,6 +197,7 @@ global N_FINAL_PRESWEEP_SAMPLES
 % This means that it is known that the quantity has no unit rather than that the unit
 % is simply unknown at present.
 %========================================================================================
+C = createLBL.constants();
 C2 = [];
 DEBUG_ON = 1;
 DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
@@ -204,7 +205,6 @@ COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
 C2.NO_ODL_UNIT    = [];
 C2.ODL_VALUE_UNKNOWN = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown. Should not be used for official deliveries.
 C2.MISSING_CONSTANT  = SATURATION_CONSTANT;   % Change name.
-C = createLBL.constants();
 
 
 
