@@ -56,13 +56,11 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
     % TODO: "Use the keyword CALIBRATION_SOURCE_ID with one or several values like the example below: CALIBRATION_SOURCE_ID = {“RPCLAP”,“RPCMIP”} "
     
     % TEMPORARY
-    %MISSING_CONSTANT = -1000;
-    %N_FINAL_PRESWEEP_SAMPLES = 16;
     generatingDeriv1 = 1;
     
     
 
-    C = createLBL.constants();
+    C = createLBL.constants(MISSING_CONSTANT, nFinalPresweepSamples);
     defs = createLBL.definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples);             % TEMP: Use constants.
     COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
 
@@ -170,9 +168,8 @@ end
 
 
 % Convenience function for shortening & clarifying code.
-function Kvpl = KVPL_overwrite_add(Kvpl, kvplContentCellArray)
-    Kvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(Kvpl, ...
-        EJ_lapdog_shared.utils.KVPL.create(kvplContentCellArray), ...
-        'add if not preexisting');
-end
-
+%function Kvpl = KVPL_overwrite_add(Kvpl, kvplContentCellArray)
+%    Kvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(Kvpl, ...
+%        EJ_lapdog_shared.utils.KVPL.create(kvplContentCellArray), ...
+%        'add if not preexisting');
+%end

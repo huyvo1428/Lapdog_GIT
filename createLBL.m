@@ -195,7 +195,10 @@ warning('on', 'all')
 % This means that it is known that the quantity has no unit rather than that the unit
 % is simply unknown at present.
 %========================================================================================
-C = createLBL.constants();
+global SATURATION_CONSTANT N_FINAL_PRESWEEP_SAMPLES
+C = createLBL.constants(SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES);
+clear SATURATION_CONSTANT N_FINAL_PRESWEEP_SAMPLES
+
 DEBUG_ON = 1;
 DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
 COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
@@ -239,9 +242,7 @@ end
 
 
 
-global SATURATION_CONSTANT
-global N_FINAL_PRESWEEP_SAMPLES
-defs = createLBL.definitions(generatingDeriv1, SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES);
+defs = createLBL.definitions(generatingDeriv1, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES);
 
 
 
@@ -594,7 +595,7 @@ if generatingDeriv1
     %
     %==============================================================
     % TEMPORARY SOLUTION.
-    createLBL.create_LBL_L5_sample_types(derivedpath, SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES)
+    createLBL.create_LBL_L5_sample_types(derivedpath, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES)
 end
 
 
@@ -605,4 +606,4 @@ fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, execution
 
 
 
-clear defs    % Not technically required, but useful when debugging and frequently modifying the corresponding class.
+clear C defs    % Not technically required, but useful when debugging and frequently modifying the corresponding class.

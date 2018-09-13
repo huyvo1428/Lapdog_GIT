@@ -14,7 +14,7 @@
 %
 % DESIGN INTENT
 % =============
-% Should not take values from anywhere (through execution). ==> Will not read "global" constants (variables declared as
+% Should not take values from anywhere (through execution). ==> Should not read "global" constants (variables declared as
 % "global". Ex: SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES
 %
 %
@@ -25,11 +25,22 @@ classdef constants < handle
     %   CON: Indentation length is more fundamental. Could pop up somewhere else.
     %   PROPOSAL: Modify write_OBJTABLE_LBL_FILE to merge header options into settings and copy the indentation length from
     %           the separate constant INDENTATION_LENGTH.
+    %
+    % NOTE: Used by non-Lapdog code: ./+erikpgjohansson/+ro/+delivery/+geom/create_geom_TAB_LBL_from_EOG.m
+    %       Might be used by future standalone, "Lapdogish" code (same git repo) for e.g. separately regenerating LBL files.
+    %
+    % PROPOSAL: Separately hard-code constant values just as Lapdog code does (duplication).
+    %   PROPOSAL: Somehow check that constants set by Lapdog (lapdog, edder_lapdog, main) use the same constant values as "constants".
+    %       PROPOSAL: (1) Internal hard-coded default values (MISSING_CONSTANT, and analogous if any). Constructor which accepts the
+    %                 same variables/constants as arguments and checks them (assertion) against the internal (hard-coded) values. 
+    %                 (2) Constructor call that just uses internally defined values.
+    % 
     
     properties(Access=public)
-        ROSETTA_NAIF_ID    = -226;     % Used for SPICE.
-        INDENTATION_LENGTH = 4;
-        MISSING_CONSTANT   = -1000;    % Defined here so that it can be used by code that is not run via Lapdog.
+        ROSETTA_NAIF_ID          = -226;     % Used by SPICE.
+        INDENTATION_LENGTH       = 4;
+        MISSING_CONSTANT         = -1000;    % Defined here so that it can be used by code that is not run via Lapdog.
+        N_FINAL_PRESWEEP_SAMPLES = 16;
         
         % Used by createLBL.create_OBJTABLE_LBL_file
         COTLF_HEADER_OPTIONS   % Set in constructor
@@ -37,8 +48,30 @@ classdef constants < handle
     
     
     
-    methods
-        function obj = constants()
+    methods(Access=public)
+
+        % Constructor
+        % 
+        % ARGUMENTS
+        % =========
+        % alt 1: No arguments
+        % alt 2: MISSING_CONSTANT
+        %        N_FINAL_PRESWEEP_SAMPLES
+        function obj = constants(varargin)
+            if nargin == 0
+                ;   % Do nothing. Everything OK.
+            elseif nargin == 2
+                % ASSERTIONS
+                if obj.MISSING_CONSTANT ~= varargin{1}
+                    error('Submitted MISSING_CONSTANT value inconsistent with internally hard-coded value.')
+                end
+                if obj.N_FINAL_PRESWEEP_SAMPLES ~= varargin{2}
+                    error('Submitted N_FINAL_PRESWEEP_SAMPLES value inconsistent with internally hard-coded value.')
+                end
+                
+            else
+                error('Wrong number of arguments.')
+            end
             
             %==================================================================
             % LBL Header keys which should preferably come in a certain order.
@@ -200,7 +233,10 @@ classdef constants < handle
                 'SPACECRAFT_CLOCK_START_COUNT', ...
                 'SPACECRAFT_CLOCK_STOP_COUNT'};
             
-            obj.COTLF_HEADER_OPTIONS = struct('keyOrderList', {KEY_ORDER_LIST}, 'forbiddenKeysList', {FORBIDDEN_KEYS}, 'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
+            obj.COTLF_HEADER_OPTIONS = struct(...
+                'keyOrderList',        {KEY_ORDER_LIST}, ...
+                'forbiddenKeysList',   {FORBIDDEN_KEYS}, ...
+                'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
         end
         
         
