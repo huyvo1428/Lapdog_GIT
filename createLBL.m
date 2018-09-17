@@ -8,12 +8,12 @@
 %
 % VARIABLE NAMING CONVENTIONS
 % ===========================
-% OCL = Object Column List
 % KVL, KVPL = Key-Value (pair) List
 
 %===================================================================================================
 % PROPOSAL/TODO: Have one MISSING_CONSTANT for createLBL.m and one for ~best_estimates.m.
-%    QUESTION: How?
+%    PROPOSAL: Initialize createLB.constants(...)
+%
 % PROPOSAL: Different LABEL_REVISION_NOTE för CALIB2, DERIV2. Multiple rows?
 % PROPOSAL: Use get_PDS.m.
 %   TODO-NEED-INFO: Why? What needed for?
@@ -78,25 +78,10 @@
 %
 % PROPOSAL: Read STOP_TIME from the last CALIB1/EDITED1 file, just like Calib1LblSs does.
 %
-% PROPOSAL: Help functions for setting specific types of column descriptions.
-%   PRO: Does not need to write out struct field names: NAME, DESCRIPTION etc.
-%   PRO: Automatically handle EDDER/DERIV1 differences.
-%   --
-%   TODO-DECISION: How handle MISSING_CONSTANT?
-%   TODO-DECISION: Need to think about how to handle DERIV2 TAB columns (here part of DERIV1)?
-%   --
-%   PROPOSAL: Automatically set constants for BYTES, DATA_TYPE, UNIT.
-%   PROPOSAL: OPTIONAL sprintf options for NAME ?
-%       PROBLEM: How implement optionality?
-%   PROPOSAL: UTC, OBT (separately to also be able to handle sweeps)
-%       PROPOSAL: oc_UTC(name, bytes, descrStr)
-%           NOTE: There is ~TIME_UTC with either BYTES=23 or 26.
-%               PROPOSAL: Have assertion for corresponding argument.
-%               PROPOSAL: Modify TAB files to always have BYTES=26?!!
-%           PROPOSAL: Assertion that name ends with "TIME_UTC".
-%       PROPOSAL: oc_OBT(name, descrStr)
-%           NOTE: BYTES=16 always
-%   --
+% PROPOSAL: Load (standard) SPICE metakernel from specific function.
+%   PRO: More structured (smaller main code).
+%   PRO: Could be used in multiple places in Lapdog.
+%
 %   PROPOSAL: Standard single current/voltage, measured/bias column which varies with EDDER/DERIV1.
 %       PROPOSAL: Argument which selects: "bias", "meas"
 %   PROPOSAL: Take hard-coded constants struct "C" as argument.
@@ -182,6 +167,11 @@
 % PROPOSAL: LABEL_REVISION_NOTE.
 %
 % PROPOSAL: EST has its own try-catch. Absolish(?)
+%
+% TODO/PROPOSAL: Create LBL for 60M_PHO, USC, ASW, NPL here (not in create_LBL_L5_sample_types).
+%
+% PROPOSAL: Centralized functionality for setting KVPL for start & stop timestamps.
+% PROPOSAL: Read first & LAST start & stop timestamps from EDITED1/CALIB1 LBL files using centralized function(s).
 %===================================================================================================
 
 executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
@@ -237,11 +227,12 @@ if strfind(basename, 'EDDER')
 elseif strfind(basename, 'DERIV')
     generatingDeriv1 = 1;
 else
-    error('Can not interpret whether generating (Lapdog''s) EDDER or (Lapdog''s) DERIV1 data set. basename=%s', basename)
+    error('Can not determine whether code generating (Lapdog''s) EDDER or (Lapdog''s) DERIV1 dataset. basename=%s', basename)
 end
 
 
 
+% NOTE: Requires "generatingDeriv1" to be defined. Can therefore not be initialized earlier.
 defs = createLBL.definitions(generatingDeriv1, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES);
 
 
@@ -293,14 +284,13 @@ for i = 1:length(stabindex)
         
         tabFilename = stabindex(i).filename;
         iIndexFirst = stabindex(i).iIndexFirst;
-        iIndexLast  = stabindex(i).iIndexLast;
+        iIndexLast  = stabindex(i).iIndexLast;     % PROPOSAL: Use for reading CALIB1/EDITED1 file for obtaining end timestamps?
         probeNbr    = index(iIndexFirst).probe;
         
         %--------------------------------
         % Read the EDDER/CALIB1 LBL file
         %--------------------------------
-        [KvlLblCalib1, Calib1LblSs] = createLBL.read_LBL_file(...
-            index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST);
+        [KvlLblCalib1, Calib1LblSs] = createLBL.read_LBL_file(index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST);
 
         
         
@@ -322,13 +312,10 @@ for i = 1:length(stabindex)
         
         
         
-        %LblData.nTabFileRows = stabindex(i).nTabFileRows;
-        
         isSweep       = (tabFilename(30)=='S');
         isSweepTable  = (tabFilename(28)=='B') && isSweep;
         isDensityMode = (tabFilename(28)=='I');
         isEFieldMode  = (tabFilename(28)=='V');
-        %isHf          = (tabFilename(30)=='H');
         
         %=======================================
         %
@@ -518,13 +505,12 @@ if generatingDeriv1
             LblData.OBJTABLE = [];
             if strcmp(san_tabindex(i).dataType, 'downsample')   %%%%%%%% DOWNSAMPLED FILE %%%%%%%%%%%%%%%                
                 
-                samplingRateSecondsStr = tabFilename(end-10:end-9);
                 samplingRateSeconds = str2double(tabFilename(end-10:end-9));
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_IVxD_data(probeNbr, Calib1LblSs.DESCRIPTION, samplingRateSeconds, isDensityMode, isEFieldMode);
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_IVxD_data(probeNbr, Calib1LblSs.DESCRIPTION, samplingRateSeconds, isDensityMode);
                 
             elseif strcmp(san_tabindex(i).dataType, 'spectra')   %%%%%%%%%%%%%%%% SPECTRA FILE %%%%%%%%%%
                 
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_PSD_data(probeNbr, isDensityMode, isEFieldMode, san_tabindex(i).nTabColumns, mode);
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_PSD_data(probeNbr, isDensityMode, san_tabindex(i).nTabColumns, mode);
                 
             elseif  strcmp(san_tabindex(i).dataType, 'frequency')    %%%%%%%%%%%% FREQUENCY FILE %%%%%%%%%
                 
@@ -570,25 +556,56 @@ if generatingDeriv1
     try
         %=================================================
         %
-        % Create LBL files for files in der_struct (A1P). - DISABLED
+        % Create LBL files for files in der_struct (A1P).
         %
         %=================================================
         global der_struct    % Global variable with info on A1P files.
         if ~isempty(der_struct)
-            % IMPLEMENTATION NOTE: "der_struct" is only defined/set when running Lapdog DERIV. However, since it is a
-            % global variable, it may survive from a Lapdog DERIV run until a edder_lapdog run. If so,
-            % der_struct.file{iFile} will contain paths to a DERIV-data set. May thus lead to overwriting LBL files in
-            % DERIV data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
+            % IMPLEMENTATION NOTE: "der_struct" is only defined/set when running Lapdog (DERIV1). However, since it is a
+            % global variable, it may survive from a Lapdog DERIV1 run until a edder_lapdog run. If so,
+            % der_struct.file{iFile} will contain paths to a DERIV1-data set. May thus lead to overwriting LBL files in
+            % DERIV1 data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
             % EDDER.
             %createLBL.write_A1P(LblAllKvpl, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, index, der_struct, ...
             %    DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            
+            for iFile = 1:numel(der_struct.file)
+                startStopTimes = der_struct.timing(iFile, :);                
+                
+                iIndex = der_struct.firstind(iFile);
+                
+                %--------------------------
+                % Read the CALIB1 LBL file
+                %--------------------------
+                [kvlLblCalib1, junk] = createLBL.read_LBL_file(index(iIndex).lblfile, dontReadHeaderKeyList);
+                
+                % IMPLEMENTATION NOTE: From experience can der_struct.timing have UTC values with 6 decimals which DVAL-NG does
+                % not permit. Must therefore remove.
+                kvlLbl = kvlLblAll;
+                kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1}(1:23));        % UTC start time
+                kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));        % UTC stop time
+                kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', startStopTimes{3});
+                kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  startStopTimes{4});
+                
+                kvlLbl = EJ_lapdog_shared.utils.KVPL.overwrite_values(kvlLblCalib1, kvlLbl, 'require preexisting keys');
+                
+                lblData = [];
+                lblData.HeaderKvl = kvlLbl;
+                clear   kvlLbl   kvlLblCalib1
+                
+                lblData.OBJTABLE = [];
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_A1P_data();
+                
+                createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, lblData, HeaderOptions, cotlfSettings, tabLblInconsistencyPolicy);
+                
+            end
         end
         
     catch exception
         createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY)
         fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',exception.message);
     end
-    
+
     %==============================================================
     %
     % Create LBL files for PHO, USC, ASW, NPL files. (DERIV1 only)
@@ -596,6 +613,18 @@ if generatingDeriv1
     %==============================================================
     % TEMPORARY SOLUTION.
     createLBL.create_LBL_L5_sample_types(derivedpath, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES)
+    
+    % TEST    
+    % ASW_tabindex (global), usc_tabindex (not global)
+    % PHO_tabindex should exist but is not available?
+    % global?
+    %global ASW_tabindex
+    %for iFile = 1:numel(ASW_tabindex)
+    %    disp(ASW_tabindex(iFile).fname)
+    %end
+    %for iFile = 1:numel(usc_tabindex)
+    %    disp(usc_tabindex(iFile).fname)
+    %end
 end
 
 

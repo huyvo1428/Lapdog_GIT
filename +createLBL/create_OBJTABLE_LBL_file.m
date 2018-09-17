@@ -100,7 +100,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     %         CON: Works fine as it is.
     %
     % PROPOSAL: Read one TAB file row and count the number of strings ", ", infer number of columns, and use for
-    %   consistency check.
+    %           consistency check.
     %   CON: Not entirely rigorous.
     %
     % TODO-DECISION: How handle UNIT (optional according to PDS)
@@ -112,7 +112,13 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     %       PRO: Shorter calls.
     %   PROPOSAL: Only include UNIT (in LBL) if caller sets .UNIT to value other than 'N/A'.
     %
-    % PROPOSAL: Read indentation length from central constants class.
+    % PROPOSAL: Read indentation length, ROSETTA_NAIF_ID, string-between-columns from createLBL.constants class.
+    %
+    % PROPOSAL: Consistency check: always verify that begin & end timestamps fit UTC, OBT columns (if they exist).
+    %   PROPOSAL: Use extra field(s) to ~always label columns for start & stop timestamps to check consistency with.
+    %   CON/NOTE: May require SPICE for UTC.
+    %       CON: No. String sorting is enough for comparisons (greater/smaller than).
+    %       CON: Not problem since SPICE already needs to be loaded for T2PK functionality.
 
 
 

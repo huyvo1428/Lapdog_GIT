@@ -9,9 +9,13 @@
 % the methods (e.g. whether EDDER/DERIV1, MISSING_CONSTANT).
 %
 %
-% NAMING CONVENTIONS
-% ==================
-% data : Refers to LBL file data.
+% NAMING CONVENTIONS, CONVENTIONS
+% ===============================
+% data      : Refers to LBL file data
+% OCL       : Object Column List
+% KVL, KVPL : Key-Value (pair) List
+% --
+% Only uses argument flags for density mode (true/false). It is implicit that E field is the inverse.
 %
 %
 % Initially created 2018-09-12 by Erik P G Johansson, IRF Uppsala.
@@ -24,13 +28,33 @@ classdef definitions < handle
     % TODO-DECISION: Use filenaming conventions consistently for naming corresponding functions.
     %
     % PROPOSAL: Better name.
-    %   PROPOSAL: LBL_definition_creator.
-    %       CON: Bad if updating LBL header in the future.
+    %   PROPOSAL: definition_creator, LBL_definition_creator.
+    %       CON: Bad if using class for updating LBL header in the future.
     %
     % TODO-DECISION: These functions set the "useFor" field. Should they? The field does not define columns as such but is
     %                related to LBL start & stop timestamps which are otherwise set outside of this class.
     % PROPOSAL: Submit (instance of) createLBL.constants instead of having field for MISSING_CONSTANT.
     %   TODO-DECISION: Are there other similar cases? N_FINAL_SWEEP_SAMPLES? 
+    %
+    % PROPOSAL: Help functions for setting specific types of column descriptions.
+    %   PRO: Does not need to write out struct field names: NAME, DESCRIPTION etc.
+    %   PRO: Automatically handle EDDER/DERIV1 differences.
+    %   --
+    %   TODO-DECISION: How handle MISSING_CONSTANT?
+    %   TODO-DECISION: Need to think about how to handle DERIV2 TAB columns (here part of DERIV1)?
+    %   --
+    %   PROPOSAL: Automatically set constants for BYTES, DATA_TYPE, UNIT.
+    %   PROPOSAL: OPTIONAL sprintf options for NAME ?
+    %       PROBLEM: How implement optionality?
+    %   PROPOSAL: UTC, OBT (separately to also be able to handle sweeps)
+    %       PROPOSAL: oc_UTC(name, bytes, descrStr)
+    %           NOTE: There is ~TIME_UTC with either BYTES=23 or 26.
+    %               PROPOSAL: Have assertion for corresponding argument.
+    %               PROPOSAL: Modify TAB files to always have BYTES=26?!!
+    %           PROPOSAL: Assertion that name ends with "TIME_UTC".
+    %       PROPOSAL: oc_OBT(name, descrStr)
+    %           NOTE: BYTES=16 always
+    %   --
     
 
     
@@ -59,6 +83,7 @@ classdef definitions < handle
     
     methods(Access=public)
         
+        % Constructor
         function obj = definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples)
             % ASSERTIONS
             assert(isscalar(nFinalPresweepSamples) && isnumeric(nFinalPresweepSamples))
@@ -134,13 +159,13 @@ classdef definitions < handle
                     voltageOc.DESCRIPTION = obj.VOLTAGE_BIAS_DESC;   % bias
                     currentOc = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, currentOc, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));   % NOTE: Modifies currentOc.
-                elseif isEFieldMode
+                else   %if isEFieldMode
                     currentOc.DESCRIPTION = obj.CURRENT_BIAS_DESC;   % bias
                     voltageOc.DESCRIPTION = obj.VOLTAGE_MEAS_DESC;   % measured
                     voltageOc = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, voltageOc, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));   % NOTE: Modifies voltageOc.
-                else
-                    error('Error, bad combination of values isDensityMode and isEFieldMode.');
+                %else
+                %    error('Error, bad combination of values isDensityMode and isEFieldMode.');
                 end
                 ocl{end+1} = currentOc;
                 ocl{end+1} = voltageOc;
@@ -158,7 +183,7 @@ classdef definitions < handle
                     
                     oc1 = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, oc1, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));
-                elseif isEFieldMode
+                else    %if isEFieldMode
                     % This case occurs at least on 2007-11-07 (EAR2), which appears to be the first day it occurs.
                     % This case does appear to occur for HF, but not LF.
                     oc1 = struct('NAME', 'P1_CURRENT',    obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', obj.CURRENT_BIAS_DESC);
@@ -167,8 +192,8 @@ classdef definitions < handle
                     
                     oc3 = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, oc3, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));
-                else
-                    error('Error, bad combination of values isDensityMode and isEFieldMode.');
+                %else
+                %    error('Error, bad combination of values isDensityMode and isEFieldMode.');
                 end
                 ocl(end+1:end+3) = {oc1; oc2; oc3};
                 
@@ -275,7 +300,7 @@ classdef definitions < handle
         % IMPLEMENTATION NOTE: Start & stop timestamps in header PDS keywords cover a smaller time interval than
         % the actual content of downsampled files. Therefore using the actual content of the TAB file to derive
         % these values.
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_IVxD_data(obj, probeNbr, table_DESCRIPTION_prefix, samplingRateSeconds, isDensityMode, isEFieldMode)
+        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_IVxD_data(obj, probeNbr, table_DESCRIPTION_prefix, samplingRateSeconds, isDensityMode)
             
             mcDescrAmendment = sprintf('A value of %g means that the underlying time period which was averaged over contained at least one saturated value.', obj.MISSING_CONSTANT);
             
@@ -301,10 +326,10 @@ classdef definitions < handle
             oc3 = struct('NAME', sprintf('P%i_VOLTAGE',        probeNbr), obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, obj.DATA_DATA_TYPE{:}, 'DESCRIPTION', 'AVERAGED VOLTAGE.');
             oc4 = struct('NAME', sprintf('P%i_VOLTAGE_STDDEV', probeNbr), obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, obj.DATA_DATA_TYPE{:}, 'DESCRIPTION', 'VOLTAGE STANDARD DEVIATION.');
             
-            oc1 = createLBL.optionally_add_MISSING_CONSTANT(isDensityMode, obj.MISSING_CONSTANT, oc1 , mcDescrAmendment);
-            oc2 = createLBL.optionally_add_MISSING_CONSTANT(isDensityMode, obj.MISSING_CONSTANT, oc2 , mcDescrAmendment);
-            oc3 = createLBL.optionally_add_MISSING_CONSTANT(isEFieldMode,  obj.MISSING_CONSTANT, oc3 , mcDescrAmendment);
-            oc4 = createLBL.optionally_add_MISSING_CONSTANT(isEFieldMode,  obj.MISSING_CONSTANT, oc4 , mcDescrAmendment);
+            oc1 = createLBL.optionally_add_MISSING_CONSTANT(isDensityMode,  obj.MISSING_CONSTANT, oc1 , mcDescrAmendment);
+            oc2 = createLBL.optionally_add_MISSING_CONSTANT(isDensityMode,  obj.MISSING_CONSTANT, oc2 , mcDescrAmendment);
+            oc3 = createLBL.optionally_add_MISSING_CONSTANT(~isDensityMode, obj.MISSING_CONSTANT, oc3 , mcDescrAmendment);
+            oc4 = createLBL.optionally_add_MISSING_CONSTANT(~isDensityMode, obj.MISSING_CONSTANT, oc4 , mcDescrAmendment);
             ocl(end+1:end+4) = {oc1; oc2; oc3; oc4};
             
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'BYTES', 5, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
@@ -329,7 +354,7 @@ classdef definitions < handle
         
         
         
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_PSD_data(obj, probeNbr, isDensityMode, isEFieldMode, nTabColumns, modeStr)
+        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_PSD_data(obj, probeNbr, isDensityMode, nTabColumns, modeStr)
             % PROPOSAL: Expand "PSD" to "POWER SPECTRAL DENSITY" (correct according to EAICD).
             table_DESCRIPTION = sprintf('%s PSD SPECTRA OF HIGH FREQUENCY MEASUREMENT', modeStr);
             
@@ -357,7 +382,7 @@ classdef definitions < handle
                 PSD_DESCRIPTION = 'PSD CURRENT SPECTRUM';
                 PSD_UNIT        = 'NANOAMPERE^2/Hz';
                 
-            elseif isEFieldMode
+            else    %if isEFieldMode
                 
                 if probeNbr == 3
                     ocl2{end+1} = struct('NAME', 'P1_CURRENT_MEAN',    obj.DATA_UNIT_CURRENT{:}, 'DESCRIPTION', obj.CURRENT_BIAS_DESC);
@@ -370,8 +395,8 @@ classdef definitions < handle
                 PSD_DESCRIPTION = 'PSD VOLTAGE SPECTRUM';
                 PSD_UNIT        = 'VOLT^2/Hz';
                 
-            else
-                error('Error, bad combination of isDensityMode and isEFieldMode.');
+            %else
+            %    error('Error, bad combination of isDensityMode and isEFieldMode.');
             end
             nSpectrumColumns = nTabColumns - (length(ocl1) + length(ocl2));
             ocl2{end+1} = struct('NAME', sprintf('PSD_%s', modeStr), 'ITEMS', nSpectrumColumns, 'UNIT', PSD_UNIT, 'DESCRIPTION', PSD_DESCRIPTION);

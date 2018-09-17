@@ -24,10 +24,7 @@ function create_LBL_L5_sample_types(deriv1Path, MISSING_CONSTANT, nFinalPresweep
 
     
     
-    objInfoList = EJ_lapdog_shared.utils.glob_files_dirs(deriv1Path, {'.*', '.*', '.*', '.*.TAB'});
-    C = createLBL.constants;
-    
-    
+    C = createLBL.constants(MISSING_CONSTANT, nFinalPresweepSamples);
     
     % TEMPORARY source constants.
     lbltime   = '2018-08-03';  % Label revision time
@@ -40,16 +37,17 @@ function create_LBL_L5_sample_types(deriv1Path, MISSING_CONSTANT, nFinalPresweep
         'SPACECRAFT_CLOCK_START_COUNT', ''; ...
         'SPACECRAFT_CLOCK_STOP_COUNT',  '' });    
 
-
+    
+    
+    objInfoList = EJ_lapdog_shared.utils.glob_files_dirs(deriv1Path, {'.*', '.*', '.*', '.*.TAB'});
 
     for i = 1:numel(objInfoList)    
         tabFilePath = objInfoList(i).fullPath;
         tabFilename = objInfoList(i).name;
         lblFilePath = regexprep(tabFilePath, '.TAB$', '.LBL');        
-        
-        
+
         %fprintf('Found %s\n', tabFilename);
-        
+
         if ~exist(lblFilePath, 'file')
             
             % TEMP: Delete empty TAB files.
@@ -72,7 +70,7 @@ function create_LBL_L5_sample_types(deriv1Path, MISSING_CONSTANT, nFinalPresweep
             
         end
         
-        canClassifyTab = createLBL.create_LBL_file(tabFilePath, LblHeaderKvpl, MISSING_CONSTANT, nFinalPresweepSamples);
+        canClassifyTab = createLBL.create_LBL_file(tabFilePath, LblHeaderKvpl, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES);
         if canClassifyTab
             fprintf('Created LBL file for "%s"\n', tabFilename);
         end

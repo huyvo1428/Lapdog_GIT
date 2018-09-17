@@ -16,8 +16,10 @@
 function Kvpl = add_kv_pairs(Kvpl, kvplContentCellArray)
 % PROPOSAL: Use some generic SFSSC function.
 
+    import EJ_lapdog_shared.*
+
     % ASSERTIONS
-    EJ_lapdog_shared.utils.KVPL.assert_KVPL(Kvpl);
+    utils.KVPL.assert_KVPL(Kvpl);
     if size(kvplContentCellArray, 2) ~= 2
         error('kvplContentCellArray has the wrong number of columns.')
     end
@@ -31,5 +33,5 @@ function Kvpl = add_kv_pairs(Kvpl, kvplContentCellArray)
     Kvpl.values(end+1 : end+nNewKeys, 1) = kvplContentCellArray(:, 2);
     
     % ASSERTION
-    EJ_lapdog_shared.utils.KVPL.assert_KVPL(Kvpl);
+    utils.KVPL.assert_KVPL(Kvpl);
 end
