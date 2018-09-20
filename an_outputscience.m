@@ -44,17 +44,30 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     if ismember(XXP(i).info.macroId,CONT_macros)
         XXP(i).data.Iph0(:,1)=XXP(i).data.Iph0(:,1)+iph0conditions.CONT;
     end
+%     delind=find(isnan(XXP(i).data.Iph0(:,1)));
+%     if ~isempty(delind)
+%         for k=1:length(delind)
+%             XXP(i).data.Iph0(delind(k),1)= SATURATION_CONSTANT;
+%         end
+%     end
+%     
+%    
+
+    %This line can generate strange error if SATURATION_CONSTANT isn't
+    %already well defined
     XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=SATURATION_CONSTANT;
     
     %fix contamination issues)
     path_to_mat_file='MIP_v03.mat';
-    %XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
+    XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
     
     dummy_ne=SATURATION_CONSTANT;
     dummy_Te_XCAL=SATURATION_CONSTANT;
     dummy_qv=1.0;
     dummy_v_ion=SATURATION_CONSTANT;
     %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
+    
+
     for j = 1:len
         
         
@@ -62,9 +75,9 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
         str2=sprintf(' %14.7e, %2.1f,',dummy_ne,dummy_qv);
         str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv);
-        str4=sprintf(' %14.7e, %2.1f,',dummy_v_ion,dummy_qv);
+        str4=sprintf(' %14.7e, %2.1f,',XCAL_struct.ionV(j),dummy_qv);
         str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.asm_Te_exp_belowVknee(j,1),dummy_qv);
-        str6=sprintf(' %14.7e, %2.1f,',dummy_Te_XCAL,dummy_qv);
+        str6=sprintf(' %14.7e, %2.1f,',XCAL_struct.Te,dummy_qv);
         str7=sprintf(' %14.7e, %2.1f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
         str8=sprintf(' %05i',XXP(i).data.qf(j));
         
@@ -115,7 +128,7 @@ function resampled = PHOTABFILE(lapstruct,conditions,XXP)
 global PHO_tabindex
 global SATURATION_CONSTANT;
 
-out= fixlap1_cont_iph0(lapstruct,conditions.CONT); % check for contamination & prepare output
+lapstruct= fixlap1_cont_iph0(lapstruct,conditions.CONT); % check for contamination & prepare output
 an_diag = 0;
 
 %niklas iph_calc.m revisited
@@ -370,32 +383,26 @@ for i = min(inter):max(inter) %main for loop
 
 
         
-        if k>1 && ~strcmp(datestr(t_matlab_date(k-1),'dd'), datestr(t_matlab_date(k),'dd')) %%new calendar day? (won't check j==1)
-            %   newfile =false;
-            fclose('all') ; %close old file
+        if k>1 && strcmp(datestr(t_matlab_date(k-1),'yyyymmdd'), datestr(t_matlab_date(k),'yyyymmdd')) %%same calendar day? (won't check k==1)
             
-            twID = fopen(filename,'w'); %open a new file, filename is now a different string.
             
+            twID = fopen(filename,'a+'); %new file.
+           %fprintf(1,'a+ opening file: %s\r\n',filename)
 
-            
+        else
+            fclose('all') ; %close old file
+
+            twID = fopen(filename,'w'); %open a new file, filename is now a different string.
+           % fprintf(1,'w+ opening file: %s\r\n',filename)
+            rowcount=0;
+
             PHO_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
             PHO_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
             %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
-            PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
             PHO_tabindex(end).no_of_columns = 5;            % Number of columns
             % usc_tabindex{end,6] = an_ind(i);
-            PHO_tabindex(end).type = 'USC'; % Type
+            PHO_tabindex(end).type = 'PHO'; % Type
             %PHO_tabindex(end).timing = timing;
-            PHO_tabindex(end).row_byte = row_byte;
-
-            rowcount=0;
-           % fprintf(1,'w+ opening file: %s\r\n',filename)
-
-        else
-
-
-            twID = fopen(filename,'a+'); %new file.
-           %fprintf(1,'a+ opening file: %s\r\n',filename)
         end
 
         dummy_qv=0.5;
@@ -404,13 +411,15 @@ for i = min(inter):max(inter) %main for loop
            % t_utc(end-8:end)='59.999797';
             t_utc(k,end-8:end)='00.000000';
 
-            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), t_obtz(k), SATURATION_CONSTANT,0,qf_array(k));
+            fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), t_obtz(k), SATURATION_CONSTANT,0,qf_array(k));
             rowcount=rowcount+1;
 
         elseif (~isempty(indz))
             t_utc(k,end-8:end)='00.000000';
             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
             rowcount=rowcount+1;
+            PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
+            PHO_tabindex(end).row_byte = row_byte; %will repeatedly get overwritten until  PHO_tabindex(end+1).fname = filename;        is called
 
         else
             %first file in array, no valid points.
@@ -445,7 +454,7 @@ for i = 1:length(PHO_tabindex)%clean up empty files
         D= dir(PHO_tabindex(i).fname);
         
         fprintf(1,'%s size is %i',PHO_tabindex(i).fname,D.bytes);
-        delete PHO_tabindex(end).fname;
+        delete(PHO_tabindex(end).fname);
     end
 end
 
@@ -592,12 +601,17 @@ end
 end
 
 
-function XCAL= XCAL_lapdog(LAP,path_to_matfile)
+function XCAL_L= XCAL_lapdog(LAP,path_to_matfile)
+global MIP %change to persistent later
+XCAL_L=[];
+XCAL_L.ionV=LAP.t0;
+XCAL_L.ionV(:)=SATURATION_CONSTANT; %default to missing constant
+XCAL_L.t0=XCAL_L.ionV;
+XCAL_L.t0(:)=nan; %default to nan, for debug plotting
 
-load path_to_matfile MIP; %loads MIP variable from file
 if isempty(MIP)
 
-    'error MIP empty'
+load(path_to_matfile,'MIP'); %loads MIP variable from file
     
 end
 
@@ -606,6 +620,7 @@ global CO IN SATURATION_CONSTANT
 assmpt=[];
 assmpt.ionM=19;%a.u.
 assmpt.vram=550;%m/s
+
 % try
 %     preamble;
 % catch err
@@ -613,43 +628,69 @@ assmpt.vram=550;%m/s
 
 delind=isnan(MIP.ne);
 
-MIP.t_epoch(delind)=[];
+MIP.tt(delind)=[];
 MIP.ne(delind)=[];
 
 
-pseudo_ind = interp1(LAP.t0,1:length(LAP.t1),MIP.t_epoch);
+pseudo_ind = interp1(LAP.t0,1:length(LAP.t0),MIP.tt);
 %pseudo ind interpolates 
 %indzz=abs(shit-floor(shit+0.5))< 2e-3; %some arbitrary limit, looks good enough. 
 filt_inds=abs(pseudo_ind-floor(pseudo_ind+0.5))< 3e-3; %%% 2e-3 WORKssome arbitrary limit, looks good enough. 
-% a limit of 2e-3 WORKS, but we can increase it slightly to be sure. 1e-3
-% makes us miss 4 points within 1 second.
+% a limit of 2e-3 WORKS, but we can increase it slightly to be sure. 
+%1e-3  makes us miss 4 points within 1 second.
 
-XCAL=[];
-XCAL.mipnefilt=MIP.ne(filt_inds);
-XCAL.mipne_threshold=MIP.ne_threshold(filt_inds);
-XCAL.mipID=MIP.ID(filt_inds);
-XCAL.t1=MIP.t_epoch(filt_inds);
+XCAL_M=[];
+XCAL_M.mipnefilt=MIP.ne(filt_inds);
+XCAL_M.mipne_threshold=MIP.ne_threshold(filt_inds);
+XCAL_M.mipID=MIP.ID(filt_inds);
+XCAL_M.t1=MIP.tt(filt_inds);
+XCAL_M.lapind=nan(1,length(XCAL_M.t1)); %default to nan, useful later
+
 %XCAL.t1 = LAP.t1;
 
 
 pts_to_check=pseudo_ind(filt_inds);
 %indz=[];
+
+if isempty(pts_to_check)
+    return;
+end
+
 for i = 1:length(pts_to_check)
 
     lap_ind=floor(pts_to_check(i)+0.5);
-    if min(abs(LAP.t0(floor(pts_to_check(i)+0.5))-XCAL.t1(i)))>1
+    if min(abs(LAP.t0(floor(pts_to_check(i)+0.5))-XCAL_M.t1(i)))>1
         %'shit'
          % indz=vertcat(indz,i);
         %fprintf(1,'diff is %d sec k=%d, i = %d \n',abs(LAP.t1(floor(pts_to_check(i)+0.5))-XCAL.t1(i)),k,i);        
     else
 
-   XCAL.ionV(i) = XCAL.mipnefilt(i)*2*IN.probe_cA*(CO.e).^2/(assmpt.ionM*CO.mp*LAP.ion_slope(lap_ind)*1e-6);
-   XCAL.Te(i) = 5* (XCAL.mipnefilt(i)/LAP.ne_5eV(lap_ind)).^2; %
+   XCAL_M.ionV(i) = XCAL_M.mipnefilt(i)*2*IN.probe_cA*(CO.e).^2/(assmpt.ionM*CO.mp*LAP.ion_slope(lap_ind)*1e-6);
+   XCAL_M.Te(i) = 5* (XCAL.mipnefilt(i)/LAP.ne_5eV(lap_ind)).^2;
+   XCAL_M.lapind(i) =floor(pts_to_check(i)+0.5);%
     end
 
 end
 
 
+
+
+delind =isnan(XCAL_M.ionV);
+XCAL_M.ionV(delind)=SATURATION_CONSTANT;
+delind =isnan(XCAL.Te);
+XCAL_M.Te(delind)=SATURATION_CONSTANT;
+
+%change to XCAL_L with LAP indexing, instead of MIP indexing
+
+indz=find(~isnan(XCAL_M.lapind(:))); %
+
+XCAL_L.ionV(XCAL_M.lapind(indz))            =XCAL_M.ionV(indz);
+XCAL_L.t0(XCAL_M.lapind(indz))              =XCAL_M.t1(indz);
+XCAL_L.Te(XCAL_M.lapind(indz))              =XCAL_M.Te(indz);
+%I care less about these, so some values will be empty.
+XCAL_L.mipID(XCAL_M.lapind(indz))           =XCAL_M.mipID(indz);
+XCAL_L.mipne_threshold(XCAL_M.lapind(indz)) =XCAL_M.mipne_threshold(indz);
+XCAL_L.mipnefilt(XCAL_M.lapind(indz))       =XCAL_M.mipnefilt(indz);
 
 
 
