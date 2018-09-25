@@ -58,7 +58,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=SATURATION_CONSTANT;
     
     %fix contamination issues)
-    path_to_mat_file='MIP_v03.mat';
+    path_to_mat_file='MIP_v23.mat';
     XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
     
     dummy_ne=SATURATION_CONSTANT;
@@ -603,11 +603,18 @@ end
 
 function XCAL_L= XCAL_lapdog(LAP,path_to_matfile)
 global MIP %change to persistent later
+global CO IN SATURATION_CONSTANT assmpt
+
 XCAL_L=[];
 XCAL_L.ionV=LAP.t0;
 XCAL_L.ionV(:)=SATURATION_CONSTANT; %default to missing constant
 XCAL_L.t0=XCAL_L.ionV;
 XCAL_L.t0(:)=nan; %default to nan, for debug plotting
+XCAL_L.mipnefilt = XCAL_L.ionV;
+XCAL_L.Te= XCAL_L.ionV;
+XCAL_L.mipne_uncertainty= XCAL_L.ionV(:);
+XCAL_L.mipnefilt= XCAL_L.ionV(:);
+
 
 if isempty(MIP)
 
@@ -615,36 +622,39 @@ load(path_to_matfile,'MIP'); %loads MIP variable from file
     
 end
 
-global CO IN SATURATION_CONSTANT
 
-assmpt=[];
-assmpt.ionM=19;%a.u.
-assmpt.vram=550;%m/s
+%assmpt=[];
+%assmpt.ionM=19;%a.u.
+%assmpt.vram=550;%m/s
 
 % try
 %     preamble;
 % catch err
 % end
-
-delind=isnan(MIP.ne);
-
-MIP.tt(delind)=[];
-MIP.ne(delind)=[];
+% 
+% delind=isnan(MIP.ne);
+% 
+% MIP.tt(delind)=[];
+% MIP.ne(delind)=[];
 
 
 pseudo_ind = interp1(LAP.t0,1:length(LAP.t0),MIP.tt);
 %pseudo ind interpolates 
 %indzz=abs(shit-floor(shit+0.5))< 2e-3; %some arbitrary limit, looks good enough. 
-filt_inds=abs(pseudo_ind-floor(pseudo_ind+0.5))< 3e-3; %%% 2e-3 WORKssome arbitrary limit, looks good enough. 
+filt_inds=abs(pseudo_ind-floor(pseudo_ind+0.5))< 2.5e-1;
+%%% below no longer valid -FKJN 21/9. Forgot about split sweeps
+%%% 2e-3 WORKssome arbitrary limit, looks good enough. 
 % a limit of 2e-3 WORKS, but we can increase it slightly to be sure. 
 %1e-3  makes us miss 4 points within 1 second.
 
 XCAL_M=[];
 XCAL_M.mipnefilt=MIP.ne(filt_inds);
-XCAL_M.mipne_threshold=MIP.ne_threshold(filt_inds);
+XCAL_M.ne_uncertainty=MIP.ne_uncertainty(filt_inds);
 XCAL_M.mipID=MIP.ID(filt_inds);
 XCAL_M.t1=MIP.tt(filt_inds);
 XCAL_M.lapind=nan(1,length(XCAL_M.t1)); %default to nan, useful later
+XCAL_M.ionV             =nan(length(XCAL_M.t1),1);
+XCAL_M.Te               =nan(length(XCAL_M.t1),1);
 
 %XCAL.t1 = LAP.t1;
 
@@ -665,8 +675,8 @@ for i = 1:length(pts_to_check)
         %fprintf(1,'diff is %d sec k=%d, i = %d \n',abs(LAP.t1(floor(pts_to_check(i)+0.5))-XCAL.t1(i)),k,i);        
     else
 
-   XCAL_M.ionV(i) = XCAL_M.mipnefilt(i)*2*IN.probe_cA*(CO.e).^2/(assmpt.ionM*CO.mp*LAP.ion_slope(lap_ind)*1e-6);
-   XCAL_M.Te(i) = 5* (XCAL.mipnefilt(i)/LAP.ne_5eV(lap_ind)).^2;
+   XCAL_M.ionV(i) = XCAL_M.mipnefilt(i)*2*IN.probe_cA*(CO.e).^2/(assmpt.ionM*CO.mp*LAP.asm_ion_slope(lap_ind)*1e-6);
+   XCAL_M.Te(i) = 5* (XCAL_M.mipnefilt(i)/LAP.ne_5eV(lap_ind)).^2;
    XCAL_M.lapind(i) =floor(pts_to_check(i)+0.5);%
     end
 
@@ -677,7 +687,7 @@ end
 
 delind =isnan(XCAL_M.ionV);
 XCAL_M.ionV(delind)=SATURATION_CONSTANT;
-delind =isnan(XCAL.Te);
+delind =isnan(XCAL_M.Te);
 XCAL_M.Te(delind)=SATURATION_CONSTANT;
 
 %change to XCAL_L with LAP indexing, instead of MIP indexing
@@ -689,7 +699,7 @@ XCAL_L.t0(XCAL_M.lapind(indz))              =XCAL_M.t1(indz);
 XCAL_L.Te(XCAL_M.lapind(indz))              =XCAL_M.Te(indz);
 %I care less about these, so some values will be empty.
 XCAL_L.mipID(XCAL_M.lapind(indz))           =XCAL_M.mipID(indz);
-XCAL_L.mipne_threshold(XCAL_M.lapind(indz)) =XCAL_M.mipne_threshold(indz);
+XCAL_L.mipne_uncertainty(XCAL_M.lapind(indz)) =XCAL_M.mipne_uncertainty(indz);
 XCAL_L.mipnefilt(XCAL_M.lapind(indz))       =XCAL_M.mipnefilt(indz);
 
 
