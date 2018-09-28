@@ -4,7 +4,11 @@
 %
 % ARGUMENTS
 % =========
-% an_tabindex  : Cell array defined by other Lapdog code. Empty (0x0) is interpreted as 0x9.
+% an_tabindex  : Cell array defined by other Lapdog code. Empty matrix is interpreted as 0x9
+%                so that the caller can easily tell the function to generate an empty but properly formatted return
+%                struct if the corresponding Lapdog variable is
+%                   (1) undefined, or
+%                   (2) defined but empty and not properly formatted.
 %
 %
 % RETURN VALUES

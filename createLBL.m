@@ -255,13 +255,21 @@ cspice_furnsh(metakernelFile);
 
 
 
-%==========================================================
+%================================================================================================================
 % Convert tabindex and an_tabindex into equivalent structs
-%==========================================================
-[stabindex] = createLBL.convert_tabindex(tabindex);
-if generatingDeriv1
-    % IMPLEMENTATION NOTE: Variable an_tabindex never defined during EDDER runs?
-    [san_tabindex] = createLBL.convert_an_tabindex(an_tabindex);
+% --------------------------------------------------------
+% IMPLEMENTATION NOTE: Lapdog never defines an_tabindex if analysis.m is disabled (not called; useful for CALIB2
+% generation). Must therefore handle that case. Can not just use generatingDeriv1.
+%================================================================================================================
+[stabindex] = createLBL.convert_tabindex(tabindex);   % Can handle arbitrarily sized empty tabindex.
+%if generatingDeriv1
+%    % IMPLEMENTATION NOTE: Variable an_tabindex never defined during EDDER runs?
+%    [san_tabindex] = createLBL.convert_an_tabindex(an_tabindex);
+%end
+if ~exist('an_tabindex', 'var')   % If variable is undefined (not just empty) ...
+    [san_tabindex] = createLBL.convert_an_tabindex([]);
+else
+    [san_tabindex] = createLBL.convert_an_tabindex(an_tabindex);  % Can handle arbitrarily sized empty an_tabindex.
 end
 
 
