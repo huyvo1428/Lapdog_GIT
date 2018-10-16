@@ -29,7 +29,7 @@ function stabindex = convert_tabindex(tabindex)
 
     % (Not assertion)
     if isempty(tabindex)
-        warning('tabindex is an EMPTY variable (0x0 array). - Modifying.');
+        %warning('tabindex is an EMPTY variable (0x0 array). - Modifying.');
         tabindex = cell(0, 9);
     end
 

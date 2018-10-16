@@ -544,12 +544,12 @@ for j=1:length(dataraw)
         
 
         for k=1:infolenflds
-          lapfile.(sprintf('%s',infofields{1,k})) = [[lapfile.(sprintf('%s',infofields{1,k}))];[dataraw(j).info.(sprintf('%s',infofields{1,k}))]];
+          lapfile.(sprintf('%s',infofields{1,k})) = [ [lapfile.(sprintf('%s',infofields{1,k}))] ; [dataraw(j).info.(sprintf('%s',infofields{1,k}))] ];
             
        
         end
         for k=1:datalenflds
-           lapfile.(sprintf('%s',datafields{1,k})) = [[lapfile.(sprintf('%s',datafields{1,k}))];[dataraw(j).data.(sprintf('%s',datafields{1,k}))]];
+           lapfile.(sprintf('%s',datafields{1,k})) = [ [lapfile.(sprintf('%s',datafields{1,k}))] ; [dataraw(j).data.(sprintf('%s',datafields{1,k}))] ];
             
        
         end

@@ -30,7 +30,7 @@ function san_tabindex = convert_an_tabindex(an_tabindex)
     %=============    
     % (Not assertion)
     if isempty(an_tabindex)
-        warning('an_tabindex is an EMPTY variable (0x0 array). - Modifying');
+        %warning('an_tabindex is an EMPTY variable (0x0 array). - Modifying');
         an_tabindex = cell(0, 9);
     end
 
