@@ -45,6 +45,7 @@ classdef assert
 % TODO-DECISION: Use assertions on (assertion function) arguments internally?
 % PROPOSAL: Struct with minimum set of fieldnames.
 % PROPOSAL: isvector, iscolumnvector, isrowvector.
+% PROPOSAL: Add argument for name of argument so that can print better error messages.
 
     methods(Static)
         
@@ -86,10 +87,18 @@ classdef assert
         
         
         
+        function scalar(x)
+            if ~isscalar(x)
+                error('Variable is not scalar as expected.')
+            end
+        end
+        
+        
+        
         % Either regular file or symlink to regular file (i.e. not directory or symlink to directory).
         function file_exists(filePath)
             if ~(exist(filePath, 'file') == 2)
-                error('Expected existing regular file "%s" can not be found.', filePath)
+                error('Expected existing regular file (or symlink to regular file) "%s" can not be found.', filePath)
             end
         end
         
@@ -120,8 +129,11 @@ classdef assert
         
         
         % Struct with certain fixed set of fields.
+        % 
+        % Default             : Require exactly   the specified set of fields.
+        % varargin = 'subset' : Require subset of the specified set of fields.
         % NOTE: Does NOT assume 1x1 struct. Can be matrix.
-        function struct(s, fieldNamesSet)
+        function struct(s, fieldNamesSet, varargin)
             % PROPOSAL: Print superfluous and missing fieldnames.
             % PROPOSAL: Option to specify subset or superset of field names.
             %   PRO: Superset useful for when submitting settings/policy struct to function which then adds default
@@ -133,14 +145,28 @@ classdef assert
             %   TODO-DECISION: How specify fieldnames? Can not use cell arrays recursively.
             import EJ_lapdog_shared.*
             
+            if isempty(varargin)   %numel(varargin) == 1 && isempty(varargin{1})
+                subsetCheck = 0;
+            elseif numel(varargin) == 1 && strcmp(varargin{1}, 'subset')
+                subsetCheck = 1;
+            else
+                error('Illegal argument')
+            end
+            
             if ~isstruct(s)
                 error('Expected struct is not struct.')
             end
             utils.assert.castring_set(fieldNamesSet)    % Abolish?
-            
-            if ~isempty(setxor(fieldnames(s), fieldNamesSet))
-                missingFnList = setdiff(fieldNamesSet, fieldnames(s));
-                extraFnList   = setdiff(fieldnames(s), fieldNamesSet);
+
+            missingFnList = setdiff(fieldNamesSet, fieldnames(s));
+            extraFnList   = setdiff(fieldnames(s), fieldNamesSet);
+            if subsetCheck && ~isempty(extraFnList)
+                
+                extraFnListStr   = utils.str_join(extraFnList,   ', ');
+                error(['Expected struct has the wrong set of fields.', ...
+                    '\n    Extra (forbidden) fields: %s'], extraFnListStr)
+                
+            elseif ~subsetCheck && (~isempty(missingFnList) || ~isempty(extraFnList))
                 
                 missingFnListStr = utils.str_join(missingFnList, ', ');
                 extraFnListStr   = utils.str_join(extraFnList,   ', ');

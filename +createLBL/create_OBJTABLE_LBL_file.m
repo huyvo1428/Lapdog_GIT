@@ -156,42 +156,20 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
 
 
 
-    % --------------------------------------------------------------
-    % ASSERTION: Caller only uses permissible field names.
+    % ------------------------------------------------------
+    % ASSERTIONS: Caller only uses permissible field names.
     % Useful when changing field names.
-    % --------------------------------------------------------------
-    if ~isempty(setxor(fieldnames(LblData), PERMITTED_LBLDATA_FIELD_NAMES))
-        fnl = fieldnames(LblData);
-        error('ERROR: Found illegal field name(s) in parameter "LblData". fieldnames(LblData) = {%s}', sprintf('"%s"  ', fnl{:}))
-    end
-    if ~isempty(setxor(fieldnames(LblData.OBJTABLE), PERMITTED_OBJTABLE_FIELD_NAMES))
-        fnl = fieldnames(LblData.OBJTABLE);
-        error('ERROR: Found illegal field name(s) in parameter "LblData.OBJTABLE". fieldnames(LblData.OBJTABLE): %s', sprintf('"%s  "', fnl{:}))
-    end
-    if ~isscalar(LblData.HeaderKvl)
-        error('LblData.HeaderKvl is not scalar.')    % Common error to initialize empty KVPL the wrong way.
-    end
+    % ------------------------------------------------------
+    EJ_lapdog_shared.utils.assert.struct(LblData, PERMITTED_LBLDATA_FIELD_NAMES)
+    EJ_lapdog_shared.utils.assert.struct(LblData.OBJTABLE, PERMITTED_OBJTABLE_FIELD_NAMES)
+    EJ_lapdog_shared.utils.assert.scalar(LblData.HeaderKvl)    % Common error to initialize empty KVPL the wrong way.
 
 
 
     OBJTABLE_data = LblData.OBJTABLE;
 
-    %-----------------------------------------------------------------------------------
-    % ASSERTION: Misc. argument check
-    % -------------------------------
-    % When a caller takes values from tabindex, an_tabindex etc, and they are sometimes
-    % mistakenly set to []. Therefore this check is useful. A mistake might
-    % otherwise be discovered first when examining LBL files.
-    %-----------------------------------------------------------------------------------
-%     if isempty(LblData.ConsistencyCheck.nTabColumns) || isempty(LblData.ConsistencyCheck.nTabBytesPerRow) || isempty(LblData.nTabFileRows)
-%         error('ERROR: Trying to use empty value when disallowed.')
-%     end
-
-    % ASSERTION: TAB file exists
-    if ~(exist(tabFilePath, 'file') && ~exist(tabFilePath, 'dir'))
-        % CASE: There is no such non-directory TAB file.
-        error('ERROR: Can not find TAB file "%s" (needed for consistency check).', tabFilePath)
-    end
+    % ASSERTION: TAB file exists (needed for consistency checks).
+    EJ_lapdog_shared.utils.assert.file_exists(tabFilePath)
 
     %################################################################################################
 
@@ -369,10 +347,10 @@ function [columnData, nSubcolumns] = complement_column_data(columnData, ...
     % names by misspelling, or misspelling when overwriting values,
     % or adding fields that are never used by the function.
     %---------------------------------------------------------------
-    if any(~ismember(fieldnames(cd), PERMITTED_OBJCOL_FIELD_NAMES))
-        error('ERROR: Found illegal COLUMN OBJECT field name(s).')
-    end
+    EJ_lapdog_shared.utils.assert.struct(cd, PERMITTED_OBJCOL_FIELD_NAMES, 'subset')
 
+    
+    
     if isfield(cd, 'BYTES') && ~isfield(cd, 'ITEMS') && ~isfield(cd, 'ITEM_BYTES')
         % CASE: Has           BYTES
         %       Does not have ITEMS, ITEM_BYTES
