@@ -106,27 +106,6 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
             
             [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_PHO_data();
             
-        elseif strcmp(msd2, 'USC')
-
-            canClassifyTab = 1;
-
-            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
-            %    {'DATA_SET_PARAMETER_NAME', '{"SPACECRAFT POTENTIAL"}'; ...
-            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
-            
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_USC_data();
-
-        elseif strcmp(msd2, 'ASW')
-            
-            canClassifyTab = 1;
-
-            % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
-            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
-            %    {'DATA_SET_PARAMETER_NAME', '{"ELECTRON DENSITY", "PHOTOSATURATION CURRENT", "ION BULK VELOCITY", "ELECTRON TEMPERATURE"}'; ...
-            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP", "RPCMIP"}'});
-            
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_ASW_data();
-
         elseif strcmp(msd2, 'NPL')
             
             canClassifyTab = 1;
@@ -141,7 +120,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
             %        'CALIBRATION_SOURCE_ID',   '{"RPCLAP", "RPCMIP"}'});
             
             [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_NLP_data();
-            
+
         else 
             canClassifyTab = 0;
         end

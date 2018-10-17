@@ -43,7 +43,7 @@ classdef definitions < handle
     %   TODO-DECISION: How handle MISSING_CONSTANT?
     %   TODO-DECISION: Need to think about how to handle DERIV2 TAB columns (here part of DERIV1)?
     %   --
-    %   PROPOSAL: Automatically set constants for BYTES, DATA_TYPE, UNIT.
+    %   PROPOSAL: Automatically set constants for BYTES, DATA_TYPE, UNIT (implicit from choice of helper function).
     %   PROPOSAL: OPTIONAL sprintf options for NAME ?
     %       PROBLEM: How implement optionality?
     %   PROPOSAL: UTC, OBT (separately to also be able to handle sweeps)
@@ -55,7 +55,7 @@ classdef definitions < handle
     %       PROPOSAL: oc_OBT(name, descrStr)
     %           NOTE: BYTES=16 always
     %   --
-    
+
 
     
     properties(Access=private)
@@ -431,6 +431,9 @@ classdef definitions < handle
         
         % NOTE: BUG in Lapdog. UTC sometimes has 3 and sometimes 6 decimals. ==> Assertions will fail sometimes.
         function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_USC_data(obj)
+            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
+            %    {'DATA_SET_PARAMETER_NAME', '{"SPACECRAFT POTENTIAL"}'; ...
+            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
             table_DESCRIPTION = 'Proxy for spacecraft potential, derived from either (1) zero current crossing in sweep, or (2) floating potential measurement (downsampled). Time interval can thus refer to either sweep or individual sample.';
             
             ocl = [];
@@ -448,6 +451,10 @@ classdef definitions < handle
 
         
         function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_ASW_data(obj)
+            % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
+            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
+            %    {'DATA_SET_PARAMETER_NAME', '{"ELECTRON DENSITY", "PHOTOSATURATION CURRENT", "ION BULK VELOCITY", "ELECTRON TEMPERATURE"}'; ...
+            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP", "RPCMIP"}'});
             % ASW = Analyzed sweep parameters
             table_DESCRIPTION = 'Analyzed sweeps (ASW). Miscellaneous physical high-level quantities derived from individual sweeps.';
             

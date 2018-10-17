@@ -11,9 +11,6 @@
 % KVL, KVPL = Key-Value (pair) List
 
 %===================================================================================================
-% PROPOSAL/TODO: Have one MISSING_CONSTANT for createLBL.m and one for ~best_estimates.m.
-%    PROPOSAL: Initialize createLB.constants(...)
-%
 % PROPOSAL: Different LABEL_REVISION_NOTE för CALIB2, DERIV2. Multiple rows?
 % PROPOSAL: Use get_PDS.m.
 %   TODO-NEED-INFO: Why? What needed for?
@@ -87,11 +84,6 @@
 %   PROPOSAL: Take hard-coded constants struct "C" as argument.
 %       TODO-DECISION: Should struct depend on EDDER/DERIV1 or contain info for both?
 %
-% PROPOSAL: Move different sections into separate functions.
-%   PRO: No need to clear variables.
-%   PRO: Smaller code sections.
-%   PROPOSAL: for-loops, or that which is iterated over.
-%
 % PROPOSAL: Make into script that simply calls separate main function (other file).
 %   PRO: Better encapsulation/modularization.
 %   PRO: Can use own variable names.
@@ -132,7 +124,7 @@
 %       Ex: Amending/refactoring code.
 %   CON: Can not read the OBJECT = TABLE DESCRIPTION (not among the LBL header keys).
 %   CON: Can not read all the technical LBL header PDS keywords (directly) from EDITED1/CALIB1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%       PROPOSAL: Some way choosing wether to retrieve LBL header PDS keywords from (1) EDITED1/CALIB1 (Lapdog), or (2) DERIV1 (running separately).
+%       PROPOSAL: Some way of choosing whether to retrieve LBL header PDS keywords from (1) EDITED1/CALIB1 (Lapdog), or (2) DERIV1 (running separately).
 %           NOTE: Implies still using Lapdog data structs for Lapdog runs.
 %   CON: EST LBL requires knowledge of which set of probes was used.
 %       CON: EST is low priority since it will probably not be used.
@@ -140,9 +132,14 @@
 %   PROPOSAL: Preparatory code refactoring.
 %       (1) Make as independent as possible of Lapdog data structs: blockTAB, index, an_tabindex, der_struct.
 %       (2) Make completely independent of Lapdog data structs: Identify DERIV1 TAB files by recursing over directory structure.
-%   PROPOSAL: Dumb-downed implementation: Have lapdog.m (createLBL?) save MATLAB workspace; Reload it to re-run
+%       (3) Move as much as possible into function file(s), possibly one major function file.
+%   PROPOSAL: Dumb-downed implementation: Have lapdog.m/main.m/edder_lapdog.m (createLBL?) save MATLAB workspace; Reload it to re-run
 %             createLBL.
 %       CON: Lapdog data structs contain absolute paths. ==> Will not work if moving datasets.
+%           PROPOSAL: Can remove those parts of paths. Then combine with known path of dataset.
+%       NOTE: createLBL.m can/should not naively save workspace since the caller of createLBL should arrange for
+%             workspace to be loaded.
+% 
 %   PROPOSAL: Functions:
 %           - create_LBL_File: Create one LBL file given arguments: Path to TAB file, LBL header PDS keywords, start & stop timestamps (2x2), OBJECT=TABLE DESCRIPTION.
 %             Type of file is deduced from TAB filename. Hard-coded info used to call createLBL.create_OBJTABLE_LBL_file
@@ -163,15 +160,16 @@
 %                 create_LBL_file will tell if it cannot classify the file.
 %       CON: Difficult to compare LBL files before (EDDER/DERIV1) and after (EDITED2/CALIB2/DERIV2), since different
 %            filenames.
-% 
-% PROPOSAL: LABEL_REVISION_NOTE.
 %
-% PROPOSAL: EST has its own try-catch. Absolish(?)
+%
+% PROPOSAL: EST has its own try-catch. Abolish(?)
 %
 % TODO/PROPOSAL: Create LBL for 60M_PHO, USC, ASW, NPL here (not in create_LBL_L5_sample_types).
 %
 % PROPOSAL: Centralized functionality for setting KVPL for start & stop timestamps.
 % PROPOSAL: Read first & LAST start & stop timestamps from EDITED1/CALIB1 LBL files using centralized function(s).
+%
+% TODO: Consistent variable naming: kvl-->kvpl, Capitalized initials for structs.
 %===================================================================================================
 
 executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
@@ -578,17 +576,17 @@ if generatingDeriv1
             %    DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
             
             for iFile = 1:numel(der_struct.file)
-                startStopTimes = der_struct.timing(iFile, :);                
+                startStopTimes = der_struct.timing(iFile, :);   % NOTE: Stores UTC+SCCS
                 
                 iIndex = der_struct.firstind(iFile);
-                
+
                 %--------------------------
                 % Read the CALIB1 LBL file
                 %--------------------------
-                [kvlLblCalib1, junk] = createLBL.read_LBL_file(index(iIndex).lblfile, dontReadHeaderKeyList);
-                
-                % IMPLEMENTATION NOTE: From experience can der_struct.timing have UTC values with 6 decimals which DVAL-NG does
-                % not permit. Must therefore remove.
+                [kvlLblCalib1, junk] = createLBL.read_LBL_file(index(iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
+
+                % IMPLEMENTATION NOTE: From experience, der_struct.timing can have UTC values with 6 decimals which DVAL-NG does
+                % not permit. Must therefore truncate or round to 3 decimals.
                 kvlLbl = kvlLblAll;
                 kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1}(1:23));        % UTC start time
                 kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));        % UTC stop time
@@ -604,7 +602,7 @@ if generatingDeriv1
                 lblData.OBJTABLE = [];
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_A1P_data();
                 
-                createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, lblData, HeaderOptions, cotlfSettings, tabLblInconsistencyPolicy);
+                createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, lblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
                 
             end
         end
@@ -613,26 +611,85 @@ if generatingDeriv1
         createLBL.exception_message(exception, GENERATE_FILE_FAIL_POLICY)
         fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',exception.message);
     end
+end
 
+
+
+if generatingDeriv1    
+    tabLblInconsistencyPolicy = GENERAL_TAB_LBL_INCONSISTENCY_POLICY;   % Default value, unless overwritten for specific data file types.
+    
+    %==========================
+    %
+    % Create LBL files for ASW
+    %
+    %==========================
+    global ASW_tabindex
+    if ~isempty(ASW_tabindex)
+        for iFile = 1:numel(ASW_tabindex)
+            startStopTimes = ASW_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+            
+            % IMPLEMENTATION NOTE: From experience, asw_tabindex.timing can have UTC values with 6 decimals which DVAL-NG does
+            % not permit. Must therefore truncate or round to 3 decimals.
+            kvlLbl = LblAllKvpl;
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1}(1:23));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sct(str2double(startStopTimes{3})));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sct(str2double(startStopTimes{4})));
+            
+            LblData = [];
+            LblData.HeaderKvl = kvlLbl;
+            clear   kvlLbl   kvlLblCalib1
+            
+            LblData.OBJTABLE = [];
+            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_ASW_data();
+            
+            createLBL.create_OBJTABLE_LBL_file(ASW_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
+        end
+    end
+    
+    
+    %==========================
+    %
+    % Create LBL files for USC
+    %
+    %==========================
+    global usc_tabindex
+    if ~isempty(usc_tabindex)
+        for iFile = 1:numel(usc_tabindex)
+            startStopTimes = usc_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+            
+            % IMPLEMENTATION NOTE: From experience, usc_tabindex.timing can have UTC values with 6 decimals which DVAL-NG does
+            % not permit. Must therefore truncate or round to 3 decimals.
+            kvlLbl = LblAllKvpl;
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1}(1:23));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sct(str2double(startStopTimes{3})));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sct(str2double(startStopTimes{4})));
+            
+            LblData = [];
+            LblData.HeaderKvl = kvlLbl;
+            clear   kvlLbl   kvlLblCalib1
+            
+            LblData.OBJTABLE = [];
+            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_USC_data();
+            
+            createLBL.create_OBJTABLE_LBL_file(usc_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
+        end
+    end
+    
+    
     %==============================================================
     %
-    % Create LBL files for PHO, USC, ASW, NPL files. (DERIV1 only)
+    % Create LBL files for PHO, USC, NPL files. (DERIV1 only)
     %
-    %==============================================================
+    %==============================================================    
     % TEMPORARY SOLUTION.
-    createLBL.create_LBL_L5_sample_types(derivedpath, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES)
+    %createLBL.create_LBL_L5_sample_types(derivedpath, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES)
     
     % TEST    
-    % ASW_tabindex (global), usc_tabindex (not global)
+    % ASW_tabindex (global)
+    % usc_tabindex (not global)
     % PHO_tabindex should exist but is not available?
-    % global?
-    %global ASW_tabindex
-    %for iFile = 1:numel(ASW_tabindex)
-    %    disp(ASW_tabindex(iFile).fname)
-    %end
-    %for iFile = 1:numel(usc_tabindex)
-    %    disp(usc_tabindex(iFile).fname)
-    %end
 end
 
 

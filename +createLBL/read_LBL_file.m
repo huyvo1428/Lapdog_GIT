@@ -2,6 +2,7 @@
 % Read ODL/LBL file "header", i.e. all the keywords from the beginning of
 % the file up until the first OBJECT statement.
 %
+%
 % ARGUMENTS AND RETURN VALUES
 % ===========================
 % deleteHeaderKeyList : Cell array of keys which are removed from HeaderKvl, if found.
@@ -14,6 +15,10 @@ function [HeaderKvl, LblSs] = read_LBL_file(filePath, deleteHeaderKeyList)
 %
 % PROPOSAL: Remove all quotes from values in header.
 %    CON: createLBL.write_LBL_header must determine which keys should have quotes. ==> Another long list which might not capture all keywords.
+%
+% PROPOSAL: Replace deleteHeaderKeyList with ~of regexes for permitted header keys.
+%   Should only need to read ROSETTA:* and certain hardcoded constants (?) like PRODUCER_FULL_NAME, LABEL_REVISION_NOTE (?),
+%   INSTRUMENT_HOST_NAME, MISSION_NAME etc.
 
     % NOTE: LblSsl keeps   quotes.
     %       LblSs  removes quotes.
