@@ -8,7 +8,7 @@
 *.BSP
 *.TSC
 *.asv
-
+*.mat
 
 gout.txt
 gtimes.txt
@@ -43,6 +43,7 @@ summary.xlsx
 
 dustgrains
 
+*.mat
 
 ManualSweepanalysis.m
 
