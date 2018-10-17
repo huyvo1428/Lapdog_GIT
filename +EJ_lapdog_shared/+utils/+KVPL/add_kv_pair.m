@@ -5,6 +5,7 @@
 % function kvl = add_kv_pair(kvl, key, value)
 function   kvl = add_kv_pair(kvl, key, value)
 
+    % ASSERTION
     if ismember(key, kvl.keys)
         error('Can not add key which is already in key-value list (key = "%s").', key)
     end

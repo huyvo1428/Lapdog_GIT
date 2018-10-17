@@ -74,9 +74,10 @@ classdef assert
         % PROPOSAL: Abolish
         %   PRO: Unnecessary since can use assert(ismember(s, strSet)).
         %       CON: This gives better error messages for string not being string, for string set not being string set.
+            import EJ_lapdog_shared.*
         
-            EJ_lapdog_shared.utils.assert.castring_set(strSet)
-            EJ_lapdog_shared.utils.assert.castring(s)
+            utils.assert.castring_set(strSet)
+            utils.assert.castring(s)
             
             if ~ismember(s, strSet)
                 error('Expected string in string set is not in set.')
@@ -130,13 +131,23 @@ classdef assert
             %   
             % PROPOSAL: Recursive structs field names.
             %   TODO-DECISION: How specify fieldnames? Can not use cell arrays recursively.
+            import EJ_lapdog_shared.*
             
             if ~isstruct(s)
                 error('Expected struct is not struct.')
             end
-            EJ_lapdog_shared.utils.assert.castring_set(fieldNamesSet)    % Abolish?
+            utils.assert.castring_set(fieldNamesSet)    % Abolish?
+            
             if ~isempty(setxor(fieldnames(s), fieldNamesSet))
-                error('Expected struct has the wrong set of fields.')
+                missingFnList = setdiff(fieldNamesSet, fieldnames(s));
+                extraFnList   = setdiff(fieldnames(s), fieldNamesSet);
+                
+                missingFnListStr = utils.str_join(missingFnList, ', ');
+                extraFnListStr   = utils.str_join(extraFnList,   ', ');
+                
+                error(['Expected struct has the wrong set of fields.', ...
+                    '\n    Missing fields:           %s', ...
+                    '\n    Extra (forbidden) fields: %s'], missingFnListStr, extraFnListStr)
             end
         end
         
