@@ -117,8 +117,7 @@ if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
 
 
 
-fprintf(1, 'Best estimates\n')
-%save(['~/temp_MATLAB/temp.', shortphase, '.allVarsBeforeBestEstmimates.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
+%fprintf(1, 'Best estimates\n')
 %an_tabindex = best_estimates(an_tabindex, tabindex, index, obe);
 
 

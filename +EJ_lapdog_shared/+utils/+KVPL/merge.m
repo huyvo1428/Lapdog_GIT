@@ -12,8 +12,12 @@ function   kvlDest = merge(kvl1, kvl2)
 %       NOTE: Current implementation.
 %    (2) Accept duplicate keys when the values are identical.
 %       PRO: Useful for createLBL_create_EST_LBL_header.
-%    QUESTION: How handle ordering?
+%    TODO-DECISION: How handle ordering?
+%
+% PROPOSAL: Change name to something that implies that ordering is kept and that KVPLs are simply joined together, after each other.
+%   PROPOSAL: concatenate, concat.
 
+    % ASSERTIONS
     intersectingKeysList = intersect(kvl1.keys, kvl2.keys);
     if ~isempty(intersectingKeysList)
         error('ERROR: kvl1 and kvl2 have %i keys in common, e.g. key = "%s".', numel(intersectingKeysList), intersectingKeysList{1});

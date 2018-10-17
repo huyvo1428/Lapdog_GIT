@@ -684,7 +684,7 @@ if generatingDeriv1
     %
     %==============================================================    
     % TEMPORARY SOLUTION.
-    %createLBL.create_LBL_L5_sample_types(derivedpath, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES)
+    createLBL.create_LBL_L5_sample_types(derivedpath, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES)
     
     % TEST    
     % ASW_tabindex (global)

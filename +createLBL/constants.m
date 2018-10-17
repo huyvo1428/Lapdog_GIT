@@ -26,7 +26,7 @@ classdef constants < handle
     %   PROPOSAL: Modify write_OBJTABLE_LBL_FILE to merge header options into settings and copy the indentation length from
     %           the separate constant INDENTATION_LENGTH.
     %
-    % NOTE: Used by non-Lapdog code: ./+erikpgjohansson/+ro/+delivery/+geom/create_geom_TAB_LBL_from_EOG.m
+    % NOTE: Used by non-Lapdog code: ./+EJ_lapdog_shared/+ro/+delivery/+geom/create_geom_TAB_LBL_from_EOG.m
     %       Might be used by future standalone, "Lapdogish" code (same git repo) for e.g. separately regenerating LBL files.
     %
     % PROPOSAL: Separately hard-code constant values just as Lapdog code does (duplication).
