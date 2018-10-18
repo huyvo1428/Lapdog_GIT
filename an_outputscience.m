@@ -7,6 +7,9 @@ ASW_tabindex=[];
 CONT_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926];
 global VFLOATMACROS
 
+debug=[0 0 0];
+
+
 iph0conditions=[];
 iph0conditions.I_Vb=-17.0;%V from generating lap1 vector.
 iph0conditions.I_Vb_eps=1.0;%V epsilon, from generating lap1vector
@@ -28,16 +31,22 @@ iph0conditions.CONT = +1.51e-9;
 
 dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf'};
 infoflds= {'macroId'};
+
+if debug(1) %PHO.TAB
 PHO= struct_cleanup(XXP,infoflds,dataflds);
 PHO= PHOTABFILE(PHO,iph0conditions,XXP);
+end
 
 
 
 for i = 1:XXP(1).info.nroffiles %AXP generation!
-    len =length(XXP(i).data.Tarr(:,1));
+    len =length(XXP(i).data.qf);
     filename=XXP(i).info.file;
     filename(end-6:end-4)='ASW';
-    
+    folder = strrep(XXP(i).info.file,XXP(i).info.shortname,'');
+
+    if debug(2)%ASW.TAB
+
     twID = fopen(filename,'w+');
     
     %quickfix for ASW
@@ -55,10 +64,12 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 
     %This line can generate strange error if SATURATION_CONSTANT isn't
     %already well defined
+
     XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=SATURATION_CONSTANT;
     
     %fix contamination issues)
-    path_to_mat_file='MIP_v23.mat';
+    path_to_mat_file='MIP_v23_forlapdog.mat';
+    %    path_to_mat_file='MIP_v23_forlapdog.mat';
     XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
     
     dummy_ne=SATURATION_CONSTANT;
@@ -70,22 +81,21 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 
     for j = 1:len
         
-        
+        %remember i & j !!!
         str1=sprintf('%s, %s, %16s, %16s,',XXP(i).data.Tarr{j,:});
         %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
         str2=sprintf(' %14.7e, %2.1f,',dummy_ne,dummy_qv);
         str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv);
         str4=sprintf(' %14.7e, %2.1f,',XCAL_struct.ionV(j),dummy_qv);
         str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.asm_Te_exp_belowVknee(j,1),dummy_qv);
-        str6=sprintf(' %14.7e, %2.1f,',XCAL_struct.Te,dummy_qv);
+        str6=sprintf(' %14.7e, %2.1f,',XCAL_struct.Te(j),dummy_qv);
         str7=sprintf(' %14.7e, %2.1f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
         str8=sprintf(' %05i',XXP(i).data.qf(j));
         
         strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
         row_bytes= fprintf(twID,'%s\r\n',strtot);
     end
-    folder = strrep(XXP(i).info.file,XXP(i).info.shortname,'');
-    
+
     ASW_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
     ASW_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
     %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
@@ -95,9 +105,10 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     ASW_tabindex(end).type = 'ASW'; % Type
     ASW_tabindex(end).timing = XXP(i).info.timing;
     ASW_tabindex(end).row_byte = row_bytes;
-    
     fclose(twID);
-    
+
+    end %debug(2)
+    if debug(3)%USC.TAB
         if  any(ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{1})) || any(ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{2}))
             
             
@@ -110,7 +121,8 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
 
         end
-        
+    end
+    
     
     
 end
@@ -605,6 +617,14 @@ function XCAL_L= XCAL_lapdog(LAP,path_to_matfile)
 global MIP %change to persistent later
 global CO IN SATURATION_CONSTANT assmpt
 
+
+pseudo_int_treshold=2.5e-1; %to filter out most unimportant MIP measurements. Some others will be removed later
+%%% below no longer valid -FKJN 21/9. Forgot about split sweeps
+%%% 2e-3 WORKssome arbitrary limit, looks good enough. 
+% a limit of 2e-3 WORKS, but we can increase it slightly to be sure. 
+%1e-3  makes us miss 4 points within 1 second.
+
+
 XCAL_L=[];
 XCAL_L.ionV=LAP.t0;
 XCAL_L.ionV(:)=SATURATION_CONSTANT; %default to missing constant
@@ -623,6 +643,8 @@ load(path_to_matfile,'MIP'); %loads MIP variable from file
 end
 
 
+
+
 %assmpt=[];
 %assmpt.ionM=19;%a.u.
 %assmpt.vram=550;%m/s
@@ -638,10 +660,29 @@ end
 % MIP.ne(delind)=[];
 
 
-pseudo_ind = interp1(LAP.t0,1:length(LAP.t0),MIP.tt);
+
+
+len = length(LAP.t0);
+
+if len ~=1
+    pseudo_ind = interp1(LAP.t0,1:len,MIP.tt);
+else    %special case for len == 1, for which interp1 can't handle
+
+    [diff,closest_mip]=min(abs(LAP.t0-MIP.tt));
+    pseudo_ind=ones(1,length(MIP.tt))+0.5; %silly vector all filled with 1.5's everywhere
+    
+    if diff > pseudo_int_treshold       %exit early?
+        return;
+    else
+            pseudo_ind(closest_mip)=1; % filt_inds thing should be able to find this if it exists.
+    end
+    
+
+end
+
 %pseudo ind interpolates 
 %indzz=abs(shit-floor(shit+0.5))< 2e-3; %some arbitrary limit, looks good enough. 
-filt_inds=abs(pseudo_ind-floor(pseudo_ind+0.5))< 2.5e-1;
+filt_inds=abs(pseudo_ind-floor(pseudo_ind+0.5))< pseudo_int_treshold;
 %%% below no longer valid -FKJN 21/9. Forgot about split sweeps
 %%% 2e-3 WORKssome arbitrary limit, looks good enough. 
 % a limit of 2e-3 WORKS, but we can increase it slightly to be sure. 
@@ -650,7 +691,7 @@ filt_inds=abs(pseudo_ind-floor(pseudo_ind+0.5))< 2.5e-1;
 XCAL_M=[];
 XCAL_M.mipnefilt=MIP.ne(filt_inds);
 XCAL_M.ne_uncertainty=MIP.ne_uncertainty(filt_inds);
-XCAL_M.mipID=MIP.ID(filt_inds);
+%XCAL_M.mipID=MIP.ID(filt_inds);
 XCAL_M.t1=MIP.tt(filt_inds);
 XCAL_M.lapind=nan(1,length(XCAL_M.t1)); %default to nan, useful later
 XCAL_M.ionV             =nan(length(XCAL_M.t1),1);
@@ -698,7 +739,7 @@ XCAL_L.ionV(XCAL_M.lapind(indz))            =XCAL_M.ionV(indz);
 XCAL_L.t0(XCAL_M.lapind(indz))              =XCAL_M.t1(indz);
 XCAL_L.Te(XCAL_M.lapind(indz))              =XCAL_M.Te(indz);
 %I care less about these, so some values will be empty.
-XCAL_L.mipID(XCAL_M.lapind(indz))           =XCAL_M.mipID(indz);
+%XCAL_L.mipID(XCAL_M.lapind(indz))           =XCAL_M.mipID(indz);
 XCAL_L.mipne_uncertainty(XCAL_M.lapind(indz)) =XCAL_M.mipne_uncertainty(indz);
 XCAL_L.mipnefilt(XCAL_M.lapind(indz))       =XCAL_M.mipnefilt(indz);
 
