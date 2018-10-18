@@ -7,7 +7,7 @@ ASW_tabindex=[];
 CONT_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926];
 global VFLOATMACROS
 
-debug=[0 0 0];
+debug=[1 1 1];
 
 
 iph0conditions=[];
