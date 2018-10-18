@@ -202,7 +202,7 @@ if DEBUG_ON
     GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'error';
     %AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
     AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
-    ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
+    ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing'; % 'warning';
 else
     GENERATE_FILE_FAIL_POLICY = 'message';
     %GENERATE_FILE_FAIL_POLICY = 'nothing';    % Somewhat misleading. Something may still be printed.
@@ -259,14 +259,12 @@ cspice_furnsh(metakernelFile);
 % Convert tabindex and an_tabindex into equivalent structs
 % --------------------------------------------------------
 % IMPLEMENTATION NOTE: Lapdog never defines an_tabindex if analysis.m is disabled (not called; useful for CALIB2
-% generation). Must therefore handle that case. Can not just use generatingDeriv1.
+% generation). Must therefore handle that case. Can NOT just use generatingDeriv1.
 %================================================================================================================
 [stabindex] = createLBL.convert_tabindex(tabindex);   % Can handle arbitrarily sized empty tabindex.
-%if generatingDeriv1
-%    % IMPLEMENTATION NOTE: Variable an_tabindex never defined during EDDER runs?
-%    [san_tabindex] = createLBL.convert_an_tabindex(an_tabindex);
-%end
-if ~exist('an_tabindex', 'var')   % If variable is undefined (not just empty) ...
+if ~exist('an_tabindex', 'var')
+    % CASE: an_tabindex is undefined (not just empty)
+    %   Ex: EDDER run, or analysis.m is deactivated (Lapdog run).
     [san_tabindex] = createLBL.convert_an_tabindex([]);
 else
     [san_tabindex] = createLBL.convert_an_tabindex(an_tabindex);  % Can handle arbitrarily sized empty an_tabindex.
@@ -396,7 +394,7 @@ for i = 1:length(blockTAB)
     KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(C.ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
     KvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(KvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(C.ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
     LblData.HeaderKvl = KvlLbl;
-    clear   KvlLbl
+    clear   KvlLbl START_TIME STOP_TIME
     
     
     
@@ -682,45 +680,43 @@ if generatingDeriv1
     % Create LBL files for PHO
     %
     %==========================
-    % NOTE: PHO_tabindex has been observed to contain the same file twice (commit 823b213/35103b0), test phase TDDG.
-    %if 0
+    % NOTE: PHO_tabindex has been observed to contain the same file multiple times (commit 9648939), test phase TDDG. Likely
+    % because entries are re-added for every run.
     global PHO_tabindex
     if ~isempty(PHO_tabindex)
         for iFile = 1:numel(PHO_tabindex)
-            startStopTimes = PHO_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+            %startStopTimes = PHO_tabindex(iFile).timing;    % ~BUG: Not implemented/never assigned (yet).
             
-            % IMPLEMENTATION NOTE: From experience, usc_tabindex.timing can have UTC values with 6 decimals which DVAL-NG does
-            % not permit. Must therefore truncate or round to 3 decimals.
+            % IMPLEMENTATION NOTE: Timestamps are set via the columns. TEMPORARY SOLUTION.
+            % Current implementation requires the timestamp PDS keywords to exist in list of keywords though.
             kvlLbl = LblAllKvpl;
-            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1}(1:23));
-            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));
-            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sctrc(str2double(startStopTimes{3})));
-            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));
+            %kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1}(1:23));
+            %kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));
+            %kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sctrc(str2double(startStopTimes{3})));
+            %kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));            
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   '<UNSET>');
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   '<UNSET>');
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', '<UNSET>');
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  '<UNSET>');
             
             LblData = [];
             LblData.HeaderKvl = kvlLbl;
             clear   kvlLbl   kvlLblCalib1
             
             LblData.OBJTABLE = [];
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_USC_data();
+            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_PHO_data();
             
             createLBL.create_OBJTABLE_LBL_file(PHO_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         end
     end
-    %end
     
     %==============================================================
     %
-    % Create LBL files for PHO, USC, NPL files. (DERIV1 only)
+    % Create LBL files for NPL files. (DERIV1 only)
     %
     %==============================================================    
     % TEMPORARY SOLUTION.
     createLBL.create_LBL_L5_sample_types(derivedpath, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES)
-    
-    % TEST    
-    % ASW_tabindex (global)
-    % usc_tabindex (not global)
-    % PHO_tabindex should exist but is not available?
 end
 
 

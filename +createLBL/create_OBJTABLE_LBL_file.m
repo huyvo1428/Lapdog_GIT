@@ -75,7 +75,7 @@
 %
 % NAMING CONVENTIONS
 % ==================
-% T2PK : TAB file to PDS keyword. Functionality for retrieving LBL header PDS keyword values from TAB file.
+% T2PK : TAB file to (2) PDS Keyword. Functionality for retrieving LBL header PDS keyword values from TAB file.
 %
 function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings, tabLblInconsistencyPolicy)
     %
@@ -119,6 +119,11 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     %   CON/NOTE: May require SPICE for UTC.
     %       CON: No. String sorting is enough for comparisons (greater/smaller than).
     %       CON: Not problem since SPICE already needs to be loaded for T2PK functionality.
+    %
+    % PROPOSAL: Separate argument (struct) with timestamps.
+    %   PROPOSAL: Convert SCCS/SCT --> UTC or reverse.
+    %   PROPOSAL: Assertion for consistency SCCS-UTC.
+    %   TODO-NEED-INFO: Is it absolutely certain that all tables have timestamps?
 
 
 

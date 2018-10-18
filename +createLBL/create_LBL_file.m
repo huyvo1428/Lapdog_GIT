@@ -5,7 +5,7 @@
 % Create LBL file for a given Lapdog TAB file (i.e. ONE file that begins with "RPCLAP_").
 %
 % Derives type of Lbl file from the TAB filename.
-% Initially intended for new TAB file types: PHO, USC, ASW, NPL.
+% Initially intended for new TAB file types: PHO, USC, ASW, NPL. Now only PHO.
 %
 %
 % DESIGN/ARCHITECTURE INTENT
@@ -23,6 +23,8 @@
 % =============
 % Most/all of the hard-coded info in createLBL will possibly be moved to this function in the future.
 % Hence the generic name.
+%
+% NOTE: Will/should probably be abolished/deleted.
 %
 %
 % VARIABLE NAMING CONVENTIONS
@@ -96,28 +98,10 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
         LblData = [];
         LblData.OBJTABLE = [];
             
-        if     strcmp(timeStr, '000000') && strcmp(msd, '60M_PHO')
-
-            canClassifyTab = 1;
-            
-            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
-            %    {'DATA_SET_PARAMETER_NAME', '{"PHOTOSATURATION CURRENT"}'; ...
-            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
-            
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_PHO_data();
-            
-        elseif strcmp(msd2, 'NPL')
+        if strcmp(msd2, 'NPL')
             
             canClassifyTab = 1;
 
-            % MB states:
-            % """"PLASMA DENSITY [cross-calibration from ion and electron density; in the label, put ELECTRON DENSITY,
-            % ION DENSITY and PLASMA DENSITY]""""            
-            % TODO-NEED-INFO: Use above?
-            
-            %LblKvpl = KVPL_overwrite_add(LblKvpl, {...
-            %        'DATA_SET_PARAMETER_NAME', '{"ELECTRON_DENSITY", "ION DENSITY", "PLASMA DENSITY"}'; ...
-            %        'CALIBRATION_SOURCE_ID',   '{"RPCLAP", "RPCMIP"}'});
             
             [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_NLP_data();
 
