@@ -88,7 +88,7 @@ else
     if lastneg>firstpos
         %then there are multiple zero crossings, extrapolation is more
         %risky
-        AP.Vz(2)=0.5;
+        AP.Vz(2)=0.4; %maybe let this be a function of the Vb distance between lastneg/firstpos
     else
         AP.Vz(2)=0.8; %good fit might not be perfect anyway.
     end
@@ -105,7 +105,19 @@ else
     ind_vz=min([max([lastneg-3;1]),firstpos]):max([min([lastneg+3;length(ip)])],firstpos);%stay within limits, but use firstpositive location also. It might be before or after lastneg, depending on the noise
     %ind_vz=max([lastneg-3;1]):min([lastneg+3;length(ip)]);%stay within limits
     ind_vz(isnan(ip(ind_vz)))=[]; %remove nans
-    AP.Vz(1)=interp1(ip(ind_vz),vb(ind_vz),0,'linear','extrap');
+    
+    %remove identical current values (interp1 complains otherwise)
+    %alternative one, add silly noise 
+    ip2=ip+(1:length(ip))*1e-22; %extremely small values.
+    %ip+wgn(1,length(ip),1)*1e-20) white noise generator is random, so
+    %uniqueness might be a problem.
+    %alternative two, remove all but one of the non-unique values:
+    %[~, I] = unique(ip(ind_vz), 'first');
+    %delind = 1:length(A);
+    %ind_vz(delind(I)) = [];
+    
+    
+    AP.Vz(1)=interp1(ip2(ind_vz),vb(ind_vz),0,'linear','extrap');
 
 %        P=polyfit(ip(ind_vz),vb(ind_vz),1);
 %        AP.Vz=polyval(P,0);
