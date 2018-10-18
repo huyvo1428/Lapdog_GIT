@@ -165,13 +165,35 @@
 %
 % PROPOSAL: EST has its own try-catch. Abolish(?)
 %
-% TODO/PROPOSAL: Create LBL for 60M_PHO, USC, ASW, NPL here (not in create_LBL_L5_sample_types).
-%
 % PROPOSAL: Centralized functionality for setting KVPL for start & stop timestamps.
 % PROPOSAL: Read first & LAST start & stop timestamps from EDITED1/CALIB1 LBL files using centralized function(s).
-%
-% TODO: Consistent variable naming: kvl-->kvpl, Capitalized initials for structs.
 %===================================================================================================
+
+%======================================================================================================================
+% Save MATLAB workspace to file in dataset directory
+% --------------------------------------------------
+% Save all variables needed for createLBL to function.
+% This file can be used for re-running createLBL (fast) without rerunning Lapdog (slow) for large datasets.
+% NOTE: Needs to save global variables.
+% IMPLEMENTATION NOTE: Only do this when there is no such file already to prevent calling createLBL with a faulty
+% workspace/variables (e.g. if not at all loaded from file when should have been) and then overwriting the file.
+%======================================================================================================================
+PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
+savedWorkspaceFile = fullfile(derivedpath, PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
+if exist(savedWorkspaceFile, 'file')
+    % CASE: There is a file.
+    ;   % Do nothing
+elseif ~exist(savedWorkspaceFile, 'file') & ~exist(savedWorkspaceFile, 'dir')
+    % CASE: There is no file (or directory by the same name).
+    
+    % Save all variables including global variables (MATLAB workspace).
+    save(savedWorkspaceFile)
+else
+    % ASSERTION
+    error('Can not save MATLAB workspace (MATLAB variables) to file:\n    %s.\nThere is probably a directory by the same name.')
+end
+
+
 
 executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
 prevWarningsSettings = warning('query');
@@ -539,9 +561,9 @@ if generatingDeriv1
                 error('Error, bad identifier in an_tabindex{%i,7} = San_tabindex(%i).dataType = "%s"',i, i, San_tabindex(i).dataType);
                 
             end
-            
-            
-            
+
+
+
             createLBL.create_OBJTABLE_LBL_file(San_tabindex(i).path, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
             clear   LblData   tabLblInconsistencyPolicy
             

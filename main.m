@@ -107,13 +107,11 @@ end
 
 
 
-%save(['~/temp_MATLAB/temp.', shortphase, '.allVarsBeforeAnalysis.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
 analysis;
 
 
 
 'lapdog: generate LBL files....'
-%save(['~/temp_MATLAB/temp.', shortphase, '.allVarsBeforeCreateLBL.', datestr(now,'yyyy-mm-dd_HH.MM.SS'), '.mat'])    % DEBUG
 createLBL
 
 
