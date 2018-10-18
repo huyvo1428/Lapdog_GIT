@@ -202,12 +202,14 @@ if DEBUG_ON
     GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'error';
     %AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
     AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
+    ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
 else
     GENERATE_FILE_FAIL_POLICY = 'message';
     %GENERATE_FILE_FAIL_POLICY = 'nothing';    % Somewhat misleading. Something may still be printed.
     
     GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'warning';
     AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
+    ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
 end
 
 
@@ -616,7 +618,6 @@ end
 
 
 if generatingDeriv1    
-    tabLblInconsistencyPolicy = GENERAL_TAB_LBL_INCONSISTENCY_POLICY;   % Default value, unless overwritten for specific data file types.
     
     %==========================
     %
@@ -633,8 +634,8 @@ if generatingDeriv1
             kvlLbl = LblAllKvpl;
             kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1}(1:23));
             kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));
-            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sct(str2double(startStopTimes{3})));
-            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sct(str2double(startStopTimes{4})));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sctrc(str2double(startStopTimes{3})));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));
             
             LblData = [];
             LblData.HeaderKvl = kvlLbl;
@@ -643,10 +644,9 @@ if generatingDeriv1
             LblData.OBJTABLE = [];
             [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_ASW_data();
             
-            createLBL.create_OBJTABLE_LBL_file(ASW_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
+            createLBL.create_OBJTABLE_LBL_file(ASW_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, ASW_TAB_LBL_INCONSISTENCY_POLICY);
         end
     end
-    
     
     %==========================
     %
@@ -663,8 +663,8 @@ if generatingDeriv1
             kvlLbl = LblAllKvpl;
             kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1}(1:23));
             kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));
-            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sct(str2double(startStopTimes{3})));
-            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sct(str2double(startStopTimes{4})));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sctrc(str2double(startStopTimes{3})));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));
             
             LblData = [];
             LblData.HeaderKvl = kvlLbl;
@@ -673,10 +673,41 @@ if generatingDeriv1
             LblData.OBJTABLE = [];
             [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_USC_data();
             
-            createLBL.create_OBJTABLE_LBL_file(usc_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
+            createLBL.create_OBJTABLE_LBL_file(usc_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         end
     end
     
+    %==========================
+    %
+    % Create LBL files for PHO
+    %
+    %==========================
+    % NOTE: PHO_tabindex has been observed to contain the same file twice (commit 823b213/35103b0), test phase TDDG.
+    %if 0
+    global PHO_tabindex
+    if ~isempty(PHO_tabindex)
+        for iFile = 1:numel(PHO_tabindex)
+            startStopTimes = PHO_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+            
+            % IMPLEMENTATION NOTE: From experience, usc_tabindex.timing can have UTC values with 6 decimals which DVAL-NG does
+            % not permit. Must therefore truncate or round to 3 decimals.
+            kvlLbl = LblAllKvpl;
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'START_TIME',                   startStopTimes{1}(1:23));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl,  'STOP_TIME',                   startStopTimes{2}(1:23));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sctrc(str2double(startStopTimes{3})));
+            kvlLbl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(kvlLbl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));
+            
+            LblData = [];
+            LblData.HeaderKvl = kvlLbl;
+            clear   kvlLbl   kvlLblCalib1
+            
+            LblData.OBJTABLE = [];
+            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_USC_data();
+            
+            createLBL.create_OBJTABLE_LBL_file(PHO_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+        end
+    end
+    %end
     
     %==============================================================
     %
