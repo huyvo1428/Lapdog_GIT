@@ -9,7 +9,7 @@
 % =========
 % tabFilePath                     : Path to TAB file.
 % LblData                         : Struct with the following fields.
-%       .HeaderKvl                : Key-value list describing PDS keywords in the "ODL header". Some mandatory
+%       .HeaderKvpl               : Key-value list describing PDS keywords in the "ODL header". Some mandatory
 %                                   keywords are added automatically by the code and must not overlap with these
 %                                   (assertion).
 %       .OBJTABLE                 : (OBJTABLE = "OBJECT = TABLE" segment)
@@ -54,7 +54,7 @@
 % =====
 % NOTE: The caller is NOT supposed to surround key value strings with quotes, or units with </>.
 % The implementation should add that when appropriate.
-% NOTE: The implementation will add certain keywords to LblData.HeaderKvl, and derive the values, and assume that
+% NOTE: The implementation will add certain keywords to LblData.HeaderKvpl, and derive the values, and assume that
 % the caller has not set them. Error otherwise (assertion).
 % NOTE: Uses Lapdog's obt2sct function.
 %
@@ -77,7 +77,7 @@
 % ==================
 % T2PK : TAB file to (2) PDS Keyword. Functionality for retrieving LBL header PDS keyword values from TAB file.
 %
-function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings, tabLblInconsistencyPolicy)
+function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings, tabLblInconsistencyPolicy)
     %
     % NOTE: CONCEIVABLE LBL FILE SPECIAL CASES that may have different requirements:
     %    - Data files (DATA/)
@@ -123,6 +123,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     % PROPOSAL: Separate argument (struct) with timestamps.
     %   PROPOSAL: Convert SCCS/SCT --> UTC or reverse.
     %   PROPOSAL: Assertion for consistency SCCS-UTC.
+    %   PROPOSAL: Assertion for consistency between columns and separately specified timestamps.
+    %       PROPOSAL: useFor (or useFor-like) options for specifying which columns should be used for checking.
     %   TODO-NEED-INFO: Is it absolutely certain that all tables have timestamps?
 
 
@@ -130,7 +132,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     %===========
     % Constants
     %===========
-    PERMITTED_LBLDATA_FIELD_NAMES  = {'HeaderKvl', 'OBJTABLE'};
+    PERMITTED_LBLDATA_FIELD_NAMES  = {'HeaderKvpl', 'OBJTABLE'};
     % NOTE: Exclude COLUMNS, ROW_BYTES, ROWS.
     PERMITTED_OBJTABLE_FIELD_NAMES = {'DESCRIPTION', 'OBJCOL_list'};
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
@@ -150,7 +152,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     BYTES_PER_LINEBREAK   = 2;                 % Carriage return + line feed.
     
     % Constants for (optionally) converting TAB file contents into PDS keywords.
-    T2PK_OBT2SCCS_FUNC = @(x) ['1/', obt2sct(str2double(x))];    % No quotes. Quotes added later.
+    T2PK_OBT2SCCS_FUNC = @(x) obt2sctrc(str2double(x));    % No quotes. Quotes added later.
     T2PK_UTC2UTC_FUNC  = @(x) [x(1:23)];                         % Has to truncate UTC second decimals according to DVAL-NG.
     T2PK_OBT2UTC_FUNC  = @(x) [cspice_et2utc(cspice_scs2e(ROSETTA_NAIF_ID, obt2sct(str2double(x))), 'ISOC', 3)];    % 3 = 3 UTC second decimals
     T2PK_PROCESSING_TABLE = struct(...
@@ -165,9 +167,9 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     % ASSERTIONS: Caller only uses permissible field names.
     % Useful when changing field names.
     % ------------------------------------------------------
-    EJ_lapdog_shared.utils.assert.struct(LblData, PERMITTED_LBLDATA_FIELD_NAMES)
+    EJ_lapdog_shared.utils.assert.struct(LblData,          PERMITTED_LBLDATA_FIELD_NAMES)
     EJ_lapdog_shared.utils.assert.struct(LblData.OBJTABLE, PERMITTED_OBJTABLE_FIELD_NAMES)
-    EJ_lapdog_shared.utils.assert.scalar(LblData.HeaderKvl)    % Common error to initialize empty KVPL the wrong way.
+    EJ_lapdog_shared.utils.assert.scalar(LblData.HeaderKvpl)    % Common error to initialize empty KVPL the wrong way.
 
 
 
@@ -196,45 +198,45 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     %--------------------------------------------------------------------------------------------------
     OBJTABLE_data.COLUMNS   = 0;   % NOTE: Adds new field to structure.
     OBJCOL_namesList = {};
-    t2pkArgsTable = struct('argConst', {}, 'iByteFirst', {}, 'iByteLast', {});
+    T2pkArgsTable = struct('argConst', {}, 'iByteFirst', {}, 'iByteLast', {});
     PDS_START_BYTE = 1;    % Used for deriving START_BYTE. Starts with one, not zero.
     for i = 1:length(OBJTABLE_data.OBJCOL_list)
-        cd = OBJTABLE_data.OBJCOL_list{i};       % Temporarily shorten variable name: cd = column data
+        Cd = OBJTABLE_data.OBJCOL_list{i};       % Temporarily shorten variable name: Cd = column data
         
         % ASSERTION: Check common user/caller error.
-        if numel(cd) ~= 1
+        if numel(Cd) ~= 1
             error('One column object is a non-one size array. Guess: Due to defining .useFor value with "struct" command and ~single curly brackets. Must be double curly braces due to MATLAB syntax.')
         end
         
-        [cd, nSubcolumns] = complement_column_data(cd, ...
+        [Cd, nSubcolumns] = complement_column_data(Cd, ...
             PERMITTED_OBJCOL_FIELD_NAMES, BYTES_BETWEEN_COLUMNS, PDS_IDENTIFIER_PERMITTED_CHARS, ...
             lblFilePath, tabLblInconsistencyPolicy);
-        cd.START_BYTE  = PDS_START_BYTE;
+        Cd.START_BYTE  = PDS_START_BYTE;
 
         % ASSERTION: Keywords do not contain quotes.
-        for fnCell = fieldnames(cd)'
+        for fnCell = fieldnames(Cd)'
             fn = fnCell{1};
-            if ischar(cd.(fn)) && ~isempty(strfind(cd.(fn), '"'))
+            if ischar(Cd.(fn)) && ~isempty(strfind(Cd.(fn), '"'))
                 error('Keyword ("%s") value contains quotes.', fn)
             end
         end
 
-        OBJCOL_namesList{end+1} = cd.NAME;
+        OBJCOL_namesList{end+1} = Cd.NAME;
         %OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + nSubcolumns;    % BUG? Misunderstanding of PDS standard?!!
         OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + 1;              % CORRECT according to MB email 2018-08-08 and DVALNG. ITEMS<>1 still counts as 1 column here.
-        PDS_START_BYTE = PDS_START_BYTE + cd.BYTES + BYTES_BETWEEN_COLUMNS;
+        PDS_START_BYTE = PDS_START_BYTE + Cd.BYTES + BYTES_BETWEEN_COLUMNS;
         
         % Collect information for T2PK functionality.
-        if isfield(cd, 'useFor')
-            for iT2pk = 1:numel(cd.useFor)    % PROPOSAL: Change name of for-loop variable.
-                t2pkArgsTable(end+1).argConst   = cd.useFor{iT2pk};
-                t2pkArgsTable(end  ).iByteFirst = cd.START_BYTE;
-                t2pkArgsTable(end  ).iByteLast  = cd.START_BYTE + cd.BYTES - 1;
+        if isfield(Cd, 'useFor')
+            for iT2pk = 1:numel(Cd.useFor)    % PROPOSAL: Change name of for-loop variable.
+                T2pkArgsTable(end+1).argConst   = Cd.useFor{iT2pk};
+                T2pkArgsTable(end  ).iByteFirst = Cd.START_BYTE;
+                T2pkArgsTable(end  ).iByteLast  = Cd.START_BYTE + Cd.BYTES - 1;
             end
         end
         
-        OBJTABLE_data.OBJCOL_list{i} = cd;      % Return updated info to original data structure.
-        clear cd
+        OBJTABLE_data.OBJCOL_list{i} = Cd;      % Return updated info to original data structure.
+        clear Cd
     end
     OBJTABLE_data.ROW_BYTES = (PDS_START_BYTE-1) - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;   % Adds new column to struct. -1 since PDS_START_BYTE=1 refers to first byte.
     
@@ -258,26 +260,26 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     %---------------------------------------------
     
     % ASSERTION: Unique .useFor PDS keywords.
-    if numel(unique({t2pkArgsTable.argConst})) ~= numel({t2pkArgsTable.argConst})
+    if numel(unique({T2pkArgsTable.argConst})) ~= numel({T2pkArgsTable.argConst})
         error('Specified the same PDS keyword multiple times in ".useFor" fields.')
     end
     
-    [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({t2pkArgsTable.argConst}, {T2PK_PROCESSING_TABLE.argConst});
+    [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({T2pkArgsTable.argConst}, {T2PK_PROCESSING_TABLE.argConst});
 
     % ASSERTION: Arguments only specify implemented-for argument constants.
-    if numel(t2pkArgsTable) ~= numel(iT2pkProcTable)
+    if numel(T2pkArgsTable) ~= numel(iT2pkProcTable)
         error('Can not find hard-coded support for at least one of the values specified in ".useFor" fields.')
     end
     
-    t2pkArgsTable = t2pkArgsTable(iT2pkArgsTable);    % Potentially modify the ordering so that it is consistent with t2pkExecTable.
-    t2pkExecTable = T2PK_PROCESSING_TABLE(iT2pkProcTable);
-    [t2pkExecTable(:).iByteFirst] = deal(t2pkArgsTable(:).iByteFirst);
-    [t2pkExecTable(:).iByteLast]  = deal(t2pkArgsTable(:).iByteLast);
+    T2pkArgsTable = T2pkArgsTable(iT2pkArgsTable);    % Potentially modify the ordering so that it is consistent with T2pkExecTable.
+    T2pkExecTable = T2PK_PROCESSING_TABLE(iT2pkProcTable);
+    [T2pkExecTable(:).iByteFirst] = deal(T2pkArgsTable(:).iByteFirst);
+    [T2pkExecTable(:).iByteLast]  = deal(T2pkArgsTable(:).iByteLast);
     
     LblData.nTabFileRows = NaN;   % Field must be created in case deriving the value later fails.
     try
         rowStringArrayArray = {[], []};
-        [rowStringArrayArray{:}, nBytesPerRow, LblData.nTabFileRows] = createLBL.analyze_TAB_file(tabFilePath, [t2pkExecTable(:).iByteFirst], [t2pkExecTable(:).iByteLast]);
+        [rowStringArrayArray{:}, nBytesPerRow, LblData.nTabFileRows] = createLBL.analyze_TAB_file(tabFilePath, [T2pkExecTable(:).iByteFirst], [T2pkExecTable(:).iByteLast]);
         
         % ASSERTION: Number of bytes per row.
         if nBytesPerRow ~= OBJTABLE_data.ROW_BYTES
@@ -285,17 +287,17 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
                 nBytesPerRow, OBJTABLE_data.ROW_BYTES, tabFilePath), tabLblInconsistencyPolicy)
         end
         
-        t2pkKvpl.keys   = {t2pkExecTable(:).pdsKeyword};
-        t2pkKvpl.values = {};
-        for iT2pk = 1:numel(t2pkKvpl.keys)
-            tabFileValueStr        = rowStringArrayArray{ t2pkExecTable(iT2pk).iFlr }{ iT2pk };
-            t2pkKvpl.values{end+1} = t2pkExecTable(iT2pk).convFunc( tabFileValueStr );
+        T2pkKvpl.keys   = {T2pkExecTable(:).pdsKeyword};
+        T2pkKvpl.values = {};
+        for iT2pk = 1:numel(T2pkKvpl.keys)
+            tabFileValueStr        = rowStringArrayArray{ T2pkExecTable(iT2pk).iFlr }{ iT2pk };
+            T2pkKvpl.values{end+1} = T2pkExecTable(iT2pk).convFunc( tabFileValueStr );
         end
         
         % Update selected PDS keyword values.
-        LblData.HeaderKvl = EJ_lapdog_shared.utils.KVPL.overwrite_values(LblData.HeaderKvl, t2pkKvpl, 'require preexisting keys');
-    catch exc
-        warning_error___LOCAL(sprintf('TAB file "%s" is inconsistent with LBL file: "%s"', tabFilename, exc.message), tabLblInconsistencyPolicy)
+        LblData.HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(LblData.HeaderKvpl, T2pkKvpl, 'require preexisting keys');
+    catch Exception
+        warning_error___LOCAL(sprintf('TAB file "%s" is inconsistent with LBL file: "%s"', tabFilename, Exception.message), tabLblInconsistencyPolicy)
     end
     
     %################################################################################################
@@ -313,21 +315,21 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, settings,
     HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'PRODUCT_ID',   sprintf('"%s"', fileBasename));   % Should be qouted.
     HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'FILE_RECORDS', sprintf( '%i',  LblData.nTabFileRows));
     
-    LblData.HeaderKvl = EJ_lapdog_shared.utils.KVPL.merge(LblData.HeaderKvl, HeaderAddKvl);
+    LblData.HeaderKvpl = EJ_lapdog_shared.utils.KVPL.merge(LblData.HeaderKvpl, HeaderAddKvl);
 
 
 
     %=============================================
     % Construct SSL representing the LBL contents
     %=============================================
-    ssl = create_SSL_header(LblData.HeaderKvl, HeaderOptions);
-    ssl = add_SSL_OBJECT(ssl, 'TABLE', create_OBJ_TABLE_content(OBJTABLE_data, LblData.nTabFileRows));
+    Ssl = create_SSL_header(LblData.HeaderKvpl, HeaderOptions);
+    Ssl = add_SSL_OBJECT(Ssl, 'TABLE', create_OBJ_TABLE_content(OBJTABLE_data, LblData.nTabFileRows));
 
 
 
     % Log message
     %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
-    EJ_lapdog_shared.PDS_utils.write_ODL_from_struct(lblFilePath, ssl, {}, settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
+    EJ_lapdog_shared.PDS_utils.write_ODL_from_struct(lblFilePath, Ssl, {}, Settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
 end
 
 
@@ -335,16 +337,16 @@ end
 % Complement description of ONE column.
 %
 % NOTE: Function name somewhat misleading since it contains a lot of useful assertions that have nothing to do with
-% complementing the columnData struct.
-function [columnData, nSubcolumns] = complement_column_data(columnData, ...
+% complementing the ColumnData struct.
+function [ColumnData, nSubcolumns] = complement_column_data(ColumnData, ...
         PERMITTED_OBJCOL_FIELD_NAMES, BYTES_BETWEEN_COLUMNS, PDS_IDENTIFIER_PERMITTED_CHARS, ...
         lblFilePath, tabLblInconsistencyPolicy)
     
     EMPTY_UNIT_DEFAULT = 'N/A';
 
-    cd = columnData;
+    Cd = ColumnData;
 
-    assert(numel(cd) == 1)
+    assert(numel(Cd) == 1)
     %---------------------------------------------------------------
     % ASSERTION: Only using permitted fields
     % --------------------------------------
@@ -352,129 +354,133 @@ function [columnData, nSubcolumns] = complement_column_data(columnData, ...
     % names by misspelling, or misspelling when overwriting values,
     % or adding fields that are never used by the function.
     %---------------------------------------------------------------
-    EJ_lapdog_shared.utils.assert.struct(cd, PERMITTED_OBJCOL_FIELD_NAMES, 'subset')
+    EJ_lapdog_shared.utils.assert.struct(Cd, PERMITTED_OBJCOL_FIELD_NAMES, 'subset')
 
     
     
-    if isfield(cd, 'BYTES') && ~isfield(cd, 'ITEMS') && ~isfield(cd, 'ITEM_BYTES')
+    if isfield(Cd, 'BYTES') && ~isfield(Cd, 'ITEMS') && ~isfield(Cd, 'ITEM_BYTES')
         % CASE: Has           BYTES
         %       Does not have ITEMS, ITEM_BYTES
         nSubcolumns = 1;
-    elseif ~isfield(cd, 'BYTES') && isfield(cd, 'ITEMS') && isfield(cd, 'ITEM_BYTES')
+    elseif ~isfield(Cd, 'BYTES') && isfield(Cd, 'ITEMS') && isfield(Cd, 'ITEM_BYTES')
         % CASE: Does not have BYTES
         %       Has           ITEMS, ITEM_BYTES
-        nSubcolumns    = cd.ITEMS;
-        cd.ITEM_OFFSET = cd.ITEM_BYTES + BYTES_BETWEEN_COLUMNS;
-        cd.BYTES       = nSubcolumns * cd.ITEM_BYTES + (nSubcolumns-1) * BYTES_BETWEEN_COLUMNS;
+        nSubcolumns    = Cd.ITEMS;
+        Cd.ITEM_OFFSET = Cd.ITEM_BYTES + BYTES_BETWEEN_COLUMNS;
+        Cd.BYTES       = nSubcolumns * Cd.ITEM_BYTES + (nSubcolumns-1) * BYTES_BETWEEN_COLUMNS;
     else
-        warning_error___LOCAL(sprintf('Found disallowed combination of BYTES/ITEMS/ITEM_BYTES. NAME="%s". ABORTING creation of LBL file', cd.NAME), tabLblInconsistencyPolicy)
+        warning_error___LOCAL(sprintf('Found disallowed combination of BYTES/ITEMS/ITEM_BYTES. NAME="%s". ABORTING creation of LBL file', Cd.NAME), tabLblInconsistencyPolicy)
         return   % NOTE: ABORTING & EXITING to avoid causing further errors.
     end
 
     %------------
     % Check UNIT
     %------------
-    if isempty(cd.UNIT)
-        cd.UNIT = EMPTY_UNIT_DEFAULT;     % NOTE: Should add quotes later.
+    if isempty(Cd.UNIT)
+        Cd.UNIT = EMPTY_UNIT_DEFAULT;     % NOTE: Should add quotes later.
     end    
     % ASSERTIONS
     % Check for presence of "raised minus" in UNIT.
     % This is a common typo when writing cm^-3 which then becomes cm⁻3.
-    if any(strfind(cd.UNIT, '⁻'))
-        warning_error___LOCAL(sprintf('Found "raised minus" in UNIT. This is assumed to be a typo. NAME="%s"; UNIT="%s"', cd.NAME, cd.UNIT), tabLblInconsistencyPolicy)
+    if any(strfind(Cd.UNIT, '⁻'))
+        warning_error___LOCAL(sprintf('Found "raised minus" in UNIT. This is assumed to be a typo. NAME="%s"; UNIT="%s"', Cd.NAME, Cd.UNIT), tabLblInconsistencyPolicy)
     end        
-    assert_nonempty_unquoted(cd.UNIT)
+    assert_nonempty_unquoted(Cd.UNIT)
 
     %------------
     % Check NAME
     %------------
     % ASSERTION: Not empty.
-    if isempty(cd.NAME)
+    if isempty(Cd.NAME)
         error('ERROR: Trying to use empty value for NAME.')
     end
     % ASSERTION: Only uses permitted characters.
-    usedDisallowedChars = setdiff(cd.NAME, PDS_IDENTIFIER_PERMITTED_CHARS);
+    usedDisallowedChars = setdiff(Cd.NAME, PDS_IDENTIFIER_PERMITTED_CHARS);
     if ~isempty(usedDisallowedChars)
         % NOTE 2016-07-22: The NAME value that triggers this error may come from a CALIB LBL file produced by pds, NAME = P1-P2_CURRENT/VOLTAGE.
         % pds should no longer produce this kind of LBL files since they violate the PDS standard but they may still occur in old data sets.
         % Therefore, there is also value in printing the file name since the user can then (maybe) determine if that is true.
         warning_error___LOCAL(sprintf('Found disallowed character(s) "%s" in NAME. NAME="%s".\n   File: %s', ...
-            usedDisallowedChars, cd.NAME, lblFilePath), tabLblInconsistencyPolicy)
+            usedDisallowedChars, Cd.NAME, lblFilePath), tabLblInconsistencyPolicy)
     end
 
     %-------------------
     % Check DESCRIPTION
     %-------------------
-    if isempty(cd.DESCRIPTION)
-        cd.DESCRIPTION = 'N/A';   % NOTE: Quotes are added later.
+    if isempty(Cd.DESCRIPTION)
+        Cd.DESCRIPTION = 'N/A';   % NOTE: Quotes are added later.
     end
     % ASSERTION: Does not contain quotes.    
-    assert_nonempty_unquoted(cd.DESCRIPTION)
+    assert_nonempty_unquoted(Cd.DESCRIPTION)
 
-    columnData = cd;
+    ColumnData = Cd;
 end
 
 
 
 % Create SSL for the content of the OBJECT=TABLE segment.
-function s = create_OBJ_TABLE_content(OBJTABLE_data, nTabFileRows)
-    s = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
+function Ssl = create_OBJ_TABLE_content(OBJTABLE_data, nTabFileRows)
+    S = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
 
-    s = add_SSL(s, 'INTERCHANGE_FORMAT','%s',   'ASCII');
-    s = add_SSL(s, 'ROWS',              '%d',   nTabFileRows);
-    s = add_SSL(s, 'COLUMNS',           '%d',   OBJTABLE_data.COLUMNS);
-    s = add_SSL(s, 'ROW_BYTES',         '%d',   OBJTABLE_data.ROW_BYTES);
-    s = add_SSL(s, 'DESCRIPTION',       '"%s"', OBJTABLE_data.DESCRIPTION);
+    S = add_SSL(S, 'INTERCHANGE_FORMAT','%s',   'ASCII');
+    S = add_SSL(S, 'ROWS',              '%d',   nTabFileRows);
+    S = add_SSL(S, 'COLUMNS',           '%d',   OBJTABLE_data.COLUMNS);
+    S = add_SSL(S, 'ROW_BYTES',         '%d',   OBJTABLE_data.ROW_BYTES);
+    S = add_SSL(S, 'DESCRIPTION',       '"%s"', OBJTABLE_data.DESCRIPTION);
 
     for i = 1:length(OBJTABLE_data.OBJCOL_list)           % Iterate over list of ODL OBJECT COLUMN
-        columnData = OBJTABLE_data.OBJCOL_list{i};        % cd = column OBJTABLE_data
+        ColumnData = OBJTABLE_data.OBJCOL_list{i};        % Cd = column OBJTABLE_data
         
-        [s2, nSubcolumns] = create_OBJ_COLUMN_content(columnData);
-        s = add_SSL_OBJECT(s, 'COLUMN', s2);
+        [S2, nSubcolumns] = create_OBJ_COLUMN_content(ColumnData);
+        S = add_SSL_OBJECT(S, 'COLUMN', S2);
     end
+    
+    Ssl = S;
 end
 
 
 
 % Create SSL for the content an OBJECT=COLUMN segment.
-% cd : Column data struct.
-function [s, nSubcolumns] = create_OBJ_COLUMN_content(cd)
-    s = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
+% Cd : Column data struct.
+function [Ssl, nSubcolumns] = create_OBJ_COLUMN_content(Cd)
+    S = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
     
-    s = add_SSL(s, 'NAME',       '%s', cd.NAME);
-    s = add_SSL(s, 'START_BYTE', '%i', cd.START_BYTE);      % Move down to ITEMS?
-    s = add_SSL(s, 'BYTES',      '%i', cd.BYTES);            % Move down to ITEMS?
-    s = add_SSL(s, 'DATA_TYPE',  '%s', cd.DATA_TYPE);
+    S = add_SSL(S, 'NAME',       '%s', Cd.NAME);
+    S = add_SSL(S, 'START_BYTE', '%i', Cd.START_BYTE);      % Move down to ITEMS?
+    S = add_SSL(S, 'BYTES',      '%i', Cd.BYTES);            % Move down to ITEMS?
+    S = add_SSL(S, 'DATA_TYPE',  '%s', Cd.DATA_TYPE);
     
-    if isfield(cd, 'UNIT')
-        s = add_SSL(s, 'UNIT', '"%s"', cd.UNIT);
+    if isfield(Cd, 'UNIT')
+        S = add_SSL(S, 'UNIT', '"%s"', Cd.UNIT);
     end
-    if isfield(cd, 'ITEMS')
-        s = add_SSL(s, 'ITEMS',       '%i', cd.ITEMS);
-        s = add_SSL(s, 'ITEM_BYTES',  '%i', cd.ITEM_BYTES);
-        s = add_SSL(s, 'ITEM_OFFSET', '%i', cd.ITEM_OFFSET);
-        nSubcolumns = cd.ITEMS;
+    if isfield(Cd, 'ITEMS')
+        S = add_SSL(S, 'ITEMS',       '%i', Cd.ITEMS);
+        S = add_SSL(S, 'ITEM_BYTES',  '%i', Cd.ITEM_BYTES);
+        S = add_SSL(S, 'ITEM_OFFSET', '%i', Cd.ITEM_OFFSET);
+        nSubcolumns = Cd.ITEMS;
     else
         nSubcolumns = 1;
     end
-    s = add_SSL(s, 'DESCRIPTION', '"%s"', cd.DESCRIPTION);      % NOTE: Added quotes.
-    if isfield(cd, 'MISSING_CONSTANT')
-        s = add_SSL(s, 'MISSING_CONSTANT', '%f', cd.MISSING_CONSTANT);
+    S = add_SSL(S, 'DESCRIPTION', '"%s"', Cd.DESCRIPTION);      % NOTE: Added quotes.
+    if isfield(Cd, 'MISSING_CONSTANT')
+        S = add_SSL(S, 'MISSING_CONSTANT', '%f', Cd.MISSING_CONSTANT);
     end
+    
+    Ssl = S;
 end
 
 
 
-function s = add_SSL(s, key, pattern, value)
-    s.keys   {end+1} = key;
-    s.values {end+1} = sprintf(pattern, value);
-    s.objects{end+1} = [];
+function Ssl = add_SSL(Ssl, key, pattern, value)
+    Ssl.keys   {end+1} = key;
+    Ssl.values {end+1} = sprintf(pattern, value);
+    Ssl.objects{end+1} = [];
 end
 
-function s = add_SSL_OBJECT(s, objectValue, sslObjectContents)
-    s.keys   {end+1} = 'OBJECT';
-    s.values {end+1} = objectValue;
-    s.objects{end+1} = sslObjectContents;
+function Ssl = add_SSL_OBJECT(Ssl, objectValue, sslObjectContents)
+    Ssl.keys   {end+1} = 'OBJECT';
+    Ssl.values {end+1} = objectValue;
+    Ssl.objects{end+1} = sslObjectContents;
 end
 
 
@@ -522,7 +528,7 @@ end
 % (3) Check that certain keywords are not used.
 %     (Ensures that obsoleted keywords are not used by mistake.)
 %
-% NOTE: Always interprets kvl.value{i} as (matlab) string, not number.
+% NOTE: Always interprets Kvpl.value{i} as (matlab) string, not number.
 %
 %
 % RATIONALE: ORDERING OF KEYS
@@ -532,7 +538,7 @@ end
 % 2) to ensure that LBL keywords are always in approximately the same order.
 %    This is useful when comparing datasets to ensure that a modified/updated
 %    lapdog code produces only the desired changes to LBL files.
-function ssl = create_SSL_header(kvl, HeaderOptions)   % kvl = key-value list
+function Ssl = create_SSL_header(Kvpl, HeaderOptions)   % Kvpl = key-value pair list
     % PROPOSAL: Assert that all KEY_ORDER_LIST keys are unique.
     % PROPOSAL: Should set keywords that apply to all LBL/CAT files (not just OBJECT=TABLE).
     %    Ex: PDS_VERSION_ID
@@ -541,30 +547,30 @@ function ssl = create_SSL_header(kvl, HeaderOptions)   % kvl = key-value list
     %    CON: Another long list which might not capture all keywords.
 
     % ASSERTION: Parameter error check
-    if isempty(kvl.keys)                    % Not sure why checks for this specifically. Previously checked before calculating maxKeyLength.
-        error('kvl.keys is empty.')
+    if isempty(Kvpl.keys)                    % Not sure why checks for this specifically. Previously checked before calculating maxKeyLength.
+        error('Kvpl.keys is empty.')
     end
-    if length(unique(kvl.keys)) ~= length(kvl.keys)
+    if length(unique(Kvpl.keys)) ~= length(Kvpl.keys)
         error('Found doubles among the keys/ODL attribute names.')
     end
 
 
 
     % Order keys.
-    kvl = EJ_lapdog_shared.utils.KVPL.order_by_key_list(kvl, HeaderOptions.keyOrderList);
+    Kvpl = EJ_lapdog_shared.utils.KVPL.order_by_key_list(Kvpl, HeaderOptions.keyOrderList);
 
     % ASSERTION: Check that there are no forbidden keys.
     for i=1:length(HeaderOptions.forbiddenKeysList)
-        if any(strcmp(HeaderOptions.forbiddenKeysList{i}, kvl.keys))
+        if any(strcmp(HeaderOptions.forbiddenKeysList{i}, Kvpl.keys))
             error('Trying to write LBL file header with explicitly forbidden LBL keyword "%s". This indicates that the code has previously failed to substitute these keywords for new ones.', ...
                 HeaderOptions.forbiddenKeysList{i})
         end
     end
 
     % Force certain key values to be quoted.
-    for j = 1:length(kvl.keys)
-        key   = kvl.keys{j};
-        value = kvl.values{j};
+    for j = 1:length(Kvpl.keys)
+        key   = Kvpl.keys{j};
+        value = Kvpl.values{j};
 
         % ASSERTION
         if ~ischar(value)
@@ -572,10 +578,10 @@ function ssl = create_SSL_header(kvl, HeaderOptions)   % kvl = key-value list
         end
 
         if ismember(key, HeaderOptions.forceQuotesKeysList) && ~any('"' == value)
-            kvl.values{j} = ['"', value, '"'];
+            Kvpl.values{j} = ['"', value, '"'];
         end
     end
     
-    ssl = struct('keys', {kvl.keys}, 'values', {kvl.values}, 'objects', {cell(size(kvl.keys))});
+    Ssl = struct('keys', {Kvpl.keys}, 'values', {Kvpl.values}, 'objects', {cell(size(Kvpl.keys))});
     
 end

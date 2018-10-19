@@ -41,6 +41,7 @@ classdef constants < handle
         INDENTATION_LENGTH       = 4;
         MISSING_CONSTANT         = -1000;    % Defined here so that it can be used by code that is not run via Lapdog.
         N_FINAL_PRESWEEP_SAMPLES = 16;
+        PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
         
         % Used by createLBL.create_OBJTABLE_LBL_file
         COTLF_HEADER_OPTIONS   % Set in constructor

@@ -101,7 +101,6 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
         if strcmp(msd2, 'NPL')
             
             canClassifyTab = 1;
-
             
             [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_NLP_data();
 
@@ -116,7 +115,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
     
     
     if canClassifyTab
-        LblData.HeaderKvl = LblKvpl;
+        LblData.HeaderKvpl = LblKvpl;
         createLBL.create_OBJTABLE_LBL_file(tabFilePath, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, TAB_LBL_INCONSISTENCY_POLICY);
     else
         %error('Can not identify type of TAB file: "%s"', tabFilePath)

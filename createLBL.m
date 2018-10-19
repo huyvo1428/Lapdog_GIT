@@ -152,7 +152,7 @@
 %           When used by delivery code:
 %               - Copy, rename selected TAB & LBL files (do not modify).
 %               - For copied TAB & LBL file pairs: read LBL file to obtain LBL header keywords, then call create_LBL_file and overwrite LBL file with new version.
-%           When used for updating LBL files of EDDER/DERIV1 dataset (without rrunning Lapdog):
+%           When used for updating LBL files of EDDER/DERIV1 dataset (without running Lapdog):
 %               - Iterate over day subdirectories
 %               - For every TAB file found, read the LBL file: Extract LBL header keywords and OBJECT=TABLE: DESCRIPTION.
 %           When used for generating initial new sample L5 LBL files (there is no ~an_tabindex equivalent):
@@ -166,33 +166,18 @@
 % PROPOSAL: EST has its own try-catch. Abolish(?)
 %
 % PROPOSAL: Centralized functionality for setting KVPL for start & stop timestamps.
+%   CON-PROPOSAL: Separate create_OBJTABLE_LBL_file argument (struct) with timestamps.
 % PROPOSAL: Read first & LAST start & stop timestamps from EDITED1/CALIB1 LBL files using centralized function(s).
+%
+% PROPOSAL: Function for converting Lapdog's TAB file structs to standard structs (most cases, if not all).
+%   PRO: Can take care of adjusting paths to always use the current dataset path as root.
+%   PRO: Can be submitted to one function to handle all iterations, one filetype at a time(?).
+%   CON: Conversions and structs vary.
+%       Ex: PHO : Does not contain any timestamp information (but will later, probably). Uses columns for timestams.
+%       Ex: IBxS, IVxHL: Uses
+% PROPOSAL: Print/log number of LBL files of each type.
+%   PRO: Can see which parts of code that is tested and not.
 %===================================================================================================
-
-%======================================================================================================================
-% Save MATLAB workspace to file in dataset directory
-% --------------------------------------------------
-% Save all variables needed for createLBL to function.
-% This file can be used for re-running createLBL (fast) without rerunning Lapdog (slow) for large datasets.
-% NOTE: Needs to save global variables.
-% IMPLEMENTATION NOTE: Only do this when there is no such file already to prevent calling createLBL with a faulty
-% workspace/variables (e.g. if not at all loaded from file when should have been) and then overwriting the file.
-%======================================================================================================================
-PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
-savedWorkspaceFile = fullfile(derivedpath, PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
-if exist(savedWorkspaceFile, 'file')
-    % CASE: There is a file.
-    ;   % Do nothing
-elseif ~exist(savedWorkspaceFile, 'file') & ~exist(savedWorkspaceFile, 'dir')
-    % CASE: There is no file (or directory by the same name).
-    
-    % Save all variables including global variables (MATLAB workspace).
-    save(savedWorkspaceFile)
-else
-    % ASSERTION
-    error('Can not save MATLAB workspace (MATLAB variables) to file:\n    %s.\nThere is probably a directory by the same name.')
-end
-
 
 
 executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
@@ -208,7 +193,38 @@ warning('on', 'all')
 %========================================================================================
 global SATURATION_CONSTANT N_FINAL_PRESWEEP_SAMPLES
 C = createLBL.constants(SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES);
-clear SATURATION_CONSTANT N_FINAL_PRESWEEP_SAMPLES
+clear SATURATION_CONSTANT N_FINAL_PRESWEEP_SAMPLES    % Does not clear the global variables. Only makes the global variables inaccessible again.
+
+
+
+%======================================================================================================================
+% Save MATLAB workspace to file in dataset directory
+% --------------------------------------------------
+% Save all variables needed for createLBL to function.
+% This file can be used for re-running createLBL (fast) without rerunning Lapdog (slow) for large datasets.
+% NOTE: Needs to include global variables.
+% IMPLEMENTATION NOTE: Only do this when there is no such file already to prevent calling createLBL with a faulty
+% workspace/variables (e.g. if not at all loaded from file when should have been) and then overwriting the file.
+% IMPLEMENTATION NOTE: Code is not first only to be able to put the filename in the constants class.
+% IMPLEMENTATION NOTE: Requires all variables to be saved to available and unaltered at this stage.
+%======================================================================================================================
+savedWorkspaceFile = fullfile(derivedpath, C.PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
+if exist(savedWorkspaceFile, 'file')
+    % CASE: There is a file.
+    ;   % Do nothing
+elseif ~exist(savedWorkspaceFile, 'file') & ~exist(savedWorkspaceFile, 'dir')
+    % CASE: There is no file (or directory by the same name).
+    
+    % Save all variables including global variables (MATLAB workspace).
+    % NOTE: Saves variables already created by createLBL: "C" and "savedWorkspaceFile".
+    save(savedWorkspaceFile)
+    fprintf('Saving MATLAB workspace in "%s"\n', savedWorkspaceFile)
+else
+    % ASSERTION
+    error('Can not save MATLAB workspace (MATLAB variables) to file:\n    %s.\nThere is probably a directory by the same name.', savedWorkspaceFile)
+end
+
+
 
 DEBUG_ON = 1;
 DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
@@ -225,7 +241,8 @@ if DEBUG_ON
     GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'error';
     %AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
     AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
-    ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing'; % 'warning';
+    %ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
+    ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'error';
 else
     GENERATE_FILE_FAIL_POLICY = 'message';
     %GENERATE_FILE_FAIL_POLICY = 'nothing';    % Somewhat misleading. Something may still be printed.
@@ -295,11 +312,11 @@ end
 
 
 
-%===============================================
+%===============================================================
 %
-% Create LBL files for (TAB files in) tabindex.
+% Create LBL files for (TAB files in) tabindex: IBxS, IVxHL
 %
-%===============================================
+%===============================================================
 for i = 1:length(Stabindex)
     try
         
@@ -336,7 +353,7 @@ for i = 1:length(Stabindex)
 
         HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
         
-        LblData.HeaderKvl = HeaderKvpl;
+        LblData.HeaderKvpl = HeaderKvpl;
         clear   HeaderKvpl IdpHeaderKvpl
         
         
@@ -416,7 +433,7 @@ for i = 1:length(blockTAB)
     HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
     HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(C.ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
     HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(C.ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
-    LblData.HeaderKvl = HeaderKvpl;
+    LblData.HeaderKvpl = HeaderKvpl;
     clear   HeaderKvpl START_TIME STOP_TIME
     
     
@@ -481,7 +498,7 @@ if generatingDeriv1
                     idpLblPathList = {index(iIndexSrc).lblfile};
                     HeaderKvpl = createLBL.create_EST_LBL_header(estTabPath, idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
                     
-                    LblData.HeaderKvl = HeaderKvpl;
+                    LblData.HeaderKvpl = HeaderKvpl;
                     clear   HeaderKvpl
                     
                 catch Exception
@@ -518,7 +535,7 @@ if generatingDeriv1
                 
                 
                 
-                LblData.HeaderKvl = HeaderKvpl;
+                LblData.HeaderKvpl = HeaderKvpl;
                 clear   HeaderKvpl IdpHeaderKvpl  % IdpLblSs is used later (once).
                 
             end   % if-else
@@ -619,7 +636,7 @@ if generatingDeriv1
                 HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
                 
                 LblData = [];
-                LblData.HeaderKvl = HeaderKvpl;
+                LblData.HeaderKvpl = HeaderKvpl;
                 clear   HeaderKvpl   IdpHeaderKvpl
 
                 LblData.OBJTABLE = [];
@@ -659,7 +676,7 @@ if generatingDeriv1
             HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));
             
             LblData = [];
-            LblData.HeaderKvl = HeaderKvpl;
+            LblData.HeaderKvpl = HeaderKvpl;
             clear   HeaderKvpl
             
             LblData.OBJTABLE = [];
@@ -688,7 +705,7 @@ if generatingDeriv1
             HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));
 
             LblData = [];
-            LblData.HeaderKvl = HeaderKvpl;
+            LblData.HeaderKvpl = HeaderKvpl;
             clear   HeaderKvpl
 
             LblData.OBJTABLE = [];
@@ -721,9 +738,9 @@ if generatingDeriv1
             HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl,  'STOP_TIME',                   '<UNSET>');
             HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', '<UNSET>');
             HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  '<UNSET>');
-            
+
             LblData = [];
-            LblData.HeaderKvl = HeaderKvpl;
+            LblData.HeaderKvpl = HeaderKvpl;
             clear   HeaderKvpl
             
             LblData.OBJTABLE = [];
