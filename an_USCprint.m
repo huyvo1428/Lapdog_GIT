@@ -2,7 +2,7 @@
 function [] = an_USCprint(USCfname,USCshort,time_arr,data_arr, index_nr_of_firstfile,timing,mode)
 
 
-fprintf(1,'printing %s, mode: %s',USCfname, mode);
+fprintf(1,'printing %s, mode: %s\n',USCfname, mode);
 %'hello'
 %fprintf(1,'%s',time_arr{1,1}(1,:));
 
