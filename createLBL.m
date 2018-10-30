@@ -430,7 +430,9 @@ for i = 1:length(Stabindex)
                 isDensityMode, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);
         end
         
-        createLBL.create_OBJTABLE_LBL_file(Stabindex(i).path, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+        createLBL.create_OBJTABLE_LBL_file(...
+            createLBL.convert_TAB_path(derivedpath, Stabindex(i).path), ...
+            LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         clear   LblData
 
     catch Exception
@@ -475,7 +477,9 @@ for i = 1:length(blockTAB)
     %=======================================
     [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_BLKLIST_data();
     
-    createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+    createLBL.create_OBJTABLE_LBL_file(...
+        createLBL.convert_TAB_path(derivedpath, blockTAB(i).blockfile), ...
+        LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
     clear   LblData
     
 end   % for
@@ -526,7 +530,9 @@ if generatingDeriv1
                     estTabPath     = San_tabindex(i).path;
                     probeNbrList   = [index(iIndexSrc).probe];
                     idpLblPathList = {index(iIndexSrc).lblfile};
-                    HeaderKvpl = createLBL.create_EST_LBL_header(estTabPath, idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
+                    HeaderKvpl = createLBL.create_EST_LBL_header(...
+                        createLBL.convert_TAB_path(derivedpath, estTabPath), ...
+                        idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
                     
                     LblData.HeaderKvpl = HeaderKvpl;
                     clear   HeaderKvpl
@@ -608,7 +614,9 @@ if generatingDeriv1
 
 
 
-            createLBL.create_OBJTABLE_LBL_file(San_tabindex(i).path, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
+            createLBL.create_OBJTABLE_LBL_file(...
+                createLBL.convert_TAB_path(derivedpath, San_tabindex(i).path), ...
+                LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
             clear   LblData   tabLblInconsistencyPolicy
             
             
@@ -669,7 +677,9 @@ if generatingDeriv1
                 LblData.OBJTABLE = [];
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_A1P_data();
 
-                createLBL.create_OBJTABLE_LBL_file(der_struct.file{iFile}, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
+                createLBL.create_OBJTABLE_LBL_file(...
+                    createLBL.convert_TAB_path(derivedpath, der_struct.file{iFile}), ...
+                    LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
 
             end
         end
@@ -709,7 +719,9 @@ if generatingDeriv1
             LblData.OBJTABLE = [];
             [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_ASW_data();
             
-            createLBL.create_OBJTABLE_LBL_file(ASW_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, ASW_TAB_LBL_INCONSISTENCY_POLICY);
+            createLBL.create_OBJTABLE_LBL_file(...
+                createLBL.convert_TAB_path(derivedpath, ASW_tabindex(iFile).fname), ...
+                LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, ASW_TAB_LBL_INCONSISTENCY_POLICY);
         end
     end
     
@@ -738,7 +750,9 @@ if generatingDeriv1
             LblData.OBJTABLE = [];
             [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_USC_data();
 
-            createLBL.create_OBJTABLE_LBL_file(usc_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            createLBL.create_OBJTABLE_LBL_file(...
+                createLBL.convert_TAB_path(derivedpath, usc_tabindex(iFile).fname), ...
+                LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         end
     end
     
@@ -773,7 +787,9 @@ if generatingDeriv1
             LblData.OBJTABLE = [];
             [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_PHO_data();
             
-            createLBL.create_OBJTABLE_LBL_file(PHO_tabindex(iFile).fname, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            createLBL.create_OBJTABLE_LBL_file(...
+                createLBL.convert_TAB_path(derivedpath, PHO_tabindex(iFile).fname), ...
+                LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         end
     end
     
