@@ -5,20 +5,25 @@
 %
 % ARGUMENTS AND RETURN VALUES
 % ===========================
-% deleteHeaderKeyList : Cell array of keys which are removed from HeaderKvpl, if found.
-% HeaderKvpl           : Key-value (pair) list. Quotes are kept. 
-% LblSs               : Quotes are removed
+% deleteHeaderKeyList : Cell array of keywords which are excluded from HeaderKvpl, if found.
+% HeaderKvpl          : Key-value (pair) list. Quotes are kept. 
+% LblSs               : Full LBL content on simple struct (SS) format. Quotes are removed
 %
 function [HeaderKvpl, LblSs] = read_LBL_file(filePath, deleteHeaderKeyList)
 %
-% PROPOSAL: Change name to something implying only reading EDDER/CALIB1 LBL files.
+% PROPOSAL: Change name to something implying only reading EDDER/CALIB1 (pds) LBL files.
+%   CON: There is nothing in its function that prevents it from reading other LBL files.
 %
 % PROPOSAL: Remove all quotes from values in header.
 %    CON: createLBL.write_LBL_header must determine which keys should have quotes. ==> Another long list which might not capture all keywords.
+%       CON?: createLBL.write_LBL_header no longer exists and has no counterpart?
 %
 % PROPOSAL: Replace deleteHeaderKeyList with ~of regexes for permitted header keys.
-%   Should only need to read ROSETTA:* and certain hardcoded constants (?) like PRODUCER_FULL_NAME, LABEL_REVISION_NOTE (?),
-%   INSTRUMENT_HOST_NAME, MISSION_NAME etc.
+%   Should only need to read ROSETTA:* and timestamps (STOP_TIME etc), INSTRUMENT_MODE_*.
+%   Returning SS (simple struct; not SSL) is equivalent to returning timestamps on easy-to-use format.
+%
+% PROPOSAL: Use whitelist+blacklist (as regexps). Every keywords must match.
+%   CON: Somewhat long blacklist (all universal keywords).
 
     % NOTE: LblSsl keeps   quotes.
     %       LblSs  removes quotes.

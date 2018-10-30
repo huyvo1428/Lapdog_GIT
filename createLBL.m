@@ -1,10 +1,10 @@
 %function createLBL_main(derivedpath, datasetid, shortphase, datasetname, ...
 %        lbltime, lbleditor, lblrev, ...
-%        producerfullname, producershortname, targetfullname, targettype, missionphase, tabindex, blockTAB, index, an_tabindex, der_struct)
+%        producerfullname, producershortname, targetfullname, targettype, missionphase, tabindex, blockTAB, index, an_tabindex, der_struct, ASW_struct, usc_struct, PHO_struct)
 
 %
 % Create .LBL files for all .TAB files.
-% NOTE: Uses global variable "der_struct"
+% NOTE: Uses global variables
 %
 % VARIABLE NAMING CONVENTIONS
 % ===========================
@@ -108,7 +108,7 @@
 %   	- ~Current dependence: function createLBL_main(derivedpath, datasetid, shortphase, datasetname, ...
 %         lbltime, lbleditor, lblrev, ...
 %         producerfullname, producershortname, targetfullname, targettype, missionphase, tabindex, blockTAB, index,
-%         an_tabindex, der_struct)
+%         an_tabindex, der_struct, ASW_struct, PHO_struct, usc_struct)
 %   --
 %   TODO-DECISION: Relationship with delivery code?
 %       Still modify LBL files in delivery code? (change TAB+LBL filenames; search-and-replace filenames in DESCRIPTION; more?)
@@ -173,8 +173,38 @@
 %   PRO: Can take care of adjusting paths to always use the current dataset path as root.
 %   PRO: Can be submitted to one function to handle all iterations, one filetype at a time(?).
 %   CON: Conversions and structs vary.
-%       Ex: PHO : Does not contain any timestamp information (but will later, probably). Uses columns for timestams.
-%       Ex: IBxS, IVxHL: Uses
+%       tabindex: IBxS, IVxHL
+%           Uses IDP LBL files for start timestamps, IDP LBL files for SPACECRAFT_CLOCK_STOP_COUNT, Stabindex for STOP_TIME.
+%       blockTAB: BLK
+%           Uses UTC midnight (slightly incorrect?) for timestamps.
+%       an_tabindex: EST
+%           ALL: Has .dataType field for separating xxD, PSD+FRQ, AxS, EST
+%           EST:            Uses createLBL.create_EST_LBL_header to initialize header KVPL (mixing timestamps with other keywords).
+%           ALL except EST: IDP LBL for all timestamps.
+%       der_struct: A1P
+%           Struct for timestamps.
+%       ASW_tabindex: ASW
+%           Struct for timestamps.
+%       usc_tabindex: USC
+%           Struct for timestamps.
+%       PHO_tabindex: PHO
+%           Struct has no timestamps (yet; later maybe). Timestamps set from columns.
+%   CON: Several things are different for different loops.
+%       Ex: Calls to different definitions.* column description functions. Calls also have different arguments.
+%       Ex: Creation of filenames (parses old filenames)
+%           Ex: IxS: BxS from IxS so that can mention file in PDS description.
+%           Ex: PSD: FRQ from PSD so that can mention file in PDS description.
+%       Ex: Take action depending on San_tabindex(i).dataType
+%       Ex: Different TAB-LBL inconsistency policy.
+%       Ex: Parse filenames:
+%           IVxD, sampling rate seconds
+%           CON: Could replace with assertions.
+%       
+% PROPOSAL: Function for converting one absolute path to TAB file to path with other dataset root path.
+%   PRO: Does not need to modify Lapdog TAB file structs/cell arrays.
+%   TODO-DECISION: How determine what is the dataset root path part?
+%       PROPOSAL: Assume that TAB files are three directories deep.
+%
 % PROPOSAL: Print/log number of LBL files of each type.
 %   PRO: Can see which parts of code that is tested and not.
 %===================================================================================================
@@ -333,6 +363,11 @@ for i = 1:length(Stabindex)
         iIndexLast  = Stabindex(i).iIndexLast;     % PROPOSAL: Use for reading CALIB1/EDITED1 file for obtaining end timestamps?
         probeNbr    = index(iIndexFirst).probe;
         
+        isSweep       = (tabFilename(30)=='S');
+        isSweepTable  = (tabFilename(28)=='B') && isSweep;
+        isDensityMode = (tabFilename(28)=='I');
+        isEFieldMode  = (tabFilename(28)=='V');
+
         %--------------------------------
         % Read the EDDER/CALIB1 LBL file
         %--------------------------------
@@ -343,10 +378,10 @@ for i = 1:length(Stabindex)
         % NOTE: One can obtain a stop/ending SCT value from index(Stabindex(i).iIndexLast).sct1str; too, but experience
         % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
         % Example: LAP_20150503_210047_525_I2L.LBL
-        SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(Stabindex(i).sctStop));
+        SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(Stabindex(i).sctStop));    % Use obt2sctrc?
         
         HeaderKvpl = HeaderAllKvpl;
-        HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   IdpLblSs.START_TIME);        % UTC start time
+        HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   IdpLblSs.START_TIME);           % UTC start time
         HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'STOP_TIME',                    Stabindex(i).utcStop(1:23));    % UTC stop  time
         HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', IdpLblSs.SPACECRAFT_CLOCK_START_COUNT);
         HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
@@ -357,11 +392,6 @@ for i = 1:length(Stabindex)
         clear   HeaderKvpl IdpHeaderKvpl
         
         
-        
-        isSweep       = (tabFilename(30)=='S');
-        isSweepTable  = (tabFilename(28)=='B') && isSweep;
-        isDensityMode = (tabFilename(28)=='I');
-        isEFieldMode  = (tabFilename(28)=='V');
         
         %=======================================
         %
@@ -420,12 +450,14 @@ for i = 1:length(blockTAB)
     
     LblData = [];
     
-    %==============================================
+    %================================================================================================================
     %
     % LBL file: Create header/key-value pairs
     %
     % NOTE: Does NOT rely on reading old LBL file.
-    %==============================================
+    % BUG?/NOTE: Can not find any block list files with command block beginning before/ending after midnight (due to
+    % "rounding") but should they not? /2018-10-19
+    %================================================================================================================
     START_TIME = datestr(blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
     STOP_TIME  = datestr(blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
     HeaderKvpl = HeaderAllKvpl;
@@ -441,7 +473,6 @@ for i = 1:length(blockTAB)
     %=======================================
     % LBL file: Create OBJECT TABLE section
     %=======================================
-    
     [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_BLKLIST_data();
     
     createLBL.create_OBJTABLE_LBL_file(blockTAB(i).blockfile, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
@@ -480,9 +511,8 @@ if generatingDeriv1
                 %======================
                 % CASE: Best estimates
                 %======================
-                % NOTE: Has its  own try-catch statement. (Why?)
+                % NOTE: Has its own try-catch statement. (Why?)
                 
-                %TAB_file_info = dir(San_tabindex(i).path);
                 HeaderKvpl = HeaderAllKvpl;
                 HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
                 try
@@ -492,9 +522,9 @@ if generatingDeriv1
                     %    START_TIME / STOP_TIME,
                     %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
                     %===============================================================
-                    iIndexSrc         = San_tabindex(i).iIndex;
-                    estTabPath        = San_tabindex(i).path;
-                    probeNbrList      = [index(iIndexSrc).probe];
+                    iIndexSrc      = San_tabindex(i).iIndex;
+                    estTabPath     = San_tabindex(i).path;
+                    probeNbrList   = [index(iIndexSrc).probe];
                     idpLblPathList = {index(iIndexSrc).lblfile};
                     HeaderKvpl = createLBL.create_EST_LBL_header(estTabPath, idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
                     
@@ -517,16 +547,15 @@ if generatingDeriv1
                 [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(...
                     index(San_tabindex(i).iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
                 
-                
                 % NOTE: One can obtain a stop/ending SCT value from index(Stabindex(i).iIndexLast).sct1str; too, but experience
                 % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
                 % Example: LAP_20150503_210047_525_I2L.LBL
                 %SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLastXXX).sct0str(2), obt2sct(stabindexXXX(i).sctStop));
-                SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(Stabindex(San_tabindex(i).iTabindex).sctStop));
-                
+                SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(Stabindex(San_tabindex(i).iTabindex).sctStop));   % Use obt2sctrc?
+
                 % BUG: Does not work for 32S. Too narrow time limits.
                 HeaderKvpl = HeaderAllKvpl;
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   IdpLblSs.START_TIME);                                % UTC start time
+                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   IdpLblSs.START_TIME);                                   % UTC start time
                 HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'STOP_TIME',                    Stabindex(San_tabindex(i).iTabindex).utcStop(1:23));    % UTC stop  time
                 HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', IdpLblSs.SPACECRAFT_CLOCK_START_COUNT);
                 HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
@@ -549,33 +578,31 @@ if generatingDeriv1
             %=======================================
             
             LblData.OBJTABLE = [];
-            if strcmp(San_tabindex(i).dataType, 'downsample')   %%%%%%%% DOWNSAMPLED FILE %%%%%%%%%%%%%%%                
-                
+            if strcmp(San_tabindex(i).dataType, 'downsample')
+                % CASE: IVxD
                 samplingRateSeconds = str2double(tabFilename(end-10:end-9));
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_IVxD_data(probeNbr, IdpLblSs.DESCRIPTION, samplingRateSeconds, isDensityMode);
                 
-            elseif strcmp(San_tabindex(i).dataType, 'spectra')   %%%%%%%%%%%%%%%% SPECTRA FILE %%%%%%%%%%
-                
+            elseif strcmp(San_tabindex(i).dataType, 'spectra')
+                % CASE: PSD                
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_PSD_data(probeNbr, isDensityMode, San_tabindex(i).nTabColumns, mode);
                 
-            elseif  strcmp(San_tabindex(i).dataType, 'frequency')    %%%%%%%%%%%% FREQUENCY FILE %%%%%%%%%
-                
+            elseif  strcmp(San_tabindex(i).dataType, 'frequency')
+                % CASE: FRQ                
                 psdTabFilename = strrep(San_tabindex(i).filename, 'FRQ', 'PSD');
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_FRQ_data(San_tabindex(i).nTabColumns, psdTabFilename);
 
-            elseif  strcmp(San_tabindex(i).dataType, 'sweep')    %%%%%%%%%%%% SWEEP ANALYSIS FILE %%%%%%%%%
-
+            elseif  strcmp(San_tabindex(i).dataType, 'sweep')
+                % CASE: AxS (analyzed sweeps)
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_AxS_data(Stabindex(San_tabindex(i).iTabindex).filename);
-
                 tabLblInconsistencyPolicy = AxS_TAB_LBL_INCONSISTENCY_POLICY;   % NOTE: Different policy for A?S.LBL files.
                 
-            elseif  strcmp(San_tabindex(i).dataType,'best_estimates')    %%%%%%%%%%%% BEST ESTIMATES FILE %%%%%%%%%%%%
-                
+            elseif  strcmp(San_tabindex(i).dataType,'best_estimates')                
+                % CASE: EST
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_EST_data();
                 
-            else
-                
-                error('Error, bad identifier in an_tabindex{%i,7} = San_tabindex(%i).dataType = "%s"',i, i, San_tabindex(i).dataType);
+            else                
+                error('Error, bad identifier in an_tabindex{%i,7} = San_tabindex(%i).dataType = "%s"', i, i, San_tabindex(i).dataType);
                 
             end
 
@@ -756,7 +783,7 @@ if generatingDeriv1
     %
     %==============================================================    
     % TEMPORARY SOLUTION.
-    createLBL.create_LBL_L5_sample_types(derivedpath, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES)
+    createLBL.create_LBL_L5_sample_types(derivedpath, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES)     % DELETE?!!
 end
 
 

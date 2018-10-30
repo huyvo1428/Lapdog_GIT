@@ -121,11 +121,14 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     %       CON: Not problem since SPICE already needs to be loaded for T2PK functionality.
     %
     % PROPOSAL: Separate argument (struct) with timestamps.
+    %   NOTE: CALIB_MEAS (030101) does not have any real timestamps.
+    %   --
     %   PROPOSAL: Convert SCCS/SCT --> UTC or reverse.
     %   PROPOSAL: Assertion for consistency SCCS-UTC.
     %   PROPOSAL: Assertion for consistency between columns and separately specified timestamps.
     %       PROPOSAL: useFor (or useFor-like) options for specifying which columns should be used for checking.
-    %   TODO-NEED-INFO: Is it absolutely certain that all tables have timestamps?
+    %   PROPOSAL: Does not have to give timestamps as UTC+SCCS. Could be UTC+OBT, or just one (automatically convert to what is missing).
+    %   TODO-NEED-INFO: Is it absolutely certain that all TAB files have timestamps?
 
 
 

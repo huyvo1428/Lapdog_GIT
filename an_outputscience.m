@@ -33,8 +33,8 @@ dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf'};
 infoflds= {'macroId'};
 
 if debug(1) %PHO.TAB
-PHO= struct_cleanup(XXP,infoflds,dataflds);
-PHO= PHOTABFILE(PHO,iph0conditions,XXP);
+    PHO= struct_cleanup(XXP,infoflds,dataflds);
+    PHO= PHOTABFILE(PHO,iph0conditions,XXP);
 end
 
 

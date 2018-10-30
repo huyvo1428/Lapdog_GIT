@@ -1,6 +1,5 @@
-% ~EXPERIMENTAL
 %
-% Collect Lapdog LBL constants. Must instantiate.
+% Collect Lapdog LBL constants. Must instantiate before using.
 %
 %
 % IMPLEMENTATION NOTE
@@ -46,9 +45,9 @@ classdef constants < handle
         % Used by createLBL.create_OBJTABLE_LBL_file
         COTLF_HEADER_OPTIONS   % Set in constructor
     end
-    
-    
-    
+
+
+
     methods(Access=public)
 
         % Constructor
@@ -239,12 +238,6 @@ classdef constants < handle
                 'forbiddenKeysList',   {FORBIDDEN_KEYS}, ...
                 'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
         end
-        
-        
-        
-    %end    % methods
-    
-    %methods(Static)
     
     
         
@@ -271,34 +264,9 @@ classdef constants < handle
                 error('Argument LABEL_REVISION_NOTE contains quote(s).')
             end
             
-            
             LblAllKvpl = [];
-            LblAllKvpl.keys = {};
+            LblAllKvpl.keys   = {};
             LblAllKvpl.values = {};
-            
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PDS_VERSION_ID',            'PDS3');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'DATA_QUALITY_ID',           '"1"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCT_TYPE',              '"DDR"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PROCESSING_LEVEL_ID',       '"5"');
-            %
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
-            %             %LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCER_ID',               producershortname);
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_HOST_ID',        'RO');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_ID',             'RPCLAP');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'TARGET_TYPE',               sprintf('"%s"', targettype));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'MISSION_ID',                'ROSETTA');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
 
             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pairs(LblAllKvpl, {...
                 'PDS_VERSION_ID',            'PDS3'; ...
