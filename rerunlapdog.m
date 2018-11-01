@@ -284,7 +284,7 @@ end
 
 if remake_LBL
     fprintf(1,'lapdog: generate LBL files....\n');
-    createLBL;
+    createLBL(0,1);
     
 end
 

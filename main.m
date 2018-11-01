@@ -112,7 +112,7 @@ analysis;
 
 
 'lapdog: generate LBL files....'
-createLBL
+createLBL(1,1)
 
 
 
