@@ -36,10 +36,10 @@ classdef constants < handle
     % 
     
     properties(Access=public)
-        ROSETTA_NAIF_ID          = -226;     % Used by SPICE.
-        INDENTATION_LENGTH       = 4;
-        MISSING_CONSTANT         = -1000;    % Defined here so that it can be used by code that is not run via Lapdog.
-        N_FINAL_PRESWEEP_SAMPLES = 16;
+        ROSETTA_NAIF_ID                        = -226;     % Used by SPICE.
+        INDENTATION_LENGTH                     = 4;
+        MISSING_CONSTANT                       = -1000;    % Defined here so that it can be used by code that is not run via Lapdog.
+        N_FINAL_PRESWEEP_SAMPLES               = 16;
         PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
         
         % Used by createLBL.create_OBJTABLE_LBL_file
@@ -239,7 +239,7 @@ classdef constants < handle
                 'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
         end
     
-    
+
         
         % Construct list of key-value pairs to use for all LBL files.
         % -----------------------------------------------------------
@@ -258,17 +258,16 @@ classdef constants < handle
         function LblAllKvpl = get_LblAllKvpl(obj, LABEL_REVISION_NOTE)
             % PROPOSAL: Rewrite to use EJ_lapdog_shared.utils.KVPL.create.
             % PROPOSAL: Use generate_PDS_data?
+            %
+            % PROPOSAL: Do not add LABEL_REVISION_NOTE?
+            % PROPOSAL: Add but set to <UNSET>?
 
             % ASSERTION
             if ~isempty(regexp(LABEL_REVISION_NOTE, '"', 'once'))
                 error('Argument LABEL_REVISION_NOTE contains quote(s).')
             end
             
-            LblAllKvpl = [];
-            LblAllKvpl.keys   = {};
-            LblAllKvpl.values = {};
-
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pairs(LblAllKvpl, {...
+            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.create({...
                 'PDS_VERSION_ID',            'PDS3'; ...
                 'DATA_QUALITY_ID',           '"<UNSET>"'; ...
                 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'); ...

@@ -6,6 +6,7 @@
 %
 % Initially created by Erik P G Johansson, IRF Uppsala.
 function metakernel = get_lapdog_metakernel()
+    % PROPOSAL: Use readlink -f to de-reference symlinks?!!
     
     currentMFile = mfilename('fullpath');
     [lapdogDir, basenameJunk, extJunk] = fileparts(currentMFile);

@@ -129,8 +129,13 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     %       PROPOSAL: useFor (or useFor-like) options for specifying which columns should be used for checking.
     %   PROPOSAL: Does not have to give timestamps as UTC+SCCS. Could be UTC+OBT, or just one (automatically convert to what is missing).
     %   TODO-NEED-INFO: Is it absolutely certain that all TAB files have timestamps?
-
-
+    %       These files are LBL+TAB and do not have START/STOP_TIME, or SPACECRAFT_CLOCK_STOP_TIME, but hey do have
+    %       SPACECRAFT_CLOCK_START_COUNT = "N/A":
+    %           CALIB/RPCLAP030101_CALIB_FINE.LBL
+    %           CALIB/RPCLAP030101_CALIB_VBIAS.LBL
+    %           CALIB/RPCLAP030101_CALIB_IBIAS.LBL
+    
+    
 
     %===========
     % Constants

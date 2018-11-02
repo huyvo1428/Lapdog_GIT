@@ -13,9 +13,6 @@
 % This code should not use global variables.
 
 %===================================================================================================
-% PROPOSAL: Use get_PDS.m.
-%   TODO-NEED-INFO: Why? What needed for?
-%
 % PROPOSAL: Stop/disable generating AxS LBL files.
 %   PRO: Will never be used (but lead to work).
 %   PRO: Are not up-to-date and generate errors/warnings which are typically ignored.
@@ -29,6 +26,7 @@
 %   NOTE: Want to avoid setting the same information twice. Avoid first setting in createLBL, and then overwriting in
 %         ~create_E2C2D2_*.
 %   --
+%   Ex: LABEL_REVISION_NOTE
 %   Ex: Column description differences.
 %   Ex: DATA_SET_ID + DATA_SET_NAME
 %   Ex: PRODUCT_TYPE + PROCESSING_LEVEL_ID (level)
@@ -76,11 +74,6 @@
 %   TODO-NEED-INFO: Need info if correct understanding of index timestamps.
 %
 % PROPOSAL: Read STOP_TIME from the last CALIB1/EDITED1 file, just like IdpLblSs does.
-%
-% PROPOSAL: Standard single current/voltage, measured/bias column which varies with EDDER/DERIV1.
-%   PROPOSAL: Argument which selects: "bias", "meas"
-% PROPOSAL: Take hard-coded constants struct "C" as argument.
-%  TODO-DECISION: Should struct depend on EDDER/DERIV1 or contain info for both?
 %
 % PROPOSAL: Make into separate, independent code that can be run separately from Lapdog, but also as a part of it.
 %   Set start & stop timestamps from TAB contents, not EDITED1/CALIB1 files.
@@ -171,24 +164,8 @@
 %           IVxD, sampling rate seconds
 %           CON: Could replace with assertions.
 %
-% PROPOSAL: Function for converting one absolute path to TAB file to path with other dataset root path.
-%   PRO: Does not need to modify Lapdog TAB file structs/cell arrays.
-%   TODO-DECISION: How determine what is the dataset root path part?
-%       PROPOSAL: Assume that TAB files are three directories deep.
-%
 % PROPOSAL: Print/log number of LBL files of each type.
 %   PRO: Can see which parts of code that is tested and not.
-%
-% PROPOSAL: Better name for LblDefs. ~LblCreator? ~LblFactory?!
-% PROPOSAL: Different LABEL_REVISION_NOTE för CALIB2, DERIV2. Multiple rows?
-% PROPOSAL: Make use of try-catch more consistent.
-%   TODO-DECISION: Per file? Per loop? Outside entire function?
-%   PROPOSAL: EST has its own try-catch. Abolish(?)
-% PROPOSAL: Set LABEL_REVISION_NOTE without lbl{rev,editor,time}.
-% PROPOSAL: Move out TAB-LBL inconsistency flags?!
-% PROPOSAL: Move out generatingDeriv1 to argument.
-%   CON: Useful to derive automatically for ~rerun_createLBL.
-% PROPOSAL: Arguments for Stabindex, San_tabindex directly?
 %
 % PROPOSAL: Check whether TAB files are under the current dataset root path.
 %   PRO: Can check if Lapdog data structs apply to the current run.
@@ -197,6 +174,15 @@
 %       CON-PROPOSAL: Check that struct's dataset subdirectory exists under current dataset.
 %           CON: Only covers some errors.
 % PROPOSAL: Move DONT_READ_HEADER_KEY_LIST to constants.
+%
+% PROPOSAL: Better name for LblDefs. ~LblCreator? ~LblFactory?!
+% PROPOSAL: Make use of try-catch more consistent.
+%   TODO-DECISION: Per file? Per loop? Outside entire function?
+%   PROPOSAL: EST has its own try-catch. Abolish(?)
+%
+% PROPOSAL: Different LABEL_REVISION_NOTE för CALIB2, DERIV2. Multiple rows?
+% PROPOSAL: Set LABEL_REVISION_NOTE without lbl{rev,editor,time}.
+%
 %===================================================================================================
 
 function create_LBL_files(data)
@@ -286,30 +272,26 @@ function create_LBL_files(data)
             isSweep       = (tabFilename(30)=='S');
             isSweepTable  = (tabFilename(28)=='B') && isSweep;
             isDensityMode = (tabFilename(28)=='I');
-            isEFieldMode  = (tabFilename(28)=='V');
+            %isEFieldMode  = (tabFilename(28)=='V');
             
             %--------------------------------
             % Read the EDDER/CALIB1 LBL file
             %--------------------------------
             [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(data.index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST);
             
-            
-            
             % NOTE: One can obtain a stop/ending SCT value from data.index(Stabindex(i).iIndexLast).sct1str; too, but experience
             % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
             % Example: LAP_20150503_210047_525_I2L.LBL
             SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', data.index(iIndexLast).sct0str(2), obt2sct(Stabindex(i).sctStop));    % Use obt2sctrc?
+            LblData.HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                IdpLblSs.START_TIME, ...
+                Stabindex(i).utcStop, ...
+                IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
+                SPACECRAFT_CLOCK_STOP_COUNT);
             
-            HeaderKvpl = HeaderAllKvpl;
-            HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   IdpLblSs.START_TIME);           % UTC start time
-            HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'STOP_TIME',                    Stabindex(i).utcStop(1:23));    % UTC stop  time
-            HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', IdpLblSs.SPACECRAFT_CLOCK_START_COUNT);
-            HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
+            LblData.HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, LblData.HeaderKvpl, 'require preexisting keys');
             
-            HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
-            
-            LblData.HeaderKvpl = HeaderKvpl;
-            clear   HeaderKvpl IdpHeaderKvpl
+            clear   IdpHeaderKvpl
             
             
             
@@ -326,26 +308,20 @@ function create_LBL_files(data)
                 %==============================
                 
                 if (isSweepTable)
-                    % CASE: BxS
-                    
-                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_BxS_data(probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);
-                    
-                else     % if (isSweepTable) ...
-                    % CASE: IxS
-                    
+                    % CASE: BxS                    
+                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_BxS_data(probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);                    
+                else
+                    % CASE: IxS                    
                     bxsTabFilename = tabFilename;
-                    bxsTabFilename(28) = 'B';
-                    
+                    bxsTabFilename(28) = 'B';                    
                     [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_IxS_data(...
-                        probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, bxsTabFilename, Stabindex(i).nColumns);
-                    
-                end   % if (isSweepTable) ... else ...
+                        probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, bxsTabFilename, Stabindex(i).nColumns);                    
+                end
                 
             else
                 %===============================================================
                 % CASE: Anything EXCEPT sweep files (NOT [IB]xS) <==> [IV]x[HL]
-                %===============================================================
-                
+                %===============================================================                
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_IVxHL_data(...
                     isDensityMode, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);
             end
@@ -358,7 +334,7 @@ function create_LBL_files(data)
         catch Exception
             createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
             fprintf(1,'Skipping LBL file (tabindex)index - Continuing\n');
-        end    % try-catch
+        end
     end    % for
     
     
@@ -382,15 +358,11 @@ function create_LBL_files(data)
         %================================================================================================================
         START_TIME = datestr(data.blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
         STOP_TIME  = datestr(data.blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
-        HeaderKvpl = HeaderAllKvpl;
-        HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   START_TIME);       % UTC start time
-        HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'STOP_TIME',                    STOP_TIME);        % UTC stop time
-        HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(START_TIME)));
-        HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
-        LblData.HeaderKvpl = HeaderKvpl;
-        clear   HeaderKvpl START_TIME STOP_TIME
-        
-        
+        LblData.HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+            START_TIME, STOP_TIME, ...
+            cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(START_TIME)), ...
+            cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
+        clear   START_TIME   STOP_TIME
         
         %=======================================
         % LBL file: Create OBJECT TABLE section
@@ -421,7 +393,7 @@ function create_LBL_files(data)
                 mode          = tabFilename(end-6:end-4);
                 probeNbr      = data.index(San_tabindex(i).iIndex).probe;     % Probe number
                 isDensityMode = (mode(1) == 'I');
-                isEFieldMode  = (mode(1) == 'V');
+                %isEFieldMode  = (mode(1) == 'V');
                 
                 LblData = [];
                 
@@ -439,35 +411,28 @@ function create_LBL_files(data)
                     
                     HeaderKvpl = HeaderAllKvpl;
                     HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
-                    try
-                        %===============================================================
-                        % NOTE: createLBL.create_EST_LBL_header(...)
-                        %       sets certain LBL/ODL variables to handle collisions:
-                        %    START_TIME / STOP_TIME,
-                        %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
-                        %===============================================================
-                        iIndexSrc      = San_tabindex(i).iIndex;
-                        estTabPath     = San_tabindex(i).path;
-                        probeNbrList   = [data.index(iIndexSrc).probe];
-                        idpLblPathList = {data.index(iIndexSrc).lblfile};
-                        HeaderKvpl = createLBL.create_EST_LBL_header(...
-                            createLBL.convert_TAB_path(data.datasetPath, estTabPath), ...
-                            idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
-                        
-                        LblData.HeaderKvpl = HeaderKvpl;
-                        clear   HeaderKvpl
-                        
-                    catch Exception
-                        createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
-                        continue
-                    end
+                    
+                    %===============================================================
+                    % NOTE: createLBL.create_EST_LBL_header(...)
+                    %       sets certain LBL/ODL variables to handle collisions:
+                    %    START_TIME / STOP_TIME,
+                    %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
+                    %===============================================================
+                    iIndexSrc      = San_tabindex(i).iIndex;
+                    estTabPath     = San_tabindex(i).path;
+                    probeNbrList   = [data.index(iIndexSrc).probe];
+                    idpLblPathList = {data.index(iIndexSrc).lblfile};
+                    
+                    LblData.HeaderKvpl = createLBL.create_EST_LBL_header(...
+                        createLBL.convert_TAB_path(data.datasetPath, estTabPath), ...
+                        idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
                     
                 else
                     %===============================================
                     % CASE: Any type of file EXCEPT best estimates.
                     %===============================================
                     
-                    iIndexFirst = Stabindex(San_tabindex(i).iTabindex).iIndexFirst;
+                    %iIndexFirst = Stabindex(San_tabindex(i).iTabindex).iIndexFirst;
                     iIndexLast  = Stabindex(San_tabindex(i).iTabindex).iIndexLast;
                     
                     [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(...
@@ -480,11 +445,11 @@ function create_LBL_files(data)
                     SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', data.index(iIndexLast).sct0str(2), obt2sct(Stabindex(San_tabindex(i).iTabindex).sctStop));   % Use obt2sctrc?
                     
                     % BUG: Does not work for 32S. Too narrow time limits.
-                    HeaderKvpl = HeaderAllKvpl;
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   IdpLblSs.START_TIME);                                   % UTC start time
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'STOP_TIME',                    Stabindex(San_tabindex(i).iTabindex).utcStop(1:23));    % UTC stop  time
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', IdpLblSs.SPACECRAFT_CLOCK_START_COUNT);
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT);
+                    HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                        IdpLblSs.START_TIME, ...
+                        Stabindex(San_tabindex(i).iTabindex).utcStop, ...
+                        IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
+                        SPACECRAFT_CLOCK_STOP_COUNT);
                     
                     HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
                     
@@ -544,32 +509,32 @@ function create_LBL_files(data)
             catch Exception
                 createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
                 fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
-            end    % try-catch
+            end
             
             
             
         end    % for
-    end    % if data.generatingDeriv1
-    
-    
-    
-    if data.generatingDeriv1
-        try
-            %=============================================================
-            %
-            % Create LBL files for files in der_struct/A1P_tabindex (A1P)
-            %
-            %=============================================================
-            if ~isempty(data.A1P_tabindex)
-                % IMPLEMENTATION NOTE: "der_struct"/A1P_tabindex is only defined/set when running Lapdog (DERIV1). However, since it is a
-                % global variable, it may survive from a Lapdog DERIV1 run until a edder_lapdog run. If so,
-                % data.A1P_tabindex.file{iFile} will contain paths to a DERIV1-data set. May thus lead to overwriting LBL files in
-                % DERIV1 data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
-                % EDDER.
-                %createLBL.write_A1P(HeaderAllKvpl, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, data.index, data.A1P_tabindex, ...
-                %    DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
-                
-                for iFile = 1:numel(data.A1P_tabindex.file)
+        
+        
+        
+        %=============================================================
+        %
+        % Create LBL files for files in der_struct/A1P_tabindex (A1P)
+        %
+        %=============================================================
+        if ~isempty(data.A1P_tabindex)
+            % IMPLEMENTATION NOTE: "der_struct"/A1P_tabindex is only defined/set when running Lapdog (DERIV1). However, since it is a
+            % global variable, it may survive from a Lapdog DERIV1 run until a edder_lapdog run. If so,
+            % data.A1P_tabindex.file{iFile} will contain paths to a DERIV1-data set. May thus lead to overwriting LBL files in
+            % DERIV1 data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
+            % EDDER.
+            %createLBL.write_A1P(HeaderAllKvpl, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, data.index, data.A1P_tabindex, ...
+            %    DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            
+            
+            
+            for iFile = 1:numel(data.A1P_tabindex.file)
+                try
                     startStopTimes = data.A1P_tabindex.timing(iFile, :);   % NOTE: Stores UTC+SCCS
                     
                     iIndex = data.A1P_tabindex.firstind(iFile);
@@ -579,19 +544,15 @@ function create_LBL_files(data)
                     %----------------------------------
                     [IdpHeaderKvpl, junk] = createLBL.read_LBL_file(data.index(iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
                     
-                    % IMPLEMENTATION NOTE: From experience, data.A1P_tabindex.timing can have UTC values with 6 decimals which DVAL-NG does
-                    % not permit. Must therefore truncate or round to 3 decimals.
-                    HeaderKvpl = kvlLblAll;
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   startStopTimes{1}(1:23));        % UTC start time
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl,  'STOP_TIME',                   startStopTimes{2}(1:23));        % UTC stop time
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', startStopTimes{3});
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  startStopTimes{4});
-                    
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
-                    
                     LblData = [];
-                    LblData.HeaderKvpl = HeaderKvpl;
-                    clear   HeaderKvpl   IdpHeaderKvpl
+                    LblData.HeaderKvpl = add_timestamps_keywords(HeaderAllKvpl, ...
+                        startStopTimes{1}, ...
+                        startStopTimes{2}, ...
+                        startStopTimes{3}, ...
+                        startStopTimes{4});
+                    LblData.HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, LblData.HeaderKvpl, 'require preexisting keys');
+                    
+                    clear   IdpHeaderKvpl
                     
                     LblData.OBJTABLE = [];
                     [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_A1P_data();
@@ -600,18 +561,14 @@ function create_LBL_files(data)
                         createLBL.convert_TAB_path(data.datasetPath, data.A1P_tabindex.file{iFile}), ...
                         LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
                     
+                catch Exception
+                    createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
+                    fprintf(1,'\nlapdog:A1P LBL failed. Error message: %s\n', Exception.message);
                 end
             end
-            
-        catch Exception
-            createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
-            fprintf(1,'\nlapdog:createLBL.write_A1P error message: %s\n',Exception.message);
         end
-    end
-    
-    
-    
-    if data.generatingDeriv1
+        
+        
         
         %==========================
         %
@@ -622,17 +579,12 @@ function create_LBL_files(data)
             for iFile = 1:numel(data.ASW_tabindex)
                 startStopTimes = data.ASW_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
                 
-                % IMPLEMENTATION NOTE: From experience, asw_tabindex.timing can have UTC values with 6 decimals which DVAL-NG does
-                % not permit. Must therefore truncate or round to 3 decimals.
-                HeaderKvpl = HeaderAllKvpl;
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   startStopTimes{1}(1:23));
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl,  'STOP_TIME',                   startStopTimes{2}(1:23));
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sctrc(str2double(startStopTimes{3})));
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));
-                
                 LblData = [];
-                LblData.HeaderKvpl = HeaderKvpl;
-                clear   HeaderKvpl
+                LblData.HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                    startStopTimes{1}, ...
+                    startStopTimes{2}, ...
+                    obt2sctrc(str2double(startStopTimes{3})), ...
+                    obt2sctrc(str2double(startStopTimes{4})));
                 
                 LblData.OBJTABLE = [];
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_ASW_data();
@@ -652,17 +604,12 @@ function create_LBL_files(data)
             for iFile = 1:numel(data.USC_tabindex)
                 startStopTimes = data.USC_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
                 
-                % IMPLEMENTATION NOTE: From experience, data.USC_tabindex.timing can have UTC values with 6 decimals which DVAL-NG does
-                % not permit. Must therefore truncate or round to 3 decimals.
-                HeaderKvpl = HeaderAllKvpl;
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   startStopTimes{1}(1:23));
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl,  'STOP_TIME',                   startStopTimes{2}(1:23));
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sctrc(str2double(startStopTimes{3})));
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));
-                
                 LblData = [];
-                LblData.HeaderKvpl = HeaderKvpl;
-                clear   HeaderKvpl
+                LblData.HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                    startStopTimes{1}, ...
+                    startStopTimes{2}, ...
+                    obt2sctrc(str2double(startStopTimes{3})), ...
+                    obt2sctrc(str2double(startStopTimes{4})));
                 
                 LblData.OBJTABLE = [];
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_USC_data();
@@ -686,15 +633,12 @@ function create_LBL_files(data)
                 
                 % IMPLEMENTATION NOTE: Timestamps are set via the columns. TEMPORARY SOLUTION.
                 % Current implementation requires the timestamp PDS keywords to exist in list of keywords though.
-                HeaderKvpl = HeaderAllKvpl;
-                %HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   startStopTimes{1}(1:23));
-                %HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl,  'STOP_TIME',                   startStopTimes{2}(1:23));
-                %HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', obt2sctrc(str2double(startStopTimes{3})));
-                %HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  obt2sctrc(str2double(startStopTimes{4})));
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'START_TIME',                   '<UNSET>');
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl,  'STOP_TIME',                   '<UNSET>');
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_START_COUNT', '<UNSET>');
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'SPACECRAFT_CLOCK_STOP_COUNT',  '<UNSET>');
+                %HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                %   startStopTimes{1}, ...
+                %   startStopTimes{2}, ...
+                %   obt2sctrc(str2double(startStopTimes{3})), ...
+                %   obt2sctrc(str2double(startStopTimes{4})));
+                HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, '<UNSET>', '<UNSET>', '<UNSET>', '<UNSET>');
                 
                 LblData = [];
                 LblData.HeaderKvpl = HeaderKvpl;
@@ -725,4 +669,33 @@ function create_LBL_files(data)
     warning(prevWarningsSettings)
     fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, executionBeginDateVec));
 
+end
+
+
+
+% Utility function to shorten code.
+%
+% IMPLEMENTATION NOTE: From experience, data.A1P_tabindex.timing, asw_tabindex.timing, data.USC_tabindex.timing can have
+% UTC values with 6 decimals which DVAL-NG does not permit. Must therefore truncate or round to 3 decimals.
+function Kvpl = add_timestamp_keywords(Kvpl, START_TIME, STOP_TIME, SPACECRAFT_CLOCK_START_COUNT, SPACECRAFT_CLOCK_STOP_COUNT)
+    % PROPOSAL: Shorten UTC to 23 chars.
+    
+    Kvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pairs(Kvpl, {...
+        'START_TIME', shorten_UTC(START_TIME);
+        'STOP_TIME',  shorten_UTC(STOP_TIME);
+        'SPACECRAFT_CLOCK_START_COUNT', SPACECRAFT_CLOCK_START_COUNT;
+        'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT});
+end
+
+
+
+% Shorten UTC strings to be at most 23 characters (3 decimals).
+% YYYY-MM-DDThh:mm:ss.mmm
+% 12345678901234567890123
+%
+% NOTE: Must handle for value "<UNSET>".
+function utc = shorten_UTC(utc)
+    if length(utc) > 23
+        utc = utc(1:23);
+    end
 end

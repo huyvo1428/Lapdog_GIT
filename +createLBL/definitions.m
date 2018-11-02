@@ -59,7 +59,11 @@ classdef definitions < handle
 
     
     properties(Access=private)
+        % NO_ODL_UNIT: Constant to be used for LBL "UNIT" fields meaning that there is no unit.
+        % This means that it is known that the quantity has no unit rather than that the unit
+        % is simply unknown at present.
         NO_ODL_UNIT        = [];
+        
         ODL_VALUE_UNKNOWN  = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown. Should NOT be used for official deliveries.
 
         MISSING_CONSTANT
