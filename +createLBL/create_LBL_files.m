@@ -129,7 +129,7 @@
 function create_LBL_files(data)
     
     % ASSERTIONS
-    EJ_lapdog_shared.utils.assert.struct(data, {'datasetPath', 'lblTime', 'lblEditor', 'lblRev', 'metakernel', ...
+    EJ_lapdog_shared.utils.assert.struct(data, {'ldDatasetPath', 'pdDatasetPath', 'lblTime', 'lblEditor', 'lblRev', 'metakernel', ...
         'C', 'failFastDebugMode', 'generatingDeriv1', ...
         'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex'})
     if isnan(data.failFastDebugMode)    % Check if field set to temporary value.
@@ -195,9 +195,9 @@ function create_LBL_files(data)
     %
     %===============================================================
     createLblFileFuncPtr = @(LblData, tabFile) (createLBL.create_OBJTABLE_LBL_file(...
-        createLBL.convert_TAB_path(data.datasetPath, tabFile), ...
+        convert_LD_TAB_path(data.ldDatasetPath, tabFile), ...
         LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY));
-    create_tabindex_files(createLblFileFuncPtr, data.index, Stabindex, GENERATE_FILE_FAIL_POLICY, ...
+    create_tabindex_files(createLblFileFuncPtr, data.pdDatasetPath, data.index, Stabindex, GENERATE_FILE_FAIL_POLICY, ...
         LblDefs, HeaderAllKvpl, DONT_READ_HEADER_KEY_LIST)
     
     
@@ -233,7 +233,7 @@ function create_LBL_files(data)
         [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_BLKLIST_data();
 
         createLBL.create_OBJTABLE_LBL_file(...
-            createLBL.convert_TAB_path(data.datasetPath, data.blockTAB(i).blockfile), ...
+            convert_LD_TAB_path(data.ldDatasetPath, data.blockTAB(i).blockfile), ...
             LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         clear   LblData
 
@@ -248,9 +248,9 @@ function create_LBL_files(data)
         %
         %===============================================
         createLblFileFuncPtr = @(LblData, tabFile, tabLblInconsistencyPolicy) (createLBL.create_OBJTABLE_LBL_file(...
-                createLBL.convert_TAB_path(data.datasetPath, tabFile), ...
+                convert_LD_TAB_path(data.ldDatasetPath, tabFile), ...
                 LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy));
-        create_antabindex_files(createLblFileFuncPtr, data.datasetPath, data.index, Stabindex, San_tabindex, ...
+        create_antabindex_files(createLblFileFuncPtr, data.ldDatasetPath, data.pdDatasetPath, data.index, Stabindex, San_tabindex, ...
             HeaderAllKvpl, LblDefs, GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY, DONT_READ_HEADER_KEY_LIST)
         
         
@@ -296,7 +296,7 @@ function create_LBL_files(data)
                     [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = createLBL.definitions.get_A1P_data();
                     
                     createLBL.create_OBJTABLE_LBL_file(...
-                        createLBL.convert_TAB_path(data.datasetPath, data.A1P_tabindex.file{iFile}), ...
+                        convert_LD_TAB_path(data.ldDatasetPath, data.A1P_tabindex.file{iFile}), ...
                         LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                     
                 catch Exception
@@ -328,7 +328,7 @@ function create_LBL_files(data)
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_ASW_data();
                 
                 createLBL.create_OBJTABLE_LBL_file(...
-                    createLBL.convert_TAB_path(data.datasetPath, data.ASW_tabindex(iFile).fname), ...
+                    convert_LD_TAB_path(data.ldDatasetPath, data.ASW_tabindex(iFile).fname), ...
                     LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, ASW_TAB_LBL_INCONSISTENCY_POLICY);
             end
         end
@@ -353,7 +353,7 @@ function create_LBL_files(data)
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_USC_data();
                 
                 createLBL.create_OBJTABLE_LBL_file(...
-                    createLBL.convert_TAB_path(data.datasetPath, data.USC_tabindex(iFile).fname), ...
+                    convert_LD_TAB_path(data.ldDatasetPath, data.USC_tabindex(iFile).fname), ...
                     LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
             end
         end
@@ -383,7 +383,7 @@ function create_LBL_files(data)
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_PHO_data();
                 
                 createLBL.create_OBJTABLE_LBL_file(...
-                    createLBL.convert_TAB_path(data.datasetPath, data.PHO_tabindex(iFile).fname), ...
+                    convert_LD_TAB_path(data.ldDatasetPath, data.PHO_tabindex(iFile).fname), ...
                     LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
             end
         end
@@ -395,7 +395,7 @@ function create_LBL_files(data)
         %==============================================================
         % TEMPORARY SOLUTION.
         % DELETE?!! Still creates NPL LBL files from found TAB files.
-        createLBL.create_LBL_L5_sample_types(data.datasetPath, data.C.MISSING_CONSTANT, data.C.N_FINAL_PRESWEEP_SAMPLES)     
+        createLBL.create_LBL_L5_sample_types(data.ldDatasetPath, data.C.MISSING_CONSTANT, data.C.N_FINAL_PRESWEEP_SAMPLES)     
     end
     
     
@@ -408,7 +408,7 @@ end
 
 
 
-function create_tabindex_files(createLblFileFuncPtr, index, Stabindex, generateFileFailPolicy, LblDefs, ...
+function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabindex, generateFileFailPolicy, LblDefs, ...
         HeaderAllKvpl, DONT_READ_HEADER_KEY_LIST)
     for i = 1:length(Stabindex)
         try            
@@ -433,7 +433,8 @@ function create_tabindex_files(createLblFileFuncPtr, index, Stabindex, generateF
             %--------------------------------
             % Read the EDDER/CALIB1 LBL file
             %--------------------------------
-            [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST);
+            [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(...
+                convert_PD_TAB_path(pdDatasetPath, index(iIndexFirst).lblfile), DONT_READ_HEADER_KEY_LIST);
             
             % NOTE: One can obtain a stop/ending SCT value from index(Stabindex(i).iIndexLast).sct1str; too, but experience
             % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
@@ -483,7 +484,7 @@ function create_tabindex_files(createLblFileFuncPtr, index, Stabindex, generateF
             end
             
             %createLBL.create_OBJTABLE_LBL_file(...
-            %    createLBL.convert_TAB_path(data.datasetPath, Stabindex(i).path), ...
+            %    convert_LD_TAB_path(data.ldDatasetPath, Stabindex(i).path), ...
             %    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
             createLblFileFuncPtr(LblData, Stabindex(i).path);
             
@@ -498,7 +499,7 @@ end
 
 
 
-function create_antabindex_files(createLblFileFuncPtr, datasetPath, index, Stabindex, San_tabindex, HeaderAllKvpl, LblDefs, ...
+function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetPath, index, Stabindex, San_tabindex, HeaderAllKvpl, LblDefs, ...
         GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY, DONT_READ_HEADER_KEY_LIST)
     for i = 1:length(San_tabindex)
         try
@@ -540,7 +541,7 @@ function create_antabindex_files(createLblFileFuncPtr, datasetPath, index, Stabi
                 idpLblPathList = {index(iIndexSrc).lblfile};
                 
                 LblData.HeaderKvpl = createLBL.create_EST_LBL_header(...
-                    createLBL.convert_TAB_path(datasetPath, estTabPath), ...
+                    convert_LD_TAB_path(ldDatasetPath, estTabPath), ...
                     idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
                 
             else
@@ -552,7 +553,7 @@ function create_antabindex_files(createLblFileFuncPtr, datasetPath, index, Stabi
                 iIndexLast  = Stabindex(San_tabindex(i).iTabindex).iIndexLast;
                 
                 [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(...
-                    index(San_tabindex(i).iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
+                    convert_PD_TAB_path(pdDatasetPath, index(San_tabindex(i).iIndex).lblfile), DONT_READ_HEADER_KEY_LIST);
                 
                 % NOTE: One can obtain a stop/ending SCT value from index(Stabindex(i).iIndexLast).sct1str; too, but experience
                 % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
@@ -616,9 +617,9 @@ function create_antabindex_files(createLblFileFuncPtr, datasetPath, index, Stabi
             
             
             %createLBL.create_OBJTABLE_LBL_file(...
-            %    createLBL.convert_TAB_path(data.datasetPath, San_tabindex(i).path), ...
+            %    convert_LD_TAB_path(data.ldDatasetPath, San_tabindex(i).path), ...
             %    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
-            createLblFileFuncPtr( LblData, San_tabindex(i).path, tabLblInconsistencyPolicy );
+            createLblFileFuncPtr( LblData, convert_LD_TAB_path(ldDatasetPath, San_tabindex(i).path), tabLblInconsistencyPolicy );
             clear   LblData   tabLblInconsistencyPolicy
             
             
@@ -658,4 +659,18 @@ function utc = shorten_UTC(utc)
     if length(utc) > 23
         utc = utc(1:23);
     end
+end
+
+
+
+% LD = Lapdog Dataset
+function tabPath = convert_LD_TAB_path(datasetPath, tabPath)
+    tabPath = createLBL.convert_TAB_path(datasetPath, tabPath, 3);
+end
+
+
+
+% PD = PDS Dataset
+function tabPath = convert_PD_TAB_path(datasetPath, tabPath)
+    tabPath = createLBL.convert_TAB_path(datasetPath, tabPath, 5);
 end

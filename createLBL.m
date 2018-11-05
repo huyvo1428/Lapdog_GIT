@@ -81,11 +81,17 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %
     % PROPOSAL: createLBL (script) always saves .mat file, then calls function which loads file and hence loads all
     %           Lapdog workspace into its own function workspace.
+    %   PRO: Simplifies code.
+    %   ~CON: Ugly
+    %   ~CON: Only works if there is a .mat file, i.e. Lapdog generations must save .mat a file just to generate a dataset.
     %
     % PROPOSAL: Iterate over who('global') and declare all global variables accessible (before saving to .mat).
     %   PRO: Prevents misspelling
     %   PRO: Prevents mistakenly not saving global Lapdog state.
     %       PRO: More important than other kinds of bugs, since cannot fix saved .mat file without rerunning Lapdog (for every file).
+    %
+    % PROPOSAL: Iterate over caller workspace variables and import all of them to a struct, instead of separately.
+    %   ~CON: Still do not want to save this struct for backward compatibility.
     
     
     
@@ -109,14 +115,16 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     clear N_FINAL_PRESWEEP_SAMPELS
 
     %===============================================================
-    % Derive datasetPath
+    % Derive ldDatasetPath
     % ------------------
     % NOTE: Needed for saving .mat file, and must hence precede it.
     %===============================================================
     if length(varargin) == 0
-        datasetPath = evalin(MWS, 'derivedpath');    % Value used twice. NOTE: evalin
-    elseif length(varargin) == 1
-        datasetPath = varargin{1};
+        ldDatasetPath = evalin(MWS, 'derivedpath');    % Value used twice. NOTE: evalin
+        pdDatasetPath = evalin(MWS, 'archivepath');                      % NOTE: evalin
+    elseif length(varargin) == 2
+        ldDatasetPath = varargin{1};
+        pdDatasetPath = varargin{2};
     else
         error('Illegal number of arguments.')
     end
@@ -141,7 +149,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
         %fprintf('Declare global variable in caller workspace: "%s"\n', cmd)    % DEBUG
         %eval(       sprintf('global %s', globalVarsList{iVar}));
     end
-    %======================================================================================================================
+    %===================================================================================================================
     % (Optionally) Save MATLAB CALLER WORKSPACE to file
     % -------------------------------------------------
     % Save all Lapdog variables needed for createLBL to function.
@@ -150,9 +158,9 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % MATLAB "save" command only includes global variables which have been declared as such with a "global statement" in
     % the current workspace, but not if they have only been declared as such in OTHER workspaces (other parts of the
     % code)!! Must therefore declare relevant variables as "global" before saving file.
-    %======================================================================================================================
+    %===================================================================================================================
     if saveCallerWorkspace
-        savedWorkspaceFile = fullfile(datasetPath, C.PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
+        savedWorkspaceFile = fullfile(ldDatasetPath, C.PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
         fprintf('Saving ~pre-createLBL MATLAB workspace+globals in "%s"\n', savedWorkspaceFile);
         evalin(MWS, sprintf('save(''%s'')', savedWorkspaceFile))                                        % NOTE: evalin
         fprintf('    Done\n');
@@ -161,20 +169,28 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
 
 
     %===================================================================================================================
-    % Derive "der_struct"
-    % -------------------
-    % Not certain "der_struct" is defined.
-    % Ex: Lapdog run where analysis.m is disabled (useful for CALIB2 generation).
-    % Ex: EDDER does not call analysis.m.
+    % Set variables (local workspace) which are expected but might not be defined (in caller's workspace)
+    % ---------------------------------------------------------------------------------------------------
+    % Ex: Different TAB files disabled inside an_outputscience.m
+    % Ex: an_outputscience.m disabled
+    % Ex: Lapdog run where analysis.m is disabled (useful for CALIB2 generation)
+    % Ex: EDDER does not call analysis.m
     % In principle, the same problem could exist for other global variables (e.g. when disabling an_outputscience) but
-    % it does not appear to do so from testing, except "der_struct" (which is in reality disabled).
-    % NOTE: In the past, Lapdog has sometimes defined, and sometimes NOT defined an_tabindex, meaning that the code must
-    % be able to handle both possibilities.
+    % it does not appear to do so from testing.
+    %
+    % NOTE: Can not write a function for this, since evalin can only work on the caller's workspace, not the caller's
+    % caller.
     %===================================================================================================================
-    if evalin(MWS, 'exist(''der_struct'')')
-        der_struct = evalin(MWS, 'der_struct');              % NOTE: evalin
-    else
-        der_struct = [];
+    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex'};
+    for i = 1:length(POT_UNDEF_VARS)
+        % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which "exist" may respond to
+        %                      if not specifying "var".
+        if evalin(MWS, sprintf('exist(''%s'', ''var'')', POT_UNDEF_VARS{i}))
+            temp = evalin(MWS, POT_UNDEF_VARS{i});                            % NOTE: evalin
+        else
+            temp = [];
+        end
+        eval(sprintf('%s = temp;', POT_UNDEF_VARS{i}));                       % NOTE : eval
     end
     
     %=====================================================================================
@@ -183,9 +199,9 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %   (2) Lapdog's DERIV (for producing CALIB2, DERIV2).
     % -----------------------------------------------------
     % IMPLEMENTATION NOTE: "fileparts" does not work as intended if path ends with slash.
-    % ASSUMES: datasetPath is ~DATA_SET_ID.
+    % ASSUMES: ldDatasetPath is ~DATA_SET_ID.
     %=====================================================================================
-    datasetPathModifCell = regexp(datasetPath, '.*[^/]', 'match');         % Remove trailing slashes (i.e. Linux only).
+    datasetPathModifCell = regexp(ldDatasetPath, '.*[^/]', 'match');         % Remove trailing slashes (i.e. Linux only).
     [parentPath, basename, suffixJunk] = fileparts(datasetPathModifCell{1});    % NOTE: fileparts interprets the period in DATA_SET_ID as separating basename from suffix.
     if strfind(basename, 'EDDER')
         generatingDeriv1 = 0;
@@ -198,7 +214,8 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     
     
     clfd = [];   % CLFD = create_LBL_files data
-    clfd.datasetPath       = datasetPath;
+    clfd.ldDatasetPath     = ldDatasetPath;
+    clfd.pdDatasetPath     = pdDatasetPath;  
     clfd.lblTime           = evalin(MWS, 'lbltime');
     clfd.lblEditor         = evalin(MWS, 'lbleditor');
     clfd.lblRev            = evalin(MWS, 'lblrev');
@@ -206,11 +223,11 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     
     clfd.index             = evalin(MWS, 'index');
     clfd.tabindex          = evalin(MWS, 'tabindex');
-    clfd.an_tabindex       = evalin(MWS, 'an_tabindex');    
+    clfd.an_tabindex       = an_tabindex;
     clfd.blockTAB          = evalin(MWS, 'blockTAB');
-    clfd.ASW_tabindex      = evalin(MWS, 'ASW_tabindex');
+    clfd.ASW_tabindex      = ASW_tabindex;
     clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable name slightly.
-    clfd.PHO_tabindex      = evalin(MWS, 'PHO_tabindex');
+    clfd.PHO_tabindex      = PHO_tabindex;
     
     clfd.A1P_tabindex      = der_struct;     % Changing variable name.
     clfd.C                 = C;
