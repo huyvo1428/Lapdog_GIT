@@ -2,15 +2,21 @@
 % Create .LBL files for all .TAB files.
 %
 %
+% ARGUMENTS
+% =========
+% data : Struct containing fields, mostly corresponding to the needed Lapdog variables, including global variables.
+%
+%
 % VARIABLE NAMING CONVENTIONS
 % ===========================
-% KVL, KVPL = Key-Value (pair) List
-% IDP = Input Dataset Pds (pds s/w, as opposed to Lapdog)
+% KVL, KVPL : Key-Value (pair) List
+% IDP       : Input Dataset Pds (pds s/w, as opposed to Lapdog)
 %
 %
 % CONVENTIONS
 % ===========
 % This code should not use global variables.
+%
 
 %===================================================================================================
 % PROPOSAL: Stop/disable generating AxS LBL files.
@@ -75,62 +81,6 @@
 %
 % PROPOSAL: Read STOP_TIME from the last CALIB1/EDITED1 file, just like IdpLblSs does.
 %
-% PROPOSAL: Make into separate, independent code that can be run separately from Lapdog, but also as a part of it.
-%   Set start & stop timestamps from TAB contents, not EDITED1/CALIB1 files.
-%   Find and identify types of files by iterating through DERIV1 data set.
-%   NOTE: In naive implementation:
-%       - Would/could NOT make use of any table with information on TAB files: blockTAB, index, tabindex, an_tabindex, der_struct.
-%         Other arguments could be ~hardcoded or submitted (or reorganized).
-%   --
-%   TODO-DECISION: Relationship with delivery code?
-%       Still modify LBL files in delivery code? (change TAB+LBL filenames; search-and-replace filenames in DESCRIPTION; more?)
-%       ~Shared code for recognizing & classifying files?!
-%       PROPOSAL: Be able to call both before and after TAB+LBL name modification: Call from both Lapdog and delivery
-%           code, with different filename prefixes?
-%   --
-%   PRO: Useful for re-running separately from Lapdog.
-%       Ex: When preparing deliveries, and having lots of large datasets at the same time.
-%           ==> Prohibitive processing time.
-%       Ex: After bugfixes.
-%       Ex: After reconfiguring
-%           Ex: New DESCRIPTION, UNIT, columns etc.
-%       Ex: Amending/refactoring code.
-%   CON: Can not read the OBJECT = TABLE DESCRIPTION (not among the LBL header keys).
-%   CON: Can not read all the technical LBL header PDS keywords (directly) from EDITED1/CALIB1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%       PROPOSAL: Some way of choosing whether to retrieve LBL header PDS keywords from (1) EDITED1/CALIB1 (Lapdog), or (2) DERIV1 (running separately).
-%           NOTE: Implies still using Lapdog data structs for Lapdog runs.
-%   CON: EST LBL requires knowledge of which set of probes was used.
-%       CON: EST is low priority since it will probably not be used.
-%   --
-%   PROPOSAL: Preparatory code refactoring.
-%       (1) Make as independent as possible of Lapdog data structs: blockTAB, index, an_tabindex, der_struct.
-%       (2) Make completely independent of Lapdog data structs: Identify DERIV1 TAB files by recursing over directory structure.
-%       (3) Move as much as possible into function file(s), possibly one major function file.
-%
-%   PROPOSAL: Functions:
-%           - create_LBL_File: Create one LBL file given arguments: Path to TAB file, LBL header PDS keywords, start & stop timestamps (2x2), OBJECT=TABLE DESCRIPTION.
-%             Type of file is deduced from TAB filename. Hard-coded info used to call createLBL.create_OBJTABLE_LBL_file
-%             (just like createLBL).
-%           When used by Lapdog:
-%               - createLBL iterates over Lapdog data structs (tabindex etc; like now).
-%               - Obtains LBL header keywords (incl. start & stop timestamps) and OBJECT=TABLE: DESCRIPTION.
-%               - Calls create_LBL_file to create individual LBL files.
-%           When used by delivery code:
-%               - Copy, rename selected TAB & LBL files (do not modify).
-%               - For copied TAB & LBL file pairs: read LBL file to obtain LBL header keywords, then call create_LBL_file and overwrite LBL file with new version.
-%           When used for updating LBL files of EDDER/DERIV1 dataset (without running Lapdog):
-%               - Iterate over day subdirectories
-%               - For every TAB file found, read the LBL file: Extract LBL header keywords and OBJECT=TABLE: DESCRIPTION.
-%           When used for generating initial new sample L5 LBL files (there is no ~an_tabindex equivalent):
-%               - Iterate over day subdirectories.
-%               - For every TAB file without a LBL file, call create_LBL_file with only standard LBL headers.
-%                 create_LBL_file will tell if it cannot classify the file.
-%       CON: Difficult to compare LBL files before (EDDER/DERIV1) and after (EDITED2/CALIB2/DERIV2), since different
-%            filenames.
-%
-%
-% PROPOSAL: Centralized functionality for setting KVPL for start & stop timestamps.
-%   CON-PROPOSAL: Separate create_OBJTABLE_LBL_file argument (struct) with timestamps.
 % PROPOSAL: Read first & LAST start & stop timestamps from EDITED1/CALIB1 LBL files using centralized function(s).
 %
 % PROPOSAL: Function for converting Lapdog's TAB file structs to standard structs (most cases, if not all).
@@ -167,18 +117,9 @@
 % PROPOSAL: Print/log number of LBL files of each type.
 %   PRO: Can see which parts of code that is tested and not.
 %
-% PROPOSAL: Check whether TAB files are under the current dataset root path.
-%   PRO: Can check if Lapdog data structs apply to the current run.
-%   PRO: Can avoid mistakenly creating LBL files for other dataset due to inheriting variables from other run.
-%   CON/PROBLEM: Can not implement if code should be able to handle moved datasets.
-%       CON-PROPOSAL: Check that struct's dataset subdirectory exists under current dataset.
-%           CON: Only covers some errors.
 % PROPOSAL: Move DONT_READ_HEADER_KEY_LIST to constants.
 %
 % PROPOSAL: Better name for LblDefs. ~LblCreator? ~LblFactory?!
-% PROPOSAL: Make use of try-catch more consistent.
-%   TODO-DECISION: Per file? Per loop? Outside entire function?
-%   PROPOSAL: EST has its own try-catch. Abolish(?)
 %
 % PROPOSAL: Different LABEL_REVISION_NOTE för CALIB2, DERIV2. Multiple rows?
 % PROPOSAL: Set LABEL_REVISION_NOTE without lbl{rev,editor,time}.

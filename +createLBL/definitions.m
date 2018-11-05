@@ -55,6 +55,12 @@ classdef definitions < handle
     %       PROPOSAL: oc_OBT(name, descrStr)
     %           NOTE: BYTES=16 always
     %   --
+    % PROPOSAL: Methods return LABEL_REVISION_NOTE.
+    % PROPOSAL: Methods filter header keywords.
+    % PROPOSAL: Methods Return entire LblData sent to create_OBJTABLE_LBL_file.
+    %   NOTE: Needs arguments for inherited HeaderKvpl (incl. timestamps?).
+    %   PRO: Can set LABEL_REVISION_NOTE. Needs no new return argument.
+    %   PRO: Can set table DESCRIPTION. Needs no return argument.
 
 
     

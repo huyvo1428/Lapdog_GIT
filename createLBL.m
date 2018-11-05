@@ -25,21 +25,31 @@
 %
 % IMPLEMENTATION NOTES, RATIONALE
 % ===============================
-% The division between this script and the main function exists to
+% The division between this script and the main function exists to:
 % (1) separate many ugly hacks and assumptions from the main LBL file-creating code code due to the interface between
 %     Lapdog and ~createLBL:
-%   (1a) make it explicit which part of the Lapdog workspace variables are used,
-%   (1b) separate out the dependence on global variables,
+%   (1a) make it explicit which of the Lapdog workspace variables are used,
+%   (1b) separate the dependence on global variables,
 %   (1c) making assumptions on where the metakernel is,
 %   (1d) figure out the output dataset type (EDDER, DERIV1),
 % (2) optionally save the necessary input to a .mat file to make it possible to rerun the createLBL (or its main function) separately
 %     from Lapdog (without saving Lapdog variables to .mat file).
 % (3) make it possible to use consistent naming conventions in the main LBL code.
 % --
-% NOTE: Due to what the function needs to do, it make many ugly calls to "evalin" for the CALLER WORKSPACE to
+% The function uses the entire Lapdog workspace as "argument" interface" (in addition to the formal function variables)
+% in order to:
+% (1) keep the number of formal function arguments low (~15 fewer) to make the call simple & safe (Lapdog code contains
+%     ~7 calls to createLBL),
+% (2) make sure there is "backward-compatibility" with saved .mat files used by createLBL,
+% (3) be able to easily save/load the entire interface (Lapdog workspace), so that when one runs createLBL separately
+% from Lapdog, it is easy to load it (the Lapdog workspace) and then call createLBL.
+% --
+% NOTE: Due to what the function needs to do, and to reduce the number of arguments (by ~15), it makes many ugly calls to
+% "evalin" for the CALLER WORKSPACE to
 % (1) declare GLOBAL variables (in the caller workspace) so that they can be accessed and saved to file,
 % (2) save the Lapdog variables (in the caller workspace),
 % (3) retrieve variable values (from the caller workspace; they are many).
+% 
 %
 %
 % Initially created (reorganized) 2018-11-01 by Erik P G Johansson, IRF Uppsala.
@@ -48,14 +58,18 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % BOGIQ
     % =====
     % ~NEED: One "clean" internal main function (create_LBL_files) that (1) does not use global variables, and (2) does not
-    %        save .mat file, (3)? does not detect EDDER,DERIV1.
+    %        save/load .mat file, (3)? does not detect EDDER,DERIV1.
     % NEED: Be able to easily call createLBL from main.m, lapdog.m, edder_lapdog.m, rerunlapdog.m, old_rerunlapdog.m,
     %       lapdogrerun_old.m, rerunlapdog_test.m and (1) save .mat, (2) have less stringent errors (?).
-    % NEED: Be able to call ~createLBL from rerun_createLBL.m (1) without saving .mat, (2a) using loaded workspace and/or
-    %       (2b) proper call to main LBL function, (3) with stringent errors.
-    % NEED?: Caller decides if DERIV1 or EDDER.
-    % NEED: Save ALL(?) Lapdog workspace variables, including globals which have to be declared/accessible before
-    % saving.
+    %       Do not want ~17 argument, do not want to assign struct with ~17 fields before calling.
+    % NEED: Be able to call createLBL from rerun_createLBL.m
+    %       (1) without saving .mat (not overwrite old file),
+    %       (2a) using loaded workspace and/or (2b) proper call to create_LBL_files,
+    %       (3) with stringent errors.
+    %       ==> Pass new arguments
+    % NEED: Save ALL Lapdog workspace variables, including globals which have to be declared/accessible before
+    % saving (to maximize backward compatibility).
+    % (NEED? : Caller decides if DERIV1 or EDDER.)
     % --
     % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex.
     % PROPOSAL: Only save input to create_LBL_files in .mat file.
@@ -81,7 +95,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     MWS = 'caller';    % MWS = MATLAB workspace
 
 
-    
+
     %====================================================================
     % Derive C
     % --------
@@ -123,13 +137,13 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % 'ASW_tabindex', 'PHO_tabindex', 'usc_tabindex'};   % "index" is not a global variable.
     for iVar = 1:numel(globalVarsList)
         cmd = sprintf('global %s', globalVarsList{iVar});
-        evalin(MWS, cmd);                                          % NOTE: evalin
+        evalin(MWS, cmd);                                                                               % NOTE: evalin
         %fprintf('Declare global variable in caller workspace: "%s"\n', cmd)    % DEBUG
         %eval(       sprintf('global %s', globalVarsList{iVar}));
     end
     %======================================================================================================================
-    % Save MATLAB workspace to file in dataset directory
-    % --------------------------------------------------
+    % (Optionally) Save MATLAB CALLER WORKSPACE to file
+    % -------------------------------------------------
     % Save all Lapdog variables needed for createLBL to function.
     % This file can be used for re-running createLBL (fast) without rerunning Lapdog (slow) for large datasets.
     % NOTE: Must include relevant global variables.
@@ -140,21 +154,22 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     if saveCallerWorkspace
         savedWorkspaceFile = fullfile(datasetPath, C.PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
         fprintf('Saving ~pre-createLBL MATLAB workspace+globals in "%s"\n', savedWorkspaceFile);
-        evalin(MWS, sprintf('save(''%s'')', savedWorkspaceFile))                                  % NOTE: evalin
+        evalin(MWS, sprintf('save(''%s'')', savedWorkspaceFile))                                        % NOTE: evalin
         fprintf('    Done\n');
     end
-    
 
-    
+
+
     %===================================================================================================================
     % Derive "der_struct"
     % -------------------
-    % NOTE: In the past, Lapdog has sometimes defined, and sometimes NOT defined an_tabindex, meaning that the code must
-    % be able to handle both possibilities.
+    % Not certain "der_struct" is defined.
     % Ex: Lapdog run where analysis.m is disabled (useful for CALIB2 generation).
     % Ex: EDDER does not call analysis.m.
     % In principle, the same problem could exist for other global variables (e.g. when disabling an_outputscience) but
-    % it does not appear to do so, except "der_struct" (which is in reality disabled).
+    % it does not appear to do so from testing, except "der_struct" (which is in reality disabled).
+    % NOTE: In the past, Lapdog has sometimes defined, and sometimes NOT defined an_tabindex, meaning that the code must
+    % be able to handle both possibilities.
     %===================================================================================================================
     if evalin(MWS, 'exist(''der_struct'')')
         der_struct = evalin(MWS, 'der_struct');              % NOTE: evalin
