@@ -253,89 +253,11 @@ function create_LBL_files(data)
     % Create LBL files for (TAB files in) tabindex: IBxS, IVxHL
     %
     %===============================================================
-    for i = 1:length(Stabindex)
-        try
-            
-            LblData = [];
-            
-            %=========================================
-            %
-            % LBL file: Create header/key-value pairs
-            %
-            %=========================================
-            
-            tabFilename = Stabindex(i).filename;
-            iIndexFirst = Stabindex(i).iIndexFirst;
-            iIndexLast  = Stabindex(i).iIndexLast;     % PROPOSAL: Use for reading CALIB1/EDITED1 file for obtaining end timestamps?
-            probeNbr    = data.index(iIndexFirst).probe;
-            
-            isSweep       = (tabFilename(30)=='S');
-            isSweepTable  = (tabFilename(28)=='B') && isSweep;
-            isDensityMode = (tabFilename(28)=='I');
-            %isEFieldMode  = (tabFilename(28)=='V');
-            
-            %--------------------------------
-            % Read the EDDER/CALIB1 LBL file
-            %--------------------------------
-            [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(data.index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST);
-            
-            % NOTE: One can obtain a stop/ending SCT value from data.index(Stabindex(i).iIndexLast).sct1str; too, but experience
-            % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
-            % Example: LAP_20150503_210047_525_I2L.LBL
-            SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', data.index(iIndexLast).sct0str(2), obt2sct(Stabindex(i).sctStop));    % Use obt2sctrc?
-            LblData.HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
-                IdpLblSs.START_TIME, ...
-                Stabindex(i).utcStop, ...
-                IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
-                SPACECRAFT_CLOCK_STOP_COUNT);
-            
-            LblData.HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, LblData.HeaderKvpl, 'require preexisting keys');
-            
-            clear   IdpHeaderKvpl
-            
-            
-            
-            %=======================================
-            %
-            % LBL file: Create OBJECT TABLE section
-            %
-            %=======================================
-            LblData.OBJTABLE = [];
-            if (isSweep)
-                
-                %==============================
-                % CASE: Sweep files (IxS, BxS)
-                %==============================
-                
-                if (isSweepTable)
-                    % CASE: BxS                    
-                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_BxS_data(probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);                    
-                else
-                    % CASE: IxS                    
-                    bxsTabFilename = tabFilename;
-                    bxsTabFilename(28) = 'B';                    
-                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_IxS_data(...
-                        probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, bxsTabFilename, Stabindex(i).nColumns);                    
-                end
-                
-            else
-                %===============================================================
-                % CASE: Anything EXCEPT sweep files (NOT [IB]xS) <==> [IV]x[HL]
-                %===============================================================                
-                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_IVxHL_data(...
-                    isDensityMode, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);
-            end
-            
-            createLBL.create_OBJTABLE_LBL_file(...
-                createLBL.convert_TAB_path(data.datasetPath, Stabindex(i).path), ...
-                LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
-            clear   LblData
-            
-        catch Exception
-            createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
-            fprintf(1,'Skipping LBL file (tabindex)index - Continuing\n');
-        end
-    end    % for
+    createLblFileFuncPtr = @(LblData, tabFile) (createLBL.create_OBJTABLE_LBL_file(...
+        createLBL.convert_TAB_path(data.datasetPath, tabFile), ...
+        LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY));
+    create_tabindex_files(createLblFileFuncPtr, data.index, Stabindex, GENERATE_FILE_FAIL_POLICY, ...
+        LblDefs, HeaderAllKvpl, DONT_READ_HEADER_KEY_LIST)
     
     
     
@@ -368,152 +290,27 @@ function create_LBL_files(data)
         % LBL file: Create OBJECT TABLE section
         %=======================================
         [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_BLKLIST_data();
-        
+
         createLBL.create_OBJTABLE_LBL_file(...
             createLBL.convert_TAB_path(data.datasetPath, data.blockTAB(i).blockfile), ...
             LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         clear   LblData
-        
+
     end   % for
     
     
     
-    %===============================================
-    %
-    % Create LBL files for TAB files in an_tabindex
-    %
-    %===============================================
     if data.generatingDeriv1
-        for i = 1:length(San_tabindex)
-            try
-                tabLblInconsistencyPolicy = GENERAL_TAB_LBL_INCONSISTENCY_POLICY;   % Default value, unless overwritten for specific data file types.
-                
-                tabFilename = San_tabindex(i).filename;
-                
-                mode          = tabFilename(end-6:end-4);
-                probeNbr      = data.index(San_tabindex(i).iIndex).probe;     % Probe number
-                isDensityMode = (mode(1) == 'I');
-                %isEFieldMode  = (mode(1) == 'V');
-                
-                LblData = [];
-                
-                %=========================================
-                %
-                % LBL file: Create header/key-value pairs
-                %
-                %=========================================
-                
-                if strcmp(San_tabindex(i).dataType, 'best_estimates')
-                    %======================
-                    % CASE: Best estimates
-                    %======================
-                    % NOTE: Has its own try-catch statement. (Why?)
-                    
-                    HeaderKvpl = HeaderAllKvpl;
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
-                    
-                    %===============================================================
-                    % NOTE: createLBL.create_EST_LBL_header(...)
-                    %       sets certain LBL/ODL variables to handle collisions:
-                    %    START_TIME / STOP_TIME,
-                    %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
-                    %===============================================================
-                    iIndexSrc      = San_tabindex(i).iIndex;
-                    estTabPath     = San_tabindex(i).path;
-                    probeNbrList   = [data.index(iIndexSrc).probe];
-                    idpLblPathList = {data.index(iIndexSrc).lblfile};
-                    
-                    LblData.HeaderKvpl = createLBL.create_EST_LBL_header(...
-                        createLBL.convert_TAB_path(data.datasetPath, estTabPath), ...
-                        idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
-                    
-                else
-                    %===============================================
-                    % CASE: Any type of file EXCEPT best estimates.
-                    %===============================================
-                    
-                    %iIndexFirst = Stabindex(San_tabindex(i).iTabindex).iIndexFirst;
-                    iIndexLast  = Stabindex(San_tabindex(i).iTabindex).iIndexLast;
-                    
-                    [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(...
-                        data.index(San_tabindex(i).iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
-                    
-                    % NOTE: One can obtain a stop/ending SCT value from data.index(Stabindex(i).iIndexLast).sct1str; too, but experience
-                    % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
-                    % Example: LAP_20150503_210047_525_I2L.LBL
-                    %SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', data.index(iIndexLastXXX).sct0str(2), obt2sct(stabindexXXX(i).sctStop));
-                    SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', data.index(iIndexLast).sct0str(2), obt2sct(Stabindex(San_tabindex(i).iTabindex).sctStop));   % Use obt2sctrc?
-                    
-                    % BUG: Does not work for 32S. Too narrow time limits.
-                    HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
-                        IdpLblSs.START_TIME, ...
-                        Stabindex(San_tabindex(i).iTabindex).utcStop, ...
-                        IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
-                        SPACECRAFT_CLOCK_STOP_COUNT);
-                    
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
-                    
-                    
-                    
-                    LblData.HeaderKvpl = HeaderKvpl;
-                    clear   HeaderKvpl IdpHeaderKvpl  % IdpLblSs is used later (once).
-                    
-                end   % if-else
-                
-                
-                
-                %=======================================
-                %
-                % LBL file: Create OBJECT TABLE section
-                %
-                %=======================================
-                
-                LblData.OBJTABLE = [];
-                if strcmp(San_tabindex(i).dataType, 'downsample')
-                    % CASE: IVxD
-                    samplingRateSeconds = str2double(tabFilename(end-10:end-9));
-                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_IVxD_data(probeNbr, IdpLblSs.DESCRIPTION, samplingRateSeconds, isDensityMode);
-                    
-                elseif strcmp(San_tabindex(i).dataType, 'spectra')
-                    % CASE: PSD
-                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_PSD_data(probeNbr, isDensityMode, San_tabindex(i).nTabColumns, mode);
-                    
-                elseif  strcmp(San_tabindex(i).dataType, 'frequency')
-                    % CASE: FRQ
-                    psdTabFilename = strrep(San_tabindex(i).filename, 'FRQ', 'PSD');
-                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_FRQ_data(San_tabindex(i).nTabColumns, psdTabFilename);
-                    
-                elseif  strcmp(San_tabindex(i).dataType, 'sweep')
-                    % CASE: AxS (analyzed sweeps)
-                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_AxS_data(Stabindex(San_tabindex(i).iTabindex).filename);
-                    tabLblInconsistencyPolicy = AxS_TAB_LBL_INCONSISTENCY_POLICY;   % NOTE: Different policy for A?S.LBL files.
-                    
-                elseif  strcmp(San_tabindex(i).dataType,'best_estimates')
-                    % CASE: EST
-                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_EST_data();
-                    
-                else
-                    error('Error, bad identifier in an_tabindex{%i,7} = San_tabindex(%i).dataType = "%s"', i, i, San_tabindex(i).dataType);
-                    
-                end
-                
-                
-                
-                createLBL.create_OBJTABLE_LBL_file(...
-                    createLBL.convert_TAB_path(data.datasetPath, San_tabindex(i).path), ...
-                    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
-                clear   LblData   tabLblInconsistencyPolicy
-                
-                
-                
-            catch Exception
-                createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
-                fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
-            end
-            
-            
-            
-        end    % for
+        %===============================================
+        %
+        % Create LBL files for TAB files in an_tabindex
+        %
+        %===============================================
+        createLblFileFuncPtr = @(LblData, tabFile, tabLblInconsistencyPolicy) (createLBL.create_OBJTABLE_LBL_file(...
+                createLBL.convert_TAB_path(data.datasetPath, tabFile), ...
+                LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy));
+        create_antabindex_files(createLblFileFuncPtr, data.datasetPath, data.index, Stabindex, San_tabindex, ...
+            HeaderAllKvpl, LblDefs, GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY, DONT_READ_HEADER_KEY_LIST)
         
         
         
@@ -559,7 +356,7 @@ function create_LBL_files(data)
                     
                     createLBL.create_OBJTABLE_LBL_file(...
                         createLBL.convert_TAB_path(data.datasetPath, data.A1P_tabindex.file{iFile}), ...
-                        LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
+                        LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                     
                 catch Exception
                     createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
@@ -631,18 +428,15 @@ function create_LBL_files(data)
             for iFile = 1:numel(data.PHO_tabindex)
                 %startStopTimes = data.PHO_tabindex(iFile).timing;    % ~BUG: Not implemented/never assigned (yet).
                 
+                LblData = [];
                 % IMPLEMENTATION NOTE: Timestamps are set via the columns. TEMPORARY SOLUTION.
                 % Current implementation requires the timestamp PDS keywords to exist in list of keywords though.
-                %HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                %LblData.HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
                 %   startStopTimes{1}, ...
                 %   startStopTimes{2}, ...
                 %   obt2sctrc(str2double(startStopTimes{3})), ...
                 %   obt2sctrc(str2double(startStopTimes{4})));
-                HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, '<UNSET>', '<UNSET>', '<UNSET>', '<UNSET>');
-                
-                LblData = [];
-                LblData.HeaderKvpl = HeaderKvpl;
-                clear   HeaderKvpl
+                LblData.HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, '<UNSET>', '<UNSET>', '<UNSET>', '<UNSET>');
                 
                 LblData.OBJTABLE = [];
                 [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_PHO_data();
@@ -669,6 +463,231 @@ function create_LBL_files(data)
     warning(prevWarningsSettings)
     fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, executionBeginDateVec));
 
+end
+
+
+
+function create_tabindex_files(createLblFileFuncPtr, index, Stabindex, generateFileFailPolicy, LblDefs, ...
+        HeaderAllKvpl, DONT_READ_HEADER_KEY_LIST)
+    for i = 1:length(Stabindex)
+        try            
+            LblData = [];
+            
+            %=========================================
+            %
+            % LBL file: Create header/key-value pairs
+            %
+            %=========================================
+            
+            tabFilename = Stabindex(i).filename;
+            iIndexFirst = Stabindex(i).iIndexFirst;
+            iIndexLast  = Stabindex(i).iIndexLast;     % PROPOSAL: Use for reading CALIB1/EDITED1 file for obtaining end timestamps?
+            probeNbr    = index(iIndexFirst).probe;
+            
+            isSweep       = (tabFilename(30)=='S');
+            isSweepTable  = (tabFilename(28)=='B') && isSweep;
+            isDensityMode = (tabFilename(28)=='I');
+            %isEFieldMode  = (tabFilename(28)=='V');
+            
+            %--------------------------------
+            % Read the EDDER/CALIB1 LBL file
+            %--------------------------------
+            [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(index(iIndexFirst).lblfile, DONT_READ_HEADER_KEY_LIST);
+            
+            % NOTE: One can obtain a stop/ending SCT value from index(Stabindex(i).iIndexLast).sct1str; too, but experience
+            % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
+            % Example: LAP_20150503_210047_525_I2L.LBL
+            SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(Stabindex(i).sctStop));    % Use obt2sctrc?
+            LblData.HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                IdpLblSs.START_TIME, ...
+                Stabindex(i).utcStop, ...
+                IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
+                SPACECRAFT_CLOCK_STOP_COUNT);
+            
+            LblData.HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, LblData.HeaderKvpl, 'require preexisting keys');
+            
+            %clear   IdpHeaderKvpl
+            
+            
+            
+            %=======================================
+            %
+            % LBL file: Create OBJECT TABLE section
+            %
+            %=======================================
+            LblData.OBJTABLE = [];
+            if (isSweep)
+                
+                %==============================
+                % CASE: Sweep files (IxS, BxS)
+                %==============================
+                
+                if (isSweepTable)
+                    % CASE: BxS                    
+                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_BxS_data(probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);                    
+                else
+                    % CASE: IxS                    
+                    bxsTabFilename = tabFilename;
+                    bxsTabFilename(28) = 'B';                    
+                    [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_IxS_data(...
+                        probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, bxsTabFilename, Stabindex(i).nColumns);                    
+                end
+                
+            else
+                %===============================================================
+                % CASE: Anything EXCEPT sweep files (NOT [IB]xS) <==> [IV]x[HL]
+                %===============================================================                
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_IVxHL_data(...
+                    isDensityMode, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);
+            end
+            
+            %createLBL.create_OBJTABLE_LBL_file(...
+            %    createLBL.convert_TAB_path(data.datasetPath, Stabindex(i).path), ...
+            %    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            createLblFileFuncPtr(LblData, Stabindex(i).path);
+            
+            clear   LblData
+            
+        catch Exception
+            createLBL.exception_message(Exception, generateFileFailPolicy);
+            fprintf(1,'Skipping LBL file (tabindex)index - Continuing\n');
+        end
+    end    % for
+end
+
+
+
+function create_antabindex_files(createLblFileFuncPtr, datasetPath, index, Stabindex, San_tabindex, HeaderAllKvpl, LblDefs, ...
+        GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY, DONT_READ_HEADER_KEY_LIST)
+    for i = 1:length(San_tabindex)
+        try
+            tabLblInconsistencyPolicy = GENERAL_TAB_LBL_INCONSISTENCY_POLICY;   % Default value, unless overwritten for specific data file types.
+            
+            tabFilename = San_tabindex(i).filename;
+            
+            mode          = tabFilename(end-6:end-4);
+            probeNbr      = index(San_tabindex(i).iIndex).probe;     % Probe number
+            isDensityMode = (mode(1) == 'I');
+            %isEFieldMode  = (mode(1) == 'V');
+            
+            LblData = [];
+            
+            %=========================================
+            %
+            % LBL file: Create header/key-value pairs
+            %
+            %=========================================
+            
+            if strcmp(San_tabindex(i).dataType, 'best_estimates')
+                %======================
+                % CASE: Best estimates
+                %======================
+                % NOTE: Has its own try-catch statement. (Why?)
+                
+                HeaderKvpl = HeaderAllKvpl;
+                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
+                
+                %===============================================================
+                % NOTE: createLBL.create_EST_LBL_header(...)
+                %       sets certain LBL/ODL variables to handle collisions:
+                %    START_TIME / STOP_TIME,
+                %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
+                %===============================================================
+                iIndexSrc      = San_tabindex(i).iIndex;
+                estTabPath     = San_tabindex(i).path;
+                probeNbrList   = [index(iIndexSrc).probe];
+                idpLblPathList = {index(iIndexSrc).lblfile};
+                
+                LblData.HeaderKvpl = createLBL.create_EST_LBL_header(...
+                    createLBL.convert_TAB_path(datasetPath, estTabPath), ...
+                    idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
+                
+            else
+                %===============================================
+                % CASE: Any type of file EXCEPT best estimates.
+                %===============================================
+                
+                %iIndexFirst = Stabindex(San_tabindex(i).iTabindex).iIndexFirst;
+                iIndexLast  = Stabindex(San_tabindex(i).iTabindex).iIndexLast;
+                
+                [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(...
+                    index(San_tabindex(i).iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
+                
+                % NOTE: One can obtain a stop/ending SCT value from index(Stabindex(i).iIndexLast).sct1str; too, but experience
+                % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
+                % Example: LAP_20150503_210047_525_I2L.LBL
+                %SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLastXXX).sct0str(2), obt2sct(stabindexXXX(i).sctStop));
+                SPACECRAFT_CLOCK_STOP_COUNT = sprintf('%s/%s', index(iIndexLast).sct0str(2), obt2sct(Stabindex(San_tabindex(i).iTabindex).sctStop));   % Use obt2sctrc?
+                
+                % BUG: Does not work for 32S. Too narrow time limits.
+                HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                    IdpLblSs.START_TIME, ...
+                    Stabindex(San_tabindex(i).iTabindex).utcStop, ...
+                    IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
+                    SPACECRAFT_CLOCK_STOP_COUNT);
+                
+                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
+                
+                
+                
+                LblData.HeaderKvpl = HeaderKvpl;
+                clear   HeaderKvpl IdpHeaderKvpl  % IdpLblSs is used later (once).
+                
+            end   % if-else
+            
+            
+            
+            %=======================================
+            %
+            % LBL file: Create OBJECT TABLE section
+            %
+            %=======================================
+            
+            LblData.OBJTABLE = [];
+            if strcmp(San_tabindex(i).dataType, 'downsample')
+                % CASE: IVxD
+                samplingRateSeconds = str2double(tabFilename(end-10:end-9));
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_IVxD_data(probeNbr, IdpLblSs.DESCRIPTION, samplingRateSeconds, isDensityMode);
+                
+            elseif strcmp(San_tabindex(i).dataType, 'spectra')
+                % CASE: PSD
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_PSD_data(probeNbr, isDensityMode, San_tabindex(i).nTabColumns, mode);
+                
+            elseif  strcmp(San_tabindex(i).dataType, 'frequency')
+                % CASE: FRQ
+                psdTabFilename = strrep(San_tabindex(i).filename, 'FRQ', 'PSD');
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_FRQ_data(San_tabindex(i).nTabColumns, psdTabFilename);
+                
+            elseif  strcmp(San_tabindex(i).dataType, 'sweep')
+                % CASE: AxS (analyzed sweeps)
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_AxS_data(Stabindex(San_tabindex(i).iTabindex).filename);
+                tabLblInconsistencyPolicy = AxS_TAB_LBL_INCONSISTENCY_POLICY;   % NOTE: Different policy for A?S.LBL files.
+                
+            elseif  strcmp(San_tabindex(i).dataType,'best_estimates')
+                % CASE: EST
+                [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = LblDefs.get_EST_data();
+                
+            else
+                error('Error, bad identifier in an_tabindex{%i,7} = San_tabindex(%i).dataType = "%s"', i, i, San_tabindex(i).dataType);
+                
+            end
+            
+            
+            
+            %createLBL.create_OBJTABLE_LBL_file(...
+            %    createLBL.convert_TAB_path(data.datasetPath, San_tabindex(i).path), ...
+            %    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
+            createLblFileFuncPtr( LblData, San_tabindex(i).path, tabLblInconsistencyPolicy );
+            clear   LblData   tabLblInconsistencyPolicy
+            
+            
+            
+        catch Exception
+            createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
+            fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
+        end
+        
+    end    % for
 end
 
 
