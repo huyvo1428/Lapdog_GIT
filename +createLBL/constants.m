@@ -34,12 +34,23 @@ classdef constants < handle
     %                 same variables/constants as arguments and checks them (assertion) against the internal (hard-coded) values. 
     %                 (2) Constructor call that just uses internally defined values.
     % 
+    %       PROPOSAL: (1) Internal hard-coded default values 
+    %                 (2) Constructor that looks for and compares with the corresponding global variables, if defined.
+    %
+    % NOTE: Not all constants here are really related to LBL files.
+    %   Ex: MISSING_CONSTANT
+    %       CON: Needed for LBL DESCRIPTION.
+    %   Ex: N_FINAL_PRESWEEP_SAMPLES
+    %       CON: Needed for LBL DESCRIPTION.
+    %
+    % PROPOSAL: Include metakernel_rosetta.txt
+    %   PRO:/NOTE: Used by lapdog_convention_wrapper, get_lapdog_metakernel.
     
     properties(Access=public)
         ROSETTA_NAIF_ID                        = -226;     % Used by SPICE.
         INDENTATION_LENGTH                     = 4;
-        MISSING_CONSTANT                       = -1000;    % Defined here so that it can be used by code that is not run via Lapdog.
-        N_FINAL_PRESWEEP_SAMPLES               = 16;
+        MISSING_CONSTANT                       = -1000;    % Same as SATURATION_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
+        N_FINAL_PRESWEEP_SAMPLES               = 16;       % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
         PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
         
         % Used by createLBL.create_OBJTABLE_LBL_file
@@ -52,26 +63,25 @@ classdef constants < handle
 
         % Constructor
         % 
-        % ARGUMENTS
-        % =========
-        % alt 1: No arguments
-        % alt 2: MISSING_CONSTANT
-        %        N_FINAL_PRESWEEP_SAMPLES
         function obj = constants(varargin)
+            
+            % ASSERTION: To find calls according to old format.
             if nargin == 0
                 ;   % Do nothing. Everything OK.
-            elseif nargin == 2
-                % ASSERTIONS
-                if obj.MISSING_CONSTANT ~= varargin{1}
-                    error('Submitted MISSING_CONSTANT value inconsistent with internally hard-coded value.')
-                end
-                if obj.N_FINAL_PRESWEEP_SAMPLES ~= varargin{2}
-                    error('Submitted N_FINAL_PRESWEEP_SAMPLES value inconsistent with internally hard-coded value.')
-                end
-                
             else
                 error('Wrong number of arguments.')
             end
+            
+            % ASSERTION: Compare with global constant with the same meaning.
+            if ismember('SATURATION_CONSTANT', who('global'))
+                % CASE: SATURATION_CONSTANT is already a global constant, although it might not have been declared as
+                % such in the current workspace.
+                global SATURATION_CONSTANT
+                if obj.MISSING_CONSTANT ~= SATURATION_CONSTANT
+                    error('Global variable SATURATION_CONSTANT inconsistent with internally hard-coded MISSING_CONSTANT.')
+                end                                
+            end
+
             
             %==================================================================
             % LBL Header keys which should preferably come in a certain order.

@@ -124,6 +124,7 @@
 % PROPOSAL: Different LABEL_REVISION_NOTE för CALIB2, DERIV2. Multiple rows?
 % PROPOSAL: Set LABEL_REVISION_NOTE without lbl{rev,editor,time}.
 %
+% PROPOSAL: Reorg to modify Lapdog data struct paths immediately, not upon use.
 %===================================================================================================
 
 function create_LBL_files(data)
@@ -395,7 +396,7 @@ function create_LBL_files(data)
         %==============================================================
         % TEMPORARY SOLUTION.
         % DELETE?!! Still creates NPL LBL files from found TAB files.
-        createLBL.create_LBL_L5_sample_types(data.ldDatasetPath, data.C.MISSING_CONSTANT, data.C.N_FINAL_PRESWEEP_SAMPLES)     
+        createLBL.create_LBL_L5_sample_types(data.ldDatasetPath)
     end
     
     

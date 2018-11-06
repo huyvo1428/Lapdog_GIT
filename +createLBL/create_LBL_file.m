@@ -35,7 +35,7 @@
 %
 % Initially created 2018-08-21 by Erik P G Johansson, IRF Uppsala.
 %
-function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING_CONSTANT, nFinalPresweepSamples)
+function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     % NOTE: Generalizing to EDITED1/CALIB1 data types requires distinguising EDDER / DERIV1.
     % PROPOSAL: Remake into class
     %   PRO: Can have constants, shared over functions.
@@ -62,8 +62,8 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
     
     
 
-    C = createLBL.constants(MISSING_CONSTANT, nFinalPresweepSamples);
-    defs = createLBL.definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples);             % TEMP: Use constants.
+    C = createLBL.constants();
+    defs = createLBL.definitions(generatingDeriv1, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES);             % TEMP: Use constants.
     COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
 
     TAB_LBL_INCONSISTENCY_POLICY = 'error';

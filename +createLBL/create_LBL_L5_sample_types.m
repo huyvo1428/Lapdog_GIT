@@ -17,14 +17,14 @@
 %
 % Initially created 2018-08-27 by Erik P G Johansson, IRF Uppsala.
 %
-function create_LBL_L5_sample_types(deriv1Path, MISSING_CONSTANT, nFinalPresweepSamples)
+function create_LBL_L5_sample_types(deriv1Path)
     % createLBL.create_LBL_L5_sample_types('/home/data/ROSETTA/datasets/RO-A-RPCLAP-5-AST2-DERIV-V2.0___LBL_L5_sample_test')
     % createLBL.create_LBL_L5_sample_types('/home/data/ROSETTA/datasets/RO-A-RPCLAP-5-AST2-DERIV-V2.0')
     % createLBL.create_LBL_L5_sample_types('/home/data/ROSETTA/datasets/RO-C-RPCLAP-5-TDDG-DERIV-V0.1')
 
     
     
-    C = createLBL.constants(MISSING_CONSTANT, nFinalPresweepSamples);
+    C = createLBL.constants();
     
     % TEMPORARY source constants.
     lbltime   = '2018-08-03';  % Label revision time
@@ -70,7 +70,7 @@ function create_LBL_L5_sample_types(deriv1Path, MISSING_CONSTANT, nFinalPresweep
             
         end
         
-        canClassifyTab = createLBL.create_LBL_file(tabFilePath, LblHeaderKvpl, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES);
+        canClassifyTab = createLBL.create_LBL_file(tabFilePath, LblHeaderKvpl);
         if canClassifyTab
             fprintf('Created LBL file for "%s"\n', tabFilename);
         end

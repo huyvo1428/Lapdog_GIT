@@ -71,7 +71,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % saving (to maximize backward compatibility).
     % (NEED? : Caller decides if DERIV1 or EDDER.)
     % --
-    % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex.
+    % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex, SATURATION_CONSTANT-->MISSING_CONSTANT.
     % PROPOSAL: Only save input to create_LBL_files in .mat file.
     %   PRO: Avoids problem of saving/loading global variables.
     %   CON: Sensitive to problems with .mat files not being backward-compatible.
@@ -108,11 +108,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % Use constructor for checking consistency with global values.
     % NOTE: Needed to find path to .mat file, and must hence precede it.
     %====================================================================
-    global SATURATION_CONSTANT
-    global N_FINAL_PRESWEEP_SAMPLES    
-    C = createLBL.constants(SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES);
-    clear SATURATION_CONSTANT
-    clear N_FINAL_PRESWEEP_SAMPELS
+    C = createLBL.constants();
 
     %===============================================================
     % Derive ldDatasetPath
@@ -226,10 +222,10 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     clfd.an_tabindex       = an_tabindex;
     clfd.blockTAB          = evalin(MWS, 'blockTAB');
     clfd.ASW_tabindex      = ASW_tabindex;
-    clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable name slightly.
+    clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable case for consistency.
     clfd.PHO_tabindex      = PHO_tabindex;
     
-    clfd.A1P_tabindex      = der_struct;     % Changing variable name.
+    clfd.A1P_tabindex      = der_struct;     % Changing variable name for consistency.
     clfd.C                 = C;
     clfd.failFastDebugMode = failFastDebugMode;
     clfd.generatingDeriv1  = generatingDeriv1;

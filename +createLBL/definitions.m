@@ -33,14 +33,13 @@ classdef definitions < handle
     %
     % TODO-DECISION: These functions set the "useFor" field. Should they? The field does not define columns as such but is
     %                related to LBL start & stop timestamps which are otherwise set outside of this class.
-    % PROPOSAL: Submit (instance of) createLBL.constants instead of having field for MISSING_CONSTANT.
-    %   TODO-DECISION: Are there other similar cases? N_FINAL_SWEEP_SAMPLES? 
+    % PROPOSAL: Submit (instance of) createLBL.constants instead of having field for MISSING_CONSTANT, N_FINAL_SWEEP_SAMPLES.
+    % PROPOSAL: Internally call createLBL.constants to eliminate arguments.
     %
     % PROPOSAL: Help functions for setting specific types of column descriptions.
     %   PRO: Does not need to write out struct field names: NAME, DESCRIPTION etc.
     %   PRO: Automatically handle EDDER/DERIV1 differences.
     %   --
-    %   TODO-DECISION: How handle MISSING_CONSTANT?
     %   TODO-DECISION: Need to think about how to handle DERIV2 TAB columns (here part of DERIV1)?
     %   --
     %   PROPOSAL: Automatically set constants for BYTES, DATA_TYPE, UNIT (implicit from choice of helper function).
@@ -72,8 +71,11 @@ classdef definitions < handle
         
         ODL_VALUE_UNKNOWN  = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown. Should NOT be used for official deliveries.
 
-        MISSING_CONSTANT
-        nFinalPresweepSamples
+        % Assigned via constructor argument, not the createLBL.constants object/class. Capitalized since it is a PDS
+        % keyword.
+        MISSING_CONSTANT        
+        nFinalPresweepSamples   % Assigned via constructor argument, not the createLBL.constants object/class.
+        
         generatingDeriv1
         
         MC_DESC_AMENDM       % Generic description string of MISSING_CONSTANT (MC). Is added at end of DESCRIPTION.
@@ -95,6 +97,7 @@ classdef definitions < handle
         
         % Constructor
         function obj = definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples)
+            
             % ASSERTIONS
             assert(isscalar(nFinalPresweepSamples) && isnumeric(nFinalPresweepSamples))
             assert(isscalar(MISSING_CONSTANT)      && isnumeric(MISSING_CONSTANT))
