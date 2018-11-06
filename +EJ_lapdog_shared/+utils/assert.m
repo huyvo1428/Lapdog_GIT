@@ -128,16 +128,18 @@ classdef assert
         
         
         
-        % Struct with certain fixed set of fields.
+        % Struct with certain set of fields.
         % 
-        % Default             : Require exactly   the specified set of fields.
-        % varargin = 'subset' : Require subset of the specified set of fields.
+        % ARGUMENTS
+        % =========
+        % varargin :
+        %   <Empty>  : Require exactly   the specified set of fields.
+        %   'subset' : Require subset of the specified set of fields.
+        %
         % NOTE: Does NOT assume 1x1 struct. Can be matrix.
         function struct(s, fieldNamesSet, varargin)
             % PROPOSAL: Print superfluous and missing fieldnames.
             % PROPOSAL: Option to specify subset or superset of field names.
-            %   PRO: Superset useful for when submitting settings/policy struct to function which then adds default
-            %        values for missing fields.
             %   PRO: Subset useful for "pdsData" structs(?)
             %   Ex: EJ_lapdog_shared.PDS_utils.construct_DATA_SET_ID
             %   

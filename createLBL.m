@@ -135,6 +135,9 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % IMPLEMENTATION NOTE: Variables are declared global in the caller/base workspace so that they can be saved to .mat
     % file. All global variables are declared global, just to make sure that no new ones are missed in case ~createLBL
     % has to be modified after a dataset has been generated.
+    % Could iterate over list of specific global variables, but then there are the risks of
+    % (1) misspelling, and
+    % (2) missing new global variables, leading to .mat incompatibility.
     %===================================================================================================================
     globalVarsList = who('global');
     % globalVarsList = {'N_FINAL_PRESWEEP_SAMPLES', 'SATURATION_CONSTANT', 'tabindex', 'an_tabindex', ...
@@ -157,7 +160,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %===================================================================================================================
     if saveCallerWorkspace
         savedWorkspaceFile = fullfile(ldDatasetPath, C.PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
-        fprintf('Saving ~pre-createLBL MATLAB workspace+globals in "%s"\n', savedWorkspaceFile);
+        fprintf('Saving pre-createLBL MATLAB workspace+globals in "%s"\n', savedWorkspaceFile);
         evalin(MWS, sprintf('save(''%s'')', savedWorkspaceFile))                                        % NOTE: evalin
         fprintf('    Done\n');
     end

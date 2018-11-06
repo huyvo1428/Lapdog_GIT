@@ -2,7 +2,7 @@
 % DESIGN INTENT
 % =============
 % Class which stores hard-coded data related to specific LBL files, at least columns. Presently a bit unclear exactly
-% what hard-coded data should be incldued.
+% what hard-coded data should be included.
 % Should at least collects functions which define and return data structures defining LBL files, one file/data type per function.
 %
 % The class is instantiated with variable values which are likely constant during a session, and can be used by
@@ -25,14 +25,10 @@ classdef definitions < handle
     %           ==> Should not write LBL files.
     % NEED: The caller should have control over error-handling, LBL-TAB consistency checks.
     %
-    % TODO-DECISION: Use filenaming conventions consistently for naming corresponding functions.
-    %
     % PROPOSAL: Better name.
     %   PROPOSAL: definition_creator, LBL_definition_creator.
     %       CON: Bad if using class for updating LBL header in the future.
     %
-    % TODO-DECISION: These functions set the "useFor" field. Should they? The field does not define columns as such but is
-    %                related to LBL start & stop timestamps which are otherwise set outside of this class.
     % PROPOSAL: Submit (instance of) createLBL.constants instead of having field for MISSING_CONSTANT, N_FINAL_SWEEP_SAMPLES.
     % PROPOSAL: Internally call createLBL.constants to eliminate arguments.
     %
@@ -78,7 +74,7 @@ classdef definitions < handle
         
         generatingDeriv1
         
-        MC_DESC_AMENDM       % Generic description string of MISSING_CONSTANT (MC). Is added at end of DESCRIPTION.
+        MC_DESC_AMENDM       % Generic description string for MISSING_CONSTANT (MC). Is added at end of DESCRIPTION.
         QFLAG1_DESCRIPTION = 'Quality flag constructed as the sum of multiple terms, depending on what quality related effects are present. From 00000 (best) to 77777 (worst).';
         QVALUE_DESCRIPTION = 'Quality value in the range 0 (worst) to 1 (best). Corresponds to goodness of fit or how well the model fits the data.';
         

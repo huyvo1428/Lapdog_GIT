@@ -125,6 +125,7 @@
 % PROPOSAL: Set LABEL_REVISION_NOTE without lbl{rev,editor,time}.
 %
 % PROPOSAL: Reorg to modify Lapdog data struct paths immediately, not upon use.
+% PROPOSAL: Have block lists use TAB columns for start & stop timestamps.
 %===================================================================================================
 
 function create_LBL_files(data)
@@ -274,8 +275,7 @@ function create_LBL_files(data)
             
             for iFile = 1:numel(data.A1P_tabindex.file)
                 try
-                    startStopTimes = data.A1P_tabindex.timing(iFile, :);   % NOTE: Stores UTC+SCCS
-                    
+                    startStopTimes = data.A1P_tabindex.timing(iFile, :);   % NOTE: Stores UTC+SCCS.
                     iIndex = data.A1P_tabindex.firstind(iFile);
                     
                     %----------------------------------
@@ -629,7 +629,7 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
             createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
             fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
         end
-        
+
     end    % for
 end
 

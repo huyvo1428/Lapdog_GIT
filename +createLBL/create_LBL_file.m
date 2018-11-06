@@ -71,11 +71,11 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
 
 
     % TEMPORARY source constants.
-    lbltime   = '2018-08-03';  % Label revision time
-    lbleditor = 'EJ';
-    lblrev    = 'Misc. descriptions clean-up';
+    lbltime    = '2018-08-03';  % Label revision time
+    lbleditor  = 'EJ';
+    lblrev     = 'Misc. descriptions clean-up';
     LblAllKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
-    LblKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(OldLblHeaderKvpl, LblAllKvpl, 'require preexisting keys');
+    LblKvpl    = EJ_lapdog_shared.utils.KVPL.overwrite_values(OldLblHeaderKvpl, LblAllKvpl, 'require preexisting keys');
     
     
     
@@ -86,7 +86,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
         
         % Ex: RPCLAP_20050301_001317_301_A2S.LBL
         % Ex: RPCLAP_20050303_124725_FRQ_I1H.LBL        
-        % NOTE: Letters in macro numbers (hex) are lower case, but the "macro" can also be 32S, PSD, FRQ i.e. upper case letters.
+        % NOTE: Letters in macro numbers (hex) are upper case, but the "macro" can also be 32S, PSD, FRQ i.e. upper case letters.
         % Therefore, the regex has to allow both upper and lower case.
         
         % NOTE: strread throws exception if the pattern does not match.
