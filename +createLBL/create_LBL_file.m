@@ -63,7 +63,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     
 
     C = createLBL.constants();
-    defs = createLBL.definitions(generatingDeriv1, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES);             % TEMP: Use constants.
+    LblDefs = createLBL.definitions(generatingDeriv1, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES);             % TEMP: Use constants.
     COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
 
     TAB_LBL_INCONSISTENCY_POLICY = 'error';
@@ -75,7 +75,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     lbleditor  = 'EJ';
     lblrev     = 'Misc. descriptions clean-up';
     LblAllKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
-    LblKvpl    = EJ_lapdog_shared.utils.KVPL.overwrite_values(OldLblHeaderKvpl, LblAllKvpl, 'require preexisting keys');
+    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(OldLblHeaderKvpl, LblAllKvpl, 'require preexisting keys');
     
     
     
@@ -95,14 +95,11 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
         msd2 = dataType{1};
         msd = [msd1, '_', msd2];
 
-        LblData = [];
-        LblData.OBJTABLE = [];
-            
         if strcmp(msd2, 'NPL')
             
             canClassifyTab = 1;
             
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_NLP_data();
+            LblData = LblDefs.get_NPL_data(HeaderKvpl);
 
         else 
             canClassifyTab = 0;
@@ -115,7 +112,6 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     
     
     if canClassifyTab
-        LblData.HeaderKvpl = LblKvpl;
         createLBL.create_OBJTABLE_LBL_file(tabFilePath, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, TAB_LBL_INCONSISTENCY_POLICY);
     else
         %error('Can not identify type of TAB file: "%s"', tabFilePath)
@@ -124,7 +120,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     
     
     
-    clear defs
+    clear LblDefs
 end
 
 
