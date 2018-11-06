@@ -13,6 +13,8 @@
 %                                   keywords are added automatically by the code and must not overlap with these
 %                                   (assertion).
 %       .OBJTABLE                 : (OBJTABLE = "OBJECT = TABLE" segment)
+%                                   NOTE: Excludes COLUMNS, ROW_BYTES, ROWS which are under the OBJECT = TABLE segment
+%                                   since they are are automatically derived.
 %           .DESCRIPTION          : Description for entire table (PDS keyword).
 %           .OBJCOL_list{i}       : Struct containing fields corresponding to various column PDS keywords.
 %                                   (OBJCOL = "OBJECT = COLUMN" segment)
@@ -57,12 +59,12 @@
 % NOTE: The implementation will add certain keywords to LblData.HeaderKvpl, and derive the values, and assume that
 % the caller has not set them. Error otherwise (assertion).
 % NOTE: Uses Lapdog's obt2sct function.
-%
+% --
 % NOTE: Not full general-purpose function for table files, since
 %       (1) ASSUMPTION: TAB files are constructed with a fixed number of bytes between columns (and no bytes
 %           before/after the first/last string).
 %       (2) Does not permit FORMAT field, and there are probably other PDS-keywords which are not supported by this code.
-%
+% --
 % ASSUMPTION: Metakernel (time conversion) loaded if setting timestamps from columns requiring time conversion (so far
 % only STOP_TIME_from_OBT).
 %
@@ -113,6 +115,10 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     %   PROPOSAL: Only include UNIT (in LBL) if caller sets .UNIT to value other than 'N/A'.
     %
     % PROPOSAL: Read indentation length, ROSETTA_NAIF_ID, string-between-columns from createLBL.constants class.
+    %   CON: Makes code less generalizable outside Lapdog.
+    %   PROPOSAL: Argument settings struct which coincides with the createLBL.constants fields?!
+    %       CON: Proper assertion would prevent this.
+    %           CON-PROPOSAL: Superset struct assertion.
     %
     % PROPOSAL: Consistency check: always verify that begin & end timestamps fit UTC, OBT columns (if they exist).
     %   PROPOSAL: Use extra field(s) to ~always label columns for start & stop timestamps to check consistency with.
@@ -134,30 +140,28 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     %           CALIB/RPCLAP030101_CALIB_FINE.LBL
     %           CALIB/RPCLAP030101_CALIB_VBIAS.LBL
     %           CALIB/RPCLAP030101_CALIB_IBIAS.LBL
-    
-    
+
+
 
     %===========
     % Constants
     %===========
-    PERMITTED_LBLDATA_FIELD_NAMES  = {'HeaderKvpl', 'OBJTABLE'};
-    % NOTE: Exclude COLUMNS, ROW_BYTES, ROWS.
-    PERMITTED_OBJTABLE_FIELD_NAMES = {'DESCRIPTION', 'OBJCOL_list'};
+    D = [];
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
     % NOTE: Includes both required and optional fields.
-    PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT', ...
+    D.PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT', ...
         'useFor'};
     
     % "Planetary Data Systems Standards Reference", Version 3.6, p12-11, section 12.3.4.
     % Applies to what PDS defines as identifiers, i.e. "values" without quotes.
-    PDS_IDENTIFIER_PERMITTED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789';
+    D.PDS_IDENTIFIER_PERMITTED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789';
     
     ROSETTA_NAIF_ID = -226;
     %CONTENT_MAX_ROW_LENGTH         = 79;    % Number excludes line break characters.
     CONTENT_MAX_ROW_LENGTH         = 1000;    % Number excludes line break characters.
     
-    BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns. Lapdog convention.
-    BYTES_PER_LINEBREAK   = 2;                 % Carriage return + line feed.
+    D.BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns. Lapdog convention.
+    BYTES_PER_LINEBREAK     = 2;                 % Carriage return + line feed.
     
     % Constants for (optionally) converting TAB file contents into PDS keywords.
     T2PK_OBT2SCCS_FUNC = @(x) obt2sctrc(str2double(x));    % No quotes. Quotes added later.
@@ -175,8 +179,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     % ASSERTIONS: Caller only uses permissible field names.
     % Useful when changing field names.
     % ------------------------------------------------------
-    EJ_lapdog_shared.utils.assert.struct(LblData,          PERMITTED_LBLDATA_FIELD_NAMES)
-    EJ_lapdog_shared.utils.assert.struct(LblData.OBJTABLE, PERMITTED_OBJTABLE_FIELD_NAMES)
+    EJ_lapdog_shared.utils.assert.struct(LblData,          {'HeaderKvpl', 'OBJTABLE'})
+    EJ_lapdog_shared.utils.assert.struct(LblData.OBJTABLE, {'DESCRIPTION', 'OBJCOL_list'})
     EJ_lapdog_shared.utils.assert.scalar(LblData.HeaderKvpl)    % Common error to initialize empty KVPL the wrong way.
 
 
@@ -216,9 +220,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
             error('One column object is a non-one size array. Guess: Due to defining .useFor value with "struct" command and ~single curly brackets. Must be double curly braces due to MATLAB syntax.')
         end
         
-        [Cd, nSubcolumns] = complement_column_data(Cd, ...
-            PERMITTED_OBJCOL_FIELD_NAMES, BYTES_BETWEEN_COLUMNS, PDS_IDENTIFIER_PERMITTED_CHARS, ...
-            lblFilePath, tabLblInconsistencyPolicy);
+        [Cd, nSubcolumns] = complement_column_data(Cd, D, lblFilePath, tabLblInconsistencyPolicy);
         Cd.START_BYTE  = PDS_START_BYTE;
 
         % ASSERTION: Keywords do not contain quotes.
@@ -232,7 +234,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
         OBJCOL_namesList{end+1} = Cd.NAME;
         %OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + nSubcolumns;    % BUG? Misunderstanding of PDS standard?!!
         OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + 1;              % CORRECT according to MB email 2018-08-08 and DVALNG. ITEMS<>1 still counts as 1 column here.
-        PDS_START_BYTE = PDS_START_BYTE + Cd.BYTES + BYTES_BETWEEN_COLUMNS;
+        PDS_START_BYTE = PDS_START_BYTE + Cd.BYTES + D.BYTES_BETWEEN_COLUMNS;
         
         % Collect information for T2PK functionality.
         if isfield(Cd, 'useFor')
@@ -246,7 +248,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
         OBJTABLE_data.OBJCOL_list{i} = Cd;      % Return updated info to original data structure.
         clear Cd
     end
-    OBJTABLE_data.ROW_BYTES = (PDS_START_BYTE-1) - BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;   % Adds new column to struct. -1 since PDS_START_BYTE=1 refers to first byte.
+    OBJTABLE_data.ROW_BYTES = (PDS_START_BYTE-1) - D.BYTES_BETWEEN_COLUMNS + BYTES_PER_LINEBREAK;   % Adds new column to struct. -1 since PDS_START_BYTE=1 refers to first byte.
     
     %################################################################################################
     
@@ -346,9 +348,7 @@ end
 %
 % NOTE: Function name somewhat misleading since it contains a lot of useful assertions that have nothing to do with
 % complementing the ColumnData struct.
-function [ColumnData, nSubcolumns] = complement_column_data(ColumnData, ...
-        PERMITTED_OBJCOL_FIELD_NAMES, BYTES_BETWEEN_COLUMNS, PDS_IDENTIFIER_PERMITTED_CHARS, ...
-        lblFilePath, tabLblInconsistencyPolicy)
+function [ColumnData, nSubcolumns] = complement_column_data(ColumnData, D, lblFilePath, tabLblInconsistencyPolicy)
     
     EMPTY_UNIT_DEFAULT = 'N/A';
 
@@ -362,7 +362,7 @@ function [ColumnData, nSubcolumns] = complement_column_data(ColumnData, ...
     % names by misspelling, or misspelling when overwriting values,
     % or adding fields that are never used by the function.
     %---------------------------------------------------------------
-    EJ_lapdog_shared.utils.assert.struct(Cd, PERMITTED_OBJCOL_FIELD_NAMES, 'subset')
+    EJ_lapdog_shared.utils.assert.struct(Cd, D.PERMITTED_OBJCOL_FIELD_NAMES, 'subset')
 
     
     
@@ -374,8 +374,8 @@ function [ColumnData, nSubcolumns] = complement_column_data(ColumnData, ...
         % CASE: Does not have BYTES
         %       Has           ITEMS, ITEM_BYTES
         nSubcolumns    = Cd.ITEMS;
-        Cd.ITEM_OFFSET = Cd.ITEM_BYTES + BYTES_BETWEEN_COLUMNS;
-        Cd.BYTES       = nSubcolumns * Cd.ITEM_BYTES + (nSubcolumns-1) * BYTES_BETWEEN_COLUMNS;
+        Cd.ITEM_OFFSET = Cd.ITEM_BYTES + D.BYTES_BETWEEN_COLUMNS;
+        Cd.BYTES       = nSubcolumns * Cd.ITEM_BYTES + (nSubcolumns-1) * D.BYTES_BETWEEN_COLUMNS;
     else
         warning_error___LOCAL(sprintf('Found disallowed combination of BYTES/ITEMS/ITEM_BYTES. NAME="%s". ABORTING creation of LBL file', Cd.NAME), tabLblInconsistencyPolicy)
         return   % NOTE: ABORTING & EXITING to avoid causing further errors.
@@ -403,7 +403,7 @@ function [ColumnData, nSubcolumns] = complement_column_data(ColumnData, ...
         error('ERROR: Trying to use empty value for NAME.')
     end
     % ASSERTION: Only uses permitted characters.
-    usedDisallowedChars = setdiff(Cd.NAME, PDS_IDENTIFIER_PERMITTED_CHARS);
+    usedDisallowedChars = setdiff(Cd.NAME, D.PDS_IDENTIFIER_PERMITTED_CHARS);
     if ~isempty(usedDisallowedChars)
         % NOTE 2016-07-22: The NAME value that triggers this error may come from a CALIB LBL file produced by pds, NAME = P1-P2_CURRENT/VOLTAGE.
         % pds should no longer produce this kind of LBL files since they violate the PDS standard but they may still occur in old data sets.
