@@ -75,7 +75,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     lbleditor  = 'EJ';
     lblrev     = 'Misc. descriptions clean-up';
     LblAllKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
-    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(OldLblHeaderKvpl, LblAllKvpl, 'require preexisting keys');
+    HeaderKvpl = OldLblHeaderKvpl.overwrite_subset(LblAllKvpl);
     
     
     

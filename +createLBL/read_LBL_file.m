@@ -28,14 +28,16 @@ function [HeaderKvpl, LblSs] = read_LBL_file(filePath, deleteHeaderKeyList)
     % NOTE: LblSsl keeps   quotes.
     %       LblSs  removes quotes.
     [LblSsl, LblSs] = EJ_lapdog_shared.PDS_utils.read_ODL_to_structs(filePath);   % Read CALIB LBL file.
-    HeaderKvpl = [];
-    HeaderKvpl.keys   = LblSsl.keys  (1:end-1);    % NOTE: LblSsl includes OBJECT = TABLE as last key-value pair.
-    HeaderKvpl.values = LblSsl.values(1:end-1);
+    
+    % NOTE: LblSsl includes OBJECT = TABLE as last key-value pair which should be excluded.
+    HeaderKvpl = EJ_lapdog_shared.utils.KVPL2(...
+        LblSsl.keys  (1:end-1), ...
+        LblSsl.values(1:end-1));
     
     %for i = 1:length(HeaderKvpl.values)
     %    value = HeaderKvpl.values{i};
     %    HeaderKvpl.values{i} = value(value ~= '"');    % Remove all quotes.
     %end
-    
-    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.delete_keys(HeaderKvpl, deleteHeaderKeyList, 'may have keys');
+
+    HeaderKvpl = HeaderKvpl.diff(deleteHeaderKeyList);
 end

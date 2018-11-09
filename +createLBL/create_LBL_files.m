@@ -280,7 +280,7 @@ function create_LBL_files(data)
                         startStopTimes{2}, ...
                         startStopTimes{3}, ...
                         startStopTimes{4});
-                    HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
+                    HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
                     
                     LblData = LblDefs.get_A1P_data(HeaderKvpl);
                     
@@ -430,7 +430,7 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
                 IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
                 obt2sctrc(Stabindex(i).sctStop));
             
-            HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
+            HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
 
 
 
@@ -504,8 +504,7 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
                 %======================
                 % NOTE: Has its own try-catch statement. (Why?)
                 
-                HeaderKvpl = HeaderAllKvpl;
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderKvpl, 'DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
+                HeaderKvpl = HeaderAllKvpl.append_kvp('DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
                 
                 %===============================================================
                 % NOTE: createLBL.create_EST_LBL_header(...)
@@ -544,7 +543,7 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
                     IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
                     obt2sctrc(Stabindex(San_tabindex(i).iTabindex).sctStop));
 
-                HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(IdpHeaderKvpl, HeaderKvpl, 'require preexisting keys');
+                HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
 
                 clear   IdpHeaderKvpl  % IdpLblSs is used later (once).
 
@@ -613,11 +612,11 @@ end
 function Kvpl = add_timestamp_keywords(Kvpl, START_TIME, STOP_TIME, SPACECRAFT_CLOCK_START_COUNT, SPACECRAFT_CLOCK_STOP_COUNT)
     % PROPOSAL: Shorten UTC to 23 chars.
     
-    Kvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pairs(Kvpl, {...
-        'START_TIME', shorten_UTC(START_TIME);
-        'STOP_TIME',  shorten_UTC(STOP_TIME);
+    Kvpl = Kvpl.append(EJ_lapdog_shared.utils.KVPL2({...
+        'START_TIME',                   shorten_UTC(START_TIME);
+        'STOP_TIME',                    shorten_UTC(STOP_TIME);
         'SPACECRAFT_CLOCK_START_COUNT', SPACECRAFT_CLOCK_START_COUNT;
-        'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT});
+        'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT}));
 end
 
 

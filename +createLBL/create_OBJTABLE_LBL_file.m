@@ -275,62 +275,70 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     %---------------------------------------------
     
     % ASSERTION: Unique .useFor PDS keywords.
-    if numel(unique({T2pkArgsTable.argConst})) ~= numel({T2pkArgsTable.argConst})
-        error('Specified the same PDS keyword multiple times in ".useFor" fields.')
-    end
-    
-    [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({T2pkArgsTable.argConst}, {T2PK_PROCESSING_TABLE.argConst});
+    % NOTE: Not foolproof due to changes. Should ideally check that the final PDS keywords are not set more than once.
+    EJ_lapdog_shared.utils.assert.castring_set({T2pkArgsTable.argConst})
+    %if numel(unique({T2pkArgsTable.argConst})) ~= numel({T2pkArgsTable.argConst})
+    %    error('Specified the same argument constant multiple times in ".useFor" fields.')
+    %end
 
+    [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({T2pkArgsTable.argConst}, {T2PK_PROCESSING_TABLE.argConst});
+    
     % ASSERTION: Arguments only specify implemented-for argument constants.
+    %            ({T2pkArgsTable.argConst} is a subset of {T2PK_PROCESSING_TABLE.argConst}.)
     if numel(T2pkArgsTable) ~= numel(iT2pkProcTable)
         error('Can not find hard-coded support for at least one of the values specified in ".useFor" fields.')
     end
-    
-    T2pkArgsTable = T2pkArgsTable(iT2pkArgsTable);    % Potentially modify the ordering so that it is consistent with T2pkExecTable.
+
+    % Reduce the size of tables (only keep specified indices) and modify the ordering so that they are consistent with each other.
+    T2pkArgsTable = T2pkArgsTable(iT2pkArgsTable);
     T2pkExecTable = T2PK_PROCESSING_TABLE(iT2pkProcTable);
+
+    % ASSERTION: Set every PDS keyword (at most) once.
+    EJ_lapdog_shared.utils.assert.castring_set({T2pkExecTable.pdsKeyword})
+    
+    % Add/transfer fields T2pkArgsTable-->T2pkExecTable for "overlapping" argConst values so that everything needed is
+    % in a single table.
     [T2pkExecTable(:).iByteFirst] = deal(T2pkArgsTable(:).iByteFirst);
     [T2pkExecTable(:).iByteLast]  = deal(T2pkArgsTable(:).iByteLast);
-    
+
     LblData.nTabFileRows = NaN;   % Field must be created in case deriving the value later fails.
     try
         rowStringArrayArray = {[], []};
         [rowStringArrayArray{:}, nBytesPerRow, LblData.nTabFileRows] = createLBL.analyze_TAB_file(tabFilePath, [T2pkExecTable(:).iByteFirst], [T2pkExecTable(:).iByteLast]);
-        
+
         % ASSERTION: Number of bytes per row.
         if nBytesPerRow ~= OBJTABLE_data.ROW_BYTES
             warning_error___LOCAL(sprintf('TAB file is inconsistent with LBL file. Bytes per row does not fit table description.\n    nBytesPerRow=%g\n    OBJTABLE_data.ROW_BYTES=%g\n    File: "%s"', ...
                 nBytesPerRow, OBJTABLE_data.ROW_BYTES, tabFilePath), tabLblInconsistencyPolicy)
         end
-        
-        T2pkKvpl.keys   = {T2pkExecTable(:).pdsKeyword};
-        T2pkKvpl.values = {};
-        for iT2pk = 1:numel(T2pkKvpl.keys)
+
+        T2pkKvpl_keys   = {T2pkExecTable(:).pdsKeyword};
+        T2pkKvpl_values = {};
+        for iT2pk = 1:numel(T2pkKvpl_keys)
             tabFileValueStr        = rowStringArrayArray{ T2pkExecTable(iT2pk).iFlr }{ iT2pk };
-            T2pkKvpl.values{end+1} = T2pkExecTable(iT2pk).convFunc( tabFileValueStr );
+            T2pkKvpl_values{end+1} = T2pkExecTable(iT2pk).convFunc( tabFileValueStr );
         end
-        
+        T2pkKvpl = EJ_lapdog_shared.utils.KVPL2(T2pkKvpl_keys, T2pkKvpl_values);
+
         % Update selected PDS keyword values.
-        LblData.HeaderKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(LblData.HeaderKvpl, T2pkKvpl, 'require preexisting keys');
+        LblData.HeaderKvpl = LblData.HeaderKvpl.overwrite_subset(T2pkKvpl);
     catch Exception
         warning_error___LOCAL(sprintf('TAB file "%s" is inconsistent with LBL file: "%s"', tabFilename, Exception.message), tabLblInconsistencyPolicy)
     end
-    
+
     %################################################################################################
 
     %===================================================================
     % Add keywords to the LBL "header" (before first OBJECT statement).
     %===================================================================
-    HeaderAddKvl = [];   % NOTE: Can not initialize with "struct(...)". That gives an unintended result due to a special interpretation for arrays.
-    HeaderAddKvl.keys   = {};
-    HeaderAddKvl.values = {};
-    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'RECORD_TYPE',  'FIXED_LENGTH');   % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
-    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'RECORD_BYTES', sprintf( '%i',  OBJTABLE_data.ROW_BYTES));
-    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'FILE_NAME',    sprintf('"%s"', lblFilename));    % Should be qouted.
-    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, '^TABLE',       sprintf('"%s"', tabFilename));    % Should be qouted.
-    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'PRODUCT_ID',   sprintf('"%s"', fileBasename));   % Should be qouted.
-    HeaderAddKvl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(HeaderAddKvl, 'FILE_RECORDS', sprintf( '%i',  LblData.nTabFileRows));
-    
-    LblData.HeaderKvpl = EJ_lapdog_shared.utils.KVPL.merge(LblData.HeaderKvpl, HeaderAddKvl);
+    LblData.HeaderKvpl = LblData.HeaderKvpl.append(EJ_lapdog_shared.utils.KVPL2({...
+        'RECORD_TYPE',  'FIXED_LENGTH'; ...                  % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
+        'RECORD_BYTES', sprintf( '%i',  OBJTABLE_data.ROW_BYTES); ...
+        'FILE_NAME',    sprintf('"%s"', lblFilename); ...    % Should be qouted.
+        '^TABLE',       sprintf('"%s"', tabFilename); ...    % Should be qouted.
+        'PRODUCT_ID',   sprintf('"%s"', fileBasename); ...   % Should be qouted.
+        'FILE_RECORDS', sprintf( '%i',  LblData.nTabFileRows) ...
+    }));   % Order not important since later reordered.
 
 
 
@@ -571,7 +579,7 @@ function Ssl = create_SSL_header(Kvpl, HeaderOptions)   % Kvpl = key-value pair 
 
 
     % Order keys.
-    Kvpl = EJ_lapdog_shared.utils.KVPL.order_by_key_list(Kvpl, HeaderOptions.keyOrderList);
+    Kvpl = Kvpl.reorder(HeaderOptions.keyOrderList, 'sorted-unsorted');
 
     % ASSERTION: Check that there are no forbidden keys.
     for i=1:length(HeaderOptions.forbiddenKeysList)
@@ -582,19 +590,20 @@ function Ssl = create_SSL_header(Kvpl, HeaderOptions)   % Kvpl = key-value pair 
     end
 
     % Force certain key values to be quoted.
-    for j = 1:length(Kvpl.keys)
-        key   = Kvpl.keys{j};
-        value = Kvpl.values{j};
+    kvplForceQuotesKeysList = intersect(HeaderOptions.forceQuotesKeysList, Kvpl.keys);
+    for j = 1:numel(kvplForceQuotesKeysList)
+        key      = kvplForceQuotesKeysList{j};
+        oldValue = Kvpl.get_value(key);
+        
+        % ASSERTION: Check that old value is a string.
+        % Want to do this explicitly to make sure that no temporary value (e.g. []) added by one part of the code, and
+        % meant to be overwritten by some other part, somehow survives into a LBL file.
+        EJ_lapdog_shared.utils.assert.castring(oldValue)
 
-        % ASSERTION
-        if ~ischar(value)
-            error('(key-) value is not a MATLAB string:\n key = "%s"', key)
-        end
-
-        if ismember(key, HeaderOptions.forceQuotesKeysList) && ~any('"' == value)
-            Kvpl.values{j} = ['"', value, '"'];
-        end
+        Kvpl = Kvpl.set_value(key, EJ_lapdog_shared.utils.quote(oldValue, 'permit quoted'));
     end
+    
+    
     
     % Create SSL from KVPL.
     Ssl = struct('keys', {Kvpl.keys}, 'values', {Kvpl.values}, 'objects', {cell(size(Kvpl.keys))});

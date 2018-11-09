@@ -198,5 +198,13 @@ classdef assert
             end
         end
         
+        
+        
+        function isa(v, className)
+            if ~isa(v, className)
+                error('Expected class=%s but found class=%s.', className, class(v))
+            end
+        end
+        
     end    % methods
 end    % classdef
