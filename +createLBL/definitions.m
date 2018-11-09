@@ -54,6 +54,8 @@ classdef definitions < handle
     %   PROPOSAL: Eliminate one of them.
     %   PROPOSAL: Have both be identical.
     %   NOTE: Root-level DESCRIPTION can be inherited from pds.
+    %
+    % PROPOSAL: Modify ROSETTA:LAP_Px_ADC16_FILTER to upper case?
 
 
     

@@ -266,10 +266,9 @@ classdef constants < handle
         % DERIV1 LBL files with e.g. "pvv label".
         
         function LblAllKvpl = get_LblAllKvpl(obj, LABEL_REVISION_NOTE)
-            % PROPOSAL: Rewrite to use EJ_lapdog_shared.utils.KVPL.create.
             % PROPOSAL: Use generate_PDS_data?
             %
-            % PROPOSAL: Do not add LABEL_REVISION_NOTE?
+            % PROPOSAL: Set LABEL_REVISION_NOTE to non-string value that must be overwritten by other code?
             % PROPOSAL: Add but set to <UNSET>?
 
             % ASSERTION

@@ -67,6 +67,8 @@
 % --
 % ASSUMPTION: Metakernel (time conversion) loaded if setting timestamps from columns requiring time conversion (so far
 % only STOP_TIME_from_OBT).
+% NOTE/ASSERTION: Check that all HeaderKvpl key values are strings. This means that Lapdog can set keys to exist, and
+% the for other Lapdog code to fill them in. This assertion then checks that the keywords have been filled in.
 %
 %
 % IMPLEMENTATION NOTES
@@ -140,8 +142,11 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     %           CALIB/RPCLAP030101_CALIB_FINE.LBL
     %           CALIB/RPCLAP030101_CALIB_VBIAS.LBL
     %           CALIB/RPCLAP030101_CALIB_IBIAS.LBL
+    %
+    % PROPOSAL/TODO: Check that ~assertion on trying to write non-string key values (HeaderKvpl) to file.
+    %   PRO: Can use this to set temporary values in HeaderKvpl which must be overwritten somewhere else in Lapdog.
 
-
+    
 
     %===========
     % Constants
@@ -537,6 +542,7 @@ end
 %     (Ensures that obsoleted keywords are not used by mistake.)
 %
 % NOTE: Always interprets Kvpl.value{i} as (matlab) string, not number.
+% ASSERTION: All key values are strings.
 %
 %
 % RATIONALE: ORDERING OF KEYS
@@ -582,7 +588,7 @@ function Ssl = create_SSL_header(Kvpl, HeaderOptions)   % Kvpl = key-value pair 
 
         % ASSERTION
         if ~ischar(value)
-            error('(key-) value is not a MATLAB string:\n key = "%s", fopen(fid) = "%s"', key, fopen(fid))
+            error('(key-) value is not a MATLAB string:\n key = "%s"', key)
         end
 
         if ismember(key, HeaderOptions.forceQuotesKeysList) && ~any('"' == value)
@@ -590,6 +596,7 @@ function Ssl = create_SSL_header(Kvpl, HeaderOptions)   % Kvpl = key-value pair 
         end
     end
     
+    % Create SSL from KVPL.
     Ssl = struct('keys', {Kvpl.keys}, 'values', {Kvpl.values}, 'objects', {cell(size(Kvpl.keys))});
     
 end
