@@ -105,8 +105,8 @@ function [ssl, sSimple, endTestRowsList] = read_ODL_to_structs(filePath)
     end
     
     %try
-        [kvl, endTestRowsList] = read_keys_values_list_INTERNAL(rowStrList);
-        [ssl, sSimple, junk]   = construct_structs_INTERNAL(kvl, 1);
+        [AsgList, endTestRowsList] = read_keys_values_list_INTERNAL(rowStrList);
+        [ssl, sSimple, junk]       = construct_structs_INTERNAL(AsgList, 1);
     %catch e
         %error([e.message, sprintf(' File "%s"', filePath)])
         %e.message = [e.message, sprintf(' File "%s"', filePath)];
@@ -119,13 +119,13 @@ end
 % Extract assignments VARIABLE_NAME = VALUE from list of lines.
 % Empty lines and "END" are permitted but are not represented in the returned result.
 % Makes not other interpretation.
-function [kvl, endTestRowsList] = read_keys_values_list_INTERNAL(rowStrList)
+function [AsgList, endTestRowsList] = read_keys_values_list_INTERNAL(rowStrList)
     
     LINE_BREAK = sprintf('\r\n');   % String that represents line break in value strings.
     
     % Preallocate cell arrays. As large as possibly needed.
-    kvl.keys   = cell(length(rowStrList), 1);
-    kvl.values = cell(length(rowStrList), 1);
+    keys   = cell(length(rowStrList), 1);
+    values = cell(length(rowStrList), 1);
     
     iKv = 0;
     iRow = 0;
@@ -222,8 +222,8 @@ function [kvl, endTestRowsList] = read_keys_values_list_INTERNAL(rowStrList)
             case 'key_value_done'
 
                 iKv = iKv + 1;
-                kvl.values{iKv} = value;
-                kvl.keys{iKv}   = key;
+                values{iKv} = value;
+                keys{iKv}   = key;
                 state = 'new_statement';
                 
             case 'end'
@@ -241,17 +241,19 @@ function [kvl, endTestRowsList] = read_keys_values_list_INTERNAL(rowStrList)
     end
 
     % Shorten cell arrays to remove unused entries (since these are preallocated variables).
-    kvl.keys   = kvl.keys(1:iKv);
-    kvl.values = kvl.values(1:iKv);
+    AsgList.keys   = keys(1:iKv);
+    AsgList.values = values(1:iKv);
+    
 end
 
 %###################################################################################################
 
 %-------------------------------------------------------------------------------------------------
-% Convert lists of key-value assignments (only strings; kvl.keys, kvl.values)
+% Convert lists of key-value assignments (only strings; AsgList.keys, AsgList.values)
 % from an ODL file into two structs, each representing the entire file contents.
+% NOTE: This is NOT a KVPL since the keys are not unique.
 %
-% Assumes complete kvl for entire file, but will only analyze the "tree"
+% Assumes complete AsgList for entire file, but will only analyze the "tree"
 % which has its "root" at iFirst, i.e. either
 % (1) the entire list of key-value pairs, or
 % (2) the sequence between (but excluding) "OBJECT = ..." and the corresponding "END_OBJECT = ...".
@@ -260,15 +262,15 @@ end
 %
 % ARGUMENTS
 % =========
-% kvl    : Unaltered key-value list representing an entire ODL file, or a part of it.
+% AsgList    : Unaltered key-value list representing an entire ODL file, or a part of it.
 %          Only includes "assignments" (excludes empty rows, END).
-% iFirst : Index into kvl fields where to start. Not an OBJECT statement which triggered
+% iFirst : Index into AsgList fields where to start. Not an OBJECT statement which triggered
 %          the call to the function.
 % 
-% iLast  : The last index into kvl fields which was analyzed.
+% iLast  : The last index into AsgList fields which was analyzed.
 %          Excludes any ENB_OBJECT which triggered ending the function.
 %-------------------------------------------------------------------------------------------------
-function [ssl, sSimple, iLast] = construct_structs_INTERNAL(kvl, iFirst)
+function [ssl, sSimple, iLast] = construct_structs_INTERNAL(AsgList, iFirst)
 
     sSimple = [];
 
@@ -277,9 +279,9 @@ function [ssl, sSimple, iLast] = construct_structs_INTERNAL(kvl, iFirst)
     ssl.values  = {};
     ssl.objects = {};
     
-    if length(kvl.keys) < 1
+    if length(AsgList.keys) < 1
         error('Too few (less than one) key-value assignments.')
-    elseif ~strcmp(kvl.keys{1}, 'PDS_VERSION_ID') || ~strcmp(kvl.values{1}, 'PDS3')
+    elseif ~strcmp(AsgList.keys{1}, 'PDS_VERSION_ID') || ~strcmp(AsgList.values{1}, 'PDS3')
         % Extra check for "PDS_VERSION_ID = PDS3".
         % "Planetary Data System Standards Reference", Version 3.6 specifies that the first key-value
         % should always be this. This is included to be more sure that the code will fail/error
@@ -288,27 +290,27 @@ function [ssl, sSimple, iLast] = construct_structs_INTERNAL(kvl, iFirst)
     end
     
     
-    i = iFirst;     % Current index into kvl.
+    i = iFirst;     % Current index into AsgList.
     while true
         
-        key   = kvl.keys{i};
-        value = kvl.values{i};
+        key   = AsgList.keys{i};
+        value = AsgList.values{i};
         %disp(['Reconstructed line : ', key, ' === ', value])  % DEBUG
         
         if strcmp(key, 'OBJECT')
             
-            [ss_str_lists, ss_simple, iLast] = construct_structs_INTERNAL(kvl, i+1);    % NOTE: RECURSIVE CALL.
+            [ss_str_lists, ss_simple, iLast] = construct_structs_INTERNAL(AsgList, i+1);    % NOTE: RECURSIVE CALL.
             
             i = iLast + 1;
             
             %--------------
             % Error checks
             %--------------
-            if ~strcmp(kvl.keys{i}, 'END_OBJECT')
+            if ~strcmp(AsgList.keys{i}, 'END_OBJECT')
                 error('Found OBJECT statement without corresponding END_OBJECT statement.')
             end
             OBJECT_value = value;
-            END_OBJECT_value = kvl.values{i};
+            END_OBJECT_value = AsgList.values{i};
             if ~strcmp(OBJECT_value, END_OBJECT_value)
                 error('"OBJECT = %s" and "END_OBJECT = %s" do not match.', OBJECT_value, END_OBJECT_value)
             end
@@ -353,7 +355,7 @@ function [ssl, sSimple, iLast] = construct_structs_INTERNAL(kvl, iFirst)
             ssl.objects{end+1} = [];
         end
         
-        if i == length(kvl.keys)
+        if i == length(AsgList.keys)
             iLast = i - 1;
             return
         end

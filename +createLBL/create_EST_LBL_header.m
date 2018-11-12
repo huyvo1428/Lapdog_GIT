@@ -10,7 +10,7 @@
 % estTabPath          : Path to EST TAB file.
 % calib1LblPathList   : Cell array of paths to the (one or two) CALIB files containing PDS keywords for the AxS files.
 % probeNbrList        : Array of probe numbers for the corresponding (one or two) CALIB/AxS files.
-% KvlOverwrite        : Keys-values which overwrite keys-values found in the CALIB LBL files.
+% OverwriteKvpl       : Keys-values which overwrite keys-values found in the CALIB LBL files.
 % deleteHeaderKeyList : Cell array of keys which are removed if found (must not be found).
 % 
 %
@@ -19,7 +19,7 @@
 %
 % Initially created <=2017 by Erik P G Johansson, IRF Uppsala.
 %==============================================================================================
-function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, probeNbrList, KvlOverwrite, deleteHeaderKeyList)
+function EstHeaderKvpl = create_EST_LBL_header(estTabPath, calib1LblPathList, probeNbrList, OverwriteKvpl, deleteHeaderKeyList)
 %
 % PROPOSAL: Move out ODL variables that are in common (key+value) for all LBL files.
 % PROPOSAL: Move collision-handling code into separate general-purpose function(s).
@@ -40,15 +40,15 @@ function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, pro
     %===========================================
     % Read headers from source LBL files (AxS).
     %===========================================
-    kvlSrcList = {};
+    SrcKvplList = {};
     START_TIME_list = {};
     STOP_TIME_list  = {};
     for j = 1:nSrcFiles   % For every source file (A1S, A2S)...
-        [KvlLblSrc, junk] = createLBL.read_LBL_file(calib1LblPathList{j}, deleteHeaderKeyList);
+        [KvplLblSrc, junk] = createLBL.read_LBL_file(calib1LblPathList{j}, deleteHeaderKeyList);
         
-        kvlSrcList{end+1} = KvlLblSrc;            
-        START_TIME_list{end+1} = KvlLblSrc.get_value('START_TIME');
-        STOP_TIME_list{end+1}  = KvlLblSrc.get_value('STOP_TIME');
+        SrcKvplList{end+1} = KvplLblSrc;            
+        START_TIME_list{end+1} = KvplLblSrc.get_value('START_TIME');
+        STOP_TIME_list{end+1}  = KvplLblSrc.get_value('STOP_TIME');
     end
 
     %=====================================================
@@ -56,35 +56,35 @@ function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, pro
     %=====================================================
     [junk, iSort] = sort(START_TIME_list);   iStart = iSort(1);
     [junk, iSort] = sort( STOP_TIME_list);   iStop  = iSort(end);
-    KvlOverwrite = KvlOverwrite.append(kvlSrcList{iStart}.subset({                 'START_TIME' }));
-    KvlOverwrite = KvlOverwrite.append(kvlSrcList{iStart}.subset({'SPACECRAFT_CLOCK_START_COUNT'}));
-    KvlOverwrite = KvlOverwrite.append(kvlSrcList{iStop} .subset({                 'STOP_TIME'  }));
-    KvlOverwrite = KvlOverwrite.append(kvlSrcList{iStop} .subset({'SPACECRAFT_CLOCK_STOP_COUNT' }));
+    OverwriteKvpl = OverwriteKvpl.append(SrcKvplList{iStart}.subset({                 'START_TIME' }));
+    OverwriteKvpl = OverwriteKvpl.append(SrcKvplList{iStart}.subset({'SPACECRAFT_CLOCK_START_COUNT'}));
+    OverwriteKvpl = OverwriteKvpl.append(SrcKvplList{iStop} .subset({                 'STOP_TIME'  }));
+    OverwriteKvpl = OverwriteKvpl.append(SrcKvplList{iStop} .subset({'SPACECRAFT_CLOCK_STOP_COUNT' }));
 
 
 
     %================================================================================================================
     % Handle key collisions
     % ---------------------
-    % IMPLEMENTATION NOTE: Must use overwrite_subset on Kvl1 and Kvl2 separately before combining them, to make sure
+    % IMPLEMENTATION NOTE: Must use overwrite_subset on Kvpl1 and Kvpl2 separately before combining them, to make sure
     % that key values are identical for the intersection before combining the two. (Although one could also remove
-    % KvlOverwrite, then join, then add KvlOverwrite.)
+    % OverwriteKvpl, then join, then add OverwriteKvpl.)
     %================================================================================================================
-    Kvl1 = kvlSrcList{1};
-    Kvl1 = Kvl1.overwrite_subset(KvlOverwrite);
+    Kvpl1 = SrcKvplList{1};
+    Kvpl1 = Kvpl1.overwrite_subset(OverwriteKvpl);
     if (nSrcFiles == 1)
-        KvlEstHeader = Kvl1;
+        EstHeaderKvpl = Kvpl1;
     else
         % CASE: There are two source files.
-        Kvl2 = kvlSrcList{2};
-        Kvl2 = Kvl2.overwrite_subset(KvlOverwrite);
+        Kvpl2 = SrcKvplList{2};
+        Kvpl2 = Kvpl2.overwrite_subset(OverwriteKvpl);
         
-        Kvl1int = Kvl1.intersection(Kvl2.keys);
-        Kvl2int = Kvl2.intersection(Kvl1.keys);
         % ASSERTION: Intersection of keys also have the same values.
-        if ~Kvl1int.equals(Kvl2int)
+        Int1Kvpl = Kvpl1.intersection(Kvpl2.keys);
+        Int2Kvpl = Kvpl2.intersection(Kvpl1.keys);
+        if ~Int1Kvpl.equals(Int2Kvpl)
             error('ERROR: Does not know what to do with LBL/ODL key collision for "%s"\n', estTabPath)
         end
         
-        KvlEstHeader = Kvl1.append(Kvl2.diff(Kvl1.keys));    % NOTE: Removes intersection of keys, assuming that it is identical anyway.
+        EstHeaderKvpl = Kvpl1.append(Kvpl2.diff(Kvpl1.keys));    % NOTE: Removes intersection of keys, assuming that it is identical anyway.
     end

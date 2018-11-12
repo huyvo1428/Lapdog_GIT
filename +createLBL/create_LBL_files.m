@@ -9,8 +9,8 @@
 %
 % VARIABLE NAMING CONVENTIONS
 % ===========================
-% KVL, KVPL : Key-Value (pair) List
-% IDP       : Input Dataset Pds (pds s/w, as opposed to Lapdog)
+% KVPL : Key-Value Pair List
+% IDP  : Input Dataset Pds (pds s/w, as opposed to Lapdog)
 %
 %
 % CONVENTIONS

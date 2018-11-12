@@ -11,9 +11,9 @@
 %
 % NAMING CONVENTIONS, CONVENTIONS
 % ===============================
-% data      : Refers to LBL file data
-% OCL       : Object Column List
-% KVL, KVPL : Key-Value (pair) List
+% data : Refers to LBL file data
+% OCL  : Object Column List
+% KVPL : Key-Value Pair List
 % --
 % Only uses argument flags for density mode (true/false). It is implicit that E field is the inverse.
 %
