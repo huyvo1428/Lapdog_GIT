@@ -94,7 +94,7 @@
 %     Alt 2) Execute code in FileFunc and/or DirFunc.
 %
 % IMPLEMENTATION NOTE: Function pointers take structs as arguments instead of conventional lists of arguments to,
-% (1) make it easier(?) to write one-line functions,
+% (1) make it easier(?) to write one-line anonymous functions,
 % (2) make it easier to add new (effective) arguments to the function pointers while maintaining backward compatibility
 %     with code that uses recurse_directory_tree,
 % (3) avoid having to remember the order of the arguments when specifying function pointers (both for internal

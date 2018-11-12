@@ -1,8 +1,10 @@
 %
-% Class modelling an ordered key-value pair list (KVPL).
-% Replaces older standard struct KVPL that could be modified with functions EJ_lapdog_shared.utils.KVPL.* .
+% Class that models an ordered key-value pair list (KVPL).
+% A KVPL is an ordered list of unique keys (strings). For every key there is a value (string). Is effectively a kind of
+% associative array.
 %
-% MATLAB "value class" which implies that it is immutable and passed-by-value.
+% The class is a MATLAB "value class" which implies that it is immutable and passed-by-value.
+% Code replaces older standard struct KVPL that could be modified with functions EJ_lapdog_shared.utils.KVPL.* .
 %
 %
 % IMPLEMENTATION NOTES
@@ -35,12 +37,8 @@ classdef KVPL2
     % PROPOSAL: Change name KVPL2-->KVPL, when has removed the old use of old KVPL data struct.
     %
     % PROPOSAL: Permit non-string values.
-    % TODO-DECISION: Permit/forbid empty string keys?
+    % TODO-DECISION: Forbid empty string keys?
     % 
-    % PROPOSAL: get/read-only properties so that can print with print_variable_recursively.
-    %
-    % PROPOSAL: Replace with containers.Map
-    % TODO-DECISION: Ignore ordering?!!
     % PROPOSAL: Convert to handle object.
     %   
     % PROPOSAL: More (public) static methods instead of instance methods.
@@ -48,8 +46,6 @@ classdef KVPL2
     %   CON: Makes class unnecessary.
     %       CON: Still has encapsulation.
     %   CON: Longer code/calls.
-    %
-    % NOTE: ~Problem is that KVLPs are not sets, but also have properties ordering AND values.
     %
     % NOTE: Can obtain KVPL.keys as set (not list) to use as argument in methods.
     % NOTE: Can obtain KVPL.keys as list (not set) to use as argument in methods.
@@ -68,21 +64,6 @@ classdef KVPL2
     %       CON: Premature optimization
     %   PROPOSAL: Methods with index arguments.
     %
-    % PROPOSAL: merge/combine
-    %   'assert no intersection'
-    %       Kvpl = Kvpl1.append(Kvpl2)    % Asserts no intersection.
-    %   'assert identical intersection'
-    %       KvplInt1 = Kvpl1.intersection(Kvpl2.keys)
-    %       KvplInt2 = Kvpl2.intersection(Kvpl1.keys)
-    %       assert KvplInt1.equals(KvplInt2, 'ignore key order')
-    %       Kvpl = Kvpl1.append( Kvpl2.diff(Kvpl1.keys) )   % Asserts no intersection
-    %       Kvpl = Kvpl.reorder(Kvpl1, 'unsorted last');
-    %   'use 1'
-    %       KvplInt1 = Kvpl1.intersection(Kvpl2.keys)
-    %       KvplInt2 = Kvpl2.intersection(Kvpl1.keys)
-    %       Kvpl = Kvpl1.append( Kvpl2.diff(Kvpl1.keys) )   % Asserts no intersection
-    %       Kvpl = Kvpl.reorder(Kvpl1, 'unsorted last');
-    %   
     % NOTE: Lapdog (2018-11-07) uses old KVPL functions:
     %   add_kv_pairs
     %   read_value
@@ -94,6 +75,39 @@ classdef KVPL2
     %   merge
     %   order_by_key_list
     %   delete_keys
+    %
+    % PROPOSAL: Assert that submitted KVPL arguments are of this same class.
+    %   PRO: Can find old usages of obsoleted KVPL data struct.
+    %   CON: Will generate error for mixed use of Lapdog & private KVPL2 class instances.
+    %       Ex: create_E2C2D2 calls createLBL.create_OBJTABLE_LBL_file which calls
+    %           LblData.HeaderKvpl = LblData.HeaderKvpl.overwrite_subset(T2pkKvpl);
+    %           with mixed KVPL2 versions.
+    %       PROPOSAL: Specify assertions which permit both *.util.KVPL2.
+    %           Obfuscate package names (.e.g with strrep) to prevent string replacement when syncing files.
+    %           CON: Overkill.
+    %       CON-PROPOSAL: Separate Lapdog and private code so that this never happens.
+    %   CON: Overkill.
+    %       CON: Assertions are meant to find unexpected use. --> Find errors early in execution.
+    %
+    % PROPOSAL: Some kind of merge/combine/append_*/join/~union method that combines two KVPLs while asserting that
+    %   intersection of keys have the same values.
+    %   NOTE: There (probably) is no method that asserts that values are identical, except for "equals".
+    %   NOTE: Combines set operation (assertion for state of non-zero intersection) and list operation (order matters).
+    %   PROPOSAL: append_diff. Appends Kvpl1.append(Kvpl2.diff(Kvpl2.keys)) assuming that the intersection is identical in keys AND values (but not ordering).
+    %       NOTE: Can not prepend.
+    %       Ex: create_EST_LBL_header.
+    %           Int1Kvpl = Kvpl1.intersection(Kvpl2.keys);
+    %           Int2Kvpl = Kvpl2.intersection(Kvpl1.keys);
+    %           % ASSERTION: Intersection of keys also have the same values.
+    %           if ~Int1Kvpl.equals(Int2Kvpl)
+    %               error('ERROR: Does not know what to do with LBL/ODL key collision for "%s"\n', estTabPath)
+    %           end
+    %           EstHeaderKvpl = Kvpl1.append(Kvpl2.diff(Kvpl1.keys));    % NOTE: Removes intersection of keys, assuming that it is identical anyway.
+    %       PROBLEM: Name "append_diff" still bad since it does not refer to intersection. Is not just a diff.
+    %           PROPOSAL: overwrite_append (overwrite_prepend).
+
+    
+    
     
     properties(SetAccess=private,GetAccess=public)
         keys      % Must be column vector.
@@ -116,12 +130,15 @@ classdef KVPL2
         %                        kvplContentCellArray{iRow,1} = key
         %                        kvplContentCellArray{iRow,2} = value
         %   alt 3:
-        %       keys   : Column cell array of strings.
-        %       values : Column cell array.
+        %       keys   : Nx1 cell array of strings.
+        %       values : Nx1 cell array.
         %   
         function obj = KVPL2(varargin)
             import EJ_lapdog_shared.utils.*
 
+            %===============
+            % Assign fields
+            %===============
             if nargin == 0
                 obj.keys   = cell(0,1);
                 obj.values = cell(0,1);
@@ -176,7 +193,7 @@ classdef KVPL2
             % PROPOSAL: Shorthand methods instead of policy. equals_cko, equals_iko            
             % PROPOSAL: Policy for just comparing keys, in and out of order.
             
-            EJ_lapdog_shared.utils.assert.isa(Kvpl2, 'EJ_lapdog_shared.utils.KVPL2')
+            %EJ_lapdog_shared.utils.assert.isa(Kvpl2, 'EJ_lapdog_shared.utils.KVPL2')
             
             if numel(obj.keys) ~= numel(Kvpl2.keys)
                 eq = false;
@@ -220,9 +237,9 @@ classdef KVPL2
             obj.values{i} = value;
             Kvpl = EJ_lapdog_shared.utils.KVPL2(obj.keys, obj.values);
         end
-        
-        
-        
+
+
+
         function value = get_value(obj, key)
             i = find(strcmp(key, obj.keys));
     
@@ -287,7 +304,7 @@ classdef KVPL2
         function Kvpl = append(obj, Kvpl)
             import EJ_lapdog_shared.utils.*
             
-            assert.isa(Kvpl, 'EJ_lapdog_shared.utils.KVPL2')
+            %assert.isa(Kvpl, 'EJ_lapdog_shared.utils.KVPL2')
             
             Kvpl = KVPL2(...
                 [obj.keys; Kvpl.keys], ...
@@ -313,11 +330,11 @@ classdef KVPL2
             %   PROPOSAL: copy_from_intersection, replace/substitute_values_from, replace, replace_intersection,
             %             overwrite_intersection
             import EJ_lapdog_shared.utils.*
+            %assert.isa(KvplSrc, 'EJ_lapdog_shared.utils.KVPL2')
             
-            assert.isa(KvplSrc, 'EJ_lapdog_shared.utils.KVPL2')
-            [intKeysList, iInt, jInt] = intersect(obj.keys, KvplSrc.keys);
-            
+            [intKeysList, iInt, jInt] = intersect(obj.keys, KvplSrc.keys);            
             obj.values(iInt) = KvplSrc.values(jInt);
+            
             Kvpl = KVPL2(obj.keys, obj.values);
         end
 
@@ -333,6 +350,7 @@ classdef KVPL2
             %             overwrite_subset
 
             % ASSERTION
+            %EJ_lapdog_shared.utils.assert.isa(KvplSubsetSrc, 'EJ_lapdog_shared.utils.KVPL2')     % Also in overwrite_intersection.
             diffKeySet = setdiff(KvplSubsetSrc.keys, obj.keys);
             if numel(diffKeySet) > 0
                 error('KvplSubsetSrc does not represent a subset of obj.keys.')

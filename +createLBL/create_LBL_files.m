@@ -352,24 +352,29 @@ function create_LBL_files(data)
         % NOTE: PHO_tabindex has been observed to contain the same file multiple times (commit 9648939), test phase TDDG. Likely
         % because entries are re-added for every run.
         if ~isempty(data.PHO_tabindex)
-            for iFile = 1:numel(data.PHO_tabindex)
-                %startStopTimes = data.PHO_tabindex(iFile).timing;    % ~BUG: Not implemented/never assigned (yet).
-                
-                % IMPLEMENTATION NOTE: TEMPORARY SOLUTION. Timestamps are set via the columns.
-                % Current implementation of create_OBJTABLE_BL_file requires the timestamp PDS keywords to exist in list
-                % of keywords though.
-                %HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
-                %   startStopTimes{1}, ...
-                %   startStopTimes{2}, ...
-                %   obt2sctrc(str2double(startStopTimes{3})), ...
-                %   obt2sctrc(str2double(startStopTimes{4})));
-                HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, '<UNSET>', '<UNSET>', '<UNSET>', '<UNSET>');
-                
-                LblData = LblDefs.get_PHO_data(HeaderKvpl);
-                
-                createLBL.create_OBJTABLE_LBL_file(...
-                    convert_LD_TAB_path(data.ldDatasetPath, data.PHO_tabindex(iFile).fname), ...
-                    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            try
+                for iFile = 1:numel(data.PHO_tabindex)
+                    %startStopTimes = data.PHO_tabindex(iFile).timing;    % ~BUG: Not implemented/never assigned (yet).
+                    
+                    % IMPLEMENTATION NOTE: TEMPORARY SOLUTION. Timestamps are set via the columns.
+                    % Current implementation of create_OBJTABLE_BL_file requires the timestamp PDS keywords to exist in list
+                    % of keywords though.
+                    %HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                    %   startStopTimes{1}, ...
+                    %   startStopTimes{2}, ...
+                    %   obt2sctrc(str2double(startStopTimes{3})), ...
+                    %   obt2sctrc(str2double(startStopTimes{4})));
+                    HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, '<UNSET>', '<UNSET>', '<UNSET>', '<UNSET>');
+                    
+                    LblData = LblDefs.get_PHO_data(HeaderKvpl);
+                    
+                    createLBL.create_OBJTABLE_LBL_file(...
+                        convert_LD_TAB_path(data.ldDatasetPath, data.PHO_tabindex(iFile).fname), ...
+                        LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                end
+            catch Exception
+                createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                fprintf(1,'Skipping LBL file (tabindex)index - Continuing\n');
             end
         end
         

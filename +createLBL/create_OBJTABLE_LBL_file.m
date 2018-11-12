@@ -145,7 +145,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     %
     % PROPOSAL/TODO: Check that ~assertion on trying to write non-string key values (HeaderKvpl) to file.
     %   PRO: Can use this to set temporary values in HeaderKvpl which must be overwritten somewhere else in Lapdog.
-
+    %
+    % PROPOSAL: Modularize code more into smaller functions. Separate T2PK?
     
 
     %===========
@@ -170,7 +171,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     
     % Constants for (optionally) converting TAB file contents into PDS keywords.
     T2PK_OBT2SCCS_FUNC = @(x) obt2sctrc(str2double(x));    % No quotes. Quotes added later.
-    T2PK_UTC2UTC_FUNC  = @(x) [x(1:23)];                         % Has to truncate UTC second decimals according to DVAL-NG.
+    T2PK_UTC2UTC_FUNC  = @(x) [x(1:23)];                   % Has to truncate UTC second decimals according to DVAL-NG.
     T2PK_OBT2UTC_FUNC  = @(x) [cspice_et2utc(cspice_scs2e(ROSETTA_NAIF_ID, obt2sct(str2double(x))), 'ISOC', 3)];    % 3 = 3 UTC second decimals
     T2PK_PROCESSING_TABLE = struct(...
         'argConst',   {'START_TIME',      'STOP_TIME',       'STOP_TIME_from_OBT', 'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}, ...    % Argument value (cell array component of field ".useFor").

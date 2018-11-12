@@ -11,7 +11,7 @@
 %
 %
 % 
-function exception_message(exception, policy)
+function exception_message(Exception, policy)
 % PROPOSAL: Implement using warnings, and MATLAB system for selecting warnings/errors (does that exist?)
 %   CON: Can not select to print/not print stack trace that way.
 %
@@ -20,7 +20,12 @@ function exception_message(exception, policy)
 %   Ex: What the code will do instead, e.g. "Skip LBL file".
 %   CON: Complicated policy.
 %
-% PROPOSAL: Använd exception.getReport?
+% PROPOSAL: Use Exception.getReport?
+% PROPOSAL: Allow function to rethrow exception.
+% PROPOSAL: Generic function also for private collection?
+% PROPOSAL: policy as cell array of strings.
+%   PRO: Simplifies implementation?
+% PROPOSAL: replace policy with Settings (interpret_settings).
 
     % ASSERTION
     % NOTE: Fails nicely (not error) with default setting in case "policy" is e.g. misspelled.
@@ -33,21 +38,20 @@ function exception_message(exception, policy)
     
     if any(strcmp(policy, {'message', 'message+stack trace'}))
         % Print error message.
-        fprintf(1,'lapdog: createLBL exception: %s\n', exception.message);    
+        fprintf(1,'lapdog: createLBL exception: %s\n', Exception.message);    
     end
 
     if any(strcmp(policy, {'message+stack trace'}))
         % Print stack trace (for this exception, not "cause exceptions".
-        len = length(exception.stack);
+        len = length(Exception.stack);
         if (~isempty(len))
             for i=1:len
-                fprintf(1,'%s, row %i,\n', exception.stack(i).name, exception.stack(i).line);
+                fprintf(1,'row %i, %s: %s\n', Exception.stack(i).line, Exception.stack(i).file, Exception.stack(i).name);
             end
         end
     end
     
-    for iCause = 1:numel(exception.cause)
-        createLBL.exception_message(exception.cause{iCause}, policy);    % RECURSIVE CALL
+    for iCause = 1:numel(Exception.cause)
+        createLBL.exception_message(Exception.cause{iCause}, policy);    % RECURSIVE CALL
     end
-
 end
