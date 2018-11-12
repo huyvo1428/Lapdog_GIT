@@ -30,6 +30,7 @@ function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, pro
 % PROPOSAL: Accept the LBL files for the AxS files instead of CALIB files. Should give the same result already.
 %    CON: Calling code has no way of finding the source AxS files from tabindex/an_tab_index(?).
 %    
+% ~TODO: Test day for nSrcFiles == 2. Seems ~rare.
 
     nSrcFiles = length(calib1LblPathList);
     if ~ismember(nSrcFiles, [1,2])
@@ -62,61 +63,28 @@ function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, pro
 
 
 
-    %==============================================================================================
+    %================================================================================================================
     % Handle key collisions
     % ---------------------
-    % ASSUMES: The two LBL files have identical header keys on identical positions (line numbers).
-    %==============================================================================================
+    % IMPLEMENTATION NOTE: Must use overwrite_subset on Kvl1 and Kvl2 separately before combining them, to make sure
+    % that key values are identical for the intersection before combining the two. (Although one could also remove
+    % KvlOverwrite, then join, then add KvlOverwrite.)
+    %================================================================================================================
     Kvl1 = kvlSrcList{1};
+    Kvl1 = Kvl1.overwrite_subset(KvlOverwrite);
     if (nSrcFiles == 1)
         KvlEstHeader = Kvl1;
     else
-        KvlEstHeader = [];
-        KvlEstHeader.keys   = {};
-        KvlEstHeader.values = {};
-        
-        % DEBUG
-        %iPerm = randperm(length(Kvl1.keys));
-        %Kvl1.keys   = Kvl1.keys(iPerm);
-        %Kvl1.values = Kvl1.values(iPerm);
-        
+        % CASE: There are two source files.
         Kvl2 = kvlSrcList{2};
-        for i1 = 1:length(Kvl1.keys)             % For every key in Kvl1...
-
-            if strcmp(Kvl1.keys{i1}, Kvl2.keys{i1})    
-                % CASE: Key collision
-
-                key = Kvl1.keys{i1};
-                KvlOverwriteHasKey = ~isempty(find(strcmp(key, KvlOverwrite.keys)));
-                if KvlOverwriteHasKey                                    
-                    % CASE: KvlOverwrite contains information on how to set value... ==> Use KvlOverwrite later...                    
-                    % IMPLEMENTATION NOTE: Can not set values here since this only covers the case of having two source LBL files.
-                    KvlEstHeader.keys  {end+1, 1} = key;
-                    KvlEstHeader.values{end+1, 1} = '<TEMPORARY - This value should be overwritten automatically.>';
-
-                elseif strcmp(Kvl1.values{i1}, Kvl2.values{i1})
-                    % CASE: Key collision AND value collision ==> No problem, use value.
-                    KvlEstHeader.keys  {end+1, 1} = Kvl1.keys  {i1};
-                    KvlEstHeader.values{end+1, 1} = Kvl1.values{i1};
-
-                else
-                    % CASE: Has no information on how to resolve collision ==> Problem, error
-                    errorMsg = sprintf('ERROR: Does not know what to do with LBL/ODL key collision for key="%s".\n', key);
-                    errorMsg = [errorMsg, sprintf('with two different values: value="%s", value="%s\n".', Kvl1.values{i1}, Kvl2.values{i1})];
-                    errorMsg = [errorMsg, sprintf('estTabPath = %s\n', estTabPath)];
-                    error(errorMsg)
-                end
-
-            else
-                % CASE: Not key collision
-                KvlEstHeader.keys  {end+1,1} = Kvl1.keys  {i1};
-                KvlEstHeader.values{end+1,1} = Kvl1.values{i1};
-                KvlEstHeader.keys  {end+1,1} = Kvl2.keys  {i1};
-                KvlEstHeader.values{end+1,1} = Kvl2.values{i1};
-            end
+        Kvl2 = Kvl2.overwrite_subset(KvlOverwrite);
+        
+        Kvl1int = Kvl1.intersection(Kvl2.keys);
+        Kvl2int = Kvl2.intersection(Kvl1.keys);
+        % ASSERTION: Intersection of keys also have the same values.
+        if ~Kvl1int.equals(Kvl2int)
+            error('ERROR: Does not know what to do with LBL/ODL key collision for "%s"\n', estTabPath)
         end
+        
+        KvlEstHeader = Kvl1.append(Kvl2.diff(Kvl1.keys));    % NOTE: Removes intersection of keys, assuming that it is identical anyway.
     end
-
-    KvlEstHeader = KvlEstHeader.overwrite_subset(KvlOverwrite);   % NOTE: Must do this for both nSrcFiles == 1, AND == 2.
-
-end
