@@ -1,16 +1,16 @@
 %
-% Generic function for writing ODL (LBL/CAT) files using a "string-lists struct" on the same format
+% Generic function for writing ODL (LBL/CAT) files using a "string-lists struct" (SSL) on the same format
 % as returned from read_ODL_from_struct. Does some basic "beautification" (indentation,
 % added whitespace to make equal signs and value left-aligned).
 %
 % NOTE: Overwrites destination file if pre-existing.
 % NOTE: Multiline values are not indented (except the key itself).
-% NOTE: Does not quote any value strings. They have to already be quoted.
+% NOTE: Does not quote any value strings. They have to be "pre-quoted".
 %
 %
 % ARGUMENTS
 % =========
-% ssl                 : See EJ_lapdog_shared.PDS_utils.read_ODL_to_structs.
+% Ssl                 : SSL data struct. See EJ_lapdog_shared.PDS_utils.read_ODL_to_structs.
 % endRowsList         : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
 % contentRowMaxLength : Max row length, not counting line break.
 %                       NOTE: This is not a rigorous line breaking for everything; only some things. In particular does
@@ -19,7 +19,7 @@
 %
 % Initially created 2016-07-07 by Erik P G Johansson, IRF Uppsala, Sweden.
 %
-function write_ODL_from_struct(filePath, ssl, endRowsList, indentationLength, contentRowMaxLength)
+function write_ODL_from_struct(filePath, Ssl, endRowsList, indentationLength, contentRowMaxLength)
 %
 % PROPOSAL: Implement additional empty rows before/after OBJECT/END_OBJECT.
 %    NOTE: Only one row between END_OBJECT and OBJECT. ==> Non-trivial.
@@ -52,7 +52,7 @@ function write_ODL_from_struct(filePath, ssl, endRowsList, indentationLength, co
     C.contentRowMaxLength = contentRowMaxLength;
     C.lineBreak           = LINE_BREAK;
     
-    write_key_values(C, ssl, 0)
+    write_key_values(C, Ssl, 0)
     
     fprintf(C.fid, ['END', LINE_BREAK]);
     
@@ -69,29 +69,33 @@ end
 % 
 % NOTE: Recursive function for OBJECT segments.
 % 
-% C : Constants
+% C   : Constants
 %       C.rowMaxLength : Excludes length of line break.
-% s : formatted as ssl.
-function write_key_values(C, s, indentationLevel)
+% Ssl : SSL data struct.
+function write_key_values(C, Ssl, indentationLevel)
 
     % ASSERTION: Implicitly checks that fields exist.
-    if length(s.keys) ~= length(s.values) || length(s.keys) ~= length(s.objects)
+    if length(Ssl.keys) ~= length(Ssl.values) || length(Ssl.keys) ~= length(Ssl.objects)
         error('.keys, .values, and .objects do not have the same length.')
     end
-    
-    keys    = s.keys;    % TODO: Rationalize away
-    values  = s.values;
-    objects = s.objects;
 
-    nonObjectKeyList      = keys(cellfun(@isempty, objects));    % Create list of keys without OBJECT/subsections.
+
+
+    nonObjectKeyList      = Ssl.keys(cellfun(@isempty, Ssl.objects));    % Create list of keys without OBJECT/subsections.
     maxNonObjectKeyLength = max(cellfun(@length, nonObjectKeyList));
 
     indentationStr = repmat(' ', 1, C.indentationLength*indentationLevel);
 
-    for i = 1:length(keys)
-        key    = keys{i};
-        value  = values{i};
-        object = objects{i};
+    for i = 1:length(Ssl.keys)
+        key    = Ssl.keys{i};
+        value  = Ssl.values{i};
+        object = Ssl.objects{i};
+        
+        % IMPLEMENTATION NOTE: Check that key and value are strings.
+        % Want to do this explicitly for VALUES to make sure that no temporary value (e.g. []) added by one part of the
+        % code, and meant to be overwritten by some other part, somehow survives into a LBL file.
+        EJ_lapdog_shared.utils.assert.castring(key)
+        EJ_lapdog_shared.utils.assert.castring(value)
         
         if ~strcmp(key, 'OBJECT') && isempty(object)
             %======================
