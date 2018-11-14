@@ -20,10 +20,10 @@
 % Initially created 2018-08-22 by Erik P G Johansson, IRF Uppsala
 %
 classdef constants < handle
-    % PROPOSAL: Merge COTLF_HEADER_OPTIONS and INDENTATION_LENGTH (modify write_OBJTABLE_LBL_FILE accordingly).
+    % PROPOSAL: Merge COTLF_HEADER_OPTIONS and ODL_INDENTATION_LENGTH (modify write_OBJTABLE_LBL_FILE accordingly).
     %   CON: Indentation length is more fundamental. Could pop up somewhere else.
     %   PROPOSAL: Modify write_OBJTABLE_LBL_FILE to merge header options into settings and copy the indentation length from
-    %           the separate constant INDENTATION_LENGTH.
+    %           the separate constant ODL_INDENTATION_LENGTH.
     %
     % NOTE: Used by non-Lapdog code: ./+EJ_lapdog_shared/+ro/+delivery/+geom/create_geom_TAB_LBL_from_EOG.m
     %       Might be used by future standalone, "Lapdogish" code (same git repo) for e.g. separately regenerating LBL files.
@@ -48,7 +48,7 @@ classdef constants < handle
     
     properties(Access=public)
         ROSETTA_NAIF_ID                        = -226;     % Used by SPICE.
-        INDENTATION_LENGTH                     = 4;
+        ODL_INDENTATION_LENGTH                 = 4;
         MISSING_CONSTANT                       = -1000;    % Same as SATURATION_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
         N_FINAL_PRESWEEP_SAMPLES               = 16;       % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
         PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
@@ -64,11 +64,9 @@ classdef constants < handle
         % Constructor
         % 
         function obj = constants(varargin)
-            
-            % ASSERTION: To find calls according to old format.
-            if nargin == 0
-                ;   % Do nothing. Everything OK.
-            else
+
+            % ASSERTION: Find calls with non-zero number of arguments (old format).
+            if nargin ~= 0
                 error('Wrong number of arguments.')
             end
             
@@ -279,7 +277,9 @@ classdef constants < handle
             if ~isempty(regexp(LABEL_REVISION_NOTE, '"', 'once'))
                 error('Argument LABEL_REVISION_NOTE contains quote(s).')
             end
-                        
+               
+            % IMPLEMENTATION NOTE: Including un-set LABEL_REVISION_NOTE meant to always be overwritten by other code. If
+            % it is not overwritten, then create_OBJTABLE_LBL_file will give error.
             LblAllKvpl = EJ_lapdog_shared.utils.KVPL2({
                 'PDS_VERSION_ID',            'PDS3'; ...
                 'DATA_QUALITY_ID',           '"<UNSET>"'; ...
@@ -287,9 +287,9 @@ classdef constants < handle
                 'PRODUCT_TYPE',              '"<UNSET>"'; ...
                 'PROCESSING_LEVEL_ID',       '"<UNSET>"'; ...
                 ...
-                'DATA_SET_ID',               ['"<UNSET>"']; ...
-                'DATA_SET_NAME',             ['"<UNSET>"']; ...
-                'LABEL_REVISION_NOTE',       ['"', LABEL_REVISION_NOTE, '"']; ...
+                'DATA_SET_ID',               '"<UNSET>"'; ...
+                'DATA_SET_NAME',             '"<UNSET>"'; ...
+                'LABEL_REVISION_NOTE',       []; ...
             %    'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
                 'PRODUCER_FULL_NAME',        '"<UNSET>"'; ...
                 'PRODUCER_ID',               '<UNSET>'; ...

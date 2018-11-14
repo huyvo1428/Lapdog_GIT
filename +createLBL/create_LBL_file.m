@@ -63,8 +63,12 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     
 
     C = createLBL.constants();
-    LblDefs = createLBL.definitions(generatingDeriv1, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES);             % TEMP: Use constants.
-    COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
+    LblDefs = createLBL.definitions(...
+        generatingDeriv1, ...
+        C.MISSING_CONSTANT, ...
+        C.N_FINAL_PRESWEEP_SAMPLES, ...
+        C.ODL_INDENTATION_LENGTH);              % TEMP: Use constants.
+    COTLF_SETTINGS = struct('indentationLength', C.ODL_INDENTATION_LENGTH);
 
     TAB_LBL_INCONSISTENCY_POLICY = 'error';
 

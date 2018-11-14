@@ -147,7 +147,7 @@ function create_LBL_files(data)
 
     
     DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
-    COTLF_SETTINGS = struct('indentationLength', data.C.INDENTATION_LENGTH);
+    COTLF_SETTINGS = struct('indentationLength', data.C.ODL_INDENTATION_LENGTH);
     
     
     
@@ -174,7 +174,11 @@ function create_LBL_files(data)
     
     
     % NOTE: Requires "generatingDeriv1" to be defined. Can therefore not be initialized earlier.
-    LblDefs       = createLBL.definitions(data.generatingDeriv1, data.C.MISSING_CONSTANT, data.C.N_FINAL_PRESWEEP_SAMPLES);
+    LblDefs       = createLBL.definitions(...
+        data.generatingDeriv1, ...
+        data.C.MISSING_CONSTANT, ...
+        data.C.N_FINAL_PRESWEEP_SAMPLES, ...
+        data.C.ODL_INDENTATION_LENGTH);
     HeaderAllKvpl = data.C.get_LblAllKvpl(sprintf('%s, %s, %s', data.lblTime, data.lblEditor, data.lblRev));
 
 
@@ -452,11 +456,13 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
                 
                 if (isSweepTable)
                     % CASE: BxS                    
-                    LblData = LblDefs.get_BxS_data(HeaderKvpl, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);
+                    ixsTabFilename     = tabFilename;
+                    ixsTabFilename(28) = 'S';
+                    LblData = LblDefs.get_BxS_data(HeaderKvpl, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, ixsTabFilename);
                 else
                     % CASE: IxS                    
                     bxsTabFilename     = tabFilename;
-                    bxsTabFilename(28) = 'B';                    
+                    bxsTabFilename(28) = 'B';
                     LblData = LblDefs.get_IxS_data(HeaderKvpl, ...
                         probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, bxsTabFilename, Stabindex(i).nColumns);
                 end

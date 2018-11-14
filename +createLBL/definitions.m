@@ -69,8 +69,9 @@ classdef definitions < handle
 
         % Assigned via constructor argument, not the createLBL.constants object/class. Capitalized since it is a PDS
         % keyword.
-        MISSING_CONSTANT        
+        MISSING_CONSTANT
         nFinalPresweepSamples   % Assigned via constructor argument, not the createLBL.constants object/class.
+        indentationLength
         
         generatingDeriv1
         
@@ -92,16 +93,17 @@ classdef definitions < handle
     methods(Access=public)
         
         % Constructor
-        function obj = definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples)
+        function obj = definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples, indentationLength)
             
             % ASSERTIONS
             assert(isscalar(nFinalPresweepSamples) && isnumeric(nFinalPresweepSamples))
             assert(isscalar(MISSING_CONSTANT)      && isnumeric(MISSING_CONSTANT))
             
-            
+
             
             obj.MISSING_CONSTANT      = MISSING_CONSTANT;
             obj.nFinalPresweepSamples = nFinalPresweepSamples;
+            obj.indentationLength     = indentationLength;
             obj.generatingDeriv1      = generatingDeriv1;
             
             obj.MC_DESC_AMENDM        = sprintf(' A value of %e refers to that there is no value.', obj.MISSING_CONSTANT);    % Amendment to other strings. Therefore begins with whitespace.
@@ -137,6 +139,7 @@ classdef definitions < handle
         
         
         function LblData = get_BLKLIST_data(obj, HeaderKvpl)
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}});
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Blocklist data. Start & stop time and macro ID of executed macro blocks.';
@@ -152,6 +155,7 @@ classdef definitions < handle
         
         
         function LblData = get_IVxHL_data(obj, HeaderKvpl, isDensityMode, probeNbr, table_DESCRIPTION)
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}});
             
             LblData.HeaderKvpl           = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = table_DESCRIPTION;   % No modification(!)
@@ -221,10 +225,12 @@ classdef definitions < handle
         
         
         
-        function LblData = get_BxS_data(obj, HeaderKvpl, probeNbr, table_DESCRIPTION_prefix)
+        function LblData = get_BxS_data(obj, HeaderKvpl, probeNbr, table_DESCRIPTION_prefix, ixsTabFilename)
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}});
             
             LblData.HeaderKvpl = HeaderKvpl;
-            LblData.OBJTABLE.DESCRIPTION = sprintf('%s. Sweep step bias and time between each step.', table_DESCRIPTION_prefix);   % Remove ref. to old DESCRIPTION? (Ex: D_SWEEP_P1_RAW_16BIT_BIP)
+            LblData.OBJTABLE.DESCRIPTION = sprintf('%s. Description of the sweep voltage bias steps associated with the measurements in %s.', ...
+                table_DESCRIPTION_prefix, ixsTabFilename);   % Remove ref. to old DESCRIPTION? (Ex: D_SWEEP_P1_RAW_16BIT_BIP)
             
             oc1 = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS');     % NOTE: Always ASCII_REAL, including for EDDER!!!
             oc2 = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr), obj.DATA_DATA_TYPE{:},     'BYTES', 14, obj.DATA_UNIT_VOLTAGE{:});
@@ -249,9 +255,10 @@ classdef definitions < handle
         
         % nTabColumns : Total number of columns in TAB file. Used to set ITEMS (number of other columns is first
         %               subtracted internally).
-        function LblData = get_IxS_data(obj, HeaderKvpl, probeNbr, table_DESCRIPTION, bxsTabFilename, nTabColumns)
+        function LblData = get_IxS_data(obj, HeaderKvpl, probeNbr, table_DESCRIPTION_prefix, bxsTabFilename, nTabColumns)
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}});
                         
-            LblData.OBJTABLE.DESCRIPTION = table_DESCRIPTION;   % No modification(!)
+            LblData.OBJTABLE.DESCRIPTION = sprintf('%s. Sweep, i.e. measured currents while the bias voltage sweeps over a continuous range of values.', table_DESCRIPTION_prefix);
             LblData.HeaderKvpl = HeaderKvpl;
             
             ocl = {};
@@ -303,11 +310,12 @@ classdef definitions < handle
         % the actual content of downsampled files. Therefore using the actual content of the TAB file to derive
         % these values.
         function LblData = get_IVxD_data(obj, HeaderKvpl, probeNbr, table_DESCRIPTION_prefix, samplingRateSeconds, isDensityMode)
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}});
             
             LblData.HeaderKvpl = HeaderKvpl;
             
             % Ex: DESCRIPTION = "D_P1P2INTRL_TRNC_20BIT_RAW_BIP, 32 SECONDS DOWNSAMPLED"
-            LblData.OBJTABLE.DESCRIPTION = sprintf('%s, %g seconds downsampled.', table_DESCRIPTION_prefix, samplingRateSeconds);
+            LblData.OBJTABLE.DESCRIPTION = sprintf('%s. Measurements downsampled to a period of %g seconds.', table_DESCRIPTION_prefix, samplingRateSeconds);
             
             mcDescrAmendment = sprintf('A value of %g means that the underlying time period which was averaged over contained at least one saturated value.', obj.MISSING_CONSTANT);
             
@@ -343,6 +351,8 @@ classdef definitions < handle
         
         
         function LblData = get_FRQ_data(obj, HeaderKvpl, nTabColumnsTotal, psdTabFilename)
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}});
+            
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Frequency list of PSD spectra file.';
             
@@ -360,6 +370,10 @@ classdef definitions < handle
         
         function LblData = get_PSD_data(obj, HeaderKvpl, probeNbr, isDensityMode, nTabColumns, modeStr)
             % PROPOSAL: Expand "PSD" to "POWER SPECTRAL DENSITY" (correct according to EAICD).
+            % NOTE: Root DESCRIPTION set to pds constant, but OBJECT_TABLE:DESCRIPTION does not use it.
+            %   PROPSOAL: Change?
+            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}});
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = sprintf('%s PSD spectra of high frequency measurements (snapshots).', modeStr);            
@@ -425,6 +439,8 @@ classdef definitions < handle
             %    {'DATA_SET_PARAMETER_NAME', '{"PHOTOSATURATION CURRENT"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
             
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-08-30', 'EJ', 'Initial version'}, {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}});
+            
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).';
             
@@ -451,6 +467,8 @@ classdef definitions < handle
             %    {'DATA_SET_PARAMETER_NAME', '{"SPACECRAFT POTENTIAL"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
             
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-08-29', 'AE', 'Initial version'}, {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}});
+            
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Proxy for spacecraft potential, derived from either (1) zero current crossing in sweep, or (2) floating potential measurement (downsampled). Time interval can thus refer to either sweep or individual sample.';
             
@@ -473,6 +491,8 @@ classdef definitions < handle
             %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
             %    {'DATA_SET_PARAMETER_NAME', '{"ELECTRON DENSITY", "PHOTOSATURATION CURRENT", "ION BULK VELOCITY", "ELECTRON TEMPERATURE"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP", "RPCMIP"}'});
+            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-08-30', 'EJ', 'Initial version'}, {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}});
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Analyzed sweeps (ASW). Miscellaneous physical high-level quantities derived from individual sweeps.';
@@ -513,6 +533,12 @@ classdef definitions < handle
         
         function LblData = get_NPL_data(obj, HeaderKvpl)
             
+            % IMPLEMENTATION NOTE: As of 2018-11-13, no such data product has ever been produced, and therefore no such
+            % label file has ever been produced.
+            % NOTE: Using this code without setting LABEL_REVISION_NOTE should trigger assertion error (overwriting is
+            % required).
+            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {});
+            
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Plasma density derived from individual fix-bias density mode (current) measurements.';
             
@@ -539,6 +565,8 @@ classdef definitions < handle
 
 
         function LblData = get_AxS_data(obj, HeaderKvpl, ixsFilename)
+            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-13', 'EJ', 'First documented version'}});
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = sprintf('Model fitted analysis of %s sweep file.', ixsFilename);
@@ -682,6 +710,8 @@ classdef definitions < handle
         % NOTE: Label files are not delivered.
         function LblData = get_EST_data(obj, HeaderKvpl)
             
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-14', 'EJ', 'First documented version'}});
+            
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = sprintf('Best estimates of physical values from model fitted analysis.');   % Bad description? To specific?
             
@@ -710,7 +740,9 @@ classdef definitions < handle
         
         % NOTE: TAB+LBL files will likely not be delivered.
         function LblData = get_A1P_data(obj, HeaderKvpl)
-            
+
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-14', 'EJ', 'First documented version'}});
+
             LblData.HeaderKvpl           = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Analyzed probe 1 parameters.';
             
@@ -726,7 +758,51 @@ classdef definitions < handle
         end
         
         
-        
-    end    % methods(...)
+
+        % Set LABEL_REVISION_NOTE key value in KVPL.
+        % NOTE: Requires key "LABEL_REVISION_NOTE" to already pre-exist in  KVPL
+        %
+        %
+        % RATIONALE
+        % =========
+        % -- Make sure does not forget to add quotes.
+        % -- Can (potentially) force common format: ~indentation, rows, date, author.
+        % -- Can potentially limit to only the last N label revisions (items).
+        % -- Force correct spelling of LABEL_REVISION_NOTE (which would otherwise be hardcoded in multiple places, although
+        %    ".set_value" requires keyword to pre-exist in KVPL, which should help).
+        %
+        % contentCellArray{iItem} = {dateStr, author, message}
+        function Kvpl = set_LRN(obj, Kvpl, contentCellArray)
+            % PROPOSAL: Link size of indentation to createLBL.constants.
+            % PROPOSAL: Set "author" here. Remove as argument.
+            
+            LINE_BREAK  = sprintf('\r\n');
+            INDENTATION = repmat(' ', 1, obj.indentationLength);
+            
+            nItems = numel(contentCellArray);
+            
+            rowList = {};
+            for i = 1:nItems
+                assert(numel(contentCellArray{i}) == 3)
+                
+                dateStr = contentCellArray{i}{1};
+                author  = contentCellArray{i}{2};
+                message = contentCellArray{i}{3};
+                rowList{i} = sprintf('%s, %s: %s', dateStr, author, message);
+            end
+
+            if nItems == 0
+                error('No info to put in LABEL_REVISION_INFO. nItems == 0.')
+            elseif nItems == 1
+                rowStr = rowList{1};
+            elseif nItems >= 2
+                % Do not use the first row (in the ODL file).
+                rowStr = EJ_lapdog_shared.utils.str_join(rowList, [LINE_BREAK, INDENTATION]);
+                rowStr = [LINE_BREAK, INDENTATION, rowStr];
+            end
+
+            Kvpl = Kvpl.set_value('LABEL_REVISION_NOTE', sprintf('"%s"', rowStr));    % NOTE: Adds quotes.
+        end
+    end    % methods
     
 end   % classdef
