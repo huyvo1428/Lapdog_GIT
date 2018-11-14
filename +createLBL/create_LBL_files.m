@@ -131,7 +131,7 @@
 function create_LBL_files(data)
     
     % ASSERTIONS
-    EJ_lapdog_shared.utils.assert.struct(data, {'ldDatasetPath', 'pdDatasetPath', 'lblTime', 'lblEditor', 'lblRev', 'metakernel', ...
+    EJ_lapdog_shared.utils.assert.struct(data, {'ldDatasetPath', 'pdDatasetPath', 'metakernel', ...
         'C', 'failFastDebugMode', 'generatingDeriv1', ...
         'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex'})
     if isnan(data.failFastDebugMode)    % Check if field set to temporary value.
@@ -179,7 +179,7 @@ function create_LBL_files(data)
         data.C.MISSING_CONSTANT, ...
         data.C.N_FINAL_PRESWEEP_SAMPLES, ...
         data.C.ODL_INDENTATION_LENGTH);
-    HeaderAllKvpl = data.C.get_LblAllKvpl(sprintf('%s, %s, %s', data.lblTime, data.lblEditor, data.lblRev));
+    HeaderAllKvpl = data.C.get_LblAllKvpl();
 
 
 

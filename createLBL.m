@@ -214,10 +214,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     
     clfd = [];   % CLFD = create_LBL_files data
     clfd.ldDatasetPath     = ldDatasetPath;
-    clfd.pdDatasetPath     = pdDatasetPath;  
-    clfd.lblTime           = evalin(MWS, 'lbltime');
-    clfd.lblEditor         = evalin(MWS, 'lbleditor');
-    clfd.lblRev            = evalin(MWS, 'lblrev');
+    clfd.pdDatasetPath     = pdDatasetPath;
     clfd.metakernel        = get_lapdog_metakernel();   % NOTE: Technically not part of the Lapdog state. Useful.
     
     clfd.index             = evalin(MWS, 'index');

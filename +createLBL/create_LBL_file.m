@@ -75,10 +75,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
 
 
     % TEMPORARY source constants.
-    lbltime    = '2018-08-03';  % Label revision time
-    lbleditor  = 'EJ';
-    lblrev     = 'Misc. descriptions clean-up';
-    LblAllKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
+    LblAllKvpl = C.get_LblAllKvpl();
     HeaderKvpl = OldLblHeaderKvpl.overwrite_subset(LblAllKvpl);
     
     

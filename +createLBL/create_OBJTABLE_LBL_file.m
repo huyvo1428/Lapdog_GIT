@@ -67,8 +67,6 @@
 % --
 % ASSUMPTION: Metakernel (time conversion) loaded if setting timestamps from columns requiring time conversion (so far
 % only STOP_TIME_from_OBT).
-% NOTE/ASSERTION: Check that all HeaderKvpl key values are strings. This means that Lapdog can set keys to exist, and
-% the for other Lapdog code to fill them in. This assertion then checks that the keywords have been filled in.
 %
 %
 % IMPLEMENTATION NOTES
@@ -597,8 +595,6 @@ function Ssl = create_SSL_header(Kvpl, HeaderOptions)   % Kvpl = key-value pair 
         oldValue = Kvpl.get_value(key);
         
         % ASSERTION: Check that old value is a string.
-        % Want to do this explicitly to make sure that no temporary value (e.g. []) added by one part of the code, and
-        % meant to be overwritten by some other part, somehow survives into a LBL file.
         EJ_lapdog_shared.utils.assert.castring(oldValue)
 
         Kvpl = Kvpl.set_value(key, EJ_lapdog_shared.utils.quote(oldValue, 'permit quoted'));

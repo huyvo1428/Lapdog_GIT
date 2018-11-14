@@ -26,11 +26,7 @@ function create_LBL_L5_sample_types(deriv1Path)
     
     C = createLBL.constants();
     
-    % TEMPORARY source constants.
-    lbltime   = '2018-08-03';  % Label revision time
-    lbleditor = 'EJ';
-    lblrev    = 'Misc. descriptions clean-up';
-    LblHeaderKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
+    LblHeaderKvpl = C.get_LblAllKvpl();
     LblHeaderKvpl = LblHeaderKvpl.append(EJ_lapdog_shared.utils.KVPL2({...
         'START_TIME',                   ''; ...
         'STOP_TIME',                    ''; ...
