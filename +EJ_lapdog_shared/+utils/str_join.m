@@ -1,5 +1,5 @@
 %
-% Join cell array of strings (and delimiter into one long string).
+% Join cell array of strings (and delimiter) into one long string.
 %
 % IMPLEMENTATION NOTE: join, strjoin would do the same job, but they do not exist in MATLAB R2009a.
 %

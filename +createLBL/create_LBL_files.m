@@ -15,7 +15,7 @@
 %
 % CONVENTIONS
 % ===========
-% This code should not use global variables.
+% This code should not use global variables. createLBL.m does it instead, and submits the needed values.
 %
 
 %===================================================================================================
@@ -225,7 +225,7 @@ function create_LBL_files(data)
             cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(START_TIME)), ...
             cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
         clear   START_TIME   STOP_TIME
-        
+
         %=======================================
         % LBL file: Create OBJECT TABLE section
         %=======================================
@@ -264,10 +264,6 @@ function create_LBL_files(data)
             % data.A1P_tabindex.file{iFile} will contain paths to a DERIV1-data set. May thus lead to overwriting LBL files in
             % DERIV1 data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
             % EDDER.
-            %createLBL.write_A1P(HeaderAllKvpl, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, data.index, data.A1P_tabindex, ...
-            %    DONT_READ_HEADER_KEY_LIST, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
-            
-            
             
             for iFile = 1:numel(data.A1P_tabindex.file)
                 try
@@ -383,9 +379,9 @@ function create_LBL_files(data)
                     %   obt2sctrc(str2double(startStopTimes{3})), ...
                     %   obt2sctrc(str2double(startStopTimes{4})));
                     HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, '<UNSET>', '<UNSET>', '<UNSET>', '<UNSET>');
-                    
+
                     LblData = LblDefs.get_PHO_data(HeaderKvpl);
-                    
+
                     createLBL.create_OBJTABLE_LBL_file(...
                         convert_LD_TAB_path(data.ldDatasetPath, data.PHO_tabindex(iFile).fname), ...
                         LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);

@@ -31,6 +31,8 @@ function EstHeaderKvpl = create_EST_LBL_header(estTabPath, calib1LblPathList, pr
 %    CON: Calling code has no way of finding the source AxS files from tabindex/an_tab_index(?).
 %    
 % ~TODO: Test day for nSrcFiles == 2. Seems ~rare.
+%
+% PROPOSAL: Move into createLBL.definitions.
 
     nSrcFiles = length(calib1LblPathList);
     if ~ismember(nSrcFiles, [1,2])

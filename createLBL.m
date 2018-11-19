@@ -95,6 +95,9 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %
     % PROPOSAL: Iterate over caller workspace variables and import all of them to a struct, instead of separately.
     %   ~CON: Still do not want to save this struct for backward compatibility.
+    %
+    % PROPOSAL: Argument for only trying to generate for data products belonging to CALIB2 or DERIV2.
+    %   CON: Lapdog should preferably not have any knowledge of which data products belong to which archiving level.
     
     
     

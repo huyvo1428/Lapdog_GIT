@@ -1,5 +1,5 @@
 %
-% Collect Lapdog LBL constants. Must instantiate before using.
+% Collect Lapdog LBL constants. Must instantiate before using. Immutable.
 %
 %
 % IMPLEMENTATION NOTE
@@ -86,7 +86,7 @@ classdef constants < handle
                 end                                
             end
 
-            
+
             %==================================================================
             % LBL Header keys which should preferably come in a certain order.
             % Not all of them are required to be present.
@@ -275,6 +275,7 @@ classdef constants < handle
         
         function LblAllKvpl = get_LblAllKvpl(obj)
             % PROPOSAL: Use generate_PDS_data?
+            % PROPOSAL: Change name. Something with "keywords" and not LBL only, which may refer to entire file.
             %
             % TODO-NEED-INFO: Required to add something like NOTE = "Cheops Reference Frame" ?
             

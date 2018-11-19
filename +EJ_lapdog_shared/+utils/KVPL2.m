@@ -105,7 +105,35 @@ classdef KVPL2
     %           EstHeaderKvpl = Kvpl1.append(Kvpl2.diff(Kvpl1.keys));    % NOTE: Removes intersection of keys, assuming that it is identical anyway.
     %       PROBLEM: Name "append_diff" still bad since it does not refer to intersection. Is not just a diff.
     %           PROPOSAL: overwrite_append (overwrite_prepend).
-
+    %
+    % PROPOSAL: Change name.
+    %   PRO: Should change name away from KVPL2 anyway.
+    %   PRO: There are other "key-value pair lists" which are not KVPLs in the meaning of this class.
+    %       Ex: *.utils.read_ODL_to_structs uses "AsgList", a list of key = value assignments where the same key can
+    %           occur twice.
+    %   PROPOSAL: Indicate UNIQUE KEYS.
+    %   PROPOSAL: Indicate that KEYS should be interpreted as a SET.
+    %   PROPOSAL: Indicate that only works with (key) STRINGS.
+    %       CON: Might change.
+    %   PROPOSAL: Indicate likeness to standard data struct.
+    %       PROPOSAL: associative arrays, map, dictionary.
+    %           NOTE: Implies unique keys. Might NOT imply ordering.
+    %       PROPOSAL: Association list, https://en.wikipedia.org/wiki/Association_list
+    %       PROPOSAL: Associative list (invention)
+    %       NOTE: "Order(ed)" seems to usually imply internal sorting, i.e. not an externally set order that is
+    %             well-defined under operations.
+    %   PROPOSAL: OSAA = Ordered String Associative Array
+    %   PROPOSAL: OAAS = Ordered Associative Array of Strings
+    %   PROPOSAL: UKAL = Unique Keys Associative List; AKUL = Associative List Unique Keys
+    %   PROPOSAL: KSAL = Key Set Associative List
+    %   PROPOSAL: ALKS = Associative List Key Set
+    %   NOTE: May some day want an associative list-class that does not require unique keys.
+    %
+    % PROPOSAL: diff-like method with assertion on keys being a subset.
+    %   PROPOSAL: Name "diff_subset" analogous to "overwrite_subset" (vs "overwrite_intersection").
+    %
+    % PROPOSAL: Method for removing keys by regexp.
+    %   PRO: Used thrice in createLBL.definitions.
     
     
     
@@ -240,6 +268,7 @@ classdef KVPL2
 
 
 
+        % ASSERTION: key must pre-exist.
         function value = get_value(obj, key)
             i = find(strcmp(key, obj.keys));
     

@@ -1,12 +1,16 @@
 %
 % DESIGN INTENT
 % =============
-% Class which stores hard-coded data related to specific LBL files, at least columns. Presently a bit unclear exactly
-% what hard-coded data should be included.
-% Should at least collects functions which define and return data structures defining LBL files, one file/data type per function.
+% Class which stores hard-coded data related to specific LBL files, at least columns. It is presently a bit unclear
+% exactly what hard-coded data should be included. Should at least collects functions which define and return data
+% structures defining LBL files, one file/data type per function.
 %
-% The class is instantiated with variable values which are likely constant during a session, and can be used by
-% the methods (e.g. whether EDDER/DERIV1, MISSING_CONSTANT).
+% The class is instantiated with variable values which are likely constant during a session, and can be used by the
+% methods (e.g. whether EDDER/DERIV1, MISSING_CONSTANT).
+%
+% The class should not use any global variables, and not know which data product belongs to which archiving level.
+% NOTE: The class indirectly "knows" which data products are L5 since it removes ROSETTA:* PDS keywords for these. This
+% is otherwise against the design intent.
 %
 %
 % NAMING CONVENTIONS, CONVENTIONS
@@ -56,9 +60,50 @@ classdef definitions < handle
     %   NOTE: Root-level DESCRIPTION can be inherited from pds.
     %
     % PROPOSAL: Modify ROSETTA:LAP_Px_ADC16_FILTER to upper case?
+    %   NOTE: Currently done in delivery code.
+    %
+    % PROPOSAL: Consistent system for lower-/uppercase for class instance fields.
+    %
+    % PROPOSAL: Function for extracting flags from filename/PRODUCT_ID.
+    %   PRO: Can have assertions.
+    %   PROPOSAL: Use, combine with delivery code's classification function.
+    %       CON: The delievry code does not contain one such function, but several "decision functions" which are very
+    %            different. Those do not extract these variables or anything similar.
+    %           PRO: They decide on whether to copy file, if HK, if ODL-to-update, new filename.
+    %
+    % PROPOSAL: Move keyword removal functionality from delivery code to here.
+    %   OhChanges.RemoveKeysList   = {'ROSETTA:LAP_P1_INITIAL_SWEEP_SMPLS', 'ROSETTA:LAP_P2_INITIAL_SWEEP_SMPLS'};   % For "all" ODL files.
+    %   OhChanges.RemoveKeysListHk = {'INSTRUMENT_MODE_ID', 'INSTRUMENT_MODE_DESC'};    % Specific for HK.
+    %   CON: Can not modify HK LBL in Lapdog.
+    %
+    % PROPOSAL: Move optionally_add_MISSING_CONSTANT into createLBL.definitions.
+    %
+    % PROPOSAL: Make the data type functions have access to full EDITED1/CALIB1 LBL file contents.
+    %   TODO-DECISION: Proper name/term.
+    %       PROPOSAL: "source label file", "template label file", "IDP label file"
+    %   TODO-DECISION: How handle timestamps (START_TIME etc)?
+    %   PROPOSAL: Receive file path and read file itself.
+    %       CON: Too much repetition between data products (more than in create_LBL_files, since some loops cover
+    %            multiple types).
+    %   --
+    %   NOTE: Some data types use the same EDITED1/CALIB1 LBL file.
+    %       Ex: IxS & BxS, PSD & FRQ (if not removing all keywords stemming from EDITED1/CALIB1).
+    %   NOTE: EST uses 1-2 CALIB1 files.
+    %   --
+    %   CON: Same procedure for many data types. create_LBL_files groups code for many data types.
+    %   PRO: Clearer what is done for every data type. Otherwise it is create_LBL_files that decides.
+    %       Ex: Some datatypes do and some do not read from EDITED1/CALIB1 LBL files. 
+    %           Ex: BLKLIST, ASW etc ignore.
+    %       Ex: As is now it is not clear if needs to remove ROSETTA:* keywords or INSTRUMENT_MODE_*.
+    %           ASW,USC,PHO,NPL do not read CALIB1 file and hence does not at all have access to those files.
+    %
+    %
+    %
+    % BUG/TODO: Somehow handle that ASW, USC DESCRIPTION (root-level), now inherited from CALIB1 (cryptic pds strings).
+    % TODO: Set DESCRIPTION sensibly.
+    % PROPOSAL: Copy selected values from CALIB1/EDDER header: ROSETTA:*, INSTRUMENT_MODE_* instead of current model
+    %           (copy all, except for blacklist).
 
-
-    
     properties(Access=private)
         % NO_ODL_UNIT: Constant to be used for LBL "UNIT" fields meaning that there is no unit.
         % This means that it is known that the quantity has no unit rather than that the unit
@@ -490,7 +535,7 @@ classdef definitions < handle
 
         
         % USC = U_sc = Potential, Spacecraft
-            
+        %    
         % NOTE: BUG in Lapdog. UTC sometimes has 3 and sometimes 6 decimals. ==> Assertions will fail sometimes.
         %   Still true? /EJ 2018-11-06
         function LblData = get_USC_data(obj, HeaderKvpl)
@@ -519,9 +564,9 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);            
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
-        
 
-        
+
+
         % ASW = Analyzed sweep parameters
         function LblData = get_ASW_data(obj, HeaderKvpl)
             % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
@@ -588,7 +633,7 @@ classdef definitions < handle
             
             % MB states:
             % """"PLASMA DENSITY [cross-calibration from ion and electron density; in the label, put ELECTRON DENSITY,
-            % ION DENSITY and PLASMA DENSITY]""""            
+            % ION DENSITY and PLASMA DENSITY]""""
             % TODO-NEED-INFO: Use above?
             
             %LblKvpl = KVPL_overwrite_add(LblKvpl, {...

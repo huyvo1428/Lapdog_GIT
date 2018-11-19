@@ -46,6 +46,9 @@ classdef assert
 % PROPOSAL: Struct with minimum set of fieldnames.
 % PROPOSAL: isvector, iscolumnvector, isrowvector.
 % PROPOSAL: Add argument for name of argument so that can print better error messages.
+% PROPOSAL: Assertion for same-sized variables. (Same-sized fields in struct?!)
+%   PROPOSAL: Specify set of dimensions (index-indices) which are asserted to be equal for arbitrary set of variables.
+%       Ex: Dimension one has to be equal in size, but not dimension two.
 
     methods(Static)
         
@@ -96,6 +99,7 @@ classdef assert
         
         
         % Either regular file or symlink to regular file (i.e. not directory or symlink to directory).
+        % NOTE: The "opposite" assertion is "path_is_available".
         function file_exists(filePath)
             if ~(exist(filePath, 'file') == 2)
                 error('Expected existing regular file (or symlink to regular file) "%s" can not be found.', filePath)
