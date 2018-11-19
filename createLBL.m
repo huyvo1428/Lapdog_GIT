@@ -17,10 +17,13 @@
 % failFastDebugMode
 %   1/True  : Fail fast, generate errors. Good for debugging and production of datasets for official delivery.
 %   0/False : Continue running for errors. Less messages. Useful if one does not really care about LBL files.
+% saveCallerWorkspace
+%   1/True  : Try to save MATLAB workspace to file. If intended path is already used, do not write but fail silently.
+%   0/False : Do not save MATLAB workspace to file.
 % varargin
 %   <Empty>  : Use Lapdog variable for dataset path.
-%   1 string : Dataset path to use. Not needed by Lapdog, but by separate code that runs createLBL for potentially moved
-%              dataset.
+%   1 string : Dataset path to use.
+%              NOTE: Not needed by Lapdog, but by separate code that runs createLBL for potentially moved dataset.
 %
 %
 % IMPLEMENTATION NOTES, RATIONALE
@@ -161,8 +164,12 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     if saveCallerWorkspace
         savedWorkspaceFile = fullfile(ldDatasetPath, C.PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
         fprintf('Saving pre-createLBL MATLAB workspace+globals in "%s"\n', savedWorkspaceFile);
-        evalin(MWS, sprintf('save(''%s'')', savedWorkspaceFile))                                        % NOTE: evalin
-        fprintf('    Done\n');
+        if exist(savedWorkspaceFile, 'file')
+            fprintf('    Ignoring - There already is such a file/directory. Will not overwrite.\n', savedWorkspaceFile)
+        else
+            evalin(MWS, sprintf('save(''%s'')', savedWorkspaceFile))                                        % NOTE: evalin
+            fprintf('    Done\n');
+        end
     end
 
 
