@@ -131,8 +131,8 @@
 function create_LBL_files(data)
     
     % ASSERTIONS
-    EJ_lapdog_shared.utils.assert.struct(data, {'ldDatasetPath', 'pdDatasetPath', 'metakernel', ...
-        'C', 'failFastDebugMode', 'generatingDeriv1', ...
+    EJ_lapdog_shared.utils.assert.struct(data, {...
+        'ldDatasetPath', 'pdDatasetPath', 'metakernel', 'C', 'failFastDebugMode', 'generatingDeriv1', ...
         'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex'})
     if isnan(data.failFastDebugMode)    % Check if field set to temporary value.
         error('Illegal argument data.failFastDebugMode=%g', data.failFastDebugMode)
@@ -309,13 +309,20 @@ function create_LBL_files(data)
         %==========================
         if ~isempty(data.ASW_tabindex)
             for iFile = 1:numel(data.ASW_tabindex)
+                %--------------------------
+                % Read the CALIB1 LBL file
+                %--------------------------
+                [IdpHeaderKvpl, IdpLblSsJunk] = createLBL.read_LBL_file(...
+                    convert_PD_TAB_path(data.pdDatasetPath, data.index(data.USC_tabindex(iFile).first_index).lblfile), DONT_READ_HEADER_KEY_LIST);
+
                 startStopTimes = data.ASW_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
-                
                 HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
                     startStopTimes{1}, ...
                     startStopTimes{2}, ...
                     obt2sctrc(str2double(startStopTimes{3})), ...
                     obt2sctrc(str2double(startStopTimes{4})));
+
+                HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
                 
                 LblData = LblDefs.get_ASW_data(HeaderKvpl);
                 
@@ -332,14 +339,21 @@ function create_LBL_files(data)
         %==========================
         if ~isempty(data.USC_tabindex)
             for iFile = 1:numel(data.USC_tabindex)
+                %--------------------------
+                % Read the CALIB1 LBL file
+                %--------------------------
+                [IdpHeaderKvpl, IdpLblSsJunk] = createLBL.read_LBL_file(...
+                    convert_PD_TAB_path(data.pdDatasetPath, data.index(data.USC_tabindex(iFile).first_index).lblfile), DONT_READ_HEADER_KEY_LIST);
+            
                 startStopTimes = data.USC_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
-                
                 HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
                     startStopTimes{1}, ...
                     startStopTimes{2}, ...
                     obt2sctrc(str2double(startStopTimes{3})), ...
                     obt2sctrc(str2double(startStopTimes{4})));
-                
+
+                HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
+            
                 LblData = LblDefs.get_USC_data(HeaderKvpl);
                 
                 createLBL.create_OBJTABLE_LBL_file(...
@@ -423,6 +437,7 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
             isSweepTable  = (tabFilename(28)=='B') && isSweep;
             isDensityMode = (tabFilename(28)=='I');
             %isEFieldMode  = (tabFilename(28)=='V');
+            isLf          = (tabFilename(30)=='L');
             
             %--------------------------------
             % Read the EDDER/CALIB1 LBL file
@@ -472,7 +487,7 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
                 % CASE: Anything EXCEPT sweep files (NOT [IB]xS) <==> [IV]x[HL]
                 %===============================================================
                 LblData = LblDefs.get_IVxHL_data(HeaderKvpl, ...
-                    isDensityMode, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION);
+                    isDensityMode, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, isLf);
             end
             
             %createLBL.create_OBJTABLE_LBL_file(...

@@ -153,12 +153,23 @@ classdef definitions < handle
         end
         
         
-        
-        function LblData = get_IVxHL_data(obj, HeaderKvpl, isDensityMode, probeNbr, table_DESCRIPTION)
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}});
+                
+        function LblData = get_IVxHL_data(obj, HeaderKvpl, isDensityMode, probeNbr, table_DESCRIPTION, isLf)
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, {'2018-11-16', 'EJ', 'Removed bias keywords'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_bias_keywords(HeaderKvpl);
+            
+            % Macros 710, 910 LF changes the downsampling and moving average cyclically. Therefore the true values of these
+            % keywords alternate in value over time.
+            % NOTE: No assertion on actual removal of keywords.
+            if isLf && any(strcmp(HeaderKvpl.get_value('INSTRUMENT_MODE_ID'), {'MCID0X0710', 'MCID0X0910'}))
+                HeaderKvpl = HeaderKvpl.diff({'ROSETTA:LAP_P1P2_ADC20_DOWNSAMPLE', 'ROSETTA:LAP_P1P2_ADC20_MA_LENGTH'});
+            end
             
             LblData.HeaderKvpl           = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = table_DESCRIPTION;   % No modification(!)
+            
+            
             
             ocl = {};
             ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECONDS', 'BYTES', 26, 'DESCRIPTION', 'UTC time.');
@@ -225,8 +236,10 @@ classdef definitions < handle
         
         
         
+        % NOTE: Sweeps keep the bias keywords since they give the surrounding bias.
         function LblData = get_BxS_data(obj, HeaderKvpl, probeNbr, table_DESCRIPTION_prefix, ixsTabFilename)
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = sprintf('%s. Description of the sweep voltage bias steps associated with the measurements in %s.', ...
@@ -255,8 +268,11 @@ classdef definitions < handle
         
         % nTabColumns : Total number of columns in TAB file. Used to set ITEMS (number of other columns is first
         %               subtracted internally).
+        %
+        % NOTE: Sweeps keep the bias keywords since they give the surrounding bias.
         function LblData = get_IxS_data(obj, HeaderKvpl, probeNbr, table_DESCRIPTION_prefix, bxsTabFilename, nTabColumns)
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
                         
             LblData.OBJTABLE.DESCRIPTION = sprintf('%s. Sweep, i.e. measured currents while the bias voltage sweeps over a continuous range of values.', table_DESCRIPTION_prefix);
             LblData.HeaderKvpl = HeaderKvpl;
@@ -310,7 +326,11 @@ classdef definitions < handle
         % the actual content of downsampled files. Therefore using the actual content of the TAB file to derive
         % these values.
         function LblData = get_IVxD_data(obj, HeaderKvpl, probeNbr, table_DESCRIPTION_prefix, samplingRateSeconds, isDensityMode)
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}});
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             LblData.HeaderKvpl = HeaderKvpl;
             
@@ -351,7 +371,11 @@ classdef definitions < handle
         
         
         function LblData = get_FRQ_data(obj, HeaderKvpl, nTabColumnsTotal, psdTabFilename)
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}});
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Frequency list of PSD spectra file.';
@@ -373,7 +397,11 @@ classdef definitions < handle
             % NOTE: Root DESCRIPTION set to pds constant, but OBJECT_TABLE:DESCRIPTION does not use it.
             %   PROPSOAL: Change?
             
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}});
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = sprintf('%s PSD spectra of high frequency measurements (snapshots).', modeStr);            
@@ -439,8 +467,12 @@ classdef definitions < handle
             %    {'DATA_SET_PARAMETER_NAME', '{"PHOTOSATURATION CURRENT"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
             
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-08-30', 'EJ', 'Initial version'}, {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}});
-            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-30', 'EJ', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_INSTRUMENT_MODE_keywords(HeaderKvpl);
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).';
             
@@ -467,13 +499,18 @@ classdef definitions < handle
             %    {'DATA_SET_PARAMETER_NAME', '{"SPACECRAFT POTENTIAL"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
             
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-08-29', 'AE', 'Initial version'}, {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}});
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-29', 'AE', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}, ...
+                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Proxy for spacecraft potential, derived from either (1) zero current crossing in sweep, or (2) floating potential measurement (downsampled). Time interval can thus refer to either sweep or individual sample.';
             
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF. Middle point for sweeps.');                                % 'useFor', {{'START_TIME'}}
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF. Middle point for sweeps.');                                % 'useFor', {{'START_TIME'}}
             ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point). Middle point for sweeps.');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}}
             ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      'DESCRIPTION', ...
                 ['Proxy for spacecraft potential derived from either (1) photoelectron knee in sweep, or (2) floating potential measurement (downsampled), depending on available data.', obj.MC_DESC_AMENDM], ...
@@ -492,7 +529,12 @@ classdef definitions < handle
             %    {'DATA_SET_PARAMETER_NAME', '{"ELECTRON DENSITY", "PHOTOSATURATION CURRENT", "ION BULK VELOCITY", "ELECTRON TEMPERATURE"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP", "RPCMIP"}'});
             
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-08-30', 'EJ', 'Initial version'}, {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}});
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-30', 'EJ', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Analyzed sweeps (ASW). Miscellaneous physical high-level quantities derived from individual sweeps.';
@@ -538,6 +580,8 @@ classdef definitions < handle
             % NOTE: Using this code without setting LABEL_REVISION_NOTE should trigger assertion error (overwriting is
             % required).
             %HeaderKvpl = obj.set_LRN(HeaderKvpl, {});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Plasma density derived from individual fix-bias density mode (current) measurements.';
@@ -566,8 +610,12 @@ classdef definitions < handle
 
         function LblData = get_AxS_data(obj, HeaderKvpl, ixsFilename)
             
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-13', 'EJ', 'First documented version'}});
-            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-13', 'EJ', 'First documented version'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = sprintf('Model fitted analysis of %s sweep file.', ixsFilename);
             
@@ -710,8 +758,12 @@ classdef definitions < handle
         % NOTE: Label files are not delivered.
         function LblData = get_EST_data(obj, HeaderKvpl)
             
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-14', 'EJ', 'First documented version'}});
-            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-14', 'EJ', 'First documented version'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+
             LblData.HeaderKvpl = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = sprintf('Best estimates of physical values from model fitted analysis.');   % Bad description? To specific?
             
@@ -740,8 +792,9 @@ classdef definitions < handle
         
         % NOTE: TAB+LBL files will likely not be delivered.
         function LblData = get_A1P_data(obj, HeaderKvpl)
-
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-14', 'EJ', 'First documented version'}});
+            HeaderKvpl = createLBL.definitions.general_header_modification(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
 
             LblData.HeaderKvpl           = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = 'Analyzed probe 1 parameters.';
@@ -757,9 +810,13 @@ classdef definitions < handle
             LblData.OBJTABLE.OBJ_COL_list = ocl;
         end
         
-        
+    end    % methods(Access=public)
 
-        % Set LABEL_REVISION_NOTE key value in KVPL.
+
+
+    methods(Access=private)
+        
+        % Set LABEL_REVISION_NOTE (LRN) key value in KVPL.
         % NOTE: Requires key "LABEL_REVISION_NOTE" to already pre-exist in  KVPL
         %
         %
@@ -803,6 +860,68 @@ classdef definitions < handle
 
             Kvpl = Kvpl.set_value('LABEL_REVISION_NOTE', sprintf('"%s"', rowStr));    % NOTE: Adds quotes.
         end
-    end    % methods
+        
+    end    % methods(Access=private)
+
+
+
+    methods(Static, Access=private)
+        
+        % Remove PDS keywords which store the LAP bias value.
+        % This should be used for LF and HF data only (not e.g. sweeps).
+        function HeaderKvpl = remove_bias_keywords(HeaderKvpl)
+            % NOTE: Not all these keywords are present simultaneously.
+            HeaderKvpl = createLBL.definitions.remove_keys_by_regex(HeaderKvpl, 'ROSETTA:LAP_[IV]BIAS[12]');
+        end
+        
+        
+        
+        % Remove all keys which begin with "ROSETTA:":
+        % This should be done for all L5 data products.
+        function HeaderKvpl = remove_ROSETTA_keywords(HeaderKvpl)
+            HeaderKvpl = createLBL.definitions.remove_keys_by_regex(HeaderKvpl, 'ROSETTA:.*');
+        end
+        
+        
+        
+        % Remove the INSTRUMENT_MODE_(ID|DESC) keywords (not prefixed "ROSETTA:").
+        % This is intended to be used for those (L5) data products which can span multiple macros.
+        function HeaderKvpl = remove_INSTRUMENT_MODE_keywords(HeaderKvpl)
+            HeaderKvpl = createLBL.definitions.remove_keys_by_regex(HeaderKvpl, 'INSTRUMENT_MODE_(ID|DESC)');   % NOTE: No "ROSETTA:" prefix.
+        end
+
+
+
+        % Helper function
+        % Remove all keys that match a regex (entire string).
+        function Kvpl = remove_keys_by_regex(Kvpl, regexpStr)
+            % Faster if using indices?!
+            temp = regexp(Kvpl.keys, ['^', regexpStr, '$'], 'match');
+            keysToRemove = [temp{:}];
+            
+            Kvpl = Kvpl.diff(keysToRemove);
+        end
+        
+        
+        
+        function HeaderKvpl = general_header_modification(HeaderKvpl)
+            % PROPOSAL: Better name.
+            
+            %========================================================================================================
+            % Change ROSETTA:LAP_P[12]_ADC16_FILTER values to upper case
+            % ----------------------------------------------------------
+            % Stems from 2018 Rosetta Archive Enchancement Science Data Review, RID RPCLAP-US-EL-001, action
+            % RPCLAP-US-EL-001-DAT. Should in practise only change "KHz" to "KHZ".
+            % NOTE: pds also converts these keyword values to uppercase since commit 28a2b84, 2018-10-04 so over the
+            % long term, this should be unnecessary. Maybe change it for an assertion.
+            %========================================================================================================
+            temp = regexp(HeaderKvpl.keys, '^ROSETTA:LAP_P[12]_ADC16_FILTER$');
+            i = find(~cellfun(@isempty, temp));
+            values = HeaderKvpl.values;
+            values(i) = upper(values(i));
+            HeaderKvpl = EJ_lapdog_shared.utils.KVPL2(HeaderKvpl.keys, values);
+        end
+        
+    end    % methods(Static, Access=private)
     
 end   % classdef
