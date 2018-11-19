@@ -179,7 +179,7 @@ function create_LBL_files(data)
         data.C.MISSING_CONSTANT, ...
         data.C.N_FINAL_PRESWEEP_SAMPLES, ...
         data.C.ODL_INDENTATION_LENGTH);
-    HeaderAllKvpl = data.C.get_LblAllKvpl();
+    HeaderAllKvpl = data.C.get_LblHeaderAllKvpl();
 
 
 
@@ -378,7 +378,8 @@ function create_LBL_files(data)
                     %   startStopTimes{2}, ...
                     %   obt2sctrc(str2double(startStopTimes{3})), ...
                     %   obt2sctrc(str2double(startStopTimes{4})));
-                    HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, '<UNSET>', '<UNSET>', '<UNSET>', '<UNSET>');
+                    %HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, '<UNSET>', '<UNSET>', '<UNSET>', '<UNSET>');
+                    HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, [], [], [], []);
 
                     LblData = LblDefs.get_PHO_data(HeaderKvpl);
 

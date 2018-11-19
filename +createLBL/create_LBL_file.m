@@ -75,7 +75,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
 
 
     % TEMPORARY source constants.
-    LblAllKvpl = C.get_LblAllKvpl();
+    LblAllKvpl = C.get_LblHeaderAllKvpl();
     HeaderKvpl = OldLblHeaderKvpl.overwrite_subset(LblAllKvpl);
     
     

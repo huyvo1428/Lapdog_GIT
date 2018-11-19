@@ -273,7 +273,7 @@ classdef constants < handle
         % this code, and reduces the number of arguments. This however increases the number of errors if validating
         % EDDER/DERIV1 (not EDITED2/CALIB2/DERIV2) LBL files with e.g. "pvv label".
         
-        function LblAllKvpl = get_LblAllKvpl(obj)
+        function LblHeaderAllKvpl = get_LblHeaderAllKvpl(obj)
             % PROPOSAL: Use generate_PDS_data?
             % PROPOSAL: Change name. Something with "keywords" and not LBL only, which may refer to entire file.
             %
@@ -283,7 +283,7 @@ classdef constants < handle
 
             % IMPLEMENTATION NOTE: Including un-set LABEL_REVISION_NOTE meant to always be overwritten by other code. If
             % it is not overwritten, then create_OBJTABLE_LBL_file will give error.
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL2({
+            LblHeaderAllKvpl = EJ_lapdog_shared.utils.KVPL2({
                 'PDS_VERSION_ID',            'PDS3'; ...
                 'DATA_QUALITY_ID',           QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
                 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'); ...
