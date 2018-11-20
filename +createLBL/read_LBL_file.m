@@ -9,21 +9,25 @@
 % HeaderKvpl          : Key-value (pair) list. Quotes are kept. 
 % LblSs               : Full LBL content on simple struct (SS) format. Quotes are removed
 %
-function [HeaderKvpl, LblSs] = read_LBL_file(filePath, deleteHeaderKeyList)
+function [HeaderKvpl, LblSs] = read_LBL_file(filePath)
 %
 % PROPOSAL: Change name to something implying only reading EDDER/CALIB1 (pds) LBL files.
 %   CON: There is nothing in its function that prevents it from reading other LBL files.
+%       CON: Use of DONT_READ_HEADER_KEY_LIST implies specialized use.
+%   PROPOSAL: read_PLKS_file
 %
-% PROPOSAL: Remove all quotes from values in header.
-%    CON: createLBL.write_LBL_header must determine which keys should have quotes. ==> Another long list which might not capture all keywords.
-%       CON?: createLBL.write_LBL_header no longer exists and has no counterpart?
-%
-% PROPOSAL: Replace deleteHeaderKeyList with ~of regexes for permitted header keys.
+% PROPOSAL: Replace deleteHeaderKeyList with ~of regexes for PERMITTED header keys.
 %   Should only need to read ROSETTA:* and timestamps (STOP_TIME etc), INSTRUMENT_MODE_*.
 %   Returning SS (simple struct; not SSL) is equivalent to returning timestamps on easy-to-use format.
 %
 % PROPOSAL: Use whitelist+blacklist (as regexps). Every keywords must match.
 %   CON: Somewhat long blacklist (all universal keywords).
+%
+% PROPOSAL: Move DONT_READ_HEADER_KEY_LIST to constants.
+
+    DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
+
+
 
     % NOTE: LblSsl keeps   quotes.
     %       LblSs  removes quotes.
@@ -34,10 +38,5 @@ function [HeaderKvpl, LblSs] = read_LBL_file(filePath, deleteHeaderKeyList)
         LblSsl.keys  (1:end-1), ...
         LblSsl.values(1:end-1));
     
-    %for i = 1:length(HeaderKvpl.values)
-    %    value = HeaderKvpl.values{i};
-    %    HeaderKvpl.values{i} = value(value ~= '"');    % Remove all quotes.
-    %end
-
-    HeaderKvpl = HeaderKvpl.diff(deleteHeaderKeyList);
+    HeaderKvpl = HeaderKvpl.diff(DONT_READ_HEADER_KEY_LIST);
 end

@@ -1,5 +1,7 @@
 %
 % Create .LBL files for all .TAB files.
+% This function is intended to (1) be the "interface" between Lapdog variables, and (2) not contain (or minimize) the
+% amount of configuration code of LBL files.
 %
 %
 % ARGUMENTS
@@ -9,8 +11,10 @@
 %
 % VARIABLE NAMING CONVENTIONS
 % ===========================
-% KVPL : Key-Value Pair List
+% KVPL : Key-Value Pair List (a class)
 % IDP  : Input Dataset Pds (pds s/w, as opposed to Lapdog)
+% LHT  : Label Header Timestamps (START_TIME etc)
+% PLKS : Pds (s/w) Label Keyword Source file
 %
 %
 % CONVENTIONS
@@ -93,7 +97,7 @@
 %           Uses UTC midnight (slightly incorrect?) for timestamps.
 %       an_tabindex: EST
 %           ALL: Has .dataType field for separating xxD, PSD+FRQ, AxS, EST
-%           EST:            Uses createLBL.create_EST_LBL_header to initialize header KVPL (mixing timestamps with other keywords).
+%           EST:            Uses createLBL.create_EST_prel_LBL_header to initialize header KVPL (mixing timestamps with other keywords).
 %           ALL except EST: IDP LBL for all timestamps.
 %       der_struct: A1P
 %           Struct for timestamps.
@@ -115,9 +119,7 @@
 %           CON: Could replace with assertions.
 %
 % PROPOSAL: Print/log number of LBL files of each type.
-%   PRO: Can see which parts of code that is tested and not.
-%
-% PROPOSAL: Move DONT_READ_HEADER_KEY_LIST to constants.
+%   PRO: Can see which parts of code that is tested and which is not.
 %
 % PROPOSAL: Better name for LblDefs. ~LblCreator? ~LblFactory?!
 %
@@ -146,7 +148,6 @@ function create_LBL_files(data)
     
 
     
-    DONT_READ_HEADER_KEY_LIST = {'FILE_NAME', '^TABLE', 'PRODUCT_ID', 'RECORD_BYTES', 'FILE_RECORDS', 'RECORD_TYPE'};
     COTLF_SETTINGS = struct('indentationLength', data.C.ODL_INDENTATION_LENGTH);
     
     
@@ -173,14 +174,13 @@ function create_LBL_files(data)
     
     
     
-    % NOTE: Requires "generatingDeriv1" to be defined. Can therefore not be initialized earlier.
-    LblDefs       = createLBL.definitions(...
+    LblDefs = createLBL.definitions(...
         data.generatingDeriv1, ...
         data.C.MISSING_CONSTANT, ...
         data.C.N_FINAL_PRESWEEP_SAMPLES, ...
-        data.C.ODL_INDENTATION_LENGTH);
-    HeaderAllKvpl = data.C.get_LblHeaderAllKvpl();
-
+        data.C.ODL_INDENTATION_LENGTH, ...
+        data.C.get_LblHeaderAllKvpl());
+    
 
 
     cspice_furnsh(data.metakernel);
@@ -204,7 +204,7 @@ function create_LBL_files(data)
         convert_LD_TAB_path(data.ldDatasetPath, tabFile), ...
         LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY));
     create_tabindex_files(createLblFileFuncPtr, data.pdDatasetPath, data.index, Stabindex, GENERATE_FILE_FAIL_POLICY, ...
-        LblDefs, HeaderAllKvpl, DONT_READ_HEADER_KEY_LIST)
+        LblDefs)
     
     
     
@@ -220,21 +220,22 @@ function create_LBL_files(data)
         % "rounding") but should they not? /2018-10-19
         START_TIME = datestr(data.blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
         STOP_TIME  = datestr(data.blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
-        HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
-            START_TIME, STOP_TIME, ...
+        LhtKvpl = get_timestamps_KVPL(...
+            START_TIME, ...
+            STOP_TIME, ...
             cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(START_TIME)), ...
             cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
-        clear   START_TIME   STOP_TIME
 
         %=======================================
         % LBL file: Create OBJECT TABLE section
         %=======================================
-        LblData = LblDefs.get_BLKLIST_data(HeaderKvpl);
+        LblData = LblDefs.get_BLKLIST_data(LhtKvpl);
 
         createLBL.create_OBJTABLE_LBL_file(...
             convert_LD_TAB_path(data.ldDatasetPath, data.blockTAB(i).blockfile), ...
             LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
-
+        
+        clear   START_TIME   STOP_TIME   LhtKvpl   LblData
     end   % for
     
     
@@ -249,7 +250,7 @@ function create_LBL_files(data)
                 convert_LD_TAB_path(data.ldDatasetPath, tabFile), ...
                 LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy));
         create_antabindex_files(createLblFileFuncPtr, data.ldDatasetPath, data.pdDatasetPath, data.index, Stabindex, San_tabindex, ...
-            HeaderAllKvpl, LblDefs, GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY, DONT_READ_HEADER_KEY_LIST)
+            LblDefs, GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY)
 
         
         
@@ -268,27 +269,20 @@ function create_LBL_files(data)
             for iFile = 1:numel(data.A1P_tabindex.file)
                 try
                     startStopTimes = data.A1P_tabindex.timing(iFile, :);   % NOTE: Stores UTC+SCCS.
-                    iIndex = data.A1P_tabindex.firstind(iFile);
-                    
-                    %----------------------------------
-                    % Read the EDITED1/CALIB1 LBL file
-                    %----------------------------------
-                    [IdpHeaderKvpl, junk] = createLBL.read_LBL_file(data.index(iIndex).lblfile, DONT_READ_HEADER_KEY_LIST);
-                    
-                    HeaderKvpl = add_timestamps_keywords(HeaderAllKvpl, ...
+                    LhtKvpl        = get_timestamps_KVPL(...
                         startStopTimes{1}, ...
                         startStopTimes{2}, ...
                         startStopTimes{3}, ...
                         startStopTimes{4});
-                    HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
                     
-                    LblData = LblDefs.get_A1P_data(HeaderKvpl);
+                    iIndex  = data.A1P_tabindex.firstind(iFile);
+                    LblData = LblDefs.get_A1P_data(LhtKvpl, data.index(iIndex).lblfile);
                     
                     createLBL.create_OBJTABLE_LBL_file(...
                         convert_LD_TAB_path(data.ldDatasetPath, data.A1P_tabindex.file{iFile}), ...
                         LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
-                    clear   IdpHeaderKvpl   HeaderKvpl   LblData
                     
+                    clear   startStopTimes   LhtKvpl   iIndex   LblData                    
                 catch Exception
                     createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
                     fprintf(1,'\nlapdog:A1P LBL failed. Error message: %s\n', Exception.message);
@@ -305,26 +299,23 @@ function create_LBL_files(data)
         %==========================
         if ~isempty(data.ASW_tabindex)
             for iFile = 1:numel(data.ASW_tabindex)
-                %--------------------------
-                % Read the CALIB1 LBL file
-                %--------------------------
-                [IdpHeaderKvpl, IdpLblSsJunk] = createLBL.read_LBL_file(...
-                    convert_PD_TAB_path(data.pdDatasetPath, data.index(data.USC_tabindex(iFile).first_index).lblfile), DONT_READ_HEADER_KEY_LIST);
 
                 startStopTimes = data.ASW_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
-                HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                LhtKvpl = get_timestamps_KVPL(...
                     startStopTimes{1}, ...
                     startStopTimes{2}, ...
                     obt2sctrc(str2double(startStopTimes{3})), ...
                     obt2sctrc(str2double(startStopTimes{4})));
 
-                HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
-                
-                LblData = LblDefs.get_ASW_data(HeaderKvpl);
+                LblData = LblDefs.get_ASW_data(...
+                    LhtKvpl, ...
+                    convert_PD_TAB_path(data.pdDatasetPath, data.index(data.USC_tabindex(iFile).first_index).lblfile));
                 
                 createLBL.create_OBJTABLE_LBL_file(...
                     convert_LD_TAB_path(data.ldDatasetPath, data.ASW_tabindex(iFile).fname), ...
                     LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, ASW_TAB_LBL_INCONSISTENCY_POLICY);
+                
+                clear   startStopTimes   LhtKvpl   LblData
             end
         end
         
@@ -335,26 +326,23 @@ function create_LBL_files(data)
         %==========================
         if ~isempty(data.USC_tabindex)
             for iFile = 1:numel(data.USC_tabindex)
-                %--------------------------
-                % Read the CALIB1 LBL file
-                %--------------------------
-                [IdpHeaderKvpl, IdpLblSsJunk] = createLBL.read_LBL_file(...
-                    convert_PD_TAB_path(data.pdDatasetPath, data.index(data.USC_tabindex(iFile).first_index).lblfile), DONT_READ_HEADER_KEY_LIST);
-            
+                
                 startStopTimes = data.USC_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
-                HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
+                LhtKvpl = get_timestamps_KVPL(...
                     startStopTimes{1}, ...
                     startStopTimes{2}, ...
                     obt2sctrc(str2double(startStopTimes{3})), ...
                     obt2sctrc(str2double(startStopTimes{4})));
 
-                HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
-            
-                LblData = LblDefs.get_USC_data(HeaderKvpl);
+                LblData = LblDefs.get_USC_data(...
+                    LhtKvpl, ...
+                    convert_PD_TAB_path(data.pdDatasetPath, data.index(data.USC_tabindex(iFile).first_index).lblfile));
                 
                 createLBL.create_OBJTABLE_LBL_file(...
                     convert_LD_TAB_path(data.ldDatasetPath, data.USC_tabindex(iFile).fname), ...
                     LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                
+                clear   startStopTimes   LhtKvpl   LblData
             end
         end
         
@@ -368,24 +356,20 @@ function create_LBL_files(data)
         if ~isempty(data.PHO_tabindex)
             try
                 for iFile = 1:numel(data.PHO_tabindex)
-                    %startStopTimes = data.PHO_tabindex(iFile).timing;    % ~BUG: Not implemented/never assigned (yet).
+                    % data.PHO_tabindex(iFile).timing;    % ~BUG: Not implemented/never assigned (yet).
                     
-                    % IMPLEMENTATION NOTE: TEMPORARY SOLUTION. Timestamps are set via the columns.
-                    % Current implementation of create_OBJTABLE_BL_file requires the timestamp PDS keywords to exist in list
-                    % of keywords though.
-                    %HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
-                    %   startStopTimes{1}, ...
-                    %   startStopTimes{2}, ...
-                    %   obt2sctrc(str2double(startStopTimes{3})), ...
-                    %   obt2sctrc(str2double(startStopTimes{4})));
-                    %HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, '<UNSET>', '<UNSET>', '<UNSET>', '<UNSET>');
-                    HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, [], [], [], []);
+                    % IMPLEMENTATION NOTE: TEMPORARY SOLUTION. Timestamps are set via the columns, not here. Submitting
+                    % empty values forces the rest of the code to overwrite the values though (assertions are triggered
+                    % otherwise).
+                    LhtKvpl = get_timestamps_KVPL([], [], [], []);
 
-                    LblData = LblDefs.get_PHO_data(HeaderKvpl);
+                    LblData = LblDefs.get_PHO_data(LhtKvpl);
 
                     createLBL.create_OBJTABLE_LBL_file(...
                         convert_LD_TAB_path(data.ldDatasetPath, data.PHO_tabindex(iFile).fname), ...
                         LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                    
+                    clear   LhtKvpl   LblData
                 end
             catch Exception
                 createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
@@ -413,8 +397,7 @@ end
 
 
 
-function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabindex, generateFileFailPolicy, LblDefs, ...
-        HeaderAllKvpl, DONT_READ_HEADER_KEY_LIST)
+function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabindex, generateFileFailPolicy, LblDefs)
     
     for i = 1:length(Stabindex)
         try
@@ -436,23 +419,16 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
             %isEFieldMode  = (tabFilename(28)=='V');
             isLf          = (tabFilename(30)=='L');
             
-            %--------------------------------
-            % Read the EDDER/CALIB1 LBL file
-            %--------------------------------
-            [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(...
-                convert_PD_TAB_path(pdDatasetPath, index(iIndexFirst).lblfile), DONT_READ_HEADER_KEY_LIST);
-            
             % NOTE: One can obtain a stop/ending SCT value from index(Stabindex(i).iIndexLast).sct1str; too, but experience
             % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
+            % Therefore not using it. LBL header start timestamps are set later.
             % Example: LAP_20150503_210047_525_I2L.LBL
-            HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
-                IdpLblSs.START_TIME, ...
+            firstPlksSs = convert_PD_TAB_path(pdDatasetPath, index(iIndexFirst).lblfile);
+            LhtKvpl = get_timestamps_KVPL(...
+                [], ...
                 Stabindex(i).utcStop, ...
-                IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
+                [], ...
                 obt2sctrc(Stabindex(i).sctStop));
-            
-            HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
-
 
 
             %=======================================
@@ -467,24 +443,25 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
                 %==============================
                 
                 if (isSweepTable)
-                    % CASE: BxS                    
+                    % CASE: BxS
                     ixsTabFilename     = tabFilename;
                     ixsTabFilename(28) = 'S';
-                    LblData = LblDefs.get_BxS_data(HeaderKvpl, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, ixsTabFilename);
+                    LblData = LblDefs.get_BxS_data(LhtKvpl, firstPlksSs, ...
+                        probeNbr, ixsTabFilename);
                 else
                     % CASE: IxS                    
                     bxsTabFilename     = tabFilename;
                     bxsTabFilename(28) = 'B';
-                    LblData = LblDefs.get_IxS_data(HeaderKvpl, ...
-                        probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, bxsTabFilename, Stabindex(i).nColumns);
+                    LblData = LblDefs.get_IxS_data(LhtKvpl, firstPlksSs, ...
+                        probeNbr, bxsTabFilename, Stabindex(i).nColumns);
                 end
                 
             else
                 %===============================================================
                 % CASE: Anything EXCEPT sweep files (NOT [IB]xS) <==> [IV]x[HL]
                 %===============================================================
-                LblData = LblDefs.get_IVxHL_data(HeaderKvpl, ...
-                    isDensityMode, probeNbr, IdpLblSs.OBJECT___TABLE{1}.DESCRIPTION, isLf);
+                LblData = LblDefs.get_IVxHL_data(LhtKvpl, firstPlksSs, ...
+                    isDensityMode, probeNbr, isLf);
             end
             
             %createLBL.create_OBJTABLE_LBL_file(...
@@ -492,7 +469,7 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
             %    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
             createLblFileFuncPtr(LblData, Stabindex(i).path);
             
-            clear   LblData
+            clear   firstPlksSs   LhtKvpl   LblData
             
         catch Exception
             createLBL.exception_message(Exception, generateFileFailPolicy);
@@ -503,8 +480,9 @@ end
 
 
 
-function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetPath, index, Stabindex, San_tabindex, HeaderAllKvpl, LblDefs, ...
-        GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY, DONT_READ_HEADER_KEY_LIST)
+function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetPath, index, Stabindex, San_tabindex, LblDefs, ...
+        GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY)
+    
     for i = 1:length(San_tabindex)
         try
             tabLblInconsistencyPolicy = GENERAL_TAB_LBL_INCONSISTENCY_POLICY;   % Default value, unless overwritten for specific data file types.
@@ -514,99 +492,70 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
             probeNbr      = index(San_tabindex(i).iIndex).probe;     % Probe number
             isDensityMode = (mode(1) == 'I');
             %isEFieldMode  = (mode(1) == 'V');
-            
+
             %=========================================
             %
             % LBL file: Create header/key-value pairs
             %
             %=========================================
-            
+
             if strcmp(San_tabindex(i).dataType, 'best_estimates')
                 %======================
                 % CASE: Best estimates
                 %======================
-                % NOTE: Has its own try-catch statement. (Why?)
-                
-                HeaderKvpl = HeaderAllKvpl.append_kvp('DESCRIPTION', 'Best estimates of physical quantities based on sweeps.');
-                
-                %===============================================================
-                % NOTE: createLBL.create_EST_LBL_header(...)
-                %       sets certain LBL/ODL variables to handle collisions:
-                %    START_TIME / STOP_TIME,
-                %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
-                %===============================================================
-                iIndexSrc      = San_tabindex(i).iIndex;
-                estTabPath     = San_tabindex(i).path;
-                probeNbrList   = [index(iIndexSrc).probe];
-                idpLblPathList = {index(iIndexSrc).lblfile};
 
-                HeaderKvpl = createLBL.create_EST_LBL_header(...
+                iIndexSrc    = San_tabindex(i).iIndex;
+                estTabPath   = San_tabindex(i).path;
+                probeNbrList = [index(iIndexSrc).probe];
+                plksFileList = {index(iIndexSrc).lblfile};                
+                for j = 1:numel(plksFileList)
+                    plksFileList{j} = convert_PD_TAB_path(pdDatasetPath, plksFileList{j});
+                end
+
+                LblData = LblDefs.get_EST_data(...
                     convert_LD_TAB_path(ldDatasetPath, estTabPath), ...
-                    idpLblPathList, probeNbrList, HeaderKvpl, DONT_READ_HEADER_KEY_LIST);    % NOTE: Reads LBL file(s).
+                    plksFileList, probeNbrList);
 
             else
                 %===============================================
                 % CASE: Any type of file EXCEPT best estimates.
                 %===============================================
-                
-                %iIndexFirst = Stabindex(San_tabindex(i).iTabindex).iIndexFirst;
-                %iIndexLast  = Stabindex(San_tabindex(i).iTabindex).iIndexLast;
-                
-                [IdpHeaderKvpl, IdpLblSs] = createLBL.read_LBL_file(...
-                    convert_PD_TAB_path(pdDatasetPath, index(San_tabindex(i).iIndex).lblfile), DONT_READ_HEADER_KEY_LIST);
-                
+
                 % NOTE: One can obtain a stop/ending SCT value from index(Stabindex(i).iIndexLast).sct1str; too, but experience
                 % shows that it is wrong on rare occasions (and in disagreement with the UTC value) for unknown reason.
                 % Example: LAP_20150503_210047_525_I2L.LBL
-
                 % BUG: Does not work for 32S_IVxD. Produces too narrow time limits.
-                HeaderKvpl = add_timestamp_keywords(HeaderAllKvpl, ...
-                    IdpLblSs.START_TIME, ...
+                firstPlksFile = convert_PD_TAB_path(pdDatasetPath, index(San_tabindex(i).iIndex).lblfile);
+                LhtKvpl = get_timestamps_KVPL(...
+                    [], ...
                     Stabindex(San_tabindex(i).iTabindex).utcStop, ...
-                    IdpLblSs.SPACECRAFT_CLOCK_START_COUNT, ...
+                    [], ...
                     obt2sctrc(Stabindex(San_tabindex(i).iTabindex).sctStop));
 
-                HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
+                if strcmp(San_tabindex(i).dataType, 'downsample')
+                    % CASE: IVxD
+                    samplingRateSeconds = str2double(tabFilename(end-10:end-9));   % Move to "createLBL.definitions" method?
+                    LblData = LblDefs.get_IVxD_data(LhtKvpl, firstPlksFile, probeNbr, samplingRateSeconds, isDensityMode);
 
-                clear   IdpHeaderKvpl  % IdpLblSs is used later (once).
+                elseif strcmp(San_tabindex(i).dataType, 'spectra')
+                    % CASE: PSD
+                    LblData = LblDefs.get_PSD_data(LhtKvpl, firstPlksFile, probeNbr, isDensityMode, San_tabindex(i).nTabColumns, mode);
 
+                elseif  strcmp(San_tabindex(i).dataType, 'frequency')
+                    % CASE: FRQ
+                    psdTabFilename = strrep(San_tabindex(i).filename, 'FRQ', 'PSD');
+                    LblData = LblDefs.get_FRQ_data(LhtKvpl, firstPlksFile, San_tabindex(i).nTabColumns, psdTabFilename);
+
+                elseif  strcmp(San_tabindex(i).dataType, 'sweep')
+                    % CASE: AxS (analyzed sweeps)
+                    LblData = LblDefs.get_AxS_data(LhtKvpl, firstPlksFile, Stabindex(San_tabindex(i).iTabindex).filename);
+                    tabLblInconsistencyPolicy = AxS_TAB_LBL_INCONSISTENCY_POLICY;   % NOTE: Different policy for A?S.LBL files.
+
+                else
+                    error('Error, bad identifier in an_tabindex{%i,7} = San_tabindex(%i).dataType = "%s"', i, i, San_tabindex(i).dataType);
+                end
+                
             end   % if-else
-            
-            
-            
-            %=======================================
-            %
-            % LBL file: Create OBJECT TABLE section
-            %
-            %=======================================
-            
-            if strcmp(San_tabindex(i).dataType, 'downsample')
-                % CASE: IVxD
-                samplingRateSeconds = str2double(tabFilename(end-10:end-9));   % Move to "createLBL.definitions" method?
-                LblData = LblDefs.get_IVxD_data(HeaderKvpl, probeNbr, IdpLblSs.DESCRIPTION, samplingRateSeconds, isDensityMode);
-                
-            elseif strcmp(San_tabindex(i).dataType, 'spectra')
-                % CASE: PSD
-                LblData = LblDefs.get_PSD_data(HeaderKvpl, probeNbr, isDensityMode, San_tabindex(i).nTabColumns, mode);
-                
-            elseif  strcmp(San_tabindex(i).dataType, 'frequency')
-                % CASE: FRQ
-                psdTabFilename = strrep(San_tabindex(i).filename, 'FRQ', 'PSD');
-                LblData = LblDefs.get_FRQ_data(HeaderKvpl, San_tabindex(i).nTabColumns, psdTabFilename);
-                
-            elseif  strcmp(San_tabindex(i).dataType, 'sweep')
-                % CASE: AxS (analyzed sweeps)
-                LblData = LblDefs.get_AxS_data(HeaderKvpl, Stabindex(San_tabindex(i).iTabindex).filename);
-                tabLblInconsistencyPolicy = AxS_TAB_LBL_INCONSISTENCY_POLICY;   % NOTE: Different policy for A?S.LBL files.
-                
-            elseif  strcmp(San_tabindex(i).dataType,'best_estimates')
-                % CASE: EST
-                LblData = LblDefs.get_EST_data(HeaderKvpl);
-                
-            else
-                error('Error, bad identifier in an_tabindex{%i,7} = San_tabindex(%i).dataType = "%s"', i, i, San_tabindex(i).dataType);
-                
-            end
             
             
             
@@ -614,7 +563,7 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
             %    convert_LD_TAB_path(data.ldDatasetPath, San_tabindex(i).path), ...
             %    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
             createLblFileFuncPtr( LblData, convert_LD_TAB_path(ldDatasetPath, San_tabindex(i).path), tabLblInconsistencyPolicy );
-            clear   LblData   tabLblInconsistencyPolicy   HeaderKvpl
+            clear   plksFileList   firstPlksFile   LblData   tabLblInconsistencyPolicy   HeaderKvpl
             
             
             
@@ -632,14 +581,12 @@ end
 %
 % IMPLEMENTATION NOTE: From experience, data.A1P_tabindex.timing, asw_tabindex.timing, data.USC_tabindex.timing can have
 % UTC values with 6 decimals which DVAL-NG does not permit. Must therefore truncate or round to 3 decimals.
-function Kvpl = add_timestamp_keywords(Kvpl, START_TIME, STOP_TIME, SPACECRAFT_CLOCK_START_COUNT, SPACECRAFT_CLOCK_STOP_COUNT)
-    % PROPOSAL: Shorten UTC to 23 chars.
-    
-    Kvpl = Kvpl.append(EJ_lapdog_shared.utils.KVPL2({...
-        'START_TIME',                   shorten_UTC(START_TIME);
-        'STOP_TIME',                    shorten_UTC(STOP_TIME);
-        'SPACECRAFT_CLOCK_START_COUNT', SPACECRAFT_CLOCK_START_COUNT;
-        'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT}));
+function Kvpl = get_timestamps_KVPL(START_TIME, STOP_TIME, SPACECRAFT_CLOCK_START_COUNT, SPACECRAFT_CLOCK_STOP_COUNT)
+    Kvpl = EJ_lapdog_shared.utils.KVPL2({ ...
+        'START_TIME',                   shorten_UTC(START_TIME); ...
+        'STOP_TIME',                    shorten_UTC(STOP_TIME); ...
+        'SPACECRAFT_CLOCK_START_COUNT', SPACECRAFT_CLOCK_START_COUNT; ...
+        'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT});
 end
 
 

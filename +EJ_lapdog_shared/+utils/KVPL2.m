@@ -95,7 +95,7 @@ classdef KVPL2
     %   NOTE: Combines set operation (assertion for state of non-zero intersection) and list operation (order matters).
     %   PROPOSAL: append_diff. Appends Kvpl1.append(Kvpl2.diff(Kvpl2.keys)) assuming that the intersection is identical in keys AND values (but not ordering).
     %       NOTE: Can not prepend.
-    %       Ex: create_EST_LBL_header.
+    %       Ex: create_EST_prel_LBL_header.
     %           Int1Kvpl = Kvpl1.intersection(Kvpl2.keys);
     %           Int2Kvpl = Kvpl2.intersection(Kvpl1.keys);
     %           % ASSERTION: Intersection of keys also have the same values.

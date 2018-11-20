@@ -1,27 +1,23 @@
-%==============================================================================================
-% Create LBL header for EST in the form of a key-value (kv) list.
-% 
-% Combines information from ONE OR TWO LBL file headers.
-% to produce information for ONE new combined header (without writing to file).
+%
+% Create preliminary LBL header for EST in the form of a key-value (kv) list from or or two PLKS files.
+% NOTE: Sets combined header timestamps.
 %
 %
 % ARGUMENTS
 % =========
 % estTabPath          : Path to EST TAB file.
-% calib1LblPathList   : Cell array of paths to the (one or two) CALIB files containing PDS keywords for the AxS files.
+% plksFileList        : Cell array of paths to the (one or two) EDDER/CALIB1 files containing PDS keywords for the AxS files.
 % probeNbrList        : Array of probe numbers for the corresponding (one or two) CALIB/AxS files.
 % OverwriteKvpl       : Keys-values which overwrite keys-values found in the CALIB LBL files.
-% deleteHeaderKeyList : Cell array of keys which are removed if found (must not be found).
 % 
 %
-% ASSUMES: The two LBL files have identical header keys on identical positions (line numbers)!
+% ASSUMES: The two LBL files have identical sets of header keys.
 %
 %
 % Initially created <=2017 by Erik P G Johansson, IRF Uppsala.
-%==============================================================================================
-function EstHeaderKvpl = create_EST_LBL_header(estTabPath, calib1LblPathList, probeNbrList, OverwriteKvpl, deleteHeaderKeyList)
 %
-% PROPOSAL: Move out ODL variables that are in common (key+value) for all LBL files.
+function EstHeaderKvpl = create_EST_prel_LBL_header(estTabPath, plksFileList, probeNbrList, OverwriteKvpl)
+%
 % PROPOSAL: Move collision-handling code into separate general-purpose function(s).
 %     NOTE: The code should preferably try to maintain the order of key-value pairs
 %           which should be easy now when has code to enforce order of keys with
@@ -34,7 +30,7 @@ function EstHeaderKvpl = create_EST_LBL_header(estTabPath, calib1LblPathList, pr
 %
 % PROPOSAL: Move into createLBL.definitions.
 
-    nSrcFiles = length(calib1LblPathList);
+    nSrcFiles = length(plksFileList);
     if ~ismember(nSrcFiles, [1,2])
         error('Wrong number of TAB file paths.');
     end
@@ -46,16 +42,18 @@ function EstHeaderKvpl = create_EST_LBL_header(estTabPath, calib1LblPathList, pr
     START_TIME_list = {};
     STOP_TIME_list  = {};
     for j = 1:nSrcFiles   % For every source file (A1S, A2S)...
-        [KvplLblSrc, junk] = createLBL.read_LBL_file(calib1LblPathList{j}, deleteHeaderKeyList);
+        [KvplLblSrc, junk] = createLBL.read_LBL_file(plksFileList{j});
         
         SrcKvplList{end+1} = KvplLblSrc;            
         START_TIME_list{end+1} = KvplLblSrc.get_value('START_TIME');
         STOP_TIME_list{end+1}  = KvplLblSrc.get_value('STOP_TIME');
     end
 
-    %=====================================================
-    % Determine start & stop times from the source files.
-    %=====================================================
+    %============================================
+    % Determine
+    % (1) first start time, and
+    % (2) last stop times from the source files.
+    %============================================
     [junk, iSort] = sort(START_TIME_list);   iStart = iSort(1);
     [junk, iSort] = sort( STOP_TIME_list);   iStop  = iSort(end);
     OverwriteKvpl = OverwriteKvpl.append(SrcKvplList{iStart}.subset({                 'START_TIME' }));

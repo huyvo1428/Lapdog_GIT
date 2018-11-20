@@ -56,30 +56,25 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     % TODO: PDS Keywords from MB, DATA_SET_PARAMETER_NAME
     %   E.g. http://chury.sp.ph.ic.ac.uk/rpcwiki/Archiving/EnhancedArchivingTeleconMinutes2018x09x04
     % TODO: "Use the keyword CALIBRATION_SOURCE_ID with one or several values like the example below: CALIBRATION_SOURCE_ID = {“RPCLAP”,“RPCMIP”} "
-    
-    % TEMPORARY
-    generatingDeriv1 = 1;
-    
-    
 
+
+
+    % TEMPORARY source constants.
+    generatingDeriv1 = 1;
+
+    TAB_LBL_INCONSISTENCY_POLICY = 'error';
+    
     C = createLBL.constants();
     LblDefs = createLBL.definitions(...
         generatingDeriv1, ...
         C.MISSING_CONSTANT, ...
         C.N_FINAL_PRESWEEP_SAMPLES, ...
-        C.ODL_INDENTATION_LENGTH);              % TEMP: Use constants.
+        C.ODL_INDENTATION_LENGTH, ...
+        C.get_LblHeaderAllKvpl());                       % TEMP: Use constants.
     COTLF_SETTINGS = struct('indentationLength', C.ODL_INDENTATION_LENGTH);
 
-    TAB_LBL_INCONSISTENCY_POLICY = 'error';
 
 
-
-    % TEMPORARY source constants.
-    LblAllKvpl = C.get_LblHeaderAllKvpl();
-    HeaderKvpl = OldLblHeaderKvpl.overwrite_subset(LblAllKvpl);
-    
-    
-    
     [parentDir, fileBasename, fileExt] = fileparts(tabFilePath);
     tabFilename = [fileBasename, fileExt];
     
@@ -100,7 +95,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
             
             canClassifyTab = 1;
             
-            LblData = LblDefs.get_NPL_data(HeaderKvpl);
+            LblData = LblDefs.get_NPL_data();
 
         else 
             canClassifyTab = 0;
