@@ -659,13 +659,15 @@ classdef definitions < handle
         function LblData = get_NPL_data(obj)
             
             % IMPLEMENTATION NOTE: As of 2018-11-13, no such data product has ever been produced (except dummy files),
-            % and therefore no such label file has ever been produced. Must therefore LBL header timestamps from
-            % columns.
+            % and therefore no such label file has ever been produced. Must therefore set LBL header timestamps from
+            % columns for now.
+            %   NOTE: Currently, not even empty timestamps are properly added to the LBL header.
             % NOTE: Using this code without setting LABEL_REVISION_NOTE should trigger assertion error (overwriting is
             % required).
             
             HeaderKvpl = obj.HeaderAllKvpl;
             %HeaderKvpl = obj.set_LRN(HeaderKvpl, {});
+            HeaderKvpl = HeaderKvpl.append_kvp('START_TIME', []);                    % Set empty header LBL timestamp to remind future reader to explicitly choose how to set timestamps.
             HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
@@ -682,8 +684,8 @@ classdef definitions < handle
             %        'CALIBRATION_SOURCE_ID',   '{"RPCLAP", "RPCMIP"}'});
             
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');                             % 'useFor', {{'START_TIME', 'STOP_TIME'}}
-            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}}
+            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');                             % 'useFor', {{'START_TIME', 'STOP_TIME'}});
+            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
             ocl{end+1} = struct('NAME', 'N_PL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'cm**-3',    'DESCRIPTION', ...
                 ['Plasma density derived from individual fix-bias density mode (current) measurements. Parameter derived from low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
