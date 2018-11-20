@@ -23,49 +23,9 @@
 %
 
 %===================================================================================================
-% PROPOSAL: Stop/disable generating AxS LBL files.
+% PROPOSAL: Stop/disable generating AxS, EST, A1P LBL files.
 %   PRO: Will never be used (but lead to work).
-%   PRO: Are not up-to-date and generate errors/warnings which are typically ignored.
-%
-%
-%
-% TODO-DECISION: What kind of information should be set in
-%   (1) createLBL, and
-%   (2) ~create_C2D2_from_CALIB1/create_E2C2D2_from_CALIB1_EDITED1,
-%   respectively? What philosophy should one use?
-%   NOTE: Want to avoid setting the same information twice. Avoid first setting in createLBL, and then overwriting in
-%         ~create_E2C2D2_*.
-%   --
-%   Ex: LABEL_REVISION_NOTE
-%   Ex: Column description differences.
-%   Ex: DATA_SET_ID + DATA_SET_NAME
-%   Ex: PRODUCT_TYPE + PROCESSING_LEVEL_ID (level)
-%   Ex: ^EAICD_DESC/ARCHIVE_CONTENT_DESC, MISSING_CONSTANT
-%   Ex: PRODUCER_ID, PRODUCER_FULL_NAME, PRODUCER_INSTITUTION_NAME, INSTRUMENT_* (5 keywords)
-%   Ex: Ordering of header keywords.
-%       NOTE: Best done together with checking for forbidden keys (and enforcing quotes?) ==> Lapdog.
-%   --
-%   PROPOSAL:
-%       Lapdog/createLBL should handle:
-%           - Philosophically:
-%               - All metadata which naturally (could) vary between individual data products (not just between PDS data
-%               sets)
-%                   Ex: TODO-DECISION: Common within PDS data set, i.e. DATA_SET_ID/-NAME,
-%               - All metadata close to the TAB contents.
-%           - Explicitly:
-%               - Column description differences (between EDDER/LAPDOG); columns present, widths of columns).
-%               - MISSION_CONSTANT
-%       ~create_E2C2D2 should handle
-%           - Philosophically: Metadata which has to do with how to select Lapdog/Edder data products to be included in
-%             delivery data sets.
-%       NOTE: Assumes that all delivery/PDS datasets pass through ~create_E2C2D2.
-%
-%   PROPOSAL: Values NOT set by createLBL, should be set to invalid placeholder values, e.g. ^EAICD_DESC = <unset>.
-%       PRO: Makes it clear in createLBL what information is not set (but not the reverse).
-%       PROPOSAL: ~create_E2C2D2 should only be allowed to overwrite such placeholder values (assertion).
-%   PROPOSAL: createLBL should NEVER set unused/overwritten keywords (not even to placeholder values).
-%       ~create_E2C2D2 should add the keys instead and check for collisions.
-%       CON: create_E2C2D2 has to know which keywords that which have to be added.
+%   PRO: AxS are not up-to-date and generate errors/warnings which are typically ignored.
 %
 % PROPOSAL: Write function for obtaining number of columns in TAB file.
 %   NOTE: Bad for combining TAB file assertions and extracting values from TAB file.
@@ -84,8 +44,8 @@
 %   TODO-NEED-INFO: Need info if correct understanding of index timestamps.
 %
 % PROPOSAL: Read STOP_TIME from the last CALIB1/EDITED1 file, just like IdpLblSs does.
-%
 % PROPOSAL: Read first & LAST start & stop timestamps from EDITED1/CALIB1 LBL files using centralized function(s).
+%   NOTE: Would be implemented in the createLBL.definitions methods.
 %
 % PROPOSAL: Function for converting Lapdog's TAB file structs to standard structs (most cases, if not all).
 %   PRO: Can take care of adjusting paths to always use the current dataset path as root.
@@ -123,10 +83,6 @@
 %
 % PROPOSAL: Better name for LblDefs. ~LblCreator? ~LblFactory?!
 %
-% PROPOSAL: Different LABEL_REVISION_NOTE för CALIB2, DERIV2. Multiple rows?
-% PROPOSAL: Set LABEL_REVISION_NOTE without lbl{rev,editor,time}.
-%
-% PROPOSAL: Reorg to modify Lapdog data struct paths immediately, not upon use.
 % PROPOSAL: Have block lists use TAB columns for start & stop timestamps.
 %===================================================================================================
 

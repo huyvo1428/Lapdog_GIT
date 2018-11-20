@@ -29,6 +29,8 @@
 % Initially created 2018-09-12 by Erik P G Johansson, IRF Uppsala.
 %
 classdef definitions < handle
+    % PROPOSAL: Change class to immutable non-handle class.
+    %
     % PROPOSAL: POLICY; Should collect hard-coded data.
     %           ==> Should not write LBL files.
     % NEED: The caller should have control over error-handling, LBL-TAB consistency checks.
@@ -105,8 +107,8 @@ classdef definitions < handle
     %
     % BUG/TODO: Somehow handle that ASW, USC DESCRIPTION (root-level), now inherited from CALIB1 (cryptic pds strings).
     % TODO: Set DESCRIPTION sensibly.
-    % PROPOSAL: Copy selected values from EDITED1/CALIB1 header: ROSETTA:*, INSTRUMENT_MODE_* instead of current model
-    %           (copy all, except for blacklist).
+    % PROPOSAL: Copy whitelisted values from EDITED1/CALIB1 header: ROSETTA:*, INSTRUMENT_MODE_* instead of current model
+    %           (copy all except for blacklist).
 
     properties(Access=private)
         % NO_ODL_UNIT: Constant to be used for LBL "UNIT" fields meaning that there is no unit.
@@ -519,7 +521,7 @@ classdef definitions < handle
             end
             nSpectrumColumns = nTabColumns - (length(ocl1) + length(ocl2));
             ocl2{end+1} = struct('NAME', sprintf('PSD_%s', modeStr), 'ITEMS', nSpectrumColumns, 'UNIT', PSD_UNIT, 'DESCRIPTION', PSD_DESCRIPTION);
-            
+
             % For all columns: Set ITEM_BYTES/BYTES.
             for iOc = 1:length(ocl2)
                 if isfield(ocl2{iOc}, 'ITEMS')    ocl2{iOc}.ITEM_BYTES = 14;
@@ -928,7 +930,6 @@ classdef definitions < handle
         %
         % contentCellArray{iItem} = {dateStr, author, message}
         function Kvpl = set_LRN(obj, Kvpl, contentCellArray)
-            % PROPOSAL: Link size of indentation to createLBL.constants.
             % PROPOSAL: Set "author" here. Remove as argument.
             
             LINE_BREAK  = sprintf('\r\n');

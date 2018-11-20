@@ -117,8 +117,8 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     C = createLBL.constants();
 
     %===============================================================
-    % Derive ldDatasetPath
-    % ------------------
+    % Derive ldDatasetPath, pdDatasetPath
+    % -----------------------------------
     % NOTE: Needed for saving .mat file, and must hence precede it.
     %===============================================================
     if length(varargin) == 0

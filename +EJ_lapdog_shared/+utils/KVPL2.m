@@ -34,19 +34,34 @@
 % Based on earlier functions and a standardized and analogous struct.
 %
 classdef KVPL2
-    % PROPOSAL: Change name KVPL2-->KVPL, when has removed the old use of old KVPL data struct.
+    % PROPOSAL: Change name.
+    %   PRO: Should change name away from KVPL2 anyway.
+    %   PRO: There are other "key-value pair lists" which are not KVPLs in the meaning of this class.
+    %       Ex: *.utils.read_ODL_to_structs uses "AsgList", a list of key = value assignments where the same key can
+    %           occur twice.
+    %   PROPOSAL: Indicate UNIQUE KEYS.
+    %   PROPOSAL: Indicate that KEYS should be interpreted as a SET.
+    %   PROPOSAL: Indicate that only works with (key) STRINGS.
+    %       CON: Might change.
+    %   PROPOSAL: Indicate likeness to standard data struct.
+    %       PROPOSAL: associative arrays, map, dictionary.
+    %           NOTE: Implies unique keys. Might NOT imply ordering.
+    %       PROPOSAL: Association list, https://en.wikipedia.org/wiki/Association_list
+    %       PROPOSAL: Associative list (invention)
+    %       NOTE: "Order(ed)" seems to usually imply internal sorting, i.e. not an externally set order that is
+    %             well-defined under operations.
+    %   PROPOSAL: OSAA = Ordered String Associative Array
+    %   PROPOSAL: OAAS = Ordered Associative Array of Strings
+    %   PROPOSAL: UKAL = Unique Keys Associative List; AKUL = Associative List Unique Keys
+    %   PROPOSAL: KSAL = Key Set Associative List
+    %   PROPOSAL: ALKS = Associative List Key Set
+    %   NOTE: May some day want an associative list-class that does not require unique keys.
     %
     % PROPOSAL: Permit non-string values.
     % TODO-DECISION: Forbid empty string keys?
     % 
     % PROPOSAL: Convert to handle object.
     %   
-    % PROPOSAL: More (public) static methods instead of instance methods.
-    %   PRO: Easier to write "formulas".
-    %   CON: Makes class unnecessary.
-    %       CON: Still has encapsulation.
-    %   CON: Longer code/calls.
-    %
     % NOTE: Can obtain KVPL.keys as set (not list) to use as argument in methods.
     % NOTE: Can obtain KVPL.keys as list (not set) to use as argument in methods.
     %
@@ -63,18 +78,6 @@ classdef KVPL2
     %       NOTE: Indices change when adding/removing keys and reordering.
     %       CON: Premature optimization
     %   PROPOSAL: Methods with index arguments.
-    %
-    % NOTE: Lapdog (2018-11-07) uses old KVPL functions:
-    %   add_kv_pairs
-    %   read_value
-    %   add_copy_of_kv_pair
-    %   add_kv_pair
-    %   add_kv_pairs
-    %   overwrite_values(..., 'require preexisting keys')
-    %   KVPL.overwrite_values(..., 'add if not preexisting')
-    %   merge
-    %   order_by_key_list
-    %   delete_keys
     %
     % PROPOSAL: Assert that submitted KVPL arguments are of this same class.
     %   PRO: Can find old usages of obsoleted KVPL data struct.
@@ -106,34 +109,14 @@ classdef KVPL2
     %       PROBLEM: Name "append_diff" still bad since it does not refer to intersection. Is not just a diff.
     %           PROPOSAL: overwrite_append (overwrite_prepend).
     %
-    % PROPOSAL: Change name.
-    %   PRO: Should change name away from KVPL2 anyway.
-    %   PRO: There are other "key-value pair lists" which are not KVPLs in the meaning of this class.
-    %       Ex: *.utils.read_ODL_to_structs uses "AsgList", a list of key = value assignments where the same key can
-    %           occur twice.
-    %   PROPOSAL: Indicate UNIQUE KEYS.
-    %   PROPOSAL: Indicate that KEYS should be interpreted as a SET.
-    %   PROPOSAL: Indicate that only works with (key) STRINGS.
-    %       CON: Might change.
-    %   PROPOSAL: Indicate likeness to standard data struct.
-    %       PROPOSAL: associative arrays, map, dictionary.
-    %           NOTE: Implies unique keys. Might NOT imply ordering.
-    %       PROPOSAL: Association list, https://en.wikipedia.org/wiki/Association_list
-    %       PROPOSAL: Associative list (invention)
-    %       NOTE: "Order(ed)" seems to usually imply internal sorting, i.e. not an externally set order that is
-    %             well-defined under operations.
-    %   PROPOSAL: OSAA = Ordered String Associative Array
-    %   PROPOSAL: OAAS = Ordered Associative Array of Strings
-    %   PROPOSAL: UKAL = Unique Keys Associative List; AKUL = Associative List Unique Keys
-    %   PROPOSAL: KSAL = Key Set Associative List
-    %   PROPOSAL: ALKS = Associative List Key Set
-    %   NOTE: May some day want an associative list-class that does not require unique keys.
-    %
     % PROPOSAL: diff-like method with assertion on keys being a subset.
     %   PROPOSAL: Name "diff_subset" analogous to "overwrite_subset" (vs "overwrite_intersection").
     %
     % PROPOSAL: Method for removing keys by regexp.
     %   PRO: Used thrice in createLBL.definitions.
+    %
+    % PROPOSAL: Method set_append_kvp which overwrites existing value if key exist, otherwise adds key+value.
+    %   NOTE: Compare set_value, append_kvp.
     
     
     
