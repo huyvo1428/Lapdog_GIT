@@ -401,7 +401,7 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
                 if (isSweepTable)
                     % CASE: BxS
                     ixsTabFilename     = tabFilename;
-                    ixsTabFilename(28) = 'S';
+                    ixsTabFilename(28) = 'I';
                     LblData = LblDefs.get_BxS_data(LhtKvpl, firstPlksSs, ...
                         probeNbr, ixsTabFilename);
                 else
