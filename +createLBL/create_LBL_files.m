@@ -84,6 +84,8 @@
 % PROPOSAL: Better name for LblDefs. ~LblCreator? ~LblFactory?!
 %
 % PROPOSAL: Have block lists use TAB columns for start & stop timestamps.
+% PROPOSAL: Replace strrep with own version which assert exactly N string replacements.
+%   PRO: Good for changes in filename convention.
 %===================================================================================================
 
 function create_LBL_files(data)
@@ -495,7 +497,8 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
 
                 elseif strcmp(San_tabindex(i).dataType, 'spectra')
                     % CASE: PSD
-                    LblData = LblDefs.get_PSD_data(LhtKvpl, firstPlksFile, probeNbr, isDensityMode, San_tabindex(i).nTabColumns, mode);
+                    frqTabFilename = strrep(San_tabindex(i).filename, 'PSD', 'FRQ');
+                    LblData = LblDefs.get_PSD_data(LhtKvpl, firstPlksFile, probeNbr, isDensityMode, San_tabindex(i).nTabColumns, mode, frqTabFilename);
 
                 elseif  strcmp(San_tabindex(i).dataType, 'frequency')
                     % CASE: FRQ
