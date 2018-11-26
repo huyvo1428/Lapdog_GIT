@@ -134,6 +134,21 @@ try
                 sdtemp = isd;
                 isd(:) = 0;
                 
+                vsd_limit = 7.62940181E-5/1800; % 1789 samples maximum per AQP. 7.63e-5 V accuracy (20bit accuracy)
+                %isd_limit = 1.90735045E-11/1800; % 1789 samples maximum per AQP. 1.9E-11 Amps accuracy (20bit accuracy)
+                
+                 % abs() probably unnecessary.
+                vsd(abs((vsd)) < vsd_limit) = 0; %find all values below treshold. Values lower than this is noise from MATLAB precision error.
+                
+                % ROSETTA:LAP_VOLTAGE_CAL_16B = "1.22072175E-3"
+                % ROSETTA:LAP_VOLTAGE_CAL_20B = "7.62940181E-5"
+                % ROSETTA:LAP_CURRENT_CAL_16B_G1 = "3.05180438E-10"
+                % ROSETTA:LAP_CURRENT_CAL_20B_G1 = "1.90735045E-11"
+                % ROSETTA:LAP_CURRENT_CAL_16B_G0_05 = "6.10360876E-9"
+                % ROSETTA:LAP_CURRENT_CAL_20B_G0_05 = "3.81470090E-10"
+                
+                
+                
                 %matlab is terrible with std...
                 
                 %             meanbias = nanmean(imu); %get mean bias, disregard NaN values.
@@ -159,7 +174,9 @@ try
                 
                 %let's not do anything fancy, the bias current/potential are written by
                 %software, not a measuremeant
-                
+                isd_limit = 1.90735045E-11/1800; % 1789 samples maximum per AQP. 1.9E-11 Amps accuracy (20bit accuracy)
+                isd(abs((isd)) < isd_limit) = 0; %find all values below treshold. Values lower than this will be noise from MATLAB precision error.
+
                 sdtemp = vsd;
                 vsd(:) = 0;
                 

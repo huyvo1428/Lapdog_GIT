@@ -32,7 +32,7 @@ iph0conditions.CONT = +1.51e-9;
 dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf'};
 infoflds= {'macroId'};
 
-if debug(1) %PHO.TAB
+if ~debug(1) %PHO.TAB
 PHO= struct_cleanup(XXP,infoflds,dataflds);
 PHO= PHOTABFILE(PHO,iph0conditions,XXP);
 end
@@ -45,7 +45,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     filename(end-6:end-4)='ASW';
     folder = strrep(XXP(i).info.file,XXP(i).info.shortname,'');
 
-    if debug(2)%ASW.TAB
+    if ~debug(2)%ASW.TAB
 
     twID = fopen(filename,'w+');
     
@@ -108,7 +108,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     fclose(twID);
 
     end %debug(2)
-    if debug(3)%USC.TAB
+    if ~debug(3)%USC.TAB
         if  any(ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{1})) || any(ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{2}))
             
             
@@ -205,6 +205,8 @@ groupind=[];
 
 
 rowcount=0;
+%prepare array with a bit or function that adds unique & different
+%qualityflags together
 qf_array  = accumarray(inter,lapstruct.qf,[],@(x) frejonbitor(unique(x)));
 
 
@@ -432,6 +434,8 @@ for i = min(inter):max(inter) %main for loop
             rowcount=rowcount+1;
             PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
             PHO_tabindex(end).row_byte = row_byte; %will repeatedly get overwritten until  PHO_tabindex(end+1).fname = filename;        is called
+            PHO_tabindex(end).timing{3} = resampled.t_O;      
+%        timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
 
         else
             %first file in array, no valid points.

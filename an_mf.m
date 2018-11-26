@@ -55,8 +55,8 @@ try
         % fname= '/mnt/squid/RO-C-RPCLAP-5-1609-DERIV-V0.5/2016/SEP/D30/RPCLAP_20160930_000052_710_V1L.TAB';
          %fname= '/Users/frejon/Rosetta/EOM/RPCLAP_20160930_000052_710_V1L.TAB';
 
-         fname= '/mnt/squid/RO-C-RPCLAP-5-1609-DERIV-V0.5/2016/SEP/D20/RPCLAP_20160920_172156_710_V1L.TAB';
-
+         %fname= '/mnt/squid/RO-C-RPCLAP-5-1609-DERIV-V0.5/2016/SEP/D20/RPCLAP_20160920_172156_710_V1L.TAB';
+         fname = '/mnt/squid/RO-C-RPCLAP-5-1512-DERIV-V0.8/2015/DEC/D28/RPCLAP_20151228_000000_914_I1L.TAB';
          %fname ='/Users/frejon/Rosetta/temp/RPCLAP_20160715_011458_610_I1H.TAB';    
          %fname ='/mnt/squid/RO-C-RPCLAP-5-1609-DERIV-V0.5/2016/SEP/D23/RPCLAP_20160923_000020_710_V2H.TAB';    
          
@@ -97,22 +97,22 @@ try
         
         dt_array=diff(scantemp{1,2});%time intervals between two measurements
 
-        notmf_ind=dt_array>1; % check if it's  more than 1 sec.
-        if ~isempty(notmf_ind)  % delete non medium frequency measurements
+%         notmf_ind=dt_array>1; % check if it's  more than 1 sec.
+%         if ~isempty(notmf_ind)  % delete non medium frequency measurements
+%         
+%             scantemp{1,1}(notmf_ind)    = [];
+%             scantemp{1,2}(notmf_ind)    = [];
+%             scantemp{1,3}(notmf_ind)    = [];
+%             scantemp{1,4}(notmf_ind)    = [];
+%             scantemp{1,5}(notmf_ind)    = [];
+% 
+%             if fileflag(2) =='3'
+%                 scantemp{1,6}(notmf_ind)    = [];
+%             end
+%         end
         
-            scantemp{1,1}(notmf_ind)    = [];
-            scantemp{1,2}(notmf_ind)    = [];
-            scantemp{1,3}(notmf_ind)    = [];
-            scantemp{1,4}(notmf_ind)    = [];
-            scantemp{1,5}(notmf_ind)    = [];
-
-            if fileflag(2) =='3'
-                scantemp{1,6}(notmf_ind)    = [];
-            end
-        end
         
-        
-        scantemp{1,end-1}= scantemp{1,end-1} - scan2{1,end-1}; %line
+        %scantemp{1,end-1}= scantemp{1,end-1} - scan2{1,end-1}; %line
         %only for V3L, if we have saved scantemp2 somewhere
 
         reltime= scantemp{1,2} - scantemp{1,2}(1);
@@ -145,15 +145,16 @@ try
             
            % reltime(n+1)-t0-(8e-3*ffactor)
 
-%             if reltime(n+1)-t0 >(8e-3*ffactor)
-%                 %%start new timer, but don't increment line counter, results
-%                 %%will be averaged
-%                 t0 =reltime(n+1);
-%             end
+            %if reltime(n+1)-t0 >(8e-3*ffactor)
+                %%start new timer, but don't increment line counter, results
+                %%will be averaged
+            %    t0 =reltime(n+1);
+            %end
             
             
-            if reltime(n+1)-reltime(n)>dt*1000 %large jump, new timer
-                
+          %  if reltime(n+1)-reltime(n)>dt*1000 %large jump, new timer
+             if reltime(n+1)-reltime(n)>0.9 %large jump, new timer
+              
                 t0 =reltime(n+1);
                 counter = counter+1; %each count will generate 1 line of output in file
                 
@@ -166,12 +167,12 @@ try
              
              
              
-            %if reltime(n+1)-t0 >= (2e-3*MIPfilter) && reltime(n+1)-t0 <= (8e-3*ffactor)
+           % if reltime(n+1)-t0 >= (2e-3*MIPfilter) && reltime(n+1)-t0 <= (8e-3*ffactor)
             sind(n+1) = counter;
                 %         else
                 %             sind(n) = 0;
                 
-            %end
+           % end
             
             
             
