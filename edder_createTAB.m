@@ -90,8 +90,10 @@ try
     %CURRENTO1 = 0;
     %CURRENTO2 = 0;
     
-    
-    filename = sprintf('%sRPCLAP_%s_%s_%03x_%s.TAB', tabfolder, datestr(macrotime,'yyyymmdd'), datestr(macrotime,'HHMMSS'), macroNo, fileflag);
+    % NOTE: Important that hexadecimal macro number is always written in upper case in filenames due to PDS archiving standard.
+    % Letters are rare in macro numbers, but they are least used in macros A01 & A07 on 2015-05-20.
+    % /Erik P G Johansson 2018-09-27
+    filename = sprintf('%sRPCLAP_%s_%s_%03X_%s.TAB', tabfolder, datestr(macrotime,'yyyymmdd'), datestr(macrotime,'HHMMSS'), macroNo, fileflag);
     filenamep = strrep(filename,tabfolder,'');
     twID = fopen(filename,'w');
     

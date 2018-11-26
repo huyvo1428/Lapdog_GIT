@@ -7,7 +7,7 @@ ASW_tabindex=[];
 CONT_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926];
 global VFLOATMACROS
 
-debug=[0 0 0];
+debug=[1 1 1];
 
 
 iph0conditions=[];
@@ -35,6 +35,7 @@ infoflds= {'macroId'};
 if ~debug(1) %PHO.TAB
 PHO= struct_cleanup(XXP,infoflds,dataflds);
 PHO= PHOTABFILE(PHO,iph0conditions,XXP);
+
 end
 
 
@@ -569,12 +570,12 @@ for j=1:length(dataraw)
         
 
         for k=1:infolenflds
-          lapfile.(sprintf('%s',infofields{1,k})) = [[lapfile.(sprintf('%s',infofields{1,k}))];[dataraw(j).info.(sprintf('%s',infofields{1,k}))]];
+          lapfile.(sprintf('%s',infofields{1,k})) = [ [lapfile.(sprintf('%s',infofields{1,k}))] ; [dataraw(j).info.(sprintf('%s',infofields{1,k}))] ];
             
        
         end
         for k=1:datalenflds
-           lapfile.(sprintf('%s',datafields{1,k})) = [[lapfile.(sprintf('%s',datafields{1,k}))];[dataraw(j).data.(sprintf('%s',datafields{1,k}))]];
+           lapfile.(sprintf('%s',datafields{1,k})) = [ [lapfile.(sprintf('%s',datafields{1,k}))] ; [dataraw(j).data.(sprintf('%s',datafields{1,k}))] ];
             
        
         end

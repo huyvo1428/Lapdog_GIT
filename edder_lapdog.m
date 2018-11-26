@@ -4,7 +4,7 @@
 % anders.eriksson at  irfu.se 2012-03-29
 % frejon at irfu.se 2014-05-07
 %
-%For batch mode execution via script, to execute local execution in Matlab, see main.m
+% For batch mode execution via script, to execute local execution in Matlab, see main.m
 %
 %
 % Quick description
@@ -26,6 +26,7 @@
 % ** information of each new file is stored in "an_tabindex" variable
 % 9. createLBL produces .LBL files for each generated file  (PDS archive
 %    specific file type)
+%
 %
 % ARGUMENTS
 % =========
@@ -124,7 +125,7 @@ save(tabindexfile,'tabindex');
 
 
 fprintf(1,'lapdog: generate LBL files....\n')
-createLBL;
+createLBL(0,1);
 
 
 fprintf(1,'lapdog: DONE!\n')

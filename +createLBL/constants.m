@@ -1,6 +1,5 @@
-% ~EXPERIMENTAL
 %
-% Collect Lapdog LBL constants. Must instantiate.
+% Collect Lapdog LBL constants. Must instantiate before using.
 %
 %
 % IMPLEMENTATION NOTE
@@ -14,7 +13,7 @@
 %
 % DESIGN INTENT
 % =============
-% Should not take values from anywhere (through execution). ==> Will not read "global" constants (variables declared as
+% Should not take values from anywhere (through execution). ==> Should not read "global" constants (variables declared as
 % "global". Ex: SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES
 %
 %
@@ -25,20 +24,54 @@ classdef constants < handle
     %   CON: Indentation length is more fundamental. Could pop up somewhere else.
     %   PROPOSAL: Modify write_OBJTABLE_LBL_FILE to merge header options into settings and copy the indentation length from
     %           the separate constant INDENTATION_LENGTH.
+    %
+    % NOTE: Used by non-Lapdog code: ./+EJ_lapdog_shared/+ro/+delivery/+geom/create_geom_TAB_LBL_from_EOG.m
+    %       Might be used by future standalone, "Lapdogish" code (same git repo) for e.g. separately regenerating LBL files.
+    %
+    % PROPOSAL: Separately hard-code constant values just as Lapdog code does (duplication).
+    %   PROPOSAL: Somehow check that constants set by Lapdog (lapdog, edder_lapdog, main) use the same constant values as "constants".
+    %       PROPOSAL: (1) Internal hard-coded default values (MISSING_CONSTANT, and analogous if any). Constructor which accepts the
+    %                 same variables/constants as arguments and checks them (assertion) against the internal (hard-coded) values. 
+    %                 (2) Constructor call that just uses internally defined values.
+    % 
     
     properties(Access=public)
-        ROSETTA_NAIF_ID    = -226;     % Used for SPICE.
-        INDENTATION_LENGTH = 4;
-        MISSING_CONSTANT   = -1000;    % Defined here so that it can be used by code that is not run via Lapdog.
+        ROSETTA_NAIF_ID                        = -226;     % Used by SPICE.
+        INDENTATION_LENGTH                     = 4;
+        MISSING_CONSTANT                       = -1000;    % Defined here so that it can be used by code that is not run via Lapdog.
+        N_FINAL_PRESWEEP_SAMPLES               = 16;
+        PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
         
         % Used by createLBL.create_OBJTABLE_LBL_file
         COTLF_HEADER_OPTIONS   % Set in constructor
     end
-    
-    
-    
-    methods
-        function obj = constants()
+
+
+
+    methods(Access=public)
+
+        % Constructor
+        % 
+        % ARGUMENTS
+        % =========
+        % alt 1: No arguments
+        % alt 2: MISSING_CONSTANT
+        %        N_FINAL_PRESWEEP_SAMPLES
+        function obj = constants(varargin)
+            if nargin == 0
+                ;   % Do nothing. Everything OK.
+            elseif nargin == 2
+                % ASSERTIONS
+                if obj.MISSING_CONSTANT ~= varargin{1}
+                    error('Submitted MISSING_CONSTANT value inconsistent with internally hard-coded value.')
+                end
+                if obj.N_FINAL_PRESWEEP_SAMPLES ~= varargin{2}
+                    error('Submitted N_FINAL_PRESWEEP_SAMPLES value inconsistent with internally hard-coded value.')
+                end
+                
+            else
+                error('Wrong number of arguments.')
+            end
             
             %==================================================================
             % LBL Header keys which should preferably come in a certain order.
@@ -200,16 +233,13 @@ classdef constants < handle
                 'SPACECRAFT_CLOCK_START_COUNT', ...
                 'SPACECRAFT_CLOCK_STOP_COUNT'};
             
-            obj.COTLF_HEADER_OPTIONS = struct('keyOrderList', {KEY_ORDER_LIST}, 'forbiddenKeysList', {FORBIDDEN_KEYS}, 'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
+            obj.COTLF_HEADER_OPTIONS = struct(...
+                'keyOrderList',        {KEY_ORDER_LIST}, ...
+                'forbiddenKeysList',   {FORBIDDEN_KEYS}, ...
+                'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
         end
-        
-        
-        
-    %end    % methods
     
-    %methods(Static)
-    
-    
+
         
         % Construct list of key-value pairs to use for all LBL files.
         % -----------------------------------------------------------
@@ -228,64 +258,40 @@ classdef constants < handle
         function LblAllKvpl = get_LblAllKvpl(obj, LABEL_REVISION_NOTE)
             % PROPOSAL: Rewrite to use EJ_lapdog_shared.utils.KVPL.create.
             % PROPOSAL: Use generate_PDS_data?
+            %
+            % PROPOSAL: Do not add LABEL_REVISION_NOTE?
+            % PROPOSAL: Add but set to <UNSET>?
 
             % ASSERTION
             if ~isempty(regexp(LABEL_REVISION_NOTE, '"', 'once'))
                 error('Argument LABEL_REVISION_NOTE contains quote(s).')
             end
             
-            
-            LblAllKvpl = [];
-            LblAllKvpl.keys = {};
-            LblAllKvpl.values = {};
-            
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PDS_VERSION_ID',            'PDS3');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'DATA_QUALITY_ID',           '"1"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCT_TYPE',              '"DDR"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PROCESSING_LEVEL_ID',       '"5"');
-            %
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'DATA_SET_ID',               ['"', strrep(datasetid,   sprintf('-3-%s-CALIB', shortphase), sprintf('-5-%s-DERIV', shortphase)), '"']);
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'DATA_SET_NAME',             ['"', strrep(datasetname, sprintf( '3 %s CALIB', shortphase), sprintf( '5 %s DERIV', shortphase)), '"']);
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'LABEL_REVISION_NOTE',       sprintf('"%s, %s, %s"', lbltime, lbleditor, lblrev));
-            %             %LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCER_FULL_NAME',        sprintf('"%s"', producerfullname));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCER_ID',               producershortname);
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_HOST_ID',        'RO');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_ID',             'RPCLAP');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'TARGET_NAME',               sprintf('"%s"', targetfullname));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'TARGET_TYPE',               sprintf('"%s"', targettype));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'MISSION_ID',                'ROSETTA');
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
-            %             LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'MISSION_PHASE_NAME',        sprintf('"%s"', missionphase));
-            
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PDS_VERSION_ID',            'PDS3');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'DATA_QUALITY_ID',           '"<UNSET>"');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'));
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCT_TYPE',              '"<UNSET>"');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PROCESSING_LEVEL_ID',       '"<UNSET>"');
-            
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'DATA_SET_ID',               ['"<UNSET>"']);
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'DATA_SET_NAME',             ['"<UNSET>"']);
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'LABEL_REVISION_NOTE',       ['"', LABEL_REVISION_NOTE, '"']);
-            %LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCER_FULL_NAME',        '"<UNSET>"');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCER_ID',               '<UNSET>');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_HOST_ID',        'RO');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'INSTRUMENT_ID',             'RPCLAP');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'TARGET_NAME',               '"<UNSET>"');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'TARGET_TYPE',               '"<UNSET>"');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'MISSION_ID',                'ROSETTA');
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'));
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.add_kv_pair(LblAllKvpl, 'MISSION_PHASE_NAME',        '"<UNSET>"');
+            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.create({...
+                'PDS_VERSION_ID',            'PDS3'; ...
+                'DATA_QUALITY_ID',           '"<UNSET>"'; ...
+                'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'); ...
+                'PRODUCT_TYPE',              '"<UNSET>"'; ...
+                'PROCESSING_LEVEL_ID',       '"<UNSET>"'; ...
+                ...
+                'DATA_SET_ID',               ['"<UNSET>"']; ...
+                'DATA_SET_NAME',             ['"<UNSET>"']; ...
+                'LABEL_REVISION_NOTE',       ['"', LABEL_REVISION_NOTE, '"']; ...
+            %    'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
+                'PRODUCER_FULL_NAME',        '"<UNSET>"'; ...
+                'PRODUCER_ID',               '<UNSET>'; ...
+                'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"'; ...
+                'INSTRUMENT_HOST_ID',        'RO'; ...
+                'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"'; ...
+                'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"'; ...
+                'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"'; ...
+                'INSTRUMENT_ID',             'RPCLAP'; ...
+                'TARGET_NAME',               '"<UNSET>"'; ...
+                'TARGET_TYPE',               '"<UNSET>"'; ...
+                'MISSION_ID',                'ROSETTA'; ...
+                'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'); ...
+                'MISSION_PHASE_NAME',        '"<UNSET>"'}...
+            );
         end
     end    % methods
 end    % classdef

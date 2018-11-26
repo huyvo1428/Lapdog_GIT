@@ -1,7 +1,8 @@
 % Create TAB files containing the current best estimates of plasma parameters.
 % 
 %
-% NOTE: Very preliminary best estimates (physics).
+% NOTES
+% =====
 % NOTE: Presently only based on probe 1 sweeps, one estimate per (probe 1) sweep.
 %
 % IMPORTANT NOTE: Uses the non-PDS compliant first row
@@ -13,6 +14,8 @@
 % IMPORTANT NOTE: This function may have a memory problem for large files or large datasets.
 %    May therefore contain extra code on memory use. Only a limited effort on reducing
 %    memory usage have been made so far.
+%
+% NOTE: Uses global variables SATURATION_CONSTANT.
 %
 function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 

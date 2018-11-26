@@ -1,5 +1,5 @@
 %
-% Create LBL files for TAB files PHO, USC, ASW, NPL.
+% Standalone program for creating LBL files for TAB files PHO, USC, ASW, NPL.
 %
 % Iterates over the TAB files of a DERIV1 dataset. For TAB files that do not have LBL files, try to create LBL files
 % (will only succeed for types that create_LBL_file can handle).
@@ -17,17 +17,14 @@
 %
 % Initially created 2018-08-27 by Erik P G Johansson, IRF Uppsala.
 %
-function create_LBL_L5_sample_types(deriv1Path)
+function create_LBL_L5_sample_types(deriv1Path, MISSING_CONSTANT, nFinalPresweepSamples)
     % createLBL.create_LBL_L5_sample_types('/home/data/ROSETTA/datasets/RO-A-RPCLAP-5-AST2-DERIV-V2.0___LBL_L5_sample_test')
     % createLBL.create_LBL_L5_sample_types('/home/data/ROSETTA/datasets/RO-A-RPCLAP-5-AST2-DERIV-V2.0')
     % createLBL.create_LBL_L5_sample_types('/home/data/ROSETTA/datasets/RO-C-RPCLAP-5-TDDG-DERIV-V0.1')
 
     
     
-    objInfoList = EJ_lapdog_shared.utils.glob_files_dirs(deriv1Path, {'.*', '.*', '.*', '.*.TAB'});
-    C = createLBL.constants;
-    
-    
+    C = createLBL.constants(MISSING_CONSTANT, nFinalPresweepSamples);
     
     % TEMPORARY source constants.
     lbltime   = '2018-08-03';  % Label revision time
@@ -40,16 +37,17 @@ function create_LBL_L5_sample_types(deriv1Path)
         'SPACECRAFT_CLOCK_START_COUNT', ''; ...
         'SPACECRAFT_CLOCK_STOP_COUNT',  '' });    
 
-
+    
+    
+    objInfoList = EJ_lapdog_shared.utils.glob_files_dirs(deriv1Path, {'.*', '.*', '.*', '.*.TAB'});
 
     for i = 1:numel(objInfoList)    
         tabFilePath = objInfoList(i).fullPath;
         tabFilename = objInfoList(i).name;
         lblFilePath = regexprep(tabFilePath, '.TAB$', '.LBL');        
-        
-        
+
         %fprintf('Found %s\n', tabFilename);
-        
+
         if ~exist(lblFilePath, 'file')
             
             % TEMP: Delete empty TAB files.
@@ -72,7 +70,7 @@ function create_LBL_L5_sample_types(deriv1Path)
             
         end
         
-        canClassifyTab = createLBL.create_LBL_file(tabFilePath, LblHeaderKvpl);
+        canClassifyTab = createLBL.create_LBL_file(tabFilePath, LblHeaderKvpl, C.MISSING_CONSTANT, C.N_FINAL_PRESWEEP_SAMPLES);
         if canClassifyTab
             fprintf('Created LBL file for "%s"\n', tabFilename);
         end

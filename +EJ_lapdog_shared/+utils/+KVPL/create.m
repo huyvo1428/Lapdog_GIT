@@ -1,5 +1,5 @@
 %
-% Create new KVPL.
+% Create new KVPL. Intended for creating KVPL using manualy hardcoded data.
 %
 %
 % ARGUMENTS

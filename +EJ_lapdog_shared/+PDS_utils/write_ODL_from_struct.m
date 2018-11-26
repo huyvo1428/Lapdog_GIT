@@ -43,30 +43,36 @@ function write_ODL_from_struct(filePath, ssl, endRowsList, indentationLength, co
         error('Illegal indentationLength argument.')
     end
 
-    [c.fid, errorMsg] = fopen(filePath, 'w');
-    c.indentationLength = indentationLength;
-    if c.fid == -1
+    [C.fid, errorMsg] = fopen(filePath, 'w');
+    if C.fid == -1
         error('Failed to open file "%s": "%s"', filePath, errorMsg)
     end
     
-    write_key_values(c, ssl, 0, contentRowMaxLength, LINE_BREAK)
+    C.indentationLength   = indentationLength;
+    C.contentRowMaxLength = contentRowMaxLength;
+    C.lineBreak           = LINE_BREAK;
     
-    fprintf(c.fid, ['END', LINE_BREAK]);
+    write_key_values(C, ssl, 0)
+    
+    fprintf(C.fid, ['END', LINE_BREAK]);
     
     for i=1:length(endRowsList)        
-        fwrite(c.fid, [endRowsList{i}, LINE_BREAK]);
+        fwrite(C.fid, [endRowsList{i}, LINE_BREAK]);
     end
     
-    fclose(c.fid);    
+    fclose(C.fid);    
 end
 
 
 
-% NOTE: Recursive function.
-% c : ??!!!
+% Write out bulk formatted content.
+% 
+% NOTE: Recursive function for OBJECT segments.
+% 
+% C : Constants
+%       C.rowMaxLength : Excludes length of line break.
 % s : formatted as ssl.
-% rowMaxLength : Excludes length of line break.
-function write_key_values(c, s, indentationLevel, rowMaxLength, lineBreak)
+function write_key_values(C, s, indentationLevel)
 
     % ASSERTION: Implicitly checks that fields exist.
     if length(s.keys) ~= length(s.values) || length(s.keys) ~= length(s.objects)
@@ -80,7 +86,7 @@ function write_key_values(c, s, indentationLevel, rowMaxLength, lineBreak)
     nonObjectKeyList      = keys(cellfun(@isempty, objects));    % Create list of keys without OBJECT/subsections.
     maxNonObjectKeyLength = max(cellfun(@length, nonObjectKeyList));
 
-    indentationStr = repmat(' ', 1, c.indentationLength*indentationLevel);
+    indentationStr = repmat(' ', 1, C.indentationLength*indentationLevel);
 
     for i = 1:length(keys)
         key    = keys{i};
@@ -93,9 +99,8 @@ function write_key_values(c, s, indentationLevel, rowMaxLength, lineBreak)
             %======================
             
             postKeyPaddingLength = maxNonObjectKeyLength-length(key);
-            
 
-            [str, firstRowExcess] = compose_non_object_key_assignment(key, value, postKeyPaddingLength, indentationStr, rowMaxLength, lineBreak);
+            [str, firstRowExcess] = compose_non_object_key_assignment(key, value, postKeyPaddingLength, indentationStr, C.contentRowMaxLength, C.lineBreak);
             
             if isfinite(firstRowExcess) && (firstRowExcess > 0)
                 % CASE: Line-breaking failed on first row.
@@ -108,22 +113,22 @@ function write_key_values(c, s, indentationLevel, rowMaxLength, lineBreak)
                 end
 
                 % Try to line-break again.
-                [str, firstRowExcess] = compose_non_object_key_assignment(key, value, postKeyPaddingLength, indentationStr, rowMaxLength, lineBreak);
+                [str, firstRowExcess] = compose_non_object_key_assignment(key, value, postKeyPaddingLength, indentationStr, C.contentRowMaxLength, C.lineBreak);
                 if firstRowExcess > 0
                     warning('Can not line break properly (keyword assignment, first row). (2)')
                 end
             end
             
-            fwrite(c.fid, str);
+            fwrite(C.fid, str);
             
         elseif strcmp(key, 'OBJECT') && ~isempty(value) && ~isempty(object) && isstruct(object)
             % CASE: OBJECT key.
             
             % Print OBJECT with different "post-key" whitespace padding.
-            fprintf(c.fid, sprintf('%s%s = %s%s',   indentationStr, key, value, lineBreak));
+            fprintf(C.fid, sprintf('%s%s = %s%s', indentationStr, key, value, C.lineBreak));
             
-            write_key_values(c, object, indentationLevel+1, rowMaxLength, lineBreak);             % RECURSIVE CALL
-            fprintf(c.fid, sprintf('%sEND_OBJECT = %s%s',   indentationStr, value, lineBreak));
+            write_key_values(C, object, indentationLevel+1);             % RECURSIVE CALL
+            fprintf(C.fid, sprintf('%sEND_OBJECT = %s%s', indentationStr, value, C.lineBreak));
         else
             error('Inconsistent combination of key, value and object.')
         end
@@ -132,7 +137,7 @@ end
 
 
 
-% Try to construct (potentially) line-broken string for key assignment.
+% Try to construct (potentially) line-broken string for key assignment value.
 % Line-breaking will only give error if line-breaking on non-first rows fail.
 % The caller must handle line breaking error on first row.
 %

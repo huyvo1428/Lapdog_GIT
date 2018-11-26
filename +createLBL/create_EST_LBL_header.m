@@ -62,11 +62,11 @@ function KvlEstHeader = create_EST_LBL_header(estTabPath, calib1LblPathList, pro
 
 
 
-    %=======================
+    %==============================================================================================
     % Handle key collisions
     % ---------------------
     % ASSUMES: The two LBL files have identical header keys on identical positions (line numbers).
-    %=======================
+    %==============================================================================================
     Kvl1 = kvlSrcList{1};
     if (nSrcFiles == 1)
         KvlEstHeader = Kvl1;

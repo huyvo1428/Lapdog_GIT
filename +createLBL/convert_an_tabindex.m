@@ -4,7 +4,11 @@
 %
 % ARGUMENTS
 % =========
-% an_tabindex  : Cell array defined by other Lapdog code. Empty (0x0) is interpreted as 0x9.
+% an_tabindex  : Cell array defined by other Lapdog code. Empty matrix is interpreted as 0x9
+%                so that the caller can easily tell the function to generate an empty but properly formatted return
+%                struct if the corresponding Lapdog variable is
+%                   (1) undefined, or
+%                   (2) defined but empty and not properly formatted.
 %
 %
 % RETURN VALUES
@@ -26,7 +30,7 @@ function san_tabindex = convert_an_tabindex(an_tabindex)
     %=============    
     % (Not assertion)
     if isempty(an_tabindex)
-        warning('an_tabindex is an EMPTY variable (0x0 array). - Modifying');
+        %warning('an_tabindex is an EMPTY variable (0x0 array). - Modifying');
         an_tabindex = cell(0, 9);
     end
 

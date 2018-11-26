@@ -1,7 +1,7 @@
 %
 % Takes a structure "a" and adds to it the fields of a
 % structure "b". If a field exists in both structures,
-% then duplicateFieldBehaviours determines what happens.
+% then DuplicateFieldBehaviours determines what happens.
 % Can be recursive.
 %
 % NOTE: The operation is NOT symmetric in "a" and "b".
@@ -13,12 +13,13 @@
 %   a                          : A struct. The fields of "b" will be added to this struct.
 %   b                          : A struct.
 % OPTIONAL:
-%   duplicateFieldBehaviours : Struct array with three components, each one representing how to react for different cases of
+%   DuplicateFieldBehaviours : Struct array with four components, each one representing how to react for different cases of
 %                              duplicate fields, depending on which of the two fields are structs themselves.
 %                              Each field in this argument is a string with one of the following values:
-%                                   "Overwrite" (The field in a is overwritten by the field in b)
-%                                   "Do nothing", "Recurse" (Only valid for two structs), "Error".
-%                              Default value is "Error" for everything.
+%                                   "Overwrite"  : The field in a is overwritten by the field in b.
+%                                   "Do nothing"
+%                                   "Recurse"    : Only valid for two structs.
+%                                   "Error"      : Default value.
 %       .noStructs
 %       .aIsStruct
 %       .bIsStruct
@@ -27,7 +28,7 @@
 %
 % Initially created 201x-xx-xx (=<2017) by Erik P G Johansson.
 %
-function a = add_struct_to_struct(a, b, duplicateFieldBehaviours)
+function a = add_struct_to_struct(a, b, DuplicateFieldBehaviours)
 % PROPOSAL: Function pointer for what to do for duplicate fields?!
 % TODO-DECISION: Over-engineered?
 %   PRO: Too many duplicate field behaviours.
@@ -37,6 +38,9 @@ function a = add_struct_to_struct(a, b, duplicateFieldBehaviours)
 % TODO-DECISION: How determine recursion depth?
 %   PROPOSAL: Function pointer argument?!!
 %   PROPOSAL: (Flag) always/never recurse structs (if present in both a and b).
+%
+% PROPOSAL: Use EJ_lapdog_shared.utils.interpret_settings_args.
+%   CON: Can not use it since it calls this function! Would get infite recursion!!!
 
 
 % NOTE: In reality designed for merging "compatible" data structures (types are compatible; field names may or may not overlap).
@@ -60,7 +64,7 @@ function a = add_struct_to_struct(a, b, duplicateFieldBehaviours)
     
     
     if nargin == 2
-        duplicateFieldBehaviours = DEFAULT_DFB;
+        DuplicateFieldBehaviours = DEFAULT_DFB;
     end
     
     % ASSERTIONS
@@ -72,9 +76,9 @@ function a = add_struct_to_struct(a, b, duplicateFieldBehaviours)
     elseif ~isstruct(b)
         b
         error('b is not a structure.')
-    elseif ~isstruct(duplicateFieldBehaviours)
-        duplicateFieldBehaviours
-        error('duplicateFieldBehaviours is not a struct.')
+    elseif ~isstruct(DuplicateFieldBehaviours)
+        DuplicateFieldBehaviours
+        error('DuplicateFieldBehaviours is not a struct.')
     end
 
         
@@ -99,24 +103,24 @@ function a = add_struct_to_struct(a, b, duplicateFieldBehaviours)
             
 %             switch nFieldStructs
 %                 case 0
-%                     behaviour = duplicateFieldBehaviours.noStructs;
+%                     behaviour = DuplicateFieldBehaviours.noStructs;
 %                 case 1
-%                     behaviour = duplicateFieldBehaviours.oneStruct;
+%                     behaviour = DuplicateFieldBehaviours.oneStruct;
 %                 case 2
-%                     behaviour = duplicateFieldBehaviours.twoStructs;
+%                     behaviour = DuplicateFieldBehaviours.twoStructs;
 %                 otherwise
 %                     error('Should never reach this code.')
 %             end
 
             bothAreStructs = false;
             if ~isstruct(afv) && ~isstruct(bfv)
-                behaviour = duplicateFieldBehaviours.noStructs;
+                behaviour = DuplicateFieldBehaviours.noStructs;
             elseif isstruct(afv) && ~isstruct(bfv)
-                behaviour = duplicateFieldBehaviours.aIsStruct;
+                behaviour = DuplicateFieldBehaviours.aIsStruct;
             elseif ~isstruct(afv) && isstruct(bfv)
-                behaviour = duplicateFieldBehaviours.bIsStruct;
+                behaviour = DuplicateFieldBehaviours.bIsStruct;
             else
-                behaviour = duplicateFieldBehaviours.bothAreStructs;
+                behaviour = DuplicateFieldBehaviours.bothAreStructs;
                 bothAreStructs = true;
             end
 
@@ -127,8 +131,8 @@ function a = add_struct_to_struct(a, b, duplicateFieldBehaviours)
             elseif strcmp(behaviour, 'Do nothing')
                 % Do nothing.
             elseif strcmp(behaviour, 'Recurse') && (bothAreStructs)
-                % NOTE: Recursive call. Needs the original duplicateFieldBehaviours.
-                a.(fieldName) = EJ_lapdog_shared.utils.add_struct_to_struct(a.(fieldName), b.(fieldName), duplicateFieldBehaviours);
+                % NOTE: Recursive call. Needs the original DuplicateFieldBehaviours.
+                a.(fieldName) = EJ_lapdog_shared.utils.add_struct_to_struct(a.(fieldName), b.(fieldName), DuplicateFieldBehaviours);
             else
                 error('Can not interpret string value behaviour="%s" for this combination of field values.', behaviour)
             end

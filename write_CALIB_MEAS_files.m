@@ -624,7 +624,8 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         %fprintf(fileId, 'LABEL_REVISION_NOTE = "2015-07-07, EJ: RECORD_BYTES=31"\r\n');   % Use??
         %fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-01-27, EJ: Updated metadata; start/stop times, DESCRIPTION, UNIT"\r\n');
         %fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-07-11, EJ: Removed ADC20 calibration factors ROSETTA:LAP_*_CAL_20B*"\r\n');
-        fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-07-11?, EJ: Removed ADC16 calibration factors ROSETTA:LAP_*_CAL_16B*"\r\n');
+        %fprintf(fileId, 'LABEL_REVISION_NOTE = "2017-07-11?, EJ: Removed ADC16 calibration factors ROSETTA:LAP_*_CAL_16B*"\r\n');
+        fprintf(fileId, 'LABEL_REVISION_NOTE = "2018-10-19, EJ: Lowercase descriptions"\r\n');
         fprintf(fileId, 'RECORD_TYPE = FIXED_LENGTH\r\n');
         fprintf(fileId, 'RECORD_BYTES = 31\r\n');
         fprintf(fileId, 'FILE_RECORDS = 256\r\n');
@@ -653,7 +654,7 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         fprintf(fileId, 'STOP_TIME = %s\r\n',                    datestr(outFileData.stopTime,  'yyyy-mm-ddTHH:MM:SS.FFF'));
         fprintf(fileId, 'SPACECRAFT_CLOCK_STOP_COUNT = %s\r\n',          outFileData.stopTimeScc);                  % NOTE: Spacecraft clock time is quoted. Field value is already quoted.
         %fprintf(fileId, 'DESCRIPTION = "CONVERSION FROM TM UNITS TO AMPERES AND VOLTS"\r\n');
-        fprintf(fileId, 'DESCRIPTION = "ADC16 CURRENT OFFSETS. CONVERSION FROM TM UNITS TO AMPERES AND VOLTS."\r\n');
+        fprintf(fileId, 'DESCRIPTION = "ADC16 current offsets. Conversion from TM units to ampere and volt."\r\n');
         
         %----------------------------------------------------------------------------------------
         %fprintf(fileId, 'ROSETTA:LAP_VOLTAGE_CAL_16B = "1.22072175E-3"\r\n');
@@ -678,7 +679,7 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         fprintf(fileId, 'ROWS = 256\r\n');
         fprintf(fileId, 'COLUMNS = 3\r\n');
         fprintf(fileId, 'ROW_BYTES = 31\r\n');
-        fprintf(fileId, 'DESCRIPTION = "THIRD DEGREE POLYNOMIAL OFFSET CORRECTION FOR ADC16 DENSITY DATA"\r\n');
+        fprintf(fileId, 'DESCRIPTION = "Third degree polynomial offset correction for ADC16 density data."\r\n');
         
         fprintf(fileId, 'OBJECT = COLUMN\r\n');
         fprintf(fileId, 'NAME = P1P2_VOLTAGE\r\n');
@@ -686,7 +687,7 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         fprintf(fileId, 'UNIT = "TM UNITS"\r\n');
         fprintf(fileId, 'START_BYTE = 1\r\n');
         fprintf(fileId, 'BYTES = 3\r\n');
-        fprintf(fileId, 'DESCRIPTION = "VOLTAGE APPLIED TO BIAS P1 AND P2"\r\n');
+        fprintf(fileId, 'DESCRIPTION = "Voltage applied to bias P1 and P2."\r\n');
         fprintf(fileId, 'END_OBJECT = COLUMN\r\n');
         
         fprintf(fileId, 'OBJECT = COLUMN\r\n');
@@ -695,7 +696,7 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         fprintf(fileId, 'UNIT = "TM UNITS"\r\n');
         fprintf(fileId, 'START_BYTE = 5\r\n');
         fprintf(fileId, 'BYTES = 12\r\n');
-        fprintf(fileId, 'DESCRIPTION = "INSTRUMENT OFFSET"\r\n');
+        fprintf(fileId, 'DESCRIPTION = "Probe 1 instrument offset."\r\n');
         fprintf(fileId, 'END_OBJECT = COLUMN\r\n');
         
         fprintf(fileId, 'OBJECT = COLUMN\r\n');        
@@ -704,7 +705,7 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         fprintf(fileId, 'UNIT = "TM UNITS"\r\n');
         fprintf(fileId, 'START_BYTE = 18\r\n');
         fprintf(fileId, 'BYTES = 12\r\n');
-        fprintf(fileId, 'DESCRIPTION = "INSTRUMENT OFFSET"\r\n');
+        fprintf(fileId, 'DESCRIPTION = "Probe 2 instrument offset."\r\n');
         fprintf(fileId, 'END_OBJECT = COLUMN\r\n');
         
         fprintf(fileId, 'END_OBJECT = TABLE\r\n');
