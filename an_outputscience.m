@@ -7,7 +7,7 @@ ASW_tabindex=[];
 CONT_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926];
 global VFLOATMACROS
 
-debug=[1 1 1];
+debug=[0 0 0];
 
 
 iph0conditions=[];
@@ -435,7 +435,7 @@ for i = min(inter):max(inter) %main for loop
             rowcount=rowcount+1;
             PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
             PHO_tabindex(end).row_byte = row_byte; %will repeatedly get overwritten until  PHO_tabindex(end+1).fname = filename;        is called
-            PHO_tabindex(end).timing{3} = resampled.t_O;      
+            %PHO_tabindex(end).timing{3} = resampled.tO(k);      
 %        timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
 
         else

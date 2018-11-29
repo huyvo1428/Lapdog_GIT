@@ -47,7 +47,7 @@ remake_sweepsonly = 0;
 %remake_bestestimates = 1;
 remake_LBL =1;
 remake_BLKLISTONLY = 0;
-
+remake_from_savestate=0; %default to 0
 
 switch rerun_mode
     
@@ -104,14 +104,30 @@ switch rerun_mode
 
         fprintf(1,'lapdog: Load all indices, rerun sweep analysis and best estimates, make lbl file (sweep mode) \n');
 
-       
+    case 6
+
+    remake_index = -1;
+    remake_tabindex = 0;
+    remake_analysis = 0;
+    remake_sweepsonly = 0;
+    %remake_bestestimates = 1;
+    remake_LBL =0;
+    remake_BLKLISTONLY = 0;
+    
+    
+    remake_from_savestate=1;
+     fprintf(1,'lapdog: Load previously saved matlab state, redo parts of the analysis. \n');
+
+        
+        
     case 7
 
 
-        remake_index = 0;
-        remake_tabindex = 0;
-        remake_BLKLISTONLY = 1;
-
+         remake_index = -1; % -1 skips index all together
+         remake_tabindex = 0;
+         remake_analysis = 0;
+%         remake_bestestimates = 0;
+         remake_LBL =0;
  
         
 end
@@ -216,6 +232,100 @@ end
 
 end
 
+
+
+
+if remake_from_savestate
+
+load(sprintf('%s/pre_createLBL_workspace.mat',derivedpath));
+antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
+
+%find datasets of different modes
+ind_I1L= find(strcmp('I1L', antype));
+ind_I2L= find(strcmp('I2L', antype));
+ind_I3L= find(strcmp('I3L', antype));
+
+ind_V1L= find(strcmp('V1L', antype));
+ind_V2L= find(strcmp('V2L', antype));
+ind_V3L= find(strcmp('V3L', antype));
+
+
+ind_V1H= find(strcmp('V1H', antype));
+ind_V2H= find(strcmp('V2H', antype));
+ind_V3H= find(strcmp('V3H', antype));
+
+ind_I1H= find(strcmp('I1H', antype));
+ind_I2H= find(strcmp('I2H', antype));
+ind_I3H= find(strcmp('I3H', antype));
+
+
+ind_I1S= find(strcmp('I1S', antype));
+ind_I2S= find(strcmp('I2S', antype));
+
+
+
+
+
+fprintf(1,'Outputting Science\n')
+if(~isempty(ind_I1S))
+    an_outputscience(XXP)
+end 
+
+
+
+
+
+% fprintf(1,'Downsampling low frequency measurements\n')
+% 
+% if(~isempty(ind_I1L))
+%     %an_downsample(ind_I1L,tabindex,8)
+%     an_downsample(ind_I1L,32,tabindex,index)
+% end
+%  
+% if(~isempty(ind_I2L))
+%    % an_downsample(ind_I2L,tabindex,8)
+%     an_downsample(ind_I2L,32,tabindex,index)
+% end
+% 
+% 
+% ind_VL=[ind_V1L;ind_V2L];
+% 
+% if(~isempty(ind_VL))
+%     ind_VL=sort(ind_VL,'ascend');
+%    % an_downsample(ind_V1L,tabindex,8)
+%     an_downsample(ind_VL,32,tabindex,index)
+% end
+% 
+% if(~isempty(ind_V1L))
+%    % an_downsample(ind_V1L,tabindex,8)
+% %    an_downsample(ind_V1L,32,tabindex,index)
+% end
+%  
+% if(~isempty(ind_V2L))
+%   %  an_downsample(ind_V2L,tabindex,8)
+%  %   an_downsample(ind_V2L,32,tabindex,index)
+% end 
+% 
+% 
+%     
+
+
+    fprintf(1,'lapdog: generate LBL files....\n');
+    createLBL(0,1);
+    
+
+
+fprintf(1,'lapdog: DONE!\n');
+
+    return;
+    
+end
+
+
+
+
+
+
 % Resample data
 tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);
 
@@ -287,6 +397,9 @@ if remake_LBL
     createLBL(0,1);
     
 end
+
+
+
 
 
 fprintf(1,'lapdog: DONE!\n');
