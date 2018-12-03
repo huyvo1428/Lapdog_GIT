@@ -98,6 +98,29 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %
     % PROPOSAL: Argument for only trying to generate for data products belonging to CALIB2 or DERIV2.
     %   CON: Lapdog should preferably not have any knowledge of which data products belong to which archiving level.
+    %
+    % TODO-DECISION: What to do about slow save -v7.3?
+    %   PROPOSAL: Time it.
+    %   PROPOSAL: Only use -v7.3 "when necessary".
+    %       PROPOSAL: When mission phase is PRL or ESC3.
+    %   PROPOSAL: Split up variables into multiple files. Store "index" separately, possibly in multiple .mat files.
+    %       PROPOSAL: Stora all variables except index in one files, and index in one/several others.
+    %           Ex: save('test2.mat', '-regexp', '^(?!(index)$).')
+    %   PROPOSAL: Do not store all of "index".
+    %       PROPOSAL: Delete indices not mentioned in tabindex, an_tabindex etc.
+    %           TODO-NEED-INFO: Find out if saves any space without changing indices.
+    %       PROPOSAL: Remove index.lblfile or index.tabfile (assuming they are analogous). (Assertion?)
+    %           NOTE: Experiment: Removing .tabfile index-->index2
+    %                index       1x781078            2457080816  struct
+    %                index2      1x781078            2074399932  struct
+    %       PROPOSAL: .tostr, .t1str, .macrostr all have lot of empty whitespace that can likely be removed. Remove the
+    %                 whitespace.
+    %   PROPOSAL: Save to other data format.
+    %   PROPOSAL: Remove certain variables from saving.
+    %       Ex: MIP
+    %
+    % PROPOSAL: Change to permit overwrite.
+    % TODO: Remove "index" from pre_createLBL_workspace.mat.
     
     
     
@@ -154,6 +177,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
         %fprintf('Declare global variable in caller workspace: "%s"\n', cmd)    % DEBUG
         %eval(       sprintf('global %s', globalVarsList{iVar}));
     end
+    index = evalin(MWS, 'index');
     %===================================================================================================================
     % (Optionally) Save MATLAB CALLER WORKSPACE to file
     % -------------------------------------------------
@@ -170,8 +194,27 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
         if exist(savedWorkspaceFile, 'file')
             fprintf('    Ignoring - There already is such a file/directory. Will not overwrite.\n', savedWorkspaceFile)
         else
-            evalin(MWS, sprintf('save(''%s'')', savedWorkspaceFile))                                        % NOTE: evalin
-            fprintf('    Done\n');
+            % IMPLEMENTATION NOTE: It has been observed (2018-12-01) that variable "index" can be too large to save to
+            % disk for PRL and ESC3, thus generating a warning message "Warning: Variable 'index' cannot be saved to a
+            % MAT-file whose version is older than 7.3.". Note that it is a warning, not an error. Lapdog continues to
+            % execute, but the .mat file saved to disk simply does not contain the "index" variables. One should in
+            % principle be able to solve this by using flag "-v7.3" but experience is that this is (1) impractically
+            % slow, and (2) result in much larger .mat files.
+            
+            saveCmd = sprintf('save(''%s'')', savedWorkspaceFile);    % TEMPORARY. Should really exclude "index" variable.
+            executionBeginDateVec = clock;
+            evalin(MWS, saveCmd)                         % NOTE: evalin
+            fprintf('    Done: %.0f s (elapsed wall time)\n', etime(clock, executionBeginDateVec));
+            
+            try
+                % EXPERIMENTAL CODE
+                savedIndexPathPrefix = fullfile(ldDatasetPath, C.PRE_CREATELBL_SAVED_INDEX_PREFIX);
+                fprintf('Saving pre-createLBL MATLAB "index" in "%s*"\n', savedIndexPathPrefix);
+                EJ_lapdog_shared.utils.store_split_array.save(index, savedIndexPathPrefix, C.N_INDEX_INDICES_PER_PART)
+                fprintf('    Done: %.0f s (elapsed wall time)\n', etime(clock, executionBeginDateVec));
+            catch Exception
+                warning('EJ_lapdog_shared.utils.store_split_array.save failed to save "index" variable to disk.')
+            end
         end
     end
 

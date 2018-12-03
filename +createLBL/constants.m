@@ -52,6 +52,15 @@ classdef constants < handle
         MISSING_CONSTANT                       = -1000;    % Same as SATURATION_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
         N_FINAL_PRESWEEP_SAMPLES               = 16;       % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
         PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
+        PRE_CREATELBL_SAVED_INDEX_PREFIX       = 'pre_createLBL_workspace.index.';
+        
+        % When splitting "index" into multiple parts for saving to disk, this is how large every part should be, in
+        % number of index values. Lapdog's ESC2 "index" variable is size "1x661300" and can be saved to disk as one
+        % (empirically).
+        % NOTE: The true upper limit may depend on the length of strings, in particular paths stored in "index". Should
+        % maybe therefore lower the value to have more margin.
+        N_INDEX_INDICES_PER_PART               = 662000;       
+        %N_INDEX_INDICES_PER_PART               = 670;
         
         % Used by createLBL.create_OBJTABLE_LBL_file
         COTLF_HEADER_OPTIONS   % Set in constructor
