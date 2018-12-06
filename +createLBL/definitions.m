@@ -295,8 +295,6 @@ classdef definitions < handle
                     
                     oc3 = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, oc3, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));
-                %else
-                %    error('Error, bad combination of values isDensityMode and isEFieldMode.');
                 end
                 ocl(end+1:end+3) = {oc1; oc2; oc3};
                 
@@ -460,6 +458,8 @@ classdef definitions < handle
         % IMPLEMENTATION NOTE: Start & stop timestamps in header PDS keywords cover a smaller time interval than
         % the actual content of downsampled files. Therefore using the actual content of the TAB file to derive
         % these values.
+        %
+        % NOTE: Has not found any "?3D" (P3, downsampled) data on old datasets. Should not exist since there (empirically) is no ?3L data.
         function LblData = get_IVxD_data(obj, LhtKvpl, firstPlksFile, probeNbr, samplingRateSeconds, isDensityMode)
             if isDensityMode ; modeStr = 'density mode';
             else               modeStr = 'E field mode';

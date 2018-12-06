@@ -108,7 +108,7 @@ function create_LBL_files(data)
     
     COTLF_SETTINGS = struct('indentationLength', data.C.ODL_INDENTATION_LENGTH);
     
-    
+
     
     % Set policy for errors/warning
     % (1) when failing to generate a file,
@@ -129,9 +129,9 @@ function create_LBL_files(data)
         AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
         ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
     end
-    
-    
-    
+
+
+
     LblDefs = createLBL.definitions(...
         data.generatingDeriv1, ...
         data.C.MISSING_CONSTANT, ...
@@ -195,9 +195,9 @@ function create_LBL_files(data)
         
         clear   START_TIME   STOP_TIME   LhtKvpl   LblData
     end   % for
-    
-    
-    
+
+
+
     if data.generatingDeriv1
         %===============================================
         %
@@ -210,8 +210,8 @@ function create_LBL_files(data)
         create_antabindex_files(createLblFileFuncPtr, data.ldDatasetPath, data.pdDatasetPath, data.index, Stabindex, San_tabindex, ...
             LblDefs, GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY)
 
-        
-        
+
+
         %=============================================================
         %
         % Create LBL files for files in der_struct/A1P_tabindex (A1P)
@@ -249,7 +249,7 @@ function create_LBL_files(data)
             end
         end
         
-        
+
         
         %==========================
         %
@@ -400,19 +400,18 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
             Stabindex(i).utcStop, ...
             [], ...
             obt2sctrc(Stabindex(i).sctStop));
-        
-        
+
         %=======================================
         %
         % LBL file: Create OBJECT TABLE section
         %
         %=======================================
         if (isSweep)
-            
+
             %==============================
             % CASE: Sweep files (IxS, BxS)
             %==============================
-            
+
             if (isSweepTable)
                 % CASE: BxS
                 ixsTabFilename     = tabFilename;
@@ -426,7 +425,7 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
                 LblData = LblDefs.get_IxS_data(LhtKvpl, firstPlksSs, ...
                     probeNbr, bxsTabFilename, Stabindex(i).nColumns);
             end
-            
+
         else
             %===============================================================
             % CASE: Anything EXCEPT sweep files (NOT [IB]xS) <==> [IV]x[HL]
@@ -434,7 +433,7 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
             LblData = LblDefs.get_IVxHL_data(LhtKvpl, firstPlksSs, ...
                 isDensityMode, probeNbr, isLf);
         end
-        
+
         %createLBL.create_OBJTABLE_LBL_file(...
         %    convert_LD_TAB_path(data.ldDatasetPath, Stabindex(i).path), ...
         %    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
@@ -509,12 +508,12 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
                     frqTabFilename = strrep(San_tabindex(i).filename, 'PSD', 'FRQ');
                     LblData = LblDefs.get_PSD_data(LhtKvpl, firstPlksFile, probeNbr, isDensityMode, San_tabindex(i).nTabColumns, mode, frqTabFilename);
 
-                elseif  strcmp(San_tabindex(i).dataType, 'frequency')
+                elseif strcmp(San_tabindex(i).dataType, 'frequency')
                     % CASE: FRQ
                     psdTabFilename = strrep(San_tabindex(i).filename, 'FRQ', 'PSD');
                     LblData = LblDefs.get_FRQ_data(LhtKvpl, firstPlksFile, San_tabindex(i).nTabColumns, psdTabFilename);
 
-                elseif  strcmp(San_tabindex(i).dataType, 'sweep')
+                elseif strcmp(San_tabindex(i).dataType, 'sweep')
                     % CASE: AxS (analyzed sweeps)
                     LblData = LblDefs.get_AxS_data(LhtKvpl, firstPlksFile, Stabindex(San_tabindex(i).iTabindex).filename);
                     tabLblInconsistencyPolicy = AxS_TAB_LBL_INCONSISTENCY_POLICY;   % NOTE: Different policy for A?S.LBL files.

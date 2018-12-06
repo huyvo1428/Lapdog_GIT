@@ -100,9 +100,8 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %   CON: Lapdog should preferably not have any knowledge of which data products belong to which archiving level.
     %
     % TODO-DECISION: What to do about slow save -v7.3?
-    %   PROPOSAL: Time it.
-    %   PROPOSAL: Only use -v7.3 "when necessary".
-    %       PROPOSAL: When mission phase is PRL or ESC3.
+    %   PROPOSAL: Only use -v7.3 "when necessary" (ESC3, PRL).
+    %       PROPOSAL: Seems unreasonably slow even to be used once.
     %   PROPOSAL: Split up variables into multiple files. Store "index" separately, possibly in multiple .mat files.
     %       PROPOSAL: Stora all variables except index in one files, and index in one/several others.
     %           Ex: save('test2.mat', '-regexp', '^(?!(index)$).')
@@ -110,17 +109,19 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %       PROPOSAL: Delete indices not mentioned in tabindex, an_tabindex etc.
     %           TODO-NEED-INFO: Find out if saves any space without changing indices.
     %       PROPOSAL: Remove index.lblfile or index.tabfile (assuming they are analogous). (Assertion?)
+    %           NOTE: create_LBL_files does not seem to use index.tabfile, .macrostr, .t0str, .t1str, sct0str, .sct1str.
+    %               NOTE: The timestamps might be useful some time though.
     %           NOTE: Experiment: Removing .tabfile index-->index2
     %                index       1x781078            2457080816  struct
     %                index2      1x781078            2074399932  struct
-    %       PROPOSAL: .tostr, .t1str, .macrostr all have lot of empty whitespace that can likely be removed. Remove the
+    %       PROPOSAL: .t0str, .t1str, .macrostr all have lot of empty whitespace that can likely be removed. Remove the
     %                 whitespace.
     %   PROPOSAL: Save to other data format.
-    %   PROPOSAL: Remove certain variables from saving.
+    %   PROPOSAL: Remove certain other variables from saving.
     %       Ex: MIP
     %
     % PROPOSAL: Change to permit overwrite.
-    % TODO: Remove "index" from pre_createLBL_workspace.mat.
+    % PROPOSAL: Remove "index" from pre_createLBL_workspace.mat.
     
     
     
@@ -293,5 +294,5 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % Therefore, older versions of variables may be available when there should be no data and it is not possible for the calling code to tell the difference. If possible, create_LBL_files
     % should try to ignore these data.
     createLBL.create_LBL_files(clfd)
-    
+
 end

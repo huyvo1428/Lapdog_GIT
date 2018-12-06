@@ -76,7 +76,7 @@ indexfile = sprintf('%s/index/index_%s_v%s.mat',dynampath,archiveid,indexversion
     end
     
 
-    save(indexfile,'index');
+    save(indexfile, 'index');
 %end
 
 
