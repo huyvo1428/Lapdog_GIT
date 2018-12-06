@@ -30,6 +30,8 @@ cspice_furnsh(kernelFile);
 
 
 k=0; %needed for error output
+XXP=[]; %output initialisation
+
 
 try
 
@@ -633,7 +635,7 @@ try
                 XXP_struct.Tarr_mid{j,1}=    cspice_et2utc(   cspice_str2et(XXP_struct.Tarr{j,1}) + t_diff, 'ISOC', 6);    % spm = sweep pair middle
                 XXP_struct.Tarr_mid{j,2}=   str2double(XXP_struct.Tarr(j,3))+t_diff;
 
-                XXP_struct.t0(j,1) = cspice_str2et(XXP_struct.Tarr{j,1});%now
+                XXP_struct.t0(j,1) = cspice_str2et(XXP_struct.Tarr{j,1});%UTC start into et
                 %XXP_struct.t0 = irf_time(XXP_struct.Tarr{j,1},'utc>tt');
                 XXP_struct.ion_slope(j,1:2)=DP(j).ion_slope;
                 XXP_struct.curr(j,1)=EP(j).curr;
@@ -668,7 +670,7 @@ try
             if i ==1
                 XXP.data=XXP_struct;
                 XXP.info=info_struct;
-                XXP(2).info=info_struct; %boom, I have now made an array of structs in this silly fashion, such that I can populate PXP(i), in future.      
+                XXP(2).info=info_struct; %boom, I have now made an array of structs in this silly fashion, such that I can populate XXP(i), in future.      
             else
                 XXP(i).data=XXP_struct;
                 XXP(i).info=info_struct;

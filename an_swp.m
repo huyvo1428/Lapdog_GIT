@@ -72,16 +72,58 @@ ip = ip(ind);
 
 
 
-% Look for zero crossing interval:
-if((min(ip) >= 0) || (max(ip) <= 0))
-    % No zero crossing in this case
-    lastneg = NaN;
-    firstpos = NaN;
-    return;
 
+    ip_no_nans=ip+(1:length(ip))*1e-22; %extremely small values of noise, sometimes needed for extrapolation.
+    vb_no_nans(isnan(ip))=[];
+    ip_no_nans(isnan(ip))=[];%remove nans.
+
+
+    lastneg = max(find(ip_no_nans<0));
+    firstpos = min(find(ip_no_nans>0));
+% Look for zero crossing interval:
+if((min(ip) >= 0) || (max(ip) <= 0)) % NB:There is a "return" command in here
+    % No zero crossing in this case. But maybe we can extrapolate a
+    % potential anyway.
+%     lastneg = NaN;
+%     firstpos = NaN;
+
+    AP.Vz(2)=0.2; %INTERPOLATION OUTSIDE SWEEP
+
+    maxneg_bool= (max(ip) <= 0);
+    %minpos_bool= (min(ip) >= 0);
+    
+    
+    if(maxneg_bool)
+    %if maximum current is negative
+    
+    
+    ind_vz = length(ip_no_nans)-3:length(ip_no_nans); % 4 points
+    %ind_vz(isnan(ip(ind_vz)))=[]; %remove nans
+    AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
+
+    else % I don't think this is actually necessary. V_S/C will never be >+30V, surely.
+        
+
+    ind_vz = 1:4; % 4 points
+    %ind_vz(isnan(ip(ind_vz)))=[]; %remove nans
+    AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
+
+    end
+    
+
+    
+
+    %%%%%%%%%%%%%%
+    return; % Don't work any further on these horrible sweeps.
+    %%%%%%%%%%%%%%
+    
+    
+    
+    
+    
 else
-    lastneg = max(find(ip<0));
-    firstpos = min(find(ip>0));
+    %lastneg = max(find(ip<0));
+    %firstpos = min(find(ip>0));
     
 
     
@@ -102,13 +144,15 @@ else
 %         %AP.Vz=polyval(P,0);
 %                 
 %     else
-    ind_vz=min([max([lastneg-3;1]),firstpos]):max([min([lastneg+3;length(ip)])],firstpos);%stay within limits, but use firstpositive location also. It might be before or after lastneg, depending on the noise
+
+
+    ind_vz=min([max([lastneg-3;1]),firstpos]):max([min([lastneg+3;length(ip_no_nans)])],firstpos);%stay within limits, but use firstpositive location also. It might be before or after lastneg, depending on the noise
     %ind_vz=max([lastneg-3;1]):min([lastneg+3;length(ip)]);%stay within limits
-    ind_vz(isnan(ip(ind_vz)))=[]; %remove nans
+    %ind_vz(isnan(ip(ind_vz)))=[]; %remove nans
     
     %remove identical current values (interp1 complains otherwise)
     %alternative one, add silly noise 
-    ip2=ip+(1:length(ip))*1e-22; %extremely small values.
+    %ip2=ip+(1:length(ip))*1e-22; %extremely small values.
     %ip+wgn(1,length(ip),1)*1e-20) white noise generator is random, so
     %uniqueness might be a problem.
     %alternative two, remove all but one of the non-unique values:
@@ -117,13 +161,13 @@ else
     %ind_vz(delind(I)) = [];
     
     
-    AP.Vz(1)=interp1(ip2(ind_vz),vb(ind_vz),0,'linear','extrap');
+    AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
 
 %        P=polyfit(ip(ind_vz),vb(ind_vz),1);
 %        AP.Vz=polyval(P,0);
     if diag
-        figure(358);plot(vb,ip,'.',vb(ind_vz),ip(ind_vz),'o')
-        vline(AP.Vz,'black-','shit')
+        figure(358);plot(vb,ip,'.',vb_no_nans(ind_vz),ip_no_nans(ind_vz),'o')
+        vline(AP.Vz(1),'black-','AP.Vz')
     end
     
 end

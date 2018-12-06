@@ -7,7 +7,7 @@ ASW_tabindex=[];
 CONT_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926];
 global VFLOATMACROS
 
-debug=[1 1 1];
+debug=[0 0 0];
 
 
 iph0conditions=[];
@@ -32,7 +32,7 @@ iph0conditions.CONT = +1.51e-9;
 dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf'};
 infoflds= {'macroId'};
 
-if debug(1) %PHO.TAB
+if ~debug(1) %PHO.TAB
     PHO= struct_cleanup(XXP,infoflds,dataflds);
     PHO= PHOTABFILE(PHO,iph0conditions,XXP);
 end
@@ -45,71 +45,70 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     filename(end-6:end-4)='ASW';
     folder = strrep(XXP(i).info.file,XXP(i).info.shortname,'');
 
-    if debug(2)    %ASW.TAB
+    if ~debug(2)%ASW.TAB
+
+    twID = fopen(filename,'w+');
+    
+    %quickfix for ASW
+    if ismember(XXP(i).info.macroId,CONT_macros)
+        XXP(i).data.Iph0(:,1)=XXP(i).data.Iph0(:,1)+iph0conditions.CONT;
+    end
+%     delind=find(isnan(XXP(i).data.Iph0(:,1)));
+%     if ~isempty(delind)
+%         for k=1:length(delind)
+%             XXP(i).data.Iph0(delind(k),1)= SATURATION_CONSTANT;
+%         end
+%     end
+%     
+%    
+
+    %This line can generate strange error if SATURATION_CONSTANT isn't
+    %already well defined
+
+    XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=SATURATION_CONSTANT;
+    
+    %fix contamination issues)
+    path_to_mat_file='MIP_v23_forlapdog.mat';
+    %    path_to_mat_file='MIP_v23_forlapdog.mat';
+    XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
+    
+    dummy_ne=SATURATION_CONSTANT;
+    dummy_Te_XCAL=SATURATION_CONSTANT;
+    dummy_qv=1.0;
+    dummy_v_ion=SATURATION_CONSTANT;
+    %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
+    
+
+    for j = 1:len
         
-        twID = fopen(filename,'w+');
+        %remember i & j !!!
+        str1=sprintf('%s, %s, %16s, %16s,',XXP(i).data.Tarr{j,:});
+        %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
+        str2=sprintf(' %14.7e, %2.1f,',dummy_ne,dummy_qv);
+        str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv);
+        str4=sprintf(' %14.7e, %2.1f,',XCAL_struct.ionV(j),dummy_qv);
+        str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.asm_Te_exp_belowVknee(j,1),dummy_qv);
+        str6=sprintf(' %14.7e, %2.1f,',XCAL_struct.Te(j),dummy_qv);
+        str7=sprintf(' %14.7e, %2.1f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
+        str8=sprintf(' %05i',XXP(i).data.qf(j));
         
-        %quickfix for ASW
-        if ismember(XXP(i).info.macroId,CONT_macros)
-            XXP(i).data.Iph0(:,1)=XXP(i).data.Iph0(:,1)+iph0conditions.CONT;
-        end
-        %     delind=find(isnan(XXP(i).data.Iph0(:,1)));
-        %     if ~isempty(delind)
-        %         for k=1:length(delind)
-        %             XXP(i).data.Iph0(delind(k),1)= SATURATION_CONSTANT;
-        %         end
-        %     end
-        %
-        %
-        
-        %This line can generate strange error if SATURATION_CONSTANT isn't
-        %already well defined
-        
-        XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=SATURATION_CONSTANT;
-        
-        %fix contamination issues)
-        path_to_mat_file='MIP_v23_forlapdog.mat';
-        %    path_to_mat_file='MIP_v23_forlapdog.mat';
-        XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
-        
-        dummy_ne=SATURATION_CONSTANT;
-        dummy_Te_XCAL=SATURATION_CONSTANT;
-        dummy_qv=1.0;
-        dummy_v_ion=SATURATION_CONSTANT;
-        %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
-        
-        
-        for j = 1:len
-            
-            %remember i & j !!!
-            str1=sprintf('%s, %s, %16s, %16s,',XXP(i).data.Tarr{j,:});
-            %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
-            str2=sprintf(' %14.7e, %2.1f,',dummy_ne,dummy_qv);
-            str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv);
-            str4=sprintf(' %14.7e, %2.1f,',XCAL_struct.ionV(j),dummy_qv);
-            str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.asm_Te_exp_belowVknee(j,1),dummy_qv);
-            str6=sprintf(' %14.7e, %2.1f,',XCAL_struct.Te(j),dummy_qv);
-            str7=sprintf(' %14.7e, %2.1f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
-            str8=sprintf(' %05i',XXP(i).data.qf(j));
-            
-            strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
-            row_bytes= fprintf(twID,'%s\r\n',strtot);
-        end
-        
-        ASW_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
-        ASW_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
-        %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
-        ASW_tabindex(end).first_index = XXP(i).info.firstind;    % Correct? /Erik P G Johansson 2018-11-16
-        ASW_tabindex(end).no_of_rows = len;                % length(foutarr{1,3}); % Number of rows
-        ASW_tabindex(end).no_of_columns = 15;            % Number of columns
-        % usc_tabindex{end,6] = an_ind(i);
-        ASW_tabindex(end).type = 'ASW'; % Type
-        ASW_tabindex(end).timing = XXP(i).info.timing;
-        ASW_tabindex(end).row_byte = row_bytes;
-        fclose(twID);
-        
+        strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
+        row_bytes= fprintf(twID,'%s\r\n',strtot);
+    end
+
+    ASW_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
+    ASW_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
+    %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
+    ASW_tabindex(end).no_of_rows = len;                % length(foutarr{1,3}); % Number of rows
+    ASW_tabindex(end).no_of_columns = 15;            % Number of columns
+    % usc_tabindex{end,6] = an_ind(i);
+    ASW_tabindex(end).type = 'ASW'; % Type
+    ASW_tabindex(end).timing = XXP(i).info.timing;
+    ASW_tabindex(end).row_byte = row_bytes;
+    fclose(twID);
+
     end %debug(2)
-    if debug(3)%USC.TAB
+    if ~debug(3)%USC.TAB
         if  any(ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{1})) || any(ismember(dec2hex(XXP(i).info.macroId),VFLOATMACROS{2}))
             
             
@@ -206,6 +205,8 @@ groupind=[];
 
 
 rowcount=0;
+%prepare array with a bit or function that adds unique & different
+%qualityflags together
 qf_array  = accumarray(inter,lapstruct.qf,[],@(x) frejonbitor(unique(x)));
 
 
@@ -433,6 +434,8 @@ for i = min(inter):max(inter) %main for loop
             rowcount=rowcount+1;
             PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
             PHO_tabindex(end).row_byte = row_byte; %will repeatedly get overwritten until  PHO_tabindex(end+1).fname = filename;        is called
+            %PHO_tabindex(end).timing{3} = resampled.tO(k);      
+%        timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
 
         else
             %first file in array, no valid points.

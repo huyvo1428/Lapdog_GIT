@@ -58,7 +58,7 @@ load_lapdog_runspis=0;
 if load_lapdog_runspis
     load(dumplapdog_runspis.mat)
 else
-    save dump_lapdog_runspis
+    %save dump_lapdog_runspis
 end
 
 
