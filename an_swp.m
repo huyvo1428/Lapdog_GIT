@@ -74,6 +74,7 @@ ip = ip(ind);
 
 
     ip_no_nans=ip+(1:length(ip))*1e-22; %extremely small values of noise, sometimes needed for extrapolation.
+    vb_no_nans=vb;
     vb_no_nans(isnan(ip))=[];
     ip_no_nans(isnan(ip))=[];%remove nans.
 
@@ -99,15 +100,25 @@ if((min(ip) >= 0) || (max(ip) <= 0)) % NB:There is a "return" command in here
     
     ind_vz = length(ip_no_nans)-3:length(ip_no_nans); % 4 points
     %ind_vz(isnan(ip(ind_vz)))=[]; %remove nans
-    AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
+    
+    P=polyfit(ip_no_nans(ind_vz),vb_no_nans(ind_vz),1);
+    AP.Vz(1)=polyval(P,0);
+    
+    if (AP.Vz(1))<0;       AP.Vz(1)=nan;end %Only a horrible fit would reveal something like this.
+    
+  %  AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
 
     else % I don't think this is actually necessary. V_S/C will never be >+30V, surely.
         
 
     ind_vz = 1:4; % 4 points
     %ind_vz(isnan(ip(ind_vz)))=[]; %remove nans
-    AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
+    P=polyfit(ip_no_nans(ind_vz),vb_no_nans(ind_vz),1);
+    AP.Vz(1)=polyval(P,0);
+    
+    %AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
 
+    
     end
     
 
@@ -136,7 +147,7 @@ else
     end
     
 %     if length(ip)>lastneg && ~isnan(ip(lastneg+1))
-% 
+
 %         ind_vz=[lastneg;lastneg+1];
 %         P=polyfit(ip(ind_vz),vb(ind_vz),1);
 %         AP.Vz=interp1(ip(ind_vz),vb(ind_vz),0);
@@ -161,8 +172,11 @@ else
     %ind_vz(delind(I)) = [];
     
     
-    AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
-
+   % AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
+    P=polyfit(ip_no_nans(ind_vz),vb_no_nans(ind_vz),1);
+    AP.Vz(1)=polyval(P,0);
+    
+    
 %        P=polyfit(ip(ind_vz),vb(ind_vz),1);
 %        AP.Vz=polyval(P,0);
     if diag
