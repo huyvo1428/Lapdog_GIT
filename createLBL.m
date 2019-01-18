@@ -17,10 +17,13 @@
 % failFastDebugMode
 %   1/True  : Fail fast, generate errors. Good for debugging and production of datasets for official delivery.
 %   0/False : Continue running for errors. Less messages. Useful if one does not really care about LBL files.
+% saveCallerWorkspace
+%   1/True  : Try to save MATLAB workspace to file. If intended path is already used, do not write but fail silently.
+%   0/False : Do not save MATLAB workspace to file.
 % varargin
 %   <Empty>  : Use Lapdog variable for dataset path.
-%   1 string : Dataset path to use. Not needed by Lapdog, but by separate code that runs createLBL for potentially moved
-%              dataset.
+%   1 string : Dataset path to use.
+%              NOTE: Not needed by Lapdog, but by separate code that runs createLBL for potentially moved dataset.
 %
 %
 % IMPLEMENTATION NOTES, RATIONALE
@@ -71,7 +74,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % saving (to maximize backward compatibility).
     % (NEED? : Caller decides if DERIV1 or EDDER.)
     % --
-    % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex.
+    % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex, SATURATION_CONSTANT-->MISSING_CONSTANT.
     % PROPOSAL: Only save input to create_LBL_files in .mat file.
     %   PRO: Avoids problem of saving/loading global variables.
     %   CON: Sensitive to problems with .mat files not being backward-compatible.
@@ -92,6 +95,33 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %
     % PROPOSAL: Iterate over caller workspace variables and import all of them to a struct, instead of separately.
     %   ~CON: Still do not want to save this struct for backward compatibility.
+    %
+    % PROPOSAL: Argument for only trying to generate for data products belonging to CALIB2 or DERIV2.
+    %   CON: Lapdog should preferably not have any knowledge of which data products belong to which archiving level.
+    %
+    % TODO-DECISION: What to do about slow save -v7.3?
+    %   PROPOSAL: Only use -v7.3 "when necessary" (ESC3, PRL).
+    %       PROPOSAL: Seems unreasonably slow even to be used once.
+    %   PROPOSAL: Split up variables into multiple files. Store "index" separately, possibly in multiple .mat files.
+    %       PROPOSAL: Stora all variables except index in one files, and index in one/several others.
+    %           Ex: save('test2.mat', '-regexp', '^(?!(index)$).')
+    %   PROPOSAL: Do not store all of "index".
+    %       PROPOSAL: Delete indices not mentioned in tabindex, an_tabindex etc.
+    %           TODO-NEED-INFO: Find out if saves any space without changing indices.
+    %       PROPOSAL: Remove index.lblfile or index.tabfile (assuming they are analogous). (Assertion?)
+    %           NOTE: create_LBL_files does not seem to use index.tabfile, .macrostr, .t0str, .t1str, sct0str, .sct1str.
+    %               NOTE: The timestamps might be useful some time though.
+    %           NOTE: Experiment: Removing .tabfile index-->index2
+    %                index       1x781078            2457080816  struct
+    %                index2      1x781078            2074399932  struct
+    %       PROPOSAL: .t0str, .t1str, .macrostr all have lot of empty whitespace that can likely be removed. Remove the
+    %                 whitespace.
+    %   PROPOSAL: Save to other data format.
+    %   PROPOSAL: Remove certain other variables from saving.
+    %       Ex: MIP
+    %
+    % PROPOSAL: Change to permit overwrite.
+    % PROPOSAL: Remove "index" from pre_createLBL_workspace.mat.
     
     
     
@@ -108,15 +138,11 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % Use constructor for checking consistency with global values.
     % NOTE: Needed to find path to .mat file, and must hence precede it.
     %====================================================================
-    global SATURATION_CONSTANT
-    global N_FINAL_PRESWEEP_SAMPLES    
-    C = createLBL.constants(SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES);
-    clear SATURATION_CONSTANT
-    clear N_FINAL_PRESWEEP_SAMPELS
+    C = createLBL.constants();
 
     %===============================================================
-    % Derive ldDatasetPath
-    % ------------------
+    % Derive ldDatasetPath, pdDatasetPath
+    % -----------------------------------
     % NOTE: Needed for saving .mat file, and must hence precede it.
     %===============================================================
     if length(varargin) == 0
@@ -139,6 +165,9 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % IMPLEMENTATION NOTE: Variables are declared global in the caller/base workspace so that they can be saved to .mat
     % file. All global variables are declared global, just to make sure that no new ones are missed in case ~createLBL
     % has to be modified after a dataset has been generated.
+    % Could iterate over list of specific global variables, but then there are the risks of
+    % (1) misspelling, and
+    % (2) missing new global variables, leading to .mat incompatibility.
     %===================================================================================================================
     globalVarsList = who('global');
     % globalVarsList = {'N_FINAL_PRESWEEP_SAMPLES', 'SATURATION_CONSTANT', 'tabindex', 'an_tabindex', ...
@@ -149,6 +178,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
         %fprintf('Declare global variable in caller workspace: "%s"\n', cmd)    % DEBUG
         %eval(       sprintf('global %s', globalVarsList{iVar}));
     end
+    index = evalin(MWS, 'index');
     %===================================================================================================================
     % (Optionally) Save MATLAB CALLER WORKSPACE to file
     % -------------------------------------------------
@@ -161,9 +191,32 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %===================================================================================================================
     if saveCallerWorkspace
         savedWorkspaceFile = fullfile(ldDatasetPath, C.PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
-        fprintf('Saving ~pre-createLBL MATLAB workspace+globals in "%s"\n', savedWorkspaceFile);
-        evalin(MWS, sprintf('save(''%s'')', savedWorkspaceFile))                                        % NOTE: evalin
-        fprintf('    Done\n');
+        fprintf('Saving pre-createLBL MATLAB workspace+globals in "%s"\n', savedWorkspaceFile);
+        if exist(savedWorkspaceFile, 'file')
+            fprintf('    Ignoring - There already is such a file/directory. Will not overwrite.\n', savedWorkspaceFile)
+        else
+            % IMPLEMENTATION NOTE: It has been observed (2018-12-01) that variable "index" can be too large to save to
+            % disk for PRL and ESC3, thus generating a warning message "Warning: Variable 'index' cannot be saved to a
+            % MAT-file whose version is older than 7.3.". Note that it is a warning, not an error. Lapdog continues to
+            % execute, but the .mat file saved to disk simply does not contain the "index" variables. One should in
+            % principle be able to solve this by using flag "-v7.3" but experience is that this is (1) impractically
+            % slow, and (2) result in much larger .mat files.
+            
+            saveCmd = sprintf('save(''%s'')', savedWorkspaceFile);    % TEMPORARY. Should really exclude "index" variable.
+            executionBeginDateVec = clock;
+            evalin(MWS, saveCmd)                         % NOTE: evalin
+            fprintf('    Done: %.0f s (elapsed wall time)\n', etime(clock, executionBeginDateVec));
+            
+            try
+                % EXPERIMENTAL CODE
+                savedIndexPathPrefix = fullfile(ldDatasetPath, C.PRE_CREATELBL_SAVED_INDEX_PREFIX);
+                fprintf('Saving pre-createLBL MATLAB "index" in "%s*"\n', savedIndexPathPrefix);
+                EJ_lapdog_shared.utils.store_split_array.save(index, savedIndexPathPrefix, C.N_INDEX_INDICES_PER_PART)
+                fprintf('    Done: %.0f s (elapsed wall time)\n', etime(clock, executionBeginDateVec));
+            catch Exception
+                warning('EJ_lapdog_shared.utils.store_split_array.save failed to save "index" variable to disk.')
+            end
+        end
     end
 
 
@@ -215,10 +268,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     
     clfd = [];   % CLFD = create_LBL_files data
     clfd.ldDatasetPath     = ldDatasetPath;
-    clfd.pdDatasetPath     = pdDatasetPath;  
-    clfd.lblTime           = evalin(MWS, 'lbltime');
-    clfd.lblEditor         = evalin(MWS, 'lbleditor');
-    clfd.lblRev            = evalin(MWS, 'lblrev');
+    clfd.pdDatasetPath     = pdDatasetPath;
     clfd.metakernel        = get_lapdog_metakernel();   % NOTE: Technically not part of the Lapdog state. Useful.
     
     clfd.index             = evalin(MWS, 'index');
@@ -226,10 +276,10 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     clfd.an_tabindex       = an_tabindex;
     clfd.blockTAB          = evalin(MWS, 'blockTAB');
     clfd.ASW_tabindex      = ASW_tabindex;
-    clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable name slightly.
+    clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable case for consistency.
     clfd.PHO_tabindex      = PHO_tabindex;
     
-    clfd.A1P_tabindex      = der_struct;     % Changing variable name.
+    clfd.A1P_tabindex      = der_struct;     % Changing variable name for consistency.
     clfd.C                 = C;
     clfd.failFastDebugMode = failFastDebugMode;
     clfd.generatingDeriv1  = generatingDeriv1;
@@ -244,5 +294,5 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % Therefore, older versions of variables may be available when there should be no data and it is not possible for the calling code to tell the difference. If possible, create_LBL_files
     % should try to ignore these data.
     createLBL.create_LBL_files(clfd)
-    
+
 end

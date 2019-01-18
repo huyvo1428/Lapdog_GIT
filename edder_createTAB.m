@@ -470,22 +470,25 @@ end
 
 
 function [IxS_nBytesPerRow, IxS_nColumns, BxS_nBytesPerRow] = write_IxS_BxS(edited1ColumnsListList, IxS_fid, BxS_fid, INITIAL_SWEEP_SMPLS_array)
-    global N_FINAL_PRESWEEP_SAMPLES   % IMPLEMENTATION NOTE: Not put in edder_createTAB_derive_IxS_BxS to facilitate automatic testing.
-    global SATURATION_CONSTANT
-    MISSING_CONSTANT = SATURATION_CONSTANT;
+    % IMPLEMENTATION NOTE: edder_createTAB_derive_IxS_BxS does not call createLBL.constants to facilitate automatic testing.
+    C = createLBL.constants();
+    
+    
     
     [BxS_relativeTime, BxS_voltageArray, IxS_utc12, IxS_obt12, IxS_currentArrays] = ...
         edder_createTAB_derive_IxS_BxS(...
-        cellfun(@(c) (c{1}), edited1ColumnsListList, 'UniformOutput', false), ...
-        cellfun(@(c) (c{2}), edited1ColumnsListList, 'UniformOutput', false), ...
-        cellfun(@(c) (c{3}), edited1ColumnsListList, 'UniformOutput', false), ...
-        cellfun(@(c) (c{4}), edited1ColumnsListList, 'UniformOutput', false), ...        
-        INITIAL_SWEEP_SMPLS_array, ...
-        N_FINAL_PRESWEEP_SAMPLES, MISSING_CONSTANT);
+            cellfun(@(c) (c{1}), edited1ColumnsListList, 'UniformOutput', false), ...
+            cellfun(@(c) (c{2}), edited1ColumnsListList, 'UniformOutput', false), ...
+            cellfun(@(c) (c{3}), edited1ColumnsListList, 'UniformOutput', false), ...
+            cellfun(@(c) (c{4}), edited1ColumnsListList, 'UniformOutput', false), ...        
+            INITIAL_SWEEP_SMPLS_array, ...
+            C.N_FINAL_PRESWEEP_SAMPLES, C.MISSING_CONSTANT);
         
         potout(1:2:2*length(BxS_relativeTime)) = BxS_relativeTime;
         potout(2:2:2*length(BxS_relativeTime)) = BxS_voltageArray;
+        
         fprintf(BxS_fid,'%14.7e, %14i\r\n', potout);   % Create BxS TAB file.
+        
         BxS_nBytesPerRow = NaN;   % Not bothered setting correctly since should not be needed by createLBL.
     
         for i = 1:numel(edited1ColumnsListList)
@@ -497,5 +500,4 @@ function [IxS_nBytesPerRow, IxS_nColumns, BxS_nBytesPerRow] = write_IxS_BxS(edit
         end
         IxS_nBytesPerRow = b2 + b3 + b4;
         IxS_nColumns = 4 + length(IxS_currentArrays{1});
-
 end

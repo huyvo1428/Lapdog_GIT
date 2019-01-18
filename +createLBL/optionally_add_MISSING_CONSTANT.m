@@ -14,6 +14,8 @@
 % Initially created 2018-04-10 by Erik P G Johansson, IRF Uppsala.
 %
 function oc = optionally_add_MISSING_CONSTANT(addMissingConstant, missingConstant, oc, descriptionAmendment)
+    % PROPOSAL: Move into createLBL.definitions.
+    
     % ASSERTION
     % IMPLEMENTATION NOTE: Assertion here to guard against caller confusing arguments with each other.
     if ~(islogical(addMissingConstant) || ismember(addMissingConstant, [0,1]))

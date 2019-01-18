@@ -9,8 +9,8 @@
 % rawCurrentArrays          : {iFile}(jSample) = double
 % rawVoltageArrays          : {iFile}(jSample) = double
 % INITIAL_SWEEP_SMPLS_array : Array of the values of PDS keyword LAP_Px_INITIAL_SWEEP_SMPLS.
-% nFinalPresweepSamples     : Number of positions of pre-sweep samples+ (fill values or not) that the output should
-%                             contain.
+% nFinalPresweepSamples     : Number of positions of pre-sweep samples (both fill values and real samples) that
+%                             the output should contain.
 % MISSING_CONSTANT          : PDS keyword MISSING_CONSTANT value. Used as fill value to represent missing values.
 % 
 %
@@ -23,7 +23,7 @@
 % IxS_currentArrays     : {iEdited1File}(iTime)
 %
 %
-% Terminology, definitions of terms
+% TERMINOLOGY, DEFINITIONS OF TERMS
 % =================================
 % true sweep              = The actual, intended sweep during which the bias changes in regular, same-sized steps.
 %                           All true sweeps (within a command block) should have the same length.
@@ -36,12 +36,14 @@
 % final pre-sweep samples = "true pre-sweep samples" + (optionally) fill values preceeding them. 
 %
 %
+% NOTES
+% =====
 % NOTE: As I recall, LAP_Px_INITIAL_SWEEP_SMPLS can be wrong sometimes (very, very large values). Unclear if bug in pds
 % or bitstream/TM. /Erik P G Johansson 2018-07-20.
 % NOTE: This function should be able to handle (correct for) one bad INITIAL_SWEEP_SMPLS value within command block (due to pds bug).
 % NOTE: This function should not be able to handle zero sweeps.
-% IMLEMENTATION NOTE: Does not directly reference global variable N_FINAL_PRESWEEP_SAMPLES to simplify automatic testing.
-% Receives values via argument instead.
+% IMLEMENTATION NOTE: Implementation does not directly reference createLBL.constants
+% (N_FINAL_PRESWEEP_SAMPLES, MISSING_CONSTANT) to simplify automatic testing. Receives values via argument instead.
 %
 %
 % Initially created 2018-07-17 by Erik P G Johansson, IRF Uppsala, Sweden.

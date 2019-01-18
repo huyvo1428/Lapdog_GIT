@@ -1,19 +1,27 @@
 %
 % DESIGN INTENT
 % =============
-% Class which stores hard-coded data related to specific LBL files, at least columns. Presently a bit unclear exactly
-% what hard-coded data should be incldued.
-% Should at least collects functions which define and return data structures defining LBL files, one file/data type per function.
+% Class which stores hard-coded data related to the creation of LBL files. Should at least collect functions which
+% define and return data structures defining LBL files, one file/data type per function.
 %
-% The class is instantiated with variable values which are likely constant during a session, and can be used by
-% the methods (e.g. whether EDDER/DERIV1, MISSING_CONSTANT).
+% The class is instantiated with variable values which are anyway likely constant during a session, and can be used by
+% the methods (e.g. whether EDDER/DERIV1, MISSING_CONSTANT etc).
+%
+% The class is not supposed to use createLBL.constants (no hard reason).
+% The class is supposed to be immutable.
+% The class is intended to NOT have an interface to Ladog variables (e.g. tabindex) directly.
+%
+% The class should not use any global variables, and not know which data product belongs to which archiving level.
+% NOTE: The class indirectly "knows" which data products are L5 since it removes ROSETTA:* PDS keywords for these. This
+% is otherwise against the design intent.
 %
 %
 % NAMING CONVENTIONS, CONVENTIONS
 % ===============================
-% data      : Refers to LBL file data
-% OCL       : Object Column List
-% KVL, KVPL : Key-Value (pair) List
+% data : Refers to LBL file data
+% OCL  : Object Column List
+% KVPL : Key-Value Pair List
+% PLKS : Pds (s/w) Label Keyword Source (file(s)). EDITED1/CALIB1 label file from which information is retrieved.
 % --
 % Only uses argument flags for density mode (true/false). It is implicit that E field is the inverse.
 %
@@ -21,26 +29,23 @@
 % Initially created 2018-09-12 by Erik P G Johansson, IRF Uppsala.
 %
 classdef definitions < handle
+    % PROPOSAL: Change class to immutable non-handle class.
+    %
     % PROPOSAL: POLICY; Should collect hard-coded data.
     %           ==> Should not write LBL files.
     % NEED: The caller should have control over error-handling, LBL-TAB consistency checks.
-    %
-    % TODO-DECISION: Use filenaming conventions consistently for naming corresponding functions.
     %
     % PROPOSAL: Better name.
     %   PROPOSAL: definition_creator, LBL_definition_creator.
     %       CON: Bad if using class for updating LBL header in the future.
     %
-    % TODO-DECISION: These functions set the "useFor" field. Should they? The field does not define columns as such but is
-    %                related to LBL start & stop timestamps which are otherwise set outside of this class.
-    % PROPOSAL: Submit (instance of) createLBL.constants instead of having field for MISSING_CONSTANT.
-    %   TODO-DECISION: Are there other similar cases? N_FINAL_SWEEP_SAMPLES? 
+    % PROPOSAL: Submit (instance of) createLBL.constants instead of having field for MISSING_CONSTANT, N_FINAL_SWEEP_SAMPLES.
+    % PROPOSAL: Internally call createLBL.constants to eliminate arguments.
     %
     % PROPOSAL: Help functions for setting specific types of column descriptions.
     %   PRO: Does not need to write out struct field names: NAME, DESCRIPTION etc.
     %   PRO: Automatically handle EDDER/DERIV1 differences.
     %   --
-    %   TODO-DECISION: How handle MISSING_CONSTANT?
     %   TODO-DECISION: Need to think about how to handle DERIV2 TAB columns (here part of DERIV1)?
     %   --
     %   PROPOSAL: Automatically set constants for BYTES, DATA_TYPE, UNIT (implicit from choice of helper function).
@@ -54,16 +59,59 @@ classdef definitions < handle
     %           PROPOSAL: Assertion that name ends with "TIME_UTC".
     %       PROPOSAL: oc_OBT(name, descrStr)
     %           NOTE: BYTES=16 always
+    %
+    % TODO-DECISION: How handle difference root-level and OBJECT=TABLE-level DESCRIPTION ?
+    %   PROPOSAL: Eliminate one of them.
+    %   PROPOSAL: Have both be identical.
+    %   NOTE: Root-level DESCRIPTION can be inherited from pds.
+    %
+    % PROPOSAL: Modify ROSETTA:LAP_Px_ADC16_FILTER to upper case?
+    %   NOTE: Currently done in delivery code.
+    %
+    % PROPOSAL: Consistent system for lower-/uppercase for class instance fields.
+    %
+    % PROPOSAL: Function for extracting flags from filename/PRODUCT_ID.
+    %   PRO: Can have assertions.
+    %   PROPOSAL: Use, combine with delivery code's classification function.
+    %       CON: The delievry code does not contain one such function, but several "decision functions" which are very
+    %            different. Those do not extract these variables or anything similar.
+    %           PRO: They decide on whether to copy file, if HK, if ODL-to-update, new filename.
+    %
+    % PROPOSAL: Move keyword removal functionality from delivery code to here.
+    %   OhChanges.RemoveKeysList   = {'ROSETTA:LAP_P1_INITIAL_SWEEP_SMPLS', 'ROSETTA:LAP_P2_INITIAL_SWEEP_SMPLS'};   % For "all" ODL files.
+    %   OhChanges.RemoveKeysListHk = {'INSTRUMENT_MODE_ID', 'INSTRUMENT_MODE_DESC'};    % Specific for HK.
+    %   CON: Can not modify HK LBL in Lapdog.
+    %
+    % PROPOSAL: Move optionally_add_MISSING_CONSTANT into createLBL.definitions.
+    %
+    % PROPOSAL: Make the data type functions have access to full EDITED1/CALIB1 LBL file contents.
+    %   TODO-DECISION: Proper name/term.
+    %       PROPOSAL: "source label file", "template label file", "IDP label file"
+    %   TODO-DECISION: How handle timestamps (START_TIME etc)?
+    %   PROPOSAL: Receive file path and read file itself.
+    %       CON: Too much repetition between data products (more than in create_LBL_files, since some loops cover
+    %            multiple types).
     %   --
-    % PROPOSAL: Methods return LABEL_REVISION_NOTE.
-    % PROPOSAL: Methods filter header keywords.
-    % PROPOSAL: Methods Return entire LblData sent to create_OBJTABLE_LBL_file.
-    %   NOTE: Needs arguments for inherited HeaderKvpl (incl. timestamps?).
-    %   PRO: Can set LABEL_REVISION_NOTE. Needs no new return argument.
-    %   PRO: Can set table DESCRIPTION. Needs no return argument.
+    %   NOTE: Some data types use the same EDITED1/CALIB1 LBL file.
+    %       Ex: IxS & BxS, PSD & FRQ (if not removing all keywords stemming from EDITED1/CALIB1).
+    %   NOTE: EST uses 1-2 CALIB1 files.
+    %   --
+    %   CON: Same procedure for many data types. create_LBL_files groups code for many data types.
+    %   PRO: Clearer what is done for every data type. Otherwise it is create_LBL_files that decides.
+    %       Ex: Some datatypes do and some do not read from EDITED1/CALIB1 LBL files. 
+    %           Ex: BLKLIST, ASW etc ignore.
+    %       Ex: As is now it is not clear if needs to remove ROSETTA:* keywords or INSTRUMENT_MODE_*.
+    %           ASW,USC,PHO,NPL do not read CALIB1 file and hence does not at all have access to those files.
+    %
+    % 
+    %
+    % BUG/TODO: Somehow handle that ASW, USC DESCRIPTION (root-level), now inherited from CALIB1 (cryptic pds strings).
+    % PROPOSAL: Copy whitelisted values from EDITED1/CALIB1 header: ROSETTA:*, INSTRUMENT_MODE_* instead of current model
+    %           (copy all except for blacklist).
+    %
+    % PROPOSAL: Function for setting/removing the root-level (header) DESCRIPTION and OBJECT=TABLE-level DESCRIPTION.
+    %   PRO: Can incorporate a global policy for which DESCRIPTION keywords to actually use: both, or one of them.
 
-
-    
     properties(Access=private)
         % NO_ODL_UNIT: Constant to be used for LBL "UNIT" fields meaning that there is no unit.
         % This means that it is known that the quantity has no unit rather than that the unit
@@ -72,11 +120,16 @@ classdef definitions < handle
         
         ODL_VALUE_UNKNOWN  = 'UNKNOWN';   %'<Unknown>';  % Unit is unknown. Should NOT be used for official deliveries.
 
+        % Assigned via constructor argument, not the createLBL.constants object/class. Capitalized since it is a PDS
+        % keyword.
         MISSING_CONSTANT
-        nFinalPresweepSamples
+        nFinalPresweepSamples   % Assigned via constructor argument, not the createLBL.constants object/class.
+        indentationLength
+
         generatingDeriv1
+        HeaderAllKvpl
         
-        MC_DESC_AMENDM       % Generic description string of MISSING_CONSTANT (MC). Is added at end of DESCRIPTION.
+        MC_DESC_AMENDM       % Generic description string for MISSING_CONSTANT (MC). Is added at end of DESCRIPTION.
         QFLAG1_DESCRIPTION = 'Quality flag constructed as the sum of multiple terms, depending on what quality related effects are present. From 00000 (best) to 77777 (worst).';
         QVALUE_DESCRIPTION = 'Quality value in the range 0 (worst) to 1 (best). Corresponds to goodness of fit or how well the model fits the data.';
         
@@ -88,27 +141,30 @@ classdef definitions < handle
         CURRENT_BIAS_DESC
         CURRENT_MEAS_DESC
     end
-    
-    
-    
+
+
+
     methods(Access=public)
         
         % Constructor
-        function obj = definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples)
+        function obj = definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples, indentationLength, HeaderAllKvpl)
+            
             % ASSERTIONS
             assert(isscalar(nFinalPresweepSamples) && isnumeric(nFinalPresweepSamples))
             assert(isscalar(MISSING_CONSTANT)      && isnumeric(MISSING_CONSTANT))
             
-            
+
             
             obj.MISSING_CONSTANT      = MISSING_CONSTANT;
             obj.nFinalPresweepSamples = nFinalPresweepSamples;
+            obj.indentationLength     = indentationLength;
             obj.generatingDeriv1      = generatingDeriv1;
+            obj.HeaderAllKvpl         = HeaderAllKvpl;
             
             obj.MC_DESC_AMENDM        = sprintf(' A value of %e refers to that there is no value.', obj.MISSING_CONSTANT);    % Amendment to other strings. Therefore begins with whitespace.
             
-            % Set PDS keywords to use for column descriptions which differ between EDITED2/EDDER and DERIV/CALIB2
-            % ---------------------------------------------------------------------------------------------------
+            % Set PDS keywords to use for column descriptions which differ between EDDER and DERIV1
+            % -------------------------------------------------------------------------------------
             % IMPLEMENTATION NOTE: Some are meant to be used on the form obj.DATA_UNIT_CURRENT{:} in object column description struct declaration/assignment, "... = struct(...)".
             % This makes it possible to optionally omit the keyword, besides shortening the assignment when non-empty. This is not
             % currently used though.
@@ -134,27 +190,55 @@ classdef definitions < handle
                 obj.CURRENT_MEAS_DESC = 'Measured current.';
             end
         end
-        
-        
-        
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_BLKLIST_data(obj)
-            table_DESCRIPTION = 'Blocklist data. Start & stop time and macro ID of executed macro blocks.';
+
+
+
+        function LblData = get_BLKLIST_data(obj, LhtKvpl)
+            HeaderKvpl = obj.HeaderAllKvpl.append(LhtKvpl);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-27', 'EJ', 'Descriptions clean-up, lowercase'}});
             
+            HeaderKvpl = HeaderKvpl.append_kvp('DESCRIPTION', 'Block list. A list of executed macro blocks during one UTC day.');
+
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = 'Table containing start and stop times, and macro ID of macro blocks executed during one UTC day.';
+            
+            %================
+            % Define columns
+            %================
             ocl = [];
             ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',       'DESCRIPTION', 'Start time of macro block, YYYY-MM-DD HH:MM:SS.sss.');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',       'DESCRIPTION', 'Last start time of macro block file YYYY-MM-DD HH:MM:SS.sss.');    % Correct? File?
+            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',       'DESCRIPTION', 'Last start time of data in macro block, YYYY-MM-DD HH:MM:SS.sss.');    % Correct? "Last start time"?
             ocl{end+1} = struct('NAME', 'MACRO_ID',       'DATA_TYPE', 'CHARACTER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Hexadecimal macro identification number.');
-            OBJECT_COLUMN_list = ocl;
+            
+            LblData.OBJTABLE.OBJCOL_list = ocl;
         end
         
         
-        
-        % IMPLEMENTATION NOTE: Just using table_DESCRIPTION as argument and return value without modification to maintain similarity
-        % with other functions for the moment. Might want to eliminate later.
-        %
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_IVxHL_data(obj, isDensityMode, probeNbr, table_DESCRIPTION)
-            table_DESCRIPTION = table_DESCRIPTION;   % No modification(!)
+                
+        function LblData = get_IVxHL_data(obj, LhtKvpl, firstPlksFile, isDensityMode, probeNbr, isLf)
             
+            [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
+            HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
+            HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Removed bias keywords'}, ...
+                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}});
+            HeaderKvpl = createLBL.definitions.remove_bias_keywords(HeaderKvpl);
+            
+            % Macros 710, 910 LF changes the downsampling and moving average cyclically. Therefore the true values of
+            % these keywords alternate in value over time. Therefore they should be removed (in agreement with LAP team
+            % and ESA-PSA).
+            % NOTE: No assertion on actual removal of keywords.
+            if isLf && any(strcmp(HeaderKvpl.get_value('INSTRUMENT_MODE_ID'), {'MCID0X0710', 'MCID0X0910'}))
+                HeaderKvpl = HeaderKvpl.diff({'ROSETTA:LAP_P1P2_ADC20_DOWNSAMPLE', 'ROSETTA:LAP_P1P2_ADC20_MA_LENGTH'});
+            end
+            
+            
+            
+            %=======================================
+            % Define columns and global DESCRIPTION
+            %=======================================
             ocl = {};
             ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECONDS', 'BYTES', 26, 'DESCRIPTION', 'UTC time.');
             ocl{end+1} = struct('NAME', 'TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECONDS', 'BYTES', 16, 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
@@ -165,17 +249,21 @@ classdef definitions < handle
                 currentOc = struct('NAME', sprintf('P%i_CURRENT', probeNbr), obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14);
                 voltageOc = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr), obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14);
                 if isDensityMode
+                    % CASE: Density mode
+                    DESCRIPTION_columnList = 'Contains timestamps, measured current, and set voltage bias.';
+                    
                     currentOc.DESCRIPTION = obj.CURRENT_MEAS_DESC;   % measured
                     voltageOc.DESCRIPTION = obj.VOLTAGE_BIAS_DESC;   % bias
                     currentOc = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, currentOc, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));   % NOTE: Modifies currentOc.
-                else   %if isEFieldMode
+                else
+                    % CASE: E field Mode
+                    DESCRIPTION_columnList = 'Contains timestamps, set bias current, and measured voltage.';
+                    
                     currentOc.DESCRIPTION = obj.CURRENT_BIAS_DESC;   % bias
                     voltageOc.DESCRIPTION = obj.VOLTAGE_MEAS_DESC;   % measured
                     voltageOc = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, voltageOc, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));   % NOTE: Modifies voltageOc.
-                %else
-                %    error('Error, bad combination of values isDensityMode and isEFieldMode.');
                 end
                 ocl{end+1} = currentOc;
                 ocl{end+1} = voltageOc;
@@ -187,23 +275,26 @@ classdef definitions < handle
                 if isDensityMode
                     % This case occurs at least on 2005-03-04 (EAR1). Appears to be the only day with V3x data for the
                     % entire mission. Appears to only happen for HF, but not LF.
-                    oc1 = struct('NAME', 'P1_P2_CURRENT', obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', 'Measured current difference.');
+                    DESCRIPTION_columnList = 'Contains timestamps, measured current difference between probes, and set voltage biases on both probes.';
+
+                    oc1 = struct('NAME', 'P1_P2_CURRENT', obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', 'Measured current difference. The difference is derived digitally onboard.');
                     oc2 = struct('NAME', 'P1_VOLTAGE',    obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', obj.VOLTAGE_BIAS_DESC);
                     oc3 = struct('NAME', 'P2_VOLTAGE',    obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', obj.VOLTAGE_BIAS_DESC);
-                    
+
                     oc1 = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, oc1, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));
-                else    %if isEFieldMode
+                else
+                    % CASE: E field Mode
                     % This case occurs at least on 2007-11-07 (EAR2), which appears to be the first day it occurs.
                     % This case does appear to occur for HF, but not LF.
+                    DESCRIPTION_columnList = 'Contains timestamps, set bias currents on both probes, and measured voltage difference between probes.';
+
                     oc1 = struct('NAME', 'P1_CURRENT',    obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', obj.CURRENT_BIAS_DESC);
                     oc2 = struct('NAME', 'P2_CURRENT',    obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', obj.CURRENT_BIAS_DESC);
-                    oc3 = struct('NAME', 'P1_P2_VOLTAGE', obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', 'Measured voltage difference.');
+                    oc3 = struct('NAME', 'P1_P2_VOLTAGE', obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', 'Measured voltage difference. The difference is derived digitally onboard.');
                     
                     oc3 = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, oc3, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));
-                %else
-                %    error('Error, bad combination of values isDensityMode and isEFieldMode.');
                 end
                 ocl(end+1:end+3) = {oc1; oc2; oc3};
                 
@@ -212,25 +303,69 @@ classdef definitions < handle
             % Add quality flag column.
             if obj.generatingDeriv1
                 ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', obj.NO_ODL_UNIT, 'BYTES',  5, ...
-                    'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+                    'DESCRIPTION', obj.QFLAG1_DESCRIPTION);    % Includes copy of cryptic EDITED1/CALIB1 DESCRIPTION. Ex: D_P1_RAW_16BIT.
             end
             
-            OBJECT_COLUMN_list = ocl;
+            LblData.OBJTABLE.OBJCOL_list = ocl;
             
-        end
+            %==========================================================
+            % Derive DESCRIPTION substrings to use for different cases
+            %==========================================================
+            if isLf ; HF_LF_str = 'LF';
+            else      HF_LF_str = 'HF';
+            end
+            if probeNbr ==3 ; probeStr = 'differential measurements (also known as probe 3, or P3)';
+            else              probeStr = sprintf('probe %i', probeNbr);
+            end
+            if isDensityMode ; modeStr = 'density mode';
+            else               modeStr = 'E field mode';
+            end
+            
+            %=========================
+            % Set DESCRIPTION strings
+            %=========================
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', ...
+                sprintf(...
+                    'Time series of %s data in %s for %s. %s.', ...
+                    HF_LF_str, modeStr, probeStr, FirstPlksSs.DESCRIPTION));
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = [...
+                sprintf(...
+                    'Table of %s data in %s for %s. ', ...
+                    HF_LF_str, modeStr, probeStr), ...
+                DESCRIPTION_columnList];
+        end    % function
         
         
         
-        % BxS
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_BxS_data(obj, probeNbr, table_DESCRIPTION_prefix)
-            table_DESCRIPTION = sprintf('%s. Sweep step bias and time between each step.', table_DESCRIPTION_prefix);   % Remove ref. to old DESCRIPTION? (Ex: D_SWEEP_P1_RAW_16BIT_BIP)
+        % NOTE: Sweeps keep the PDS bias keywords since they give the surrounding bias.
+        function LblData = get_BxS_data(obj, LhtKvpl, firstPlksFile, probeNbr, ixsTabFilename)
             
-            
-            
-            %ocl = [];
-            oc1 = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS');     % NOTE: Always ASCII_REAL, including for EDDER!!!
+            [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
+            HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
+            HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}});
+
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', ...
+                sprintf(...
+                    'Description of the sequence of sweep voltage bias steps. %s.', ...
+                    FirstPlksSs.DESCRIPTION));    % Includes copy of cryptic EDITED1/CALIB1 DESCRIPTION. Ex: D_SWEEP_P1_RAW_16BIT_BIP.);
+
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = sprintf(...
+                ['Table of relative time within sweep, and corresponding voltage bias. This table is shared for all sweeps on', ...
+                ' the same probe and is associated with the sweep data in file %s.'], ...
+                ixsTabFilename);
+
+            %================
+            % Define columns
+            %================
+            oc1 = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS');     % NOTE: Always ASCII_REAL, also for EDDER!
             oc2 = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr), obj.DATA_DATA_TYPE{:},     'BYTES', 14, obj.DATA_UNIT_VOLTAGE{:});
-            
+
             if ~obj.generatingDeriv1
                 oc1.DESCRIPTION = sprintf(['Elapsed time (s/c clock time) from first sweep measurement. ', ...
                     'Negative time refers to samples taken just before the actual sweep for technical reasons. ', ...
@@ -244,24 +379,37 @@ classdef definitions < handle
                 oc2.DESCRIPTION = obj.VOLTAGE_BIAS_DESC;
             end
             
-            %ocl{end+1} = oc1;
-            %ocl{end+1} = oc2;
-            
-            OBJECT_COLUMN_list = {oc1, oc2};
+            LblData.OBJTABLE.OBJCOL_list = {oc1, oc2};
         end
-        
-        
-        
-        % IMPLEMENTATION NOTE: Just using table_DESCRIPTION as argument and return value without modification to maintain similarity
-        % with other functions for the moment. Might want to eliminate later.
-        %
+
+
+
         % nTabColumns : Total number of columns in TAB file. Used to set ITEMS (number of other columns is first
-        % subtracted internally).
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_IxS_data(obj, probeNbr, table_DESCRIPTION, bxsTabFilename, nTabColumns)
-            table_DESCRIPTION = table_DESCRIPTION;   % No modification(!)
+        %               subtracted internally).
+        %
+        % NOTE: Sweeps keep the bias keywords since they give the surrounding bias.
+        function LblData = get_IxS_data(obj, LhtKvpl, firstPlksFile, probeNbr, bxsTabFilename, nTabColumns)
+
+            [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
+            HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
+            HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}});
+
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', ...
+                sprintf('Sweep data, i.e. measured currents while the bias voltage sweeps over a continuous range of values (repeatedly). %s.', ...
+                FirstPlksSs.DESCRIPTION));    % Includes copy of cryptic EDITED1/CALIB1 DESCRIPTION. Ex: D_SWEEP_P1_RAW_16BIT_BIP.
+
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = sprintf(...
+                ['Time series of sweep start and sweep stop timestamps, and measured sweep currents for the different sweep bias voltages.', ...
+                ' The actual bias voltages are specified in file %s.'], ...
+                bxsTabFilename);
             
-            
-            
+            %================
+            % Define columns
+            %================
             ocl = {};
             
             oc1 = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'Sweep start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
@@ -287,11 +435,11 @@ classdef definitions < handle
             
             if ~obj.generatingDeriv1
                 oc.DESCRIPTION = sprintf([...
-                    'One current for each of the voltage potential sweep steps described by %s. ', ...
+                    'One current for each of the voltage potential sweep steps described in file %s. ', ...
                     'A value of %g refers to that no such sample was ever taken.'], bxsTabFilename, obj.MISSING_CONSTANT);
             else
                 oc.DESCRIPTION = sprintf([...
-                    'One current for each of the voltage potential sweep steps described by %s. ', ...
+                    'One current for each of the voltage potential sweep steps described in file %s. ', ...
                     'Each current is the average over one or multiple measurements on a single potential step. ', ...
                     'A value of %g refers to ', ...
                     '(1) that the underlying set of samples contained at least one saturated value, and/or ', ...
@@ -299,7 +447,7 @@ classdef definitions < handle
             end
             ocl{end+1} = oc;
             
-            OBJECT_COLUMN_list = ocl;
+            LblData.OBJTABLE.OBJCOL_list = ocl;
         end
         
         
@@ -310,15 +458,36 @@ classdef definitions < handle
         % IMPLEMENTATION NOTE: Start & stop timestamps in header PDS keywords cover a smaller time interval than
         % the actual content of downsampled files. Therefore using the actual content of the TAB file to derive
         % these values.
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_IVxD_data(obj, probeNbr, table_DESCRIPTION_prefix, samplingRateSeconds, isDensityMode)
+        %
+        % NOTE: Has not found any "?3D" (P3, downsampled) data on old datasets. Should not exist since there (empirically) is no ?3L data.
+        function LblData = get_IVxD_data(obj, LhtKvpl, firstPlksFile, probeNbr, samplingRateSeconds, isDensityMode)
+            if isDensityMode ; modeStr = 'density mode';
+            else               modeStr = 'E field mode';
+            end
             
-            mcDescrAmendment = sprintf('A value of %g means that the underlying time period which was averaged over contained at least one saturated value.', obj.MISSING_CONSTANT);
-            
-            
+            [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
+            HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
+            HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
+                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
 
-            % Ex: DESCRIPTION = "D_P1P2INTRL_TRNC_20BIT_RAW_BIP, 32 SECONDS DOWNSAMPLED"
-            table_DESCRIPTION = sprintf('%s, %g seconds downsampled.', table_DESCRIPTION_prefix, samplingRateSeconds);
-            
+            HeaderKvpl = HeaderKvpl.set_value(...
+                'DESCRIPTION', ...
+                sprintf('Time series of LF %s data downsampled to a period of %g seconds on one probe.', ...
+                    modeStr, samplingRateSeconds));
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = sprintf(...
+                ['Table of timestamps, averaged currents, current standard deviation, averaged voltages, and voltage standard deviation for one probe.', ...
+                ' Values apply to consecutive %g second periods of LF %s data. Note that the bias is (almost) always constant and hence its standard deviation is zero.'], ...
+                samplingRateSeconds, modeStr);
+
+            %================
+            % Define columns
+            %================
+            mcDescrAmendment = sprintf('A value of %g means that the underlying time period which was averaged over contained at least one saturated value.', obj.MISSING_CONSTANT);
             ocl = {};
             % IMPLEMENTATION NOTE: The LBL start and stop timestamps of the source EDITED1/CALIB1 files often do
             % NOT cover the time interval of the downsampled time series. This is due to downsampling creating its
@@ -344,31 +513,70 @@ classdef definitions < handle
             ocl(end+1:end+4) = {oc1; oc2; oc3; oc4};
             
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG', 'BYTES', 5, 'DATA_TYPE', 'ASCII_INTEGER', 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
-            OBJECT_COLUMN_list = ocl;
+            
+            LblData.OBJTABLE.OBJCOL_list = ocl;
         end
         
         
         
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_FRQ_data(obj, nTabColumnsTotal, psdTabFilename)
-            table_DESCRIPTION = 'Frequency list of PSD spectra file.';
+        function LblData = get_FRQ_data(obj, LhtKvpl, firstPlksFile, nTabColumnsTotal, psdTabFilename)
             
+            [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
+            HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
+            HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
+                {'2018-11-21', 'EJ', 'Updated global DESCRIPTION'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', sprintf('Frequencies used for PSD spectra in file %s.', psdTabFilename));
+
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = sprintf('Table of frequencies used for the power spectral density (PSD) data in file %s.', psdTabFilename);
+
+            %================
+            % Define columns
+            %================
             ocl = {};
             % NOTE: References file (filename) in DESCRIPTION which could potentially be wrong name in delivered
             % data sets which uses other filenaming convention. However, the delivery code should update this string
             % to contain the correct filename when building final datasets for delivery.
             ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', nTabColumnsTotal, 'UNIT', 'Hz', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
-                'DESCRIPTION', sprintf('Frequenct list of PSD spectra file %s.', psdTabFilename));
+                'DESCRIPTION', 'Frequency list');
+            
             LblData.OBJTABLE.OBJCOL_list = ocl;
-            
-            OBJECT_COLUMN_list = ocl;
         end
-        
-        
-        
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_PSD_data(obj, probeNbr, isDensityMode, nTabColumns, modeStr)
+
+
+
+        function LblData = get_PSD_data(obj, LhtKvpl, firstPlksFile, probeNbr, isDensityMode, nTabColumns, filenameModeStr, frqTabFilename)
             % PROPOSAL: Expand "PSD" to "POWER SPECTRAL DENSITY" (correct according to EAICD).
-            table_DESCRIPTION = sprintf('%s PSD spectra of high frequency measurements (snapshots).', modeStr);
             
+            if isDensityMode ; modeStr = 'density mode';
+            else               modeStr = 'E field mode';
+            end
+            
+            [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
+            HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
+            HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
+                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', sprintf('PSD spectra of HF %s data (snapshots) on probe %i for the frequencies described in file %s.', modeStr, probeNbr, frqTabFilename));
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = sprintf(...
+                ['Table of snapshot start and stop timestamps, mean current and mean voltage of snapshot, and PSD of the snapshot itself.', ...
+                ' The PSD frequencies are the same for every snapshot and are described in file %s.'], ...
+                frqTabFilename);
+            
+            %================
+            % Define columns
+            %================
             ocl1 = {};
             ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECONDS',       'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
             ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECONDS',       'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
@@ -391,7 +599,8 @@ classdef definitions < handle
                 PSD_DESCRIPTION = 'Current PSD spectrum';
                 PSD_UNIT        = 'NANOAMPERE^2/Hz';
                 
-            else    %if isEFieldMode
+            else
+                % CASE: E-Field Mode
                 
                 if probeNbr == 3
                     ocl2{end+1} = struct('NAME', 'P1_CURRENT_MEAN',    obj.DATA_UNIT_CURRENT{:}, 'DESCRIPTION', obj.CURRENT_BIAS_DESC);
@@ -404,12 +613,10 @@ classdef definitions < handle
                 PSD_DESCRIPTION = 'Voltage PSD spectrum';
                 PSD_UNIT        = 'VOLT^2/Hz';
                 
-            %else
-            %    error('Error, bad combination of isDensityMode and isEFieldMode.');
             end
             nSpectrumColumns = nTabColumns - (length(ocl1) + length(ocl2));
-            ocl2{end+1} = struct('NAME', sprintf('PSD_%s', modeStr), 'ITEMS', nSpectrumColumns, 'UNIT', PSD_UNIT, 'DESCRIPTION', PSD_DESCRIPTION);
-            
+            ocl2{end+1} = struct('NAME', sprintf('PSD_%s', filenameModeStr), 'ITEMS', nSpectrumColumns, 'UNIT', PSD_UNIT, 'DESCRIPTION', PSD_DESCRIPTION);
+
             % For all columns: Set ITEM_BYTES/BYTES.
             for iOc = 1:length(ocl2)
                 if isfield(ocl2{iOc}, 'ITEMS')    ocl2{iOc}.ITEM_BYTES = 14;
@@ -417,22 +624,38 @@ classdef definitions < handle
                 end
                 ocl2{iOc}.DATA_TYPE = 'ASCII_REAL';
             end
-            
-            OBJECT_COLUMN_list = [ocl1, ocl2];
+
+            LblData.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
         end
-        
-        
-        
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_PHO_data(obj)
+
+
+
+        function LblData = get_PHO_data(obj, LhtKvpl)
             % IMPLEMENTATION NOTE: Derives timestamps from columns since the Lapdog PHO struct does not contain timing
             % information. TEMPORARY SOLUTION.
-            
+
             %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
             %    {'DATA_SET_PARAMETER_NAME', '{"PHOTOSATURATION CURRENT"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
+
+            HeaderKvpl = obj.HeaderAllKvpl.append(LhtKvpl);
             
-            table_DESCRIPTION = 'Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).';
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-30', 'EJ', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}});
+            HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_INSTRUMENT_MODE_keywords(HeaderKvpl);
             
+            HeaderKvpl = HeaderKvpl.append_kvp('DESCRIPTION', 'Time series of photosaturation current.');
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).';
+
+            %================
+            % Define columns
+            %================
             ocl = [];
             ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.',                           'useFor', {{'START_TIME', 'STOP_TIME'}});
             ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
@@ -441,40 +664,76 @@ classdef definitions < handle
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'I_PH0_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',        'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
-            OBJECT_COLUMN_list = ocl;
+            LblData.OBJTABLE.OBJCOL_list = ocl;
         end
-        
 
-        
+
+
+        % USC = U_sc = Potential, Spacecraft
+        %    
         % NOTE: BUG in Lapdog. UTC sometimes has 3 and sometimes 6 decimals. ==> Assertions will fail sometimes.
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_USC_data(obj)
+        %   Still true? /EJ 2018-11-06
+        function LblData = get_USC_data(obj, LhtKvpl, firstPlksFile)
+            
             %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
             %    {'DATA_SET_PARAMETER_NAME', '{"SPACECRAFT POTENTIAL"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
-            table_DESCRIPTION = 'Proxy for spacecraft potential, derived from either (1) zero current crossing in sweep, or (2) floating potential measurement (downsampled). Time interval can thus refer to either sweep or individual sample.';
             
+            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
+            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-29', 'AE', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}, ...
+                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
+                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Time series of proxy for spacecraft potential.');
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = ['Table of timestamps, and a proxy for spacecraft potential, derived from either (1) zero current', ...
+                ' crossing in sweep, or (2) floating potential measurement (downsampled).', ...
+                ' Timestamps can thus refer to either the midpoint of a sweep, or an individual sample.'];    % TODO: Check with FJ/AE if timestamps can refer to individual LF/HF sample, or 32S sample.
+            
+            %================
+            % Define columns
+            %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF. Middle point for sweeps.');                                % 'useFor', {{'START_TIME'}}
-            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point). Middle point for sweeps.');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}}
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.');                                % 'useFor', {{'START_TIME'}}
+            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}}
             ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      'DESCRIPTION', ...
                 ['Proxy for spacecraft potential derived from either (1) photoelectron knee in sweep, or (2) floating potential measurement (downsampled), depending on available data.', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
-            
-            OBJECT_COLUMN_list = ocl;
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);            
+            LblData.OBJTABLE.OBJCOL_list = ocl;
         end
-        
 
-        
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_ASW_data(obj)
+
+
+        % ASW = Analyzed sweep parameters
+        function LblData = get_ASW_data(obj, LhtKvpl, firstPlksFile)
             % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
             %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
             %    {'DATA_SET_PARAMETER_NAME', '{"ELECTRON DENSITY", "PHOTOSATURATION CURRENT", "ION BULK VELOCITY", "ELECTRON TEMPERATURE"}'; ...
             %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP", "RPCMIP"}'});
-            % ASW = Analyzed sweep parameters
-            table_DESCRIPTION = 'Analyzed sweeps (ASW). Miscellaneous physical high-level quantities derived from individual sweeps.';
             
+            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-30', 'EJ', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
+                {'2018-11-27', 'EJ', 'Updated global DESCRIPTION'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Analyzed sweeps (ASW). Miscellaneous physical high-level quantities derived from individual sweeps.');
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = 'Time series of sweep timestamps, and sweep-based estimates of electron density, ion bulk speed, electron temperature, and photoelectron knee potential.';
+            
+            %================
+            % Define columns
+            %================
             ocl = [];
             ocl{end+1} = struct('NAME', 'START_TIME_UTC',      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');   % 'useFor', {{'START_TIME'}}
             ocl{end+1} = struct('NAME',  'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');   % 'useFor', {{'STOP_TIME'}}
@@ -504,39 +763,78 @@ classdef definitions < handle
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'V_PH_KNEE_QUALITY_VALUE',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                  'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
-            OBJECT_COLUMN_list = ocl;
+            LblData.OBJTABLE.OBJCOL_list = ocl;
         end
         
         
         
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_NPL_data(obj)
-            table_DESCRIPTION = 'Plasma density derived from individual fix-bias density mode (current) measurements.';
+        % NOTE: No LBL timestamps for now, and hence no such arguments.
+        function LblData = get_NPL_data(obj)
+            
+            % IMPLEMENTATION NOTE: As of 2018-11-13, no such data product has ever been produced (except dummy files),
+            % and therefore no such label file has ever been produced. Must therefore set LBL header timestamps from
+            % columns for now.
+            %   NOTE: Currently, not even empty timestamps are properly added to the LBL header.
+            % NOTE: Using this code without setting LABEL_REVISION_NOTE should trigger assertion error (overwriting is
+            % required).
+            
+            HeaderKvpl = obj.HeaderAllKvpl;
+            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {});
+            HeaderKvpl = HeaderKvpl.append_kvp('START_TIME', []);                    % Set empty header LBL timestamp to remind future reader to explicitly choose how to set timestamps.
+            HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             % MB states:
             % """"PLASMA DENSITY [cross-calibration from ion and electron density; in the label, put ELECTRON DENSITY,
-            % ION DENSITY and PLASMA DENSITY]""""            
+            % ION DENSITY and PLASMA DENSITY]""""
             % TODO-NEED-INFO: Use above?
             
             %LblKvpl = KVPL_overwrite_add(LblKvpl, {...
             %        'DATA_SET_PARAMETER_NAME', '{"ELECTRON_DENSITY", "ION DENSITY", "PLASMA DENSITY"}'; ...
             %        'CALIBRATION_SOURCE_ID',   '{"RPCLAP", "RPCMIP"}'});
             
+            DESCRIPTION = 'Time series of plasma density.';
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and an estimate of plasma density derived from individual fix-bias density mode (current) measurements.';
+            
+            %================
+            % Define columns
+            %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');                             % 'useFor', {{'START_TIME', 'STOP_TIME'}}
-            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}}
+            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');                             % 'useFor', {{'START_TIME', 'STOP_TIME'}});
+            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
             ocl{end+1} = struct('NAME', 'N_PL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'cm**-3',    'DESCRIPTION', ...
                 ['Plasma density derived from individual fix-bias density mode (current) measurements. Parameter derived from low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'QUALITY_VALUE',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',   'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
-            OBJECT_COLUMN_list = ocl;
+            LblData.OBJTABLE.OBJCOL_list = ocl;
         end
 
 
 
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_AxS_data(obj, ixsFilename)
-            table_DESCRIPTION = sprintf('Model fitted analysis of %s sweep file.', ixsFilename);
+        function LblData = get_AxS_data(obj, LhtKvpl, firstPlksFile, ixsFilename)
             
+            [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
+            HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
+            HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-13', 'EJ', 'First documented version'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
+                {'2018-11-21', 'EJ', 'Update global DESCRIPTION'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+
+            DESCRIPTION = sprintf('Model fitted analysis of %s sweep file.', ixsFilename);
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = DESCRIPTION;
+            
+            %================
+            % Define columns
+            %================
             ocl1 = {};
             ocl1{end+1} = struct('NAME', 'START_TIME_UTC',  'UNIT', 'SECONDS',       'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC time YYYY-MM-DD HH:MM:SS.FFF.');
             ocl1{end+1} = struct('NAME', 'STOP_TIME_UTC',   'UNIT', 'SECONDS',       'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION',  'Stop time of sweep. UTC time YYYY-MM-DD HH:MM:SS.FFF.');
@@ -667,16 +965,39 @@ classdef definitions < handle
                 ocl2{iOc}.DATA_TYPE = 'ASCII_REAL';
             end
             
-            OBJECT_COLUMN_list = [ocl1, ocl2];
+            LblData.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
             
         end    % get_AxS_data()
         
         
         
         % NOTE: Label files are not delivered.
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_EST_data(obj)
-            table_DESCRIPTION = sprintf('Best estimates of physical values from model fitted analysis.');   % Bad description? To specific?
+        function LblData = get_EST_data(obj, estTabPath, plksFileList, probeNbrList)
             
+            %===============================================================
+            % NOTE: createLBL.create_EST_prel_LBL_header(...)
+            %       sets certain LBL/ODL variables to handle collisions:
+            %    START_TIME / STOP_TIME,
+            %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
+            %    obj.HeaderAllKvpl
+            %===============================================================
+            HeaderKvpl = createLBL.create_EST_prel_LBL_header(estTabPath, plksFileList, probeNbrList, obj.HeaderAllKvpl);
+            HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
+            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-14', 'EJ', 'First documented version'}, ...
+                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            DESCRIPTION = 'Best estimates of physical values from model fitted analysis based on sweeps.';
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
+
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = DESCRIPTION;
+
+            %================
+            % Define columns
+            %================
             ocl = [];
             ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',       'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
             ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',       'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
@@ -693,16 +1014,32 @@ classdef definitions < handle
                 ['Number signifying which group of sweeps the data comes from. ', ...
                 'Groups of sweeps are formed for the purpose of deriving/selecting values to be used in best estimates. ', ...
                 'All sweeps with the same group number are almost simultaneous. For every type of best estimate, at most one is chosen from each group.' ...
-                ]);  % NOTE: Causes trouble by making such a long line in LBL file?!!
-            OBJECT_COLUMN_list = ocl;
+                ]);  % NOTE: Making such a long line in LBL file causes trouble?!!
+
+            LblData.OBJTABLE.OBJCOL_list = ocl;
         end
         
         
         
-        % NOTE: Label files are not delivered.
-        function [OBJECT_COLUMN_list, table_DESCRIPTION] = get_A1P_data(obj)
-            table_DESCRIPTION = 'Analyzed probe 1 parameters.';
+        % NOTE: TAB+LBL files will likely not be delivered.
+        function LblData = get_A1P_data(obj, LhtKvpl, firstPlksFile)            
             
+            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
+            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-11-14', 'EJ', 'First documented version'}, ...
+                {'2018-11-21', 'EJ', 'Update global DESCRIPTION'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            DESCRIPTION = 'Analyzed probe 1 parameters.';
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);            
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = DESCRIPTION;
+            
+            %================
+            % Define columns
+            %================
             ocl = [];
             ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',       'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
             ocl{end+1} = struct('NAME',  'STOP_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',       'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
@@ -711,12 +1048,138 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Quality flag from 000 (best) to 777 (worst).');
             ocl{end+1} = struct('NAME', 'Vph_knee',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',         'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Potential at probe position from photoelectron current knee (gaussian fit of second derivative).');
             ocl{end+1} = struct('NAME', 'Te_exp_belowVknee',  'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT', 'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Electron temperature from an exponential fit to the slope of the retardation region of the electron current.');
-            OBJECT_COLUMN_list = ocl;
+            LblData.OBJTABLE.OBJ_COL_list = ocl;
+        end
+        
+    end    % methods(Access=public)
+
+
+
+    methods(Access=private)
+        
+        % Set LABEL_REVISION_NOTE (LRN) key value in KVPL.
+        % NOTE: Requires key "LABEL_REVISION_NOTE" to already pre-exist in  KVPL
+        %
+        %
+        % RATIONALE
+        % =========
+        % -- Make sure does not forget to add quotes.
+        % -- Can (potentially) force common format: ~indentation, rows, date, author.
+        % -- Can potentially limit to only the last N label revisions (items).
+        % -- Force correct spelling of LABEL_REVISION_NOTE (which would otherwise be hardcoded in multiple places, although
+        %    ".set_value" requires keyword to pre-exist in KVPL, which should help).
+        %
+        % contentCellArray{iItem} = {dateStr, author, message}
+        function Kvpl = set_LRN(obj, Kvpl, contentCellArray)
+            % PROPOSAL: Set "author" here. Remove as argument.
             
+            LINE_BREAK  = sprintf('\r\n');
+            INDENTATION = repmat(' ', 1, obj.indentationLength);
+            
+            nItems = numel(contentCellArray);
+            
+            rowList = {};
+            for i = 1:nItems
+                assert(numel(contentCellArray{i}) == 3)
+                
+                dateStr = contentCellArray{i}{1};
+                author  = contentCellArray{i}{2};
+                message = contentCellArray{i}{3};
+                rowList{i} = sprintf('%s, %s: %s', dateStr, author, message);
+            end
+
+            if nItems == 0
+                error('No info to put in LABEL_REVISION_INFO. nItems == 0.')
+            elseif nItems == 1
+                rowStr = rowList{1};
+            elseif nItems >= 2
+                % Do not use the first row (in the ODL file).
+                rowStr = EJ_lapdog_shared.utils.str_join(rowList, [LINE_BREAK, INDENTATION]);
+                rowStr = [LINE_BREAK, INDENTATION, rowStr];
+            end
+
+            Kvpl = Kvpl.set_value('LABEL_REVISION_NOTE', sprintf('"%s"', rowStr));    % NOTE: Adds quotes.
+        end
+
+        
+        
+        % Build basic LBL header KVPL for most data products.
+        % 
+        % NOTE: PlksSs is used by some data products for setting DESCRIPTION (root-level and/or OBJECT=TABLE-level).
+        function [HeaderKvpl, PlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile)
+            % PROPOSAL: Add LABEL_REVISION_NOTE.
+            %   PROPOSAL: Wait until has implemented and tested use of this function.
+            
+            EJ_lapdog_shared.utils.assert.castring(firstPlksFile);
+            
+            [IdpHeaderKvpl, PlksSs] = createLBL.read_LBL_file(firstPlksFile);
+            IdpHeaderKvpl = createLBL.definitions.modify_PLKS_header(IdpHeaderKvpl);
+            
+            HeaderKvpl = obj.HeaderAllKvpl.append(LhtKvpl);
+            HeaderKvpl = IdpHeaderKvpl.overwrite_subset(HeaderKvpl);
+        end
+        
+    end    % methods(Access=private)
+
+
+
+    methods(Static, Access=private)
+        
+        % Remove PDS keywords which store the LAP bias value.
+        % This should be used for LF and HF data only (not e.g. sweeps).
+        function HeaderKvpl = remove_bias_keywords(HeaderKvpl)
+            % NOTE: Not all these keywords are present simultaneously.
+            HeaderKvpl = createLBL.definitions.remove_keys_by_regex(HeaderKvpl, 'ROSETTA:LAP_[IV]BIAS[12]');
         end
         
         
         
-    end    % methods(...)
+        % Remove all keys which begin with "ROSETTA:":
+        % This should be done for all L5 data products.
+        function HeaderKvpl = remove_ROSETTA_keywords(HeaderKvpl)
+            HeaderKvpl = createLBL.definitions.remove_keys_by_regex(HeaderKvpl, 'ROSETTA:.*');
+        end
+        
+        
+        
+        % Remove the INSTRUMENT_MODE_(ID|DESC) keywords (not prefixed "ROSETTA:").
+        % This is intended to be used for those (L5) data products which can span multiple macros.
+        function HeaderKvpl = remove_INSTRUMENT_MODE_keywords(HeaderKvpl)
+            HeaderKvpl = createLBL.definitions.remove_keys_by_regex(HeaderKvpl, 'INSTRUMENT_MODE_(ID|DESC)');   % NOTE: No "ROSETTA:" prefix.
+        end
+
+
+
+        % Helper function
+        % Remove all keys that match a regex (entire string).
+        function Kvpl = remove_keys_by_regex(Kvpl, regexpStr)
+            % Faster if using indices?!
+            temp = regexp(Kvpl.keys, ['^', regexpStr, '$'], 'match');
+            keysToRemove = [temp{:}];
+            
+            Kvpl = Kvpl.diff(keysToRemove);
+        end
+        
+        
+        
+        function HeaderKvpl = modify_PLKS_header(HeaderKvpl)
+            % PROPOSAL: Better name.
+            
+            %========================================================================================================
+            % Change ROSETTA:LAP_P[12]_ADC16_FILTER values to upper case
+            % ----------------------------------------------------------
+            % Stems from 2018 Rosetta Archive Enchancement Science Data Review, RID RPCLAP-US-EL-001, action
+            % RPCLAP-US-EL-001-DAT. Should in practise only change "KHz" to "KHZ".
+            % NOTE: pds also converts these keyword values to uppercase since commit 28a2b84, 2018-10-04 so over the
+            % long term, this should be unnecessary. Maybe change it for an assertion.
+            %========================================================================================================
+            temp = regexp(HeaderKvpl.keys, '^ROSETTA:LAP_P[12]_ADC16_FILTER$');
+            i = find(~cellfun(@isempty, temp));
+            values = HeaderKvpl.values;
+            values(i) = upper(values(i));
+            HeaderKvpl = EJ_lapdog_shared.utils.KVPL2(HeaderKvpl.keys, values);
+        end
+        
+    end    % methods(Static, Access=private)
     
 end   % classdef

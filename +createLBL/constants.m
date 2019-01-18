@@ -1,5 +1,5 @@
 %
-% Collect Lapdog LBL constants. Must instantiate before using.
+% Collect Lapdog LBL constants. Must instantiate before using. Immutable.
 %
 %
 % IMPLEMENTATION NOTE
@@ -20,10 +20,10 @@
 % Initially created 2018-08-22 by Erik P G Johansson, IRF Uppsala
 %
 classdef constants < handle
-    % PROPOSAL: Merge COTLF_HEADER_OPTIONS and INDENTATION_LENGTH (modify write_OBJTABLE_LBL_FILE accordingly).
+    % PROPOSAL: Merge COTLF_HEADER_OPTIONS and ODL_INDENTATION_LENGTH (modify write_OBJTABLE_LBL_FILE accordingly).
     %   CON: Indentation length is more fundamental. Could pop up somewhere else.
     %   PROPOSAL: Modify write_OBJTABLE_LBL_FILE to merge header options into settings and copy the indentation length from
-    %           the separate constant INDENTATION_LENGTH.
+    %           the separate constant ODL_INDENTATION_LENGTH.
     %
     % NOTE: Used by non-Lapdog code: ./+EJ_lapdog_shared/+ro/+delivery/+geom/create_geom_TAB_LBL_from_EOG.m
     %       Might be used by future standalone, "Lapdogish" code (same git repo) for e.g. separately regenerating LBL files.
@@ -34,16 +34,42 @@ classdef constants < handle
     %                 same variables/constants as arguments and checks them (assertion) against the internal (hard-coded) values. 
     %                 (2) Constructor call that just uses internally defined values.
     % 
+    %       PROPOSAL: (1) Internal hard-coded default values 
+    %                 (2) Constructor that looks for and compares with the corresponding global variables, if defined.
+    %
+    % NOTE: Not all constants here are really related to LBL files.
+    %   Ex: MISSING_CONSTANT
+    %       CON: Needed for LBL DESCRIPTION.
+    %   Ex: N_FINAL_PRESWEEP_SAMPLES
+    %       CON: Needed for LBL DESCRIPTION.
+    %
+    % PROPOSAL: Include metakernel_rosetta.txt
+    %   PRO:/NOTE: Used by lapdog_convention_wrapper, get_lapdog_metakernel.
     
     properties(Access=public)
         ROSETTA_NAIF_ID                        = -226;     % Used by SPICE.
-        INDENTATION_LENGTH                     = 4;
-        MISSING_CONSTANT                       = -1000;    % Defined here so that it can be used by code that is not run via Lapdog.
-        N_FINAL_PRESWEEP_SAMPLES               = 16;
+        ODL_INDENTATION_LENGTH                 = 4;
+        MISSING_CONSTANT                       = -1000;    % Same as SATURATION_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
+        N_FINAL_PRESWEEP_SAMPLES               = 16;       % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
         PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
+        PRE_CREATELBL_SAVED_INDEX_PREFIX       = 'pre_createLBL_workspace.index.';
+        
+        % When splitting "index" into multiple parts for saving to disk, this is how large every part should be, in
+        % number of index values. Lapdog's ESC2 "index" variable is size "1x661300" and can be saved to disk as one
+        % (empirically).
+        % NOTE: The true upper limit may depend on the length of strings, in particular paths stored in "index". Should
+        % maybe therefore lower the value to have more margin.
+        N_INDEX_INDICES_PER_PART               = 662000;       
+        %N_INDEX_INDICES_PER_PART               = 670;
         
         % Used by createLBL.create_OBJTABLE_LBL_file
         COTLF_HEADER_OPTIONS   % Set in constructor
+        
+        % Used for PDS keywords which are added to/included in LBL files, but whose values are not set by Lapdog. In
+        % practise, these should be overwritten by Erik P G Johansson's "delivery code" (not included in Lapdog) before
+        % actual delivery.
+        % NOTE: Not inherently quoted. Usage may require adding quotes.
+        VALUE_NOT_SET_BY_LAPDOG                = '<UNSET>';   
     end
 
 
@@ -52,27 +78,24 @@ classdef constants < handle
 
         % Constructor
         % 
-        % ARGUMENTS
-        % =========
-        % alt 1: No arguments
-        % alt 2: MISSING_CONSTANT
-        %        N_FINAL_PRESWEEP_SAMPLES
         function obj = constants(varargin)
-            if nargin == 0
-                ;   % Do nothing. Everything OK.
-            elseif nargin == 2
-                % ASSERTIONS
-                if obj.MISSING_CONSTANT ~= varargin{1}
-                    error('Submitted MISSING_CONSTANT value inconsistent with internally hard-coded value.')
-                end
-                if obj.N_FINAL_PRESWEEP_SAMPLES ~= varargin{2}
-                    error('Submitted N_FINAL_PRESWEEP_SAMPLES value inconsistent with internally hard-coded value.')
-                end
-                
-            else
+
+            % ASSERTION: Find calls with non-zero number of arguments (old format).
+            if nargin ~= 0
                 error('Wrong number of arguments.')
             end
             
+            % ASSERTION: Compare with global constant with the same meaning.
+            if ismember('SATURATION_CONSTANT', who('global'))
+                % CASE: SATURATION_CONSTANT is already a global constant, although it might not have been declared as
+                % such in the current workspace.
+                global SATURATION_CONSTANT
+                if obj.MISSING_CONSTANT ~= SATURATION_CONSTANT
+                    error('Global variable SATURATION_CONSTANT inconsistent with internally hard-coded MISSING_CONSTANT.')
+                end                                
+            end
+
+
             %==================================================================
             % LBL Header keys which should preferably come in a certain order.
             % Not all of them are required to be present.
@@ -137,6 +160,8 @@ classdef constants < handle
                 'ROSETTA:LAP_P1_SWEEP_RESOLUTION', ...
                 'ROSETTA:LAP_P1_SWEEP_STEP_HEIGHT', ...
                 'ROSETTA:LAP_P1_ADC16_DOWNSAMPLE', ...
+                'ROSETTA:LAP_P1_EFIELD_FIX_DURATION', ...
+                'ROSETTA:LAP_SWEEPING_P1', ...
                 'ROSETTA:LAP_P1_DENSITY_FIX_DURATION', ...
                 ...
                 'ROSETTA:LAP_FEEDBACK_P2', ...
@@ -157,6 +182,8 @@ classdef constants < handle
                 'ROSETTA:LAP_P2_SWEEP_RESOLUTION', ...
                 'ROSETTA:LAP_P2_SWEEP_STEP_HEIGHT', ...
                 'ROSETTA:LAP_P2_ADC16_DOWNSAMPLE', ...
+                'ROSETTA:LAP_P2_EFIELD_FIX_DURATION', ...
+                'ROSETTA:LAP_SWEEPING_P2', ...
                 'ROSETTA:LAP_P2_DENSITY_FIX_DURATION', ...
                 ...
                 'ROSETTA:LAP_P1P2_ADC20_STATUS', ...
@@ -238,59 +265,58 @@ classdef constants < handle
                 'forbiddenKeysList',   {FORBIDDEN_KEYS}, ...
                 'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
         end
-    
+        
 
         
         % Construct list of key-value pairs to use for all LBL files.
-        % -----------------------------------------------------------
+        % 
         % Keys must not collide with keys set for specific file types.
-        % For file types that read CALIB LBL files, must overwrite old keys(!).
+        % For file types that read EDITED1/CALIB1 LBL files, must overwrite old keys(!).
         %
         % NOTE: Only keys that already exist in the CALIB files that are read (otherwise intentional error)
         %       and which are thus overwritten.
         % NOTE: Might not be complete.
         % NOTE: Contains many hardcoded constants, but not only.
+        % NOTE: Does not contain timestamps (START/STOP_TIME, SPACECRAFT_CLOCK_START/STOP_COUNT).
         %
         % NOTE: Will not correctly assign all values, since they are overwritten in delivery code anyway. Simplifies
         % this code, and reduces the number of arguments. This however increases the number of errors if validating
-        % DERIV1 LBL files with e.g. "pvv label".
+        % EDDER/DERIV1 (not EDITED2/CALIB2/DERIV2) LBL files with e.g. "pvv label".
         
-        function LblAllKvpl = get_LblAllKvpl(obj, LABEL_REVISION_NOTE)
-            % PROPOSAL: Rewrite to use EJ_lapdog_shared.utils.KVPL.create.
+        function LblHeaderAllKvpl = get_LblHeaderAllKvpl(obj)
             % PROPOSAL: Use generate_PDS_data?
+            % PROPOSAL: Change name. Something with "keywords" and not LBL only, which may refer to entire file.
             %
-            % PROPOSAL: Do not add LABEL_REVISION_NOTE?
-            % PROPOSAL: Add but set to <UNSET>?
-
-            % ASSERTION
-            if ~isempty(regexp(LABEL_REVISION_NOTE, '"', 'once'))
-                error('Argument LABEL_REVISION_NOTE contains quote(s).')
-            end
+            % TODO-NEED-INFO: Required to add something like NOTE = "Cheops Reference Frame" ?
             
-            LblAllKvpl = EJ_lapdog_shared.utils.KVPL.create({...
+            QUOTED_VALUE_NOT_SET_BY_LAPDOG = ['"', obj.VALUE_NOT_SET_BY_LAPDOG, '"'];
+
+            % IMPLEMENTATION NOTE: Including un-set LABEL_REVISION_NOTE meant to always be overwritten by other code. If
+            % it is not overwritten, then create_OBJTABLE_LBL_file will give error.
+            LblHeaderAllKvpl = EJ_lapdog_shared.utils.KVPL2({
                 'PDS_VERSION_ID',            'PDS3'; ...
-                'DATA_QUALITY_ID',           '"<UNSET>"'; ...
+                'DATA_QUALITY_ID',           QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
                 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'); ...
-                'PRODUCT_TYPE',              '"<UNSET>"'; ...
-                'PROCESSING_LEVEL_ID',       '"<UNSET>"'; ...
+                'PRODUCT_TYPE',              QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
+                'PROCESSING_LEVEL_ID',       QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
                 ...
-                'DATA_SET_ID',               ['"<UNSET>"']; ...
-                'DATA_SET_NAME',             ['"<UNSET>"']; ...
-                'LABEL_REVISION_NOTE',       ['"', LABEL_REVISION_NOTE, '"']; ...
-            %    'NOTE',                      '"... Cheops Reference Frame."');  % Include?!!
-                'PRODUCER_FULL_NAME',        '"<UNSET>"'; ...
-                'PRODUCER_ID',               '<UNSET>'; ...
+                'DATA_SET_ID',               QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
+                'DATA_SET_NAME',             QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
+                'LABEL_REVISION_NOTE',       []; ...
+                'PRODUCER_FULL_NAME',        QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
+                'PRODUCER_ID',               obj.VALUE_NOT_SET_BY_LAPDOG; ...
                 'PRODUCER_INSTITUTION_NAME', '"SWEDISH INSTITUTE OF SPACE PHYSICS, UPPSALA"'; ...
                 'INSTRUMENT_HOST_ID',        'RO'; ...
                 'INSTRUMENT_HOST_NAME',      '"ROSETTA-ORBITER"'; ...
                 'INSTRUMENT_NAME',           '"ROSETTA PLASMA CONSORTIUM - LANGMUIR PROBE"'; ...
                 'INSTRUMENT_TYPE',           '"PLASMA INSTRUMENT"'; ...
                 'INSTRUMENT_ID',             'RPCLAP'; ...
-                'TARGET_NAME',               '"<UNSET>"'; ...
-                'TARGET_TYPE',               '"<UNSET>"'; ...
+                'TARGET_NAME',               QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
+                'TARGET_TYPE',               QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
                 'MISSION_ID',                'ROSETTA'; ...
-                'MISSION_NAME',              sprintf('"%s"', 'INTERNATIONAL ROSETTA MISSION'); ...
-                'MISSION_PHASE_NAME',        '"<UNSET>"'}...
+                'MISSION_NAME',              '"INTERNATIONAL ROSETTA MISSION"'; ...
+                'MISSION_PHASE_NAME',        QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...                
+                }    ...
             );
         end
     end    % methods

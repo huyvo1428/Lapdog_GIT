@@ -3,7 +3,7 @@
 % Assumes index has been generated and exists in workspace
 % anders.eriksson@irfu.se 2012-03-29
 %
-% Relies one being able to log on to IRF Umeå for some data.
+% Relies on one being able to log on to IRF Umeå for some data.
 %
 % Not used anymore. Will never be used again?!
 % Erik P G Johansson 2015-12-15?

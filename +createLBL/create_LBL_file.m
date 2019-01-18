@@ -35,7 +35,7 @@
 %
 % Initially created 2018-08-21 by Erik P G Johansson, IRF Uppsala.
 %
-function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING_CONSTANT, nFinalPresweepSamples)
+function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl)
     % NOTE: Generalizing to EDITED1/CALIB1 data types requires distinguising EDDER / DERIV1.
     % PROPOSAL: Remake into class
     %   PRO: Can have constants, shared over functions.
@@ -56,29 +56,25 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
     % TODO: PDS Keywords from MB, DATA_SET_PARAMETER_NAME
     %   E.g. http://chury.sp.ph.ic.ac.uk/rpcwiki/Archiving/EnhancedArchivingTeleconMinutes2018x09x04
     % TODO: "Use the keyword CALIBRATION_SOURCE_ID with one or several values like the example below: CALIBRATION_SOURCE_ID = {“RPCLAP”,“RPCMIP”} "
-    
-    % TEMPORARY
-    generatingDeriv1 = 1;
-    
-    
-
-    C = createLBL.constants(MISSING_CONSTANT, nFinalPresweepSamples);
-    defs = createLBL.definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples);             % TEMP: Use constants.
-    COTLF_SETTINGS = struct('indentationLength', C.INDENTATION_LENGTH);
-
-    TAB_LBL_INCONSISTENCY_POLICY = 'error';
 
 
 
     % TEMPORARY source constants.
-    lbltime   = '2018-08-03';  % Label revision time
-    lbleditor = 'EJ';
-    lblrev    = 'Misc. descriptions clean-up';
-    LblAllKvpl = C.get_LblAllKvpl(sprintf('%s, %s, %s', lbltime, lbleditor, lblrev));
-    LblKvpl = EJ_lapdog_shared.utils.KVPL.overwrite_values(OldLblHeaderKvpl, LblAllKvpl, 'require preexisting keys');
+    generatingDeriv1 = 1;
+
+    TAB_LBL_INCONSISTENCY_POLICY = 'error';
     
-    
-    
+    C = createLBL.constants();
+    LblDefs = createLBL.definitions(...
+        generatingDeriv1, ...
+        C.MISSING_CONSTANT, ...
+        C.N_FINAL_PRESWEEP_SAMPLES, ...
+        C.ODL_INDENTATION_LENGTH, ...
+        C.get_LblHeaderAllKvpl());                       % TEMP: Use constants.
+    COTLF_SETTINGS = struct('indentationLength', C.ODL_INDENTATION_LENGTH);
+
+
+
     [parentDir, fileBasename, fileExt] = fileparts(tabFilePath);
     tabFilename = [fileBasename, fileExt];
     
@@ -86,7 +82,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
         
         % Ex: RPCLAP_20050301_001317_301_A2S.LBL
         % Ex: RPCLAP_20050303_124725_FRQ_I1H.LBL        
-        % NOTE: Letters in macro numbers (hex) are lower case, but the "macro" can also be 32S, PSD, FRQ i.e. upper case letters.
+        % NOTE: Letters in macro numbers (hex) are upper case, but the "macro" can also be 32S, PSD, FRQ i.e. upper case letters.
         % Therefore, the regex has to allow both upper and lower case.
         
         % NOTE: strread throws exception if the pattern does not match.
@@ -95,14 +91,11 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
         msd2 = dataType{1};
         msd = [msd1, '_', msd2];
 
-        LblData = [];
-        LblData.OBJTABLE = [];
-            
         if strcmp(msd2, 'NPL')
             
             canClassifyTab = 1;
             
-            [LblData.OBJTABLE.OBJCOL_list, LblData.OBJTABLE.DESCRIPTION] = defs.get_NLP_data();
+            LblData = LblDefs.get_NPL_data();
 
         else 
             canClassifyTab = 0;
@@ -115,7 +108,6 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
     
     
     if canClassifyTab
-        LblData.HeaderKvpl = LblKvpl;
         createLBL.create_OBJTABLE_LBL_file(tabFilePath, LblData, C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, TAB_LBL_INCONSISTENCY_POLICY);
     else
         %error('Can not identify type of TAB file: "%s"', tabFilePath)
@@ -124,7 +116,7 @@ function canClassifyTab = create_LBL_file(tabFilePath, OldLblHeaderKvpl, MISSING
     
     
     
-    clear defs
+    clear LblDefs
 end
 
 

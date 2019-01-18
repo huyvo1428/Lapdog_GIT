@@ -9,9 +9,6 @@
 producerfullname='ERIK P G JOHANSSON';
 producershortname='EJ';
 
-global N_FINAL_PRESWEEP_SAMPLES
-N_FINAL_PRESWEEP_SAMPLES = 16;    % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
-
 % 2. Control section
 % ==================
 do_geom = 0;  % Geometry file preparation off/on

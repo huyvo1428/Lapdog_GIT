@@ -46,6 +46,9 @@ classdef assert
 % PROPOSAL: Struct with minimum set of fieldnames.
 % PROPOSAL: isvector, iscolumnvector, isrowvector.
 % PROPOSAL: Add argument for name of argument so that can print better error messages.
+% PROPOSAL: Assertion for same-sized variables. (Same-sized fields in struct?!)
+%   PROPOSAL: Specify set of dimensions (index-indices) which are asserted to be equal for arbitrary set of variables.
+%       Ex: Dimension one has to be equal in size, but not dimension two.
 
     methods(Static)
         
@@ -96,6 +99,7 @@ classdef assert
         
         
         % Either regular file or symlink to regular file (i.e. not directory or symlink to directory).
+        % NOTE: The "opposite" assertion is "path_is_available".
         function file_exists(filePath)
             if ~(exist(filePath, 'file') == 2)
                 error('Expected existing regular file (or symlink to regular file) "%s" can not be found.', filePath)
@@ -128,16 +132,18 @@ classdef assert
         
         
         
-        % Struct with certain fixed set of fields.
+        % Struct with certain set of fields.
         % 
-        % Default             : Require exactly   the specified set of fields.
-        % varargin = 'subset' : Require subset of the specified set of fields.
+        % ARGUMENTS
+        % =========
+        % varargin :
+        %   <Empty>  : Require exactly   the specified set of fields.
+        %   'subset' : Require subset of the specified set of fields.
+        %
         % NOTE: Does NOT assume 1x1 struct. Can be matrix.
         function struct(s, fieldNamesSet, varargin)
             % PROPOSAL: Print superfluous and missing fieldnames.
             % PROPOSAL: Option to specify subset or superset of field names.
-            %   PRO: Superset useful for when submitting settings/policy struct to function which then adds default
-            %        values for missing fields.
             %   PRO: Subset useful for "pdsData" structs(?)
             %   Ex: EJ_lapdog_shared.PDS_utils.construct_DATA_SET_ID
             %   
@@ -193,6 +199,14 @@ classdef assert
             elseif nargout(funcHandle) ~= nArgout
                 % NOTE: MATLAB actually uses term "output arguments".
                 error('Expected function handle ("%s") has the wrong number of output arguments (return values). nargout()=%i, nArgout=%i', func2str(funcHandle), nargout(funcHandle), nArgout)
+            end
+        end
+        
+        
+        
+        function isa(v, className)
+            if ~isa(v, className)
+                error('Expected class=%s but found class=%s.', className, class(v))
             end
         end
         

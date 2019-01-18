@@ -112,11 +112,13 @@ micePath = cell2mat(cellstr(p(i_mice)));
 % Add mice paths
 % NOTE: If above code does not find MICE path in metakernel, then micePath will be an empty string (no errors).
 if ~isempty(micePath)
+    % For backward compatibility.
     addpath([micePath '/src/mice']);
     addpath([micePath '/lib']);
 else
     % NOTE: Useful not to give errors, so that Lapdog also works with metakernel without MICE path.
-    fprintf('Notice: Can not find MICE path in metakernel. Requires MICE to have been added to the MATLAB path by the caller.\n')
+    % Remove the message since this is default behaviour nowadays?
+    fprintf('Notice: Can not find MICE path in metakernel. This is OK if the caller has already added MICE to the MATLAB path.\n')
 end
 
 % Add irfu-matlab path
