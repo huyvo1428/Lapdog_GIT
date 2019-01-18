@@ -29,12 +29,17 @@ iph0conditions.CONT = +1.51e-9;
 %     'asm_ion_slope' 'old_Vx' 'old_Vsi' 'Vsi' 'macroId' 'ion_slope' 'curr' 'B'...
 %     'asm_ne_5eV' 'asm_ni_v_dep'};
 
-dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf'};
-infoflds= {'macroId'};
+dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf' 'macroId'}; %note, macroID is not actually in dataflds,but will be added to it in the struct_cleanup function
+
+%infoflds= {'macroId'};
 
 if ~debug(1) %PHO.TAB
-    PHO= struct_cleanup(XXP,infoflds,dataflds);
-    PHO= PHOTABFILE(PHO,iph0conditions,XXP);
+%PHO= struct_cleanup(XXP,infoflds,dataflds);
+PHO= struct_cleanup(XXP,dataflds);
+
+PHO= PHOTABFILE(PHO,iph0conditions,XXP);
+
+
 end
 
 
@@ -513,7 +518,9 @@ lapstruct_fixed.curr(ind,:) = lapstruct.curr(ind,:)+CONT;
 
 end
 
-function lapfile= struct_cleanup(dataraw,infofields,datafields)
+%function lapfile= struct_cleanup(dataraw,infofields,datafields)
+function lapfile= struct_cleanup(dataraw,datafields)
+
 %lapfile takes a horrible massive struct called dataraw from readAxS_prelim
 % and polishes, removing any struct field that is not named in the "flds"
 % parameter list. The code was made to output averages and medians per file
@@ -521,7 +528,7 @@ function lapfile= struct_cleanup(dataraw,infofields,datafields)
 % if the flds listed do not contain "B" or "curr" then
 % lapfile_with_iph0_niklas will not work
 
-infolenflds = length(infofields);
+%infolenflds = length(infofields);
 datalenflds = length(datafields);
 
 %lenI = length(fldI);
@@ -544,15 +551,22 @@ std1=[];
 
 for j=1:length(dataraw)
 
+    %first, map XXP.info.macroID to XXP.data.macroID.
+   len_d=length(dataraw(j).data.qf);
+   dataraw(j).data.macroId(1:len_d,1)=dataraw(j).info.macroId;
+   
+    
+    
+    
   %  j
     if j <2
         
-        
-        for k=1:infolenflds
-            lapfile.(sprintf('%s',infofields{1,k})) =[dataraw(j).info.(sprintf('%s',infofields{1,k}))];
-
-        end
-        
+%         
+%         for k=1:infolenflds
+%             lapfile.(sprintf('%s',infofields{1,k})) =[dataraw(j).info.(sprintf('%s',infofields{1,k}))];
+% 
+%         end
+%         
                 
         for k=1:datalenflds
             lapfile.(sprintf('%s',datafields{1,k})) =[dataraw(j).data.(sprintf('%s',datafields{1,k}))];
@@ -566,13 +580,13 @@ for j=1:length(dataraw)
         
           lapfile.Tarr=vertcat(lapfile.Tarr, dataraw(j).data.Tarr); %special case for this parameter
 
-        
-
-        for k=1:infolenflds
-          lapfile.(sprintf('%s',infofields{1,k})) = [ [lapfile.(sprintf('%s',infofields{1,k}))] ; [dataraw(j).info.(sprintf('%s',infofields{1,k}))] ];
-            
-       
-        end
+%         
+% 
+%         for k=1:infolenflds
+%           lapfile.(sprintf('%s',infofields{1,k})) = [ [lapfile.(sprintf('%s',infofields{1,k}))] ; [dataraw(j).info.(sprintf('%s',infofields{1,k}))] ];
+%             
+%        
+%        end
         for k=1:datalenflds
            lapfile.(sprintf('%s',datafields{1,k})) = [ [lapfile.(sprintf('%s',datafields{1,k}))] ; [dataraw(j).data.(sprintf('%s',datafields{1,k}))] ];
             

@@ -85,14 +85,18 @@ switch rerun_mode
         
         
      case 4
-         
-         remake_index = -1; % -1 skips index all together
+        
+
+         %remake_index = -1; % -1 skips index all together 
+         remake_index = 0;
          remake_tabindex = 0;
          remake_analysis = 1;
 %         remake_bestestimates = 0;
          remake_LBL =0;
 %         
-         fprintf(1,'lapdog: analysis test mode. Only used for test purposes, will crash and not create EST.TAB & LBL files..\n');
+         fprintf(1,'lapdog: analysis mode, no LBL files \n');
+
+         %fprintf(1,'lapdog: analysis test mode. Only used for test purposes, will crash and not create EST.TAB & LBL files..\n');
 %         
     case 5
         remake_index = 0;
@@ -238,38 +242,38 @@ end
 if remake_from_savestate
 
 load(sprintf('%s/pre_createLBL_workspace.mat',derivedpath));
-antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
-
-%find datasets of different modes
-ind_I1L= find(strcmp('I1L', antype));
-ind_I2L= find(strcmp('I2L', antype));
-ind_I3L= find(strcmp('I3L', antype));
-
-ind_V1L= find(strcmp('V1L', antype));
-ind_V2L= find(strcmp('V2L', antype));
-ind_V3L= find(strcmp('V3L', antype));
-
-
-ind_V1H= find(strcmp('V1H', antype));
-ind_V2H= find(strcmp('V2H', antype));
-ind_V3H= find(strcmp('V3H', antype));
-
-ind_I1H= find(strcmp('I1H', antype));
-ind_I2H= find(strcmp('I2H', antype));
-ind_I3H= find(strcmp('I3H', antype));
-
-
-ind_I1S= find(strcmp('I1S', antype));
-ind_I2S= find(strcmp('I2S', antype));
-
-
+% antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
+% 
+% %find datasets of different modes
+% ind_I1L= find(strcmp('I1L', antype));
+% ind_I2L= find(strcmp('I2L', antype));
+% ind_I3L= find(strcmp('I3L', antype));
+% 
+% ind_V1L= find(strcmp('V1L', antype));
+% ind_V2L= find(strcmp('V2L', antype));
+% ind_V3L= find(strcmp('V3L', antype));
+% 
+% 
+% ind_V1H= find(strcmp('V1H', antype));
+% ind_V2H= find(strcmp('V2H', antype));
+% ind_V3H= find(strcmp('V3H', antype));
+% 
+% ind_I1H= find(strcmp('I1H', antype));
+% ind_I2H= find(strcmp('I2H', antype));
+% ind_I3H= find(strcmp('I3H', antype));
+% 
+% 
+% ind_I1S= find(strcmp('I1S', antype));
+% ind_I2S= find(strcmp('I2S', antype));
 
 
+analysis_test;
 
-fprintf(1,'Outputting Science\n')
-if(~isempty(ind_I1S))
-    an_outputscience(XXP)
-end 
+
+%fprintf(1,'Outputting Science\n')
+%if(~isempty(ind_I1S))
+%    an_outputscience(XXP)
+%end 
 
 
 
@@ -385,7 +389,7 @@ if remake_analysis
    if remake_sweepsonly
 	analysis_test;
    else
-	analysis;
+	analysis_test; %NB THIS WAS CHANGED!! 17/1 2019 FKJN
    end
 end
 

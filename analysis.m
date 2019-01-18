@@ -37,29 +37,33 @@ ind_I1S= find(strcmp('I1S', antype));
 ind_I2S= find(strcmp('I2S', antype));
 
 
+spath=sprintf('%s/XXP_save.mat',derivedpath);
+
+try
+
+load(spath,'XXP')
+fprintf(1,'load XXP successful')
+
+catch err
 
 
-fprintf(1,'Analysing sweeps\n')
 
-if(~isempty(ind_I1S))
-    [XXP]=an_sweepmain_v2(ind_I1S,tabindex,targetfullname);
-end 
+        fprintf(1,'Analysing sweeps\n')
 
-if(~isempty(ind_I2S))
-    fprintf(1,'Skipping Analysing LAP2 sweeps\n')
-%    an_sweepmain(ind_I2S,tabindex,targetfullname); 
+        if(~isempty(ind_I1S))
+                [XXP]=an_sweepmain_v2(ind_I1S,tabindex,targetfullname);
+        end
+        save(spath,'XXP');
+
+        if(~isempty(ind_I2S))
+        fprintf(1,'Skipping Analysing LAP2 sweeps\n')
+        %    an_sweepmain(ind_I2S,tabindex,targetfullname); 
+        end
+
 end
 
 
 
-
-load_lapdog_runspis=0;
- 
-if load_lapdog_runspis
-    load(dumplapdog_runspis.mat)
-else
-    %save dump_lapdog_runspis
-end
 
 
 
