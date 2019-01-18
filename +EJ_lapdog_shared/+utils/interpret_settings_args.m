@@ -29,16 +29,21 @@
 % ARGUMENTS
 % =========
 % DefaultSettings : Struct with default Settings (to be processed; not Settings for this functions).
-% argList         : Cell array of strings representing a sequence of arguments (varargin presumably) from another
+% argList         : Cell array representing a sequence of arguments (varargin presumably) from another
 %                   function that uses this function.
+%                   It is either
+%                       (1) a cell array of pairs string+value, or
+%                       (2) a cell array of exactly one struct, or
+%                       (3) an empty cell array
 %                   NOTE: The list is permitted to be empty.
-%                   NOTE: {{}} is interpreted as empty list just varargin uses it to represent no arguments.
+%                   NOTE: {{}} is interpreted as empty list just as varargin uses it to represent no arguments.
 %
 %
 % RETURN VALUES
 % =============
 % Settings    : Struct. See algorithm.
-% argList     : Cell array of strings, representing list of arguments passed to other function.
+% argList     : Cell array of strings, representing list of arguments passed to other function. Typically varargin
+%               as received from the enclosing function directly.
 %
 %
 % Initially created 2018-07-18 by Erik P G Johansson.
@@ -75,7 +80,7 @@ function [Settings] = interpret_settings_args(DefaultSettings, argList)
     while true
         if numel(argList) == 0
             break
-            
+
         elseif numel(argList) == 1
             error('Uneven number of string-value arguments.')
             

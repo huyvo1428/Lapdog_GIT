@@ -46,9 +46,6 @@ classdef assert
 % PROPOSAL: Struct with minimum set of fieldnames.
 % PROPOSAL: isvector, iscolumnvector, isrowvector.
 % PROPOSAL: Add argument for name of argument so that can print better error messages.
-% PROPOSAL: Assertion for same-sized variables. (Same-sized fields in struct?!)
-%   PROPOSAL: Specify set of dimensions (index-indices) which are asserted to be equal for arbitrary set of variables.
-%       Ex: Dimension one has to be equal in size, but not dimension two.
 
     methods(Static)
         
@@ -99,7 +96,6 @@ classdef assert
         
         
         % Either regular file or symlink to regular file (i.e. not directory or symlink to directory).
-        % NOTE: The "opposite" assertion is "path_is_available".
         function file_exists(filePath)
             if ~(exist(filePath, 'file') == 2)
                 error('Expected existing regular file (or symlink to regular file) "%s" can not be found.', filePath)
@@ -137,24 +133,29 @@ classdef assert
         % ARGUMENTS
         % =========
         % varargin :
-        %   <Empty>  : Require exactly   the specified set of fields.
-        %   'subset' : Require subset of the specified set of fields.
+        %   <Empty>    : Require exactly                   the specified set of fields.
+        %   'subset'   : Require subset   of (or equal to) the specified set of fields.
+        %   'superset' : Require superset of (or equal to) the specified set of fields.
         %
         % NOTE: Does NOT assume 1x1 struct. Can be matrix.
         function struct(s, fieldNamesSet, varargin)
             % PROPOSAL: Print superfluous and missing fieldnames.
             % PROPOSAL: Option to specify subset or superset of field names.
-            %   PRO: Subset useful for "pdsData" structs(?)
+            %   PRO: Subset useful for "PdsData" structs(?)
             %   Ex: EJ_lapdog_shared.PDS_utils.construct_DATA_SET_ID
             %   
             % PROPOSAL: Recursive structs field names.
             %   TODO-DECISION: How specify fieldnames? Can not use cell arrays recursively.
+            % PROPOSAL: Replace sueprset, subset with clearer keywords.
+            %   PROPOSAL: require, permit
             import EJ_lapdog_shared.*
             
             if isempty(varargin)   %numel(varargin) == 1 && isempty(varargin{1})
-                subsetCheck = 0;
+                checkType = 'exact';
             elseif numel(varargin) == 1 && strcmp(varargin{1}, 'subset')
-                subsetCheck = 1;
+                checkType = 'subset';
+            elseif numel(varargin) == 1 && strcmp(varargin{1}, 'superset')
+                checkType = 'superset';
             else
                 error('Illegal argument')
             end
@@ -163,23 +164,34 @@ classdef assert
                 error('Expected struct is not struct.')
             end
             utils.assert.castring_set(fieldNamesSet)    % Abolish?
-
+            
             missingFnList = setdiff(fieldNamesSet, fieldnames(s));
             extraFnList   = setdiff(fieldnames(s), fieldNamesSet);
-            if subsetCheck && ~isempty(extraFnList)
-                
-                extraFnListStr   = utils.str_join(extraFnList,   ', ');
-                error(['Expected struct has the wrong set of fields.', ...
-                    '\n    Extra (forbidden) fields: %s'], extraFnListStr)
-                
-            elseif ~subsetCheck && (~isempty(missingFnList) || ~isempty(extraFnList))
-                
-                missingFnListStr = utils.str_join(missingFnList, ', ');
-                extraFnListStr   = utils.str_join(extraFnList,   ', ');
-                
-                error(['Expected struct has the wrong set of fields.', ...
-                    '\n    Missing fields:           %s', ...
-                    '\n    Extra (forbidden) fields: %s'], missingFnListStr, extraFnListStr)
+            
+            switch(checkType)
+                case 'exact'
+                    if (~isempty(missingFnList) || ~isempty(extraFnList))
+                        
+                        missingFnListStr = utils.str_join(missingFnList, ', ');
+                        extraFnListStr   = utils.str_join(extraFnList,   ', ');
+                        
+                        error(['Expected struct has the wrong set of fields.', ...
+                            '\n    Missing fields:           %s', ...
+                            '\n    Extra (forbidden) fields: %s'], missingFnListStr, extraFnListStr)
+                    end
+                case 'subset'
+                    if ~isempty(extraFnList)
+                        
+                        extraFnListStr   = utils.str_join(extraFnList,   ', ');
+                        error(['Expected struct has the wrong set of fields.', ...
+                            '\n    Extra (forbidden) fields: %s'], extraFnListStr)
+                    end
+                case 'superset'
+                    if ~isempty(missingFnList)                        
+                        missingFnListStr = utils.str_join(missingFnList, ', ');
+                        error(['Expected struct has the wrong set of fields.', ...
+                            '\n    Missing fields:           %s'], missingFnListStr)
+                    end
             end
         end
         

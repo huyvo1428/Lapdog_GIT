@@ -73,13 +73,16 @@ function [str, strList] = break_text(str, firstRowMaxLength, midRowsMaxLength, l
 % warningPolicy      : String constant. Whether to trigger warning when can not satisfy the rowMaxLength values.
 %   'Warning on longer rows'
 %   'Permit longer rows'
+%
+% PROPOSAL: Handle tabs somehow.
 
     % ASSERTION: Check row max lengths.
     % Useful to check this in case the rox max lengths are automatically calculated (can go wrong).
     if ~all([firstRowMaxLength, midRowsMaxLength, lastRowMaxLength] > 0)
         error('At least one row-max length argument is non-positive.')
     end
-    
+    % ASSERTION
+    EJ_lapdog_shared.utils.assert.castring(str)
     
 
     strList = {};
