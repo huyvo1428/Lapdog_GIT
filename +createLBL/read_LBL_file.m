@@ -31,10 +31,10 @@ function [HeaderKvpl, LblSs] = read_LBL_file(filePath)
 
     % NOTE: LblSsl keeps   quotes.
     %       LblSs  removes quotes.
-    [LblSsl, LblSs] = EJ_lapdog_shared.PDS_utils.read_ODL_to_structs(filePath);   % Read CALIB LBL file.
+    [LblSsl, LblSs] = EJ_library.PDS_utils.read_ODL_to_structs(filePath);   % Read CALIB LBL file.
     
     % NOTE: LblSsl includes OBJECT = TABLE as last key-value pair which should be excluded.
-    HeaderKvpl = EJ_lapdog_shared.utils.KVPL2(...
+    HeaderKvpl = EJ_library.utils.KVPL2(...
         LblSsl.keys  (1:end-1), ...
         LblSsl.values(1:end-1));
     

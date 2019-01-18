@@ -4,7 +4,7 @@
 % associative array.
 %
 % The class is a MATLAB "value class" which implies that it is immutable and passed-by-value.
-% Code replaces older standard struct KVPL that could be modified with functions EJ_lapdog_shared.utils.KVPL.* .
+% Code replaces older standard struct KVPL that could be modified with functions EJ_library.utils.KVPL.* .
 %
 %
 % IMPLEMENTATION NOTES
@@ -145,7 +145,7 @@ classdef KVPL2
         %       values : Nx1 cell array.
         %   
         function obj = KVPL2(varargin)
-            import EJ_lapdog_shared.utils.*
+            import EJ_library.utils.*
 
             %===============
             % Assign fields
@@ -204,7 +204,7 @@ classdef KVPL2
             % PROPOSAL: Shorthand methods instead of policy. equals_cko, equals_iko            
             % PROPOSAL: Policy for just comparing keys, in and out of order.
             
-            %EJ_lapdog_shared.utils.assert.isa(Kvpl2, 'EJ_lapdog_shared.utils.KVPL2')
+            %EJ_library.utils.assert.isa(Kvpl2, 'EJ_library.utils.KVPL2')
             
             if numel(obj.keys) ~= numel(Kvpl2.keys)
                 eq = false;
@@ -246,7 +246,7 @@ classdef KVPL2
             end
             
             obj.values{i} = value;
-            Kvpl = EJ_lapdog_shared.utils.KVPL2(obj.keys, obj.values);
+            Kvpl = EJ_library.utils.KVPL2(obj.keys, obj.values);
         end
 
 
@@ -272,7 +272,7 @@ classdef KVPL2
         % NOTE: Named after the set operation "difference". Could also be thought of as "delete_keys".
         function Kvpl = diff(obj, keySet)
             % PROPOSAL: Rename "difference", remove_intersection
-            import EJ_lapdog_shared.utils.*
+            import EJ_library.utils.*
             
             assert.castring_set(keySet)
             [diffKeyList, iDiff] = setdiff(obj.keys, keySet);
@@ -292,7 +292,7 @@ classdef KVPL2
         function Kvpl = intersection(obj, keySet)
             [intKeysList, iInt, junk] = intersect(obj.keys, keySet);
             
-            Kvpl = EJ_lapdog_shared.utils.KVPL2(...
+            Kvpl = EJ_library.utils.KVPL2(...
                 obj.keys(iInt), ...
                 obj.values(iInt));
         end
@@ -314,9 +314,9 @@ classdef KVPL2
         % NOTE: No "prepend" method/policy since that can be achieved by exchanging the object and argument.
         % ASSERTION: No intersection of key sets.
         function Kvpl = append(obj, Kvpl)
-            import EJ_lapdog_shared.utils.*
+            import EJ_library.utils.*
             
-            %assert.isa(Kvpl, 'EJ_lapdog_shared.utils.KVPL2')
+            %assert.isa(Kvpl, 'EJ_library.utils.KVPL2')
             
             Kvpl = KVPL2(...
                 [obj.keys; Kvpl.keys], ...
@@ -328,7 +328,7 @@ classdef KVPL2
         % NOTE: To copy a key-value from a KVPL, use Kvpl = Kvpl.append(Kvpl.subset({key}))
         % ASSERTION: No intersection of key sets.
         function Kvpl = append_kvp(obj, key, value)
-            Kvpl = EJ_lapdog_shared.utils.KVPL2(...
+            Kvpl = EJ_library.utils.KVPL2(...
                 [obj.keys;   key], ...
                 [obj.values; value]);
         end
@@ -341,8 +341,8 @@ classdef KVPL2
             % PROPOSAL: Better name to better reflect meaning.
             %   PROPOSAL: copy_from_intersection, replace/substitute_values_from, replace, replace_intersection,
             %             overwrite_intersection
-            import EJ_lapdog_shared.utils.*
-            %assert.isa(KvplSrc, 'EJ_lapdog_shared.utils.KVPL2')
+            import EJ_library.utils.*
+            %assert.isa(KvplSrc, 'EJ_library.utils.KVPL2')
             
             [intKeysList, iInt, jInt] = intersect(obj.keys, KvplSrc.keys);            
             obj.values(iInt) = KvplSrc.values(jInt);
@@ -362,7 +362,7 @@ classdef KVPL2
             %             overwrite_subset
 
             % ASSERTION
-            %EJ_lapdog_shared.utils.assert.isa(KvplSubsetSrc, 'EJ_lapdog_shared.utils.KVPL2')     % Also in overwrite_intersection.
+            %EJ_library.utils.assert.isa(KvplSubsetSrc, 'EJ_library.utils.KVPL2')     % Also in overwrite_intersection.
             diffKeySet = setdiff(KvplSubsetSrc.keys, obj.keys);
             if numel(diffKeySet) > 0
                 error('KvplSubsetSrc does not represent a subset of obj.keys.')
@@ -392,7 +392,7 @@ classdef KVPL2
             %   Assert obj.keys     is subset of keyOrderList.
             %   Assert obj.keys     and          yOrderList    are identical (except for order).
             
-            import EJ_lapdog_shared.utils.*
+            import EJ_library.utils.*
 
             % ASSERTION
             assert.castring_set(keyOrderList)

@@ -13,7 +13,7 @@
 function tabPath = convert_TAB_path(datasetPath, tabPath, nDirLevelsKept)
 % PROPOSAL: Move into create_LBL_files since only used there.
 
-    pathPartsList = EJ_lapdog_shared.utils.str_split(tabPath, filesep);
+    pathPartsList = EJ_library.utils.str_split(tabPath, filesep);
     
     tabPath = fullfile(datasetPath, pathPartsList{(end-nDirLevelsKept) : end});
 end

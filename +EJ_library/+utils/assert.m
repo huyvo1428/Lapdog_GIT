@@ -26,11 +26,11 @@
 % PRO: MATLAB's assert requires argument to logical, not numerical (useful if using 0/1=false/true).
 % --
 % Ex: assert(strcmp(datasetType, 'DERIV1'))
-%     vs EJ_lapdog_shared.utils.assertions.castring_in_set(datasetType, {'DERIV1'})
+%     vs EJ_library.utils.assertions.castring_in_set(datasetType, {'DERIV1'})
 % Ex: assert(any(strcmp(s, {'DERIV1', 'EDDER'})))
-%     vs EJ_lapdog_shared.utils.assertions.castring_in_set(datasetType, {'EDDER', 'DERIV1'})
+%     vs EJ_library.utils.assertions.castring_in_set(datasetType, {'EDDER', 'DERIV1'})
 % Ex: assert(isstruct(s) && isempty(setxor(fieldnames(s), {'a', 'b', 'c'})))
-%     vs EJ_lapdog_shared.utils.assertions.is_struct_w_fields(s, {'a', 'b', 'c'})
+%     vs EJ_library.utils.assertions.is_struct_w_fields(s, {'a', 'b', 'c'})
 %
 %
 % NAMING CONVENTIONS
@@ -75,7 +75,7 @@ classdef assert
         % PROPOSAL: Abolish
         %   PRO: Unnecessary since can use assert(ismember(s, strSet)).
         %       CON: This gives better error messages for string not being string, for string set not being string set.
-            import EJ_lapdog_shared.*
+            import EJ_library.*
         
             utils.assert.castring_set(strSet)
             utils.assert.castring(s)
@@ -142,13 +142,13 @@ classdef assert
             % PROPOSAL: Print superfluous and missing fieldnames.
             % PROPOSAL: Option to specify subset or superset of field names.
             %   PRO: Subset useful for "PdsData" structs(?)
-            %   Ex: EJ_lapdog_shared.PDS_utils.construct_DATA_SET_ID
+            %   Ex: EJ_library.PDS_utils.construct_DATA_SET_ID
             %   
             % PROPOSAL: Recursive structs field names.
             %   TODO-DECISION: How specify fieldnames? Can not use cell arrays recursively.
             % PROPOSAL: Replace sueprset, subset with clearer keywords.
             %   PROPOSAL: require, permit
-            import EJ_lapdog_shared.*
+            import EJ_library.*
             
             if isempty(varargin)   %numel(varargin) == 1 && isempty(varargin{1})
                 checkType = 'exact';

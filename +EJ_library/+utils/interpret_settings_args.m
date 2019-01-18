@@ -53,7 +53,7 @@ function [Settings] = interpret_settings_args(DefaultSettings, argList)
     %   CON: Makes it impossible to have default values for some settings/fields, but not for others.
     %   PROPOSAL: Option/flag for this behaviour.
     
-    import EJ_lapdog_shared.*
+    import EJ_library.*
     
     % Normalize argList so that varargin can be used to assign argList
     % ----------------------------------------------------------------

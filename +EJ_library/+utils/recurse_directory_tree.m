@@ -51,7 +51,7 @@
 %                          .dirCmdResult
 %                          .recursionDepth
 %                     
-% varargin          : Optional settings on format determined by EJ_lapdog_shared.utils.interpret_settings_args .
+% varargin          : Optional settings on format determined by EJ_library.utils.interpret_settings_args .
 %                     useRelativeDirectorySlash : True/false. Whether "relativePath" for directories should have a trailing
 %                                                 slash/backslash or not.
 %                     useRootRelativePathPeriod : True/false. Whether "relativePath" for rootDirPath (the "root path") itself
@@ -205,7 +205,7 @@ function result = recurse_directory_tree(rootDirPath, FileFunc, DirFunc, ShouldR
     % Set default settings.
     defaultSettings.useRelativeDirectorySlash = false;
     defaultSettings.useRootRelativePathPeriod = false;
-    settings = EJ_lapdog_shared.utils.interpret_settings_args(defaultSettings, varargin);
+    settings = EJ_library.utils.interpret_settings_args(defaultSettings, varargin);
 
     % ASSERTION
     if settings.useRelativeDirectorySlash && ~settings.useRootRelativePathPeriod
@@ -369,7 +369,7 @@ end
 function dirCmdResult = get_dir_cmd_result_for_single_object(path)
     % FRÅGA: Hur hanterar "/"?
 
-    absPath = EJ_lapdog_shared.utils.get_abs_path(path);   % Need absolute path to later determine the name of the directory (e.g. for relative paths, "/").
+    absPath = EJ_library.utils.get_abs_path(path);   % Need absolute path to later determine the name of the directory (e.g. for relative paths, "/").
     
     dirCmdResultsList = dir(absPath);
 

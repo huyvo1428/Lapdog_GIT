@@ -1094,7 +1094,7 @@ classdef definitions < handle
                 rowStr = rowList{1};
             elseif nItems >= 2
                 % Do not use the first row (in the ODL file).
-                rowStr = EJ_lapdog_shared.utils.str_join(rowList, [LINE_BREAK, INDENTATION]);
+                rowStr = EJ_library.utils.str_join(rowList, [LINE_BREAK, INDENTATION]);
                 rowStr = [LINE_BREAK, INDENTATION, rowStr];
             end
 
@@ -1110,7 +1110,7 @@ classdef definitions < handle
             % PROPOSAL: Add LABEL_REVISION_NOTE.
             %   PROPOSAL: Wait until has implemented and tested use of this function.
             
-            EJ_lapdog_shared.utils.assert.castring(firstPlksFile);
+            EJ_library.utils.assert.castring(firstPlksFile);
             
             [IdpHeaderKvpl, PlksSs] = createLBL.read_LBL_file(firstPlksFile);
             IdpHeaderKvpl = createLBL.definitions.modify_PLKS_header(IdpHeaderKvpl);
@@ -1177,7 +1177,7 @@ classdef definitions < handle
             i = find(~cellfun(@isempty, temp));
             values = HeaderKvpl.values;
             values(i) = upper(values(i));
-            HeaderKvpl = EJ_lapdog_shared.utils.KVPL2(HeaderKvpl.keys, values);
+            HeaderKvpl = EJ_library.utils.KVPL2(HeaderKvpl.keys, values);
         end
         
     end    % methods(Static, Access=private)

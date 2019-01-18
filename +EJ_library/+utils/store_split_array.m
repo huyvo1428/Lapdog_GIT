@@ -46,7 +46,7 @@ classdef store_split_array
             % Convert array: N-D --> 1-D
             array = reshape(array, [iTotal, 1]);
             
-            [iPartBeginArray, iPartEndArray] = EJ_lapdog_shared.utils.store_split_array.split_indices(iTotal, nIndicesPerFile);
+            [iPartBeginArray, iPartEndArray] = EJ_library.utils.store_split_array.split_indices(iTotal, nIndicesPerFile);
             nParts = numel(iPartBeginArray);
 
             for jPart = 1:nParts
@@ -56,7 +56,7 @@ classdef store_split_array
 
                 arrayPart = array(iPartBegin:iPartEnd);    % NOTE: Defining variable just so that "save" can store/save it.
 
-                filePath = EJ_lapdog_shared.utils.store_split_array.get_file_path(pathPrefix, jPart);
+                filePath = EJ_library.utils.store_split_array.get_file_path(pathPrefix, jPart);
                 save(filePath, 'arrayPart', 'iPartBegin', 'iPartEnd', 'nParts', 'arraySize', 'operationId', 'saveTimestamp');
 
             end
@@ -70,7 +70,7 @@ classdef store_split_array
             firstOperationId = [];
             
             while true
-                filePath = EJ_lapdog_shared.utils.store_split_array.get_file_path(pathPrefix, jPart);
+                filePath = EJ_library.utils.store_split_array.get_file_path(pathPrefix, jPart);
                 load(filePath, 'arrayPart', 'iPartBegin', 'iPartEnd', 'nParts', 'arraySize', 'operationId');
                 
                 % ASSERTION: 

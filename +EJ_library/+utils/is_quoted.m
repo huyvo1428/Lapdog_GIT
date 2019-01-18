@@ -1,6 +1,6 @@
 %
 % Determine whether string is quoted. Primarily intended to be useful for handling PDS keywords.
-% Function created so that EJ_lapdog_shared.utils.quote and EJ_lapdog_shared.utils.unquote can use it and have a clearly defined and uniform algorithm.
+% Function created so that EJ_library.utils.quote and EJ_library.utils.unquote can use it and have a clearly defined and uniform algorithm.
 %
 % NOTE: Assumes that both first and last character cannot be escaped quotes.
 %

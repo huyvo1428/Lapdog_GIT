@@ -25,7 +25,7 @@ classdef constants < handle
     %   PROPOSAL: Modify write_OBJTABLE_LBL_FILE to merge header options into settings and copy the indentation length from
     %           the separate constant ODL_INDENTATION_LENGTH.
     %
-    % NOTE: Used by non-Lapdog code: ./+EJ_lapdog_shared/+ro/+delivery/+geom/create_geom_TAB_LBL_from_EOG.m
+    % NOTE: Used by non-Lapdog code: ./+EJ_library/+ro/+delivery/+geom/create_geom_TAB_LBL_from_EOG.m
     %       Might be used by future standalone, "Lapdogish" code (same git repo) for e.g. separately regenerating LBL files.
     %
     % PROPOSAL: Separately hard-code constant values just as Lapdog code does (duplication).
@@ -293,7 +293,7 @@ classdef constants < handle
 
             % IMPLEMENTATION NOTE: Including un-set LABEL_REVISION_NOTE meant to always be overwritten by other code. If
             % it is not overwritten, then create_OBJTABLE_LBL_file will give error.
-            LblHeaderAllKvpl = EJ_lapdog_shared.utils.KVPL2({
+            LblHeaderAllKvpl = EJ_library.utils.KVPL2({
                 'PDS_VERSION_ID',            'PDS3'; ...
                 'DATA_QUALITY_ID',           QUOTED_VALUE_NOT_SET_BY_LAPDOG; ...
                 'PRODUCT_CREATION_TIME',     datestr(now, 'yyyy-mm-ddTHH:MM:SS.FFF'); ...

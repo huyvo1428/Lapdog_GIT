@@ -27,7 +27,7 @@ function create_LBL_L5_sample_types(deriv1Path)
     C = createLBL.constants();
     
     LblHeaderKvpl = C.get_LblHeaderAllKvpl();
-    LblHeaderKvpl = LblHeaderKvpl.append(EJ_lapdog_shared.utils.KVPL2({...
+    LblHeaderKvpl = LblHeaderKvpl.append(EJ_library.utils.KVPL2({...
         'START_TIME',                   ''; ...
         'STOP_TIME',                    ''; ...
         'SPACECRAFT_CLOCK_START_COUNT', ''; ...
@@ -35,7 +35,7 @@ function create_LBL_L5_sample_types(deriv1Path)
 
     
     
-    objInfoList = EJ_lapdog_shared.utils.glob_files_dirs(deriv1Path, {'.*', '.*', '.*', '.*.TAB'});
+    objInfoList = EJ_library.utils.glob_files_dirs(deriv1Path, {'.*', '.*', '.*', '.*.TAB'});
 
     for i = 1:numel(objInfoList)    
         tabFilePath = objInfoList(i).fullPath;

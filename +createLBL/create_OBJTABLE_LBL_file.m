@@ -183,16 +183,16 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     % ASSERTIONS: Caller only uses permissible field names.
     % Useful when changing field names.
     % ------------------------------------------------------
-    EJ_lapdog_shared.utils.assert.struct(LblData,          {'HeaderKvpl', 'OBJTABLE'})
-    EJ_lapdog_shared.utils.assert.struct(LblData.OBJTABLE, {'DESCRIPTION', 'OBJCOL_list'})
-    EJ_lapdog_shared.utils.assert.scalar(LblData.HeaderKvpl)    % Common error to initialize empty KVPL the wrong way.
+    EJ_library.utils.assert.struct(LblData,          {'HeaderKvpl', 'OBJTABLE'})
+    EJ_library.utils.assert.struct(LblData.OBJTABLE, {'DESCRIPTION', 'OBJCOL_list'})
+    EJ_library.utils.assert.scalar(LblData.HeaderKvpl)    % Common error to initialize empty KVPL the wrong way.
 
 
 
     OBJTABLE_data = LblData.OBJTABLE;
 
     % ASSERTION: TAB file exists (needed for consistency checks).
-    EJ_lapdog_shared.utils.assert.file_exists(tabFilePath)
+    EJ_library.utils.assert.file_exists(tabFilePath)
 
     %################################################################################################
 
@@ -275,7 +275,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     
     % ASSERTION: Unique .useFor PDS keywords.
     % NOTE: Not foolproof due to changes. Should ideally check that the final PDS keywords are not set more than once.
-    EJ_lapdog_shared.utils.assert.castring_set({T2pkArgsTable.argConst})
+    EJ_library.utils.assert.castring_set({T2pkArgsTable.argConst})
     %if numel(unique({T2pkArgsTable.argConst})) ~= numel({T2pkArgsTable.argConst})
     %    error('Specified the same argument constant multiple times in ".useFor" fields.')
     %end
@@ -293,7 +293,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     T2pkExecTable = T2PK_PROCESSING_TABLE(iT2pkProcTable);
 
     % ASSERTION: Set every PDS keyword (at most) once.
-    EJ_lapdog_shared.utils.assert.castring_set({T2pkExecTable.pdsKeyword})
+    EJ_library.utils.assert.castring_set({T2pkExecTable.pdsKeyword})
     
     % Add/transfer fields T2pkArgsTable-->T2pkExecTable for "overlapping" argConst values so that everything needed is
     % in a single table.
@@ -317,7 +317,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
             tabFileValueStr        = rowStringArrayArray{ T2pkExecTable(iT2pk).iFlr }{ iT2pk };
             T2pkKvpl_values{end+1} = T2pkExecTable(iT2pk).convFunc( tabFileValueStr );
         end
-        T2pkKvpl = EJ_lapdog_shared.utils.KVPL2(T2pkKvpl_keys, T2pkKvpl_values);
+        T2pkKvpl = EJ_library.utils.KVPL2(T2pkKvpl_keys, T2pkKvpl_values);
 
         % Update selected PDS keyword values.
         LblData.HeaderKvpl = LblData.HeaderKvpl.overwrite_subset(T2pkKvpl);
@@ -330,7 +330,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     %===================================================================
     % Add keywords to the LBL "header" (before first OBJECT statement).
     %===================================================================
-    LblData.HeaderKvpl = LblData.HeaderKvpl.append(EJ_lapdog_shared.utils.KVPL2({...
+    LblData.HeaderKvpl = LblData.HeaderKvpl.append(EJ_library.utils.KVPL2({...
         'RECORD_TYPE',  'FIXED_LENGTH'; ...                  % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
         'RECORD_BYTES', sprintf( '%i',  OBJTABLE_data.ROW_BYTES); ...
         'FILE_NAME',    sprintf('"%s"', lblFilename); ...    % Should be qouted.
@@ -351,7 +351,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
 
     % Log message
     %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
-    EJ_lapdog_shared.PDS_utils.write_ODL_from_struct(lblFilePath, Ssl, {}, Settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
+    EJ_library.PDS_utils.write_ODL_from_struct(lblFilePath, Ssl, {}, Settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
 end
 
 
@@ -374,7 +374,7 @@ function [ColumnData, nSubcolumns] = complement_column_data(ColumnData, D, lblFi
     % names by misspelling, or misspelling when overwriting values,
     % or adding fields that are never used by the function.
     %---------------------------------------------------------------
-    EJ_lapdog_shared.utils.assert.struct(Cd, D.PERMITTED_OBJCOL_FIELD_NAMES, 'subset')
+    EJ_library.utils.assert.struct(Cd, D.PERMITTED_OBJCOL_FIELD_NAMES, 'subset')
 
     
     
@@ -595,9 +595,9 @@ function Ssl = create_SSL_header(Kvpl, HeaderOptions)   % Kvpl = key-value pair 
         oldValue = Kvpl.get_value(key);
         
         % ASSERTION: Check that old value is a string.
-        EJ_lapdog_shared.utils.assert.castring(oldValue)
+        EJ_library.utils.assert.castring(oldValue)
 
-        Kvpl = Kvpl.set_value(key, EJ_lapdog_shared.utils.quote(oldValue, 'permit quoted'));
+        Kvpl = Kvpl.set_value(key, EJ_library.utils.quote(oldValue, 'permit quoted'));
     end
     
     

@@ -82,7 +82,7 @@ function [str, strList] = break_text(str, firstRowMaxLength, midRowsMaxLength, l
         error('At least one row-max length argument is non-positive.')
     end
     % ASSERTION
-    EJ_lapdog_shared.utils.assert.castring(str)
+    EJ_library.utils.assert.castring(str)
     
 
     strList = {};

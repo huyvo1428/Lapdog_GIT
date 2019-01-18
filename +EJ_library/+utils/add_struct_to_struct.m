@@ -39,7 +39,7 @@ function a = add_struct_to_struct(a, b, DuplicateFieldBehaviours)
 %   PROPOSAL: Function pointer argument?!!
 %   PROPOSAL: (Flag) always/never recurse structs (if present in both a and b).
 %
-% PROPOSAL: Use EJ_lapdog_shared.utils.interpret_settings_args.
+% PROPOSAL: Use EJ_library.utils.interpret_settings_args.
 %   CON: Can not use it since it calls this function! Would get infite recursion!!!
 
 
@@ -132,7 +132,7 @@ function a = add_struct_to_struct(a, b, DuplicateFieldBehaviours)
                 % Do nothing.
             elseif strcmp(behaviour, 'Recurse') && (bothAreStructs)
                 % NOTE: Recursive call. Needs the original DuplicateFieldBehaviours.
-                a.(fieldName) = EJ_lapdog_shared.utils.add_struct_to_struct(a.(fieldName), b.(fieldName), DuplicateFieldBehaviours);
+                a.(fieldName) = EJ_library.utils.add_struct_to_struct(a.(fieldName), b.(fieldName), DuplicateFieldBehaviours);
             else
                 error('Can not interpret string value behaviour="%s" for this combination of field values.', behaviour)
             end

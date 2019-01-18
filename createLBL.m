@@ -211,10 +211,10 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
                 % EXPERIMENTAL CODE
                 savedIndexPathPrefix = fullfile(ldDatasetPath, C.PRE_CREATELBL_SAVED_INDEX_PREFIX);
                 fprintf('Saving pre-createLBL MATLAB "index" in "%s*"\n', savedIndexPathPrefix);
-                EJ_lapdog_shared.utils.store_split_array.save(index, savedIndexPathPrefix, C.N_INDEX_INDICES_PER_PART)
+                EJ_library.utils.store_split_array.save(index, savedIndexPathPrefix, C.N_INDEX_INDICES_PER_PART)
                 fprintf('    Done: %.0f s (elapsed wall time)\n', etime(clock, executionBeginDateVec));
             catch Exception
-                warning('EJ_lapdog_shared.utils.store_split_array.save failed to save "index" variable to disk.')
+                warning('EJ_library.utils.store_split_array.save failed to save "index" variable to disk.')
             end
         end
     end

@@ -42,7 +42,7 @@ function [s, initiallyUnquoted] = quote(s, policy)
 %   PROBLEM: Need to be able to determine whether string is quoted/unquoted. ==> How distinguish surrounding quotes from escaped internal quotes?
 %       PROPOSAL: Ideally, a separate (arbitrary) function should determine whether string is quoted or not.
 
-isQuoted = EJ_lapdog_shared.utils.is_quoted(s);
+isQuoted = EJ_library.utils.is_quoted(s);
 
 switch policy
 %    case 'always quote'

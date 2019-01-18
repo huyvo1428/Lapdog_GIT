@@ -10,7 +10,7 @@
 %
 % ARGUMENTS
 % =========
-% Ssl                 : SSL data struct. See EJ_lapdog_shared.PDS_utils.read_ODL_to_structs.
+% Ssl                 : SSL data struct. See EJ_library.PDS_utils.read_ODL_to_structs.
 % endRowsList         : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
 % contentRowMaxLength : Max row length, not counting line break.
 %                       NOTE: This is not a rigorous line breaking for everything; only some things. In particular does
@@ -94,8 +94,8 @@ function write_key_values(C, Ssl, indentationLevel)
         % IMPLEMENTATION NOTE: Check that key and value are strings.
         % Want to do this explicitly for VALUES to make sure that no temporary value (e.g. []) added by one part of the
         % code, and meant to be overwritten by some other part, somehow survives into a LBL file.
-        EJ_lapdog_shared.utils.assert.castring(key)
-        EJ_lapdog_shared.utils.assert.castring(value)
+        EJ_library.utils.assert.castring(key)
+        EJ_library.utils.assert.castring(value)
         
         if ~strcmp(key, 'OBJECT') && isempty(object)
             %======================
@@ -176,7 +176,7 @@ function [str, firstRowExcess] = compose_non_object_key_assignment(key, value, p
     if ~isempty(strfind(value, '"')) && isempty(strfind(value, lineBreak))
         firstRowMaxLength = rowMaxLength-length(str1);
         
-        [value, rowList] = EJ_lapdog_shared.utils.break_text(value, ...
+        [value, rowList] = EJ_library.utils.break_text(value, ...
             firstRowMaxLength, ...    % NOTE: String contains beginning quote. Therefore does NOT need to subtract 1 from rowMaxLength.
             rowMaxLength, ...
             rowMaxLength, ...    % NOTE: String contains ending quote. Therefore does NOT need to subtract 1 from rowMaxLength.
