@@ -172,11 +172,13 @@ try
             case 'I'
                 
                 
-                %let's not do anything fancy, the bias current/potential are written by
-                %software, not a measuremeant
+
                 isd_limit = 1.90735045E-11/1800; % 1789 samples maximum per AQP. 1.9E-11 Amps accuracy (20bit accuracy)
                 isd(abs((isd)) < isd_limit) = 0; %find all values below treshold. Values lower than this will be noise from MATLAB precision error.
 
+                
+                %let's not do anything fancy, the bias current/potential are written by
+                %software, not a measuremeant
                 sdtemp = vsd;
                 vsd(:) = 0;
                 

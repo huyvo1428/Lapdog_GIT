@@ -644,7 +644,7 @@ try
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
                 XXP_struct.Vz(j,1:2)=AP(j).Vz;
                 XXP_struct.Vsi(j,1:2)=DP(j).Vsi;
-                XXP_struct.asm_Te_exp_belowVknee(j,1:2)=DP_asm(j).Te_exp_belowVknee;
+                XXP_struct.Te_exp_belowVknee(j,1:2)=DP(j).Te_exp_belowVknee;
                 XXP_struct.Iph0(j,1:2)=DP(j).Iph0;
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
                 XXP_struct.qf(j,1)=EP(j).qf;
