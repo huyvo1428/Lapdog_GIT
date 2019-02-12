@@ -122,8 +122,6 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %
     % PROPOSAL: Change to permit overwrite.
     % PROPOSAL: Remove "index" from pre_createLBL_workspace.mat.
-    %
-    % TODO: Change clfd-->Clfd.
     
     
     
@@ -147,7 +145,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % -----------------------------------
     % NOTE: Needed for saving .mat file, and must hence precede it.
     %===============================================================
-    if length(varargin) == 0
+    if isempty(varargin)
         ldDatasetPath = evalin(MWS, 'derivedpath');    % Value used twice. NOTE: evalin
         pdDatasetPath = evalin(MWS, 'archivepath');                      % NOTE: evalin
     elseif length(varargin) == 2
@@ -268,23 +266,23 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     
     
     
-    clfd = [];   % CLFD = create_LBL_files data
-    clfd.ldDatasetPath     = ldDatasetPath;
-    clfd.pdDatasetPath     = pdDatasetPath;
-    clfd.metakernel        = get_lapdog_metakernel();   % NOTE: Technically not part of the Lapdog state. Useful.
+    Clfd = [];   % CLFD = create_LBL_files data
+    Clfd.ldDatasetPath     = ldDatasetPath;
+    Clfd.pdDatasetPath     = pdDatasetPath;
+    Clfd.metakernel        = get_lapdog_metakernel();   % NOTE: Technically not part of the Lapdog state. Useful.
     
-    clfd.index             = evalin(MWS, 'index');
-    clfd.tabindex          = evalin(MWS, 'tabindex');
-    clfd.an_tabindex       = an_tabindex;
-    clfd.blockTAB          = evalin(MWS, 'blockTAB');
-    clfd.ASW_tabindex      = ASW_tabindex;
-    clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable case for consistency.
-    clfd.PHO_tabindex      = PHO_tabindex;
+    Clfd.index             = evalin(MWS, 'index');
+    Clfd.tabindex          = evalin(MWS, 'tabindex');
+    Clfd.an_tabindex       = an_tabindex;
+    Clfd.blockTAB          = evalin(MWS, 'blockTAB');
+    Clfd.ASW_tabindex      = ASW_tabindex;
+    Clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable case for consistency.
+    Clfd.PHO_tabindex      = PHO_tabindex;
     
-    clfd.A1P_tabindex      = der_struct;     % Changing variable name for consistency.
-    clfd.C                 = C;
-    clfd.failFastDebugMode = failFastDebugMode;
-    clfd.generatingDeriv1  = generatingDeriv1;
+    Clfd.A1P_tabindex      = der_struct;     % Changing variable name for consistency.
+    Clfd.C                 = C;
+    Clfd.failFastDebugMode = failFastDebugMode;
+    Clfd.generatingDeriv1  = generatingDeriv1;
     clear C
 
 
@@ -295,6 +293,6 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % (2) disabling part of Lapdog (e.g. all analysis.m, or output_science.m, or parts thereof)
     % Therefore, older versions of variables may be available when there should be no data and it is not possible for the calling code to tell the difference. If possible, create_LBL_files
     % should try to ignore these data.
-    createLBL.create_LBL_files(clfd)
+    createLBL.create_LBL_files(Clfd)
 
 end

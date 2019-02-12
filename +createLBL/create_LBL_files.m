@@ -6,7 +6,7 @@
 %
 % ARGUMENTS
 % =========
-% data : Struct containing fields, mostly corresponding to the needed Lapdog variables, including global variables.
+% Data : Struct containing fields, mostly corresponding to the needed Lapdog variables, including global variables.
 %
 %
 % VARIABLE NAMING CONVENTIONS
@@ -39,7 +39,7 @@
 %   CON: Slightly unsafe. Would need to search for strings ', '.
 %
 % PROPOSAL: Make code independent of Stabindex.utcStop, Stabindex.sctStop by just using
-%           data.index(Stabindex.iIndexFirst/Last) instead.
+%           Data.index(Stabindex.iIndexFirst/Last) instead.
 %   PRO: Makes code more reliable.
 %   TODO-NEED-INFO: Need info if correct understanding of index timestamps.
 %
@@ -86,18 +86,16 @@
 % PROPOSAL: Have block lists use TAB columns for start & stop timestamps.
 % PROPOSAL: Replace strrep with own version which assert exactly N string replacements.
 %   PRO: Good for changes in filename convention.
-%
-% TODO: Change data-->Data
 %===================================================================================================
 
-function create_LBL_files(data)
+function create_LBL_files(Data)
     
     % ASSERTIONS
-    EJ_library.utils.assert.struct(data, {...
+    EJ_library.utils.assert.struct(Data, {...
         'ldDatasetPath', 'pdDatasetPath', 'metakernel', 'C', 'failFastDebugMode', 'generatingDeriv1', ...
         'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex'})
-    if isnan(data.failFastDebugMode)    % Check if field set to temporary value.
-        error('Illegal argument data.failFastDebugMode=%g', data.failFastDebugMode)
+    if isnan(Data.failFastDebugMode)    % Check if field set to temporary value.
+        error('Illegal argument Data.failFastDebugMode=%g', Data.failFastDebugMode)
     end
 
 
@@ -108,14 +106,14 @@ function create_LBL_files(data)
     
 
     
-    COTLF_SETTINGS = struct('indentationLength', data.C.ODL_INDENTATION_LENGTH);
+    COTLF_SETTINGS = struct('indentationLength', Data.C.ODL_INDENTATION_LENGTH);
     
 
     
     % Set policy for errors/warning
     % (1) when failing to generate a file,
     % (2) when LBL files are (believed to be) inconsistent with TAB files.
-    if data.failFastDebugMode
+    if Data.failFastDebugMode
         GENERATE_FILE_FAIL_POLICY = 'message+stack trace';
         
         GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'error';
@@ -135,23 +133,23 @@ function create_LBL_files(data)
 
 
     LblDefs = createLBL.definitions(...
-        data.generatingDeriv1, ...
-        data.C.MISSING_CONSTANT, ...
-        data.C.N_FINAL_PRESWEEP_SAMPLES, ...
-        data.C.ODL_INDENTATION_LENGTH, ...
-        data.C.get_LblHeaderAllKvpl());
+        Data.generatingDeriv1, ...
+        Data.C.MISSING_CONSTANT, ...
+        Data.C.N_FINAL_PRESWEEP_SAMPLES, ...
+        Data.C.ODL_INDENTATION_LENGTH, ...
+        Data.C.get_LblHeaderAllKvpl());
     
 
 
-    cspice_furnsh(data.metakernel);
+    cspice_furnsh(Data.metakernel);
 
 
 
     %================================================================================================================
     % Convert tabindex and an_tabindex into equivalent structs
     %================================================================================================================
-    Stabindex    = createLBL.convert_tabindex(data.tabindex);         % Can handle arbitrarily sized empty tabindex.
-    San_tabindex = createLBL.convert_an_tabindex(data.an_tabindex);   % Can handle arbitrarily sized empty an_tabindex.
+    Stabindex    = createLBL.convert_tabindex(Data.tabindex);         % Can handle arbitrarily sized empty tabindex.
+    San_tabindex = createLBL.convert_an_tabindex(Data.an_tabindex);   % Can handle arbitrarily sized empty an_tabindex.
     
     
     
@@ -161,9 +159,9 @@ function create_LBL_files(data)
     %
     %===============================================================
     createLblFileFuncPtr = @(LblData, tabFile) (createLBL.create_OBJTABLE_LBL_file(...
-        convert_LD_TAB_path(data.ldDatasetPath, tabFile), ...
-        LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY));
-    create_tabindex_files(createLblFileFuncPtr, data.pdDatasetPath, data.index, Stabindex, ...
+        convert_LD_TAB_path(Data.ldDatasetPath, tabFile), ...
+        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY));
+    create_tabindex_files(createLblFileFuncPtr, Data.pdDatasetPath, Data.index, Stabindex, ...
         LblDefs)
     
     
@@ -173,18 +171,18 @@ function create_LBL_files(data)
     % Create LBL files for TAB files in blockTAB.
     %
     %===============================================
-    for i = 1:length(data.blockTAB)
+    for i = 1:length(Data.blockTAB)
                 
         % NOTE: Does NOT rely on reading old LBL file.
         % BUG?/NOTE: Can not find any block list files with macro block beginning before/ending after midnight (due to
         % "rounding") but should they not? /2018-10-19
-        START_TIME = datestr(data.blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
-        STOP_TIME  = datestr(data.blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
+        START_TIME = datestr(Data.blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
+        STOP_TIME  = datestr(Data.blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
         LhtKvpl = get_timestamps_KVPL(...
             START_TIME, ...
             STOP_TIME, ...
-            cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(START_TIME)), ...
-            cspice_sce2s(data.C.ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
+            cspice_sce2s(Data.C.ROSETTA_NAIF_ID, cspice_str2et(START_TIME)), ...
+            cspice_sce2s(Data.C.ROSETTA_NAIF_ID, cspice_str2et(STOP_TIME)));
 
         %=======================================
         % LBL file: Create OBJECT TABLE section
@@ -192,24 +190,24 @@ function create_LBL_files(data)
         LblData = LblDefs.get_BLKLIST_data(LhtKvpl);
 
         createLBL.create_OBJTABLE_LBL_file(...
-            convert_LD_TAB_path(data.ldDatasetPath, data.blockTAB(i).blockfile), ...
-            LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            convert_LD_TAB_path(Data.ldDatasetPath, Data.blockTAB(i).blockfile), ...
+            LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         
         clear   START_TIME   STOP_TIME   LhtKvpl   LblData
     end   % for
 
 
 
-    if data.generatingDeriv1
+    if Data.generatingDeriv1
         %===============================================
         %
         % Create LBL files for TAB files in an_tabindex
         %
         %===============================================
         createLblFileFuncPtr = @(LblData, tabFile, tabLblInconsistencyPolicy) (createLBL.create_OBJTABLE_LBL_file(...
-                convert_LD_TAB_path(data.ldDatasetPath, tabFile), ...
-                LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy));
-        create_antabindex_files(createLblFileFuncPtr, data.ldDatasetPath, data.pdDatasetPath, data.index, Stabindex, San_tabindex, ...
+                convert_LD_TAB_path(Data.ldDatasetPath, tabFile), ...
+                LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy));
+        create_antabindex_files(createLblFileFuncPtr, Data.ldDatasetPath, Data.pdDatasetPath, Data.index, Stabindex, San_tabindex, ...
             LblDefs, GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY)
 
 
@@ -219,32 +217,32 @@ function create_LBL_files(data)
         % Create LBL files for files in der_struct/A1P_tabindex (A1P)
         %
         %=============================================================
-        if ~isempty(data.A1P_tabindex)
+        if ~isempty(Data.A1P_tabindex)
             % IMPLEMENTATION NOTE: "der_struct"/A1P_tabindex is only defined/set when
             % (1) running Lapdog (DERIV1), not edder_lapdog, and
             % (2) analysis.m is not disabled
             % Since it is a global variable, it may survive from a Lapdog DERIV1 run to a run where it should not be
-            % defined. NOTE: In that case, data.A1P_tabindex.file{iFile} will contain paths to the DERIV1-data set (the
+            % defined. NOTE: In that case, Data.A1P_tabindex.file{iFile} will contain paths to the DERIV1-data set (the
             % wrong data set) which may thus lead to overwriting LBL files in DERIV1 data set if called when writing
             % EDDER data set!!! Therefore important to NOT RUN this code for EDDER.
             % IMPLEMENTATION NOTE: "der_struct"/A1P_tabindex can be empty (size 0x0 array) and thus have no fields.
             % ==> Must check for A1P_tabindex being empty.
             
-            for iFile = 1:numel(data.A1P_tabindex.file)
+            for iFile = 1:numel(Data.A1P_tabindex.file)
                 try
-                    startStopTimes = data.A1P_tabindex.timing(iFile, :);   % NOTE: Stores UTC+SCCS.
+                    startStopTimes = Data.A1P_tabindex.timing(iFile, :);   % NOTE: Stores UTC+SCCS.
                     LhtKvpl        = get_timestamps_KVPL(...
                         startStopTimes{1}, ...
                         startStopTimes{2}, ...
                         startStopTimes{3}, ...
                         startStopTimes{4});
                     
-                    iIndex  = data.A1P_tabindex.firstind(iFile);
-                    LblData = LblDefs.get_A1P_data(LhtKvpl, data.index(iIndex).lblfile);
+                    iIndex  = Data.A1P_tabindex.firstind(iFile);
+                    LblData = LblDefs.get_A1P_data(LhtKvpl, Data.index(iIndex).lblfile);
                     
                     createLBL.create_OBJTABLE_LBL_file(...
-                        convert_LD_TAB_path(data.ldDatasetPath, data.A1P_tabindex.file{iFile}), ...
-                        LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                        convert_LD_TAB_path(Data.ldDatasetPath, Data.A1P_tabindex.file{iFile}), ...
+                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                     
                     clear   startStopTimes   LhtKvpl   iIndex   LblData
                     
@@ -262,11 +260,11 @@ function create_LBL_files(data)
         % Create LBL files for ASW
         %
         %==========================
-        if ~isempty(data.ASW_tabindex)
-            for iFile = 1:numel(data.ASW_tabindex)
+        if ~isempty(Data.ASW_tabindex)
+            for iFile = 1:numel(Data.ASW_tabindex)
                 try
                     
-                    startStopTimes = data.ASW_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+                    startStopTimes = Data.ASW_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
                     LhtKvpl = get_timestamps_KVPL(...
                         startStopTimes{1}, ...
                         startStopTimes{2}, ...
@@ -275,11 +273,11 @@ function create_LBL_files(data)
                     
                     LblData = LblDefs.get_ASW_data(...
                         LhtKvpl, ...
-                        convert_PD_TAB_path(data.pdDatasetPath, data.index(data.USC_tabindex(iFile).first_index).lblfile));
+                        convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.USC_tabindex(iFile).first_index).lblfile));
                     
                     createLBL.create_OBJTABLE_LBL_file(...
-                        convert_LD_TAB_path(data.ldDatasetPath, data.ASW_tabindex(iFile).fname), ...
-                        LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, ASW_TAB_LBL_INCONSISTENCY_POLICY);
+                        convert_LD_TAB_path(Data.ldDatasetPath, Data.ASW_tabindex(iFile).fname), ...
+                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, ASW_TAB_LBL_INCONSISTENCY_POLICY);
                     
                     clear   startStopTimes   LhtKvpl   LblData
                     
@@ -295,11 +293,11 @@ function create_LBL_files(data)
         % Create LBL files for USC
         %
         %==========================
-        if ~isempty(data.USC_tabindex)
-            for iFile = 1:numel(data.USC_tabindex)
+        if ~isempty(Data.USC_tabindex)
+            for iFile = 1:numel(Data.USC_tabindex)
                 try
                     
-                    startStopTimes = data.USC_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+                    startStopTimes = Data.USC_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
                     LhtKvpl = get_timestamps_KVPL(...
                         startStopTimes{1}, ...
                         startStopTimes{2}, ...
@@ -308,11 +306,11 @@ function create_LBL_files(data)
                     
                     LblData = LblDefs.get_USC_data(...
                         LhtKvpl, ...
-                        convert_PD_TAB_path(data.pdDatasetPath, data.index(data.USC_tabindex(iFile).first_index).lblfile));
+                        convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.USC_tabindex(iFile).first_index).lblfile));
                     
                     createLBL.create_OBJTABLE_LBL_file(...
-                        convert_LD_TAB_path(data.ldDatasetPath, data.USC_tabindex(iFile).fname), ...
-                        LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                        convert_LD_TAB_path(Data.ldDatasetPath, Data.USC_tabindex(iFile).fname), ...
+                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                     
                     clear   startStopTimes   LhtKvpl   LblData
                     
@@ -330,10 +328,10 @@ function create_LBL_files(data)
         %==========================
         % NOTE: PHO_tabindex has been observed to contain the same file multiple times (commit 9648939), test phase TDDG. Likely
         % because entries are re-added for every run.
-        if ~isempty(data.PHO_tabindex)
-            for iFile = 1:numel(data.PHO_tabindex)
+        if ~isempty(Data.PHO_tabindex)
+            for iFile = 1:numel(Data.PHO_tabindex)
                 try
-                    % data.PHO_tabindex(iFile).timing;    % ~BUG: Not implemented/never assigned (yet).
+                    % Data.PHO_tabindex(iFile).timing;    % ~BUG: Not implemented/never assigned (yet).
                     
                     % IMPLEMENTATION NOTE: TEMPORARY SOLUTION. Timestamps are set via the columns, not here. Submitting
                     % empty values forces the rest of the code to overwrite the values though (assertions are triggered
@@ -343,8 +341,8 @@ function create_LBL_files(data)
                     LblData = LblDefs.get_PHO_data(LhtKvpl);
                     
                     createLBL.create_OBJTABLE_LBL_file(...
-                        convert_LD_TAB_path(data.ldDatasetPath, data.PHO_tabindex(iFile).fname), ...
-                        LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                        convert_LD_TAB_path(Data.ldDatasetPath, Data.PHO_tabindex(iFile).fname), ...
+                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                     
                     clear   LhtKvpl   LblData
                     
@@ -362,12 +360,12 @@ function create_LBL_files(data)
         %==============================================================
         % TEMPORARY SOLUTION.
         % DELETE?!! Still creates NPL LBL files from found TAB files.
-        createLBL.create_LBL_L5_sample_types(data.ldDatasetPath)
+        createLBL.create_LBL_L5_sample_types(Data.ldDatasetPath)
     end
     
     
     
-    cspice_unload(data.metakernel);
+    cspice_unload(Data.metakernel);
     warning(prevWarningsSettings)
     fprintf(1, '%s: %.0f s (elapsed wall time)\n', mfilename, etime(clock, executionBeginDateVec));
 
@@ -441,8 +439,8 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
         end
 
         %createLBL.create_OBJTABLE_LBL_file(...
-        %    convert_LD_TAB_path(data.ldDatasetPath, Stabindex(i).path), ...
-        %    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+        %    convert_LD_TAB_path(Data.ldDatasetPath, Stabindex(i).path), ...
+        %    LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         createLblFileFuncPtr(LblData, Stabindex(i).path);
         
         clear   firstPlksSs   LhtKvpl   LblData
@@ -533,8 +531,8 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
             
             
             %createLBL.create_OBJTABLE_LBL_file(...
-            %    convert_LD_TAB_path(data.ldDatasetPath, San_tabindex(i).path), ...
-            %    LblData, data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
+            %    convert_LD_TAB_path(Data.ldDatasetPath, San_tabindex(i).path), ...
+            %    LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
             createLblFileFuncPtr( LblData, convert_LD_TAB_path(ldDatasetPath, San_tabindex(i).path), tabLblInconsistencyPolicy );
             clear   plksFileList   firstPlksFile   LblData   tabLblInconsistencyPolicy   HeaderKvpl
             
@@ -552,7 +550,7 @@ end
 
 % Utility function to shorten code.
 %
-% IMPLEMENTATION NOTE: From experience, data.A1P_tabindex.timing, asw_tabindex.timing, data.USC_tabindex.timing can have
+% IMPLEMENTATION NOTE: From experience, Data.A1P_tabindex.timing, asw_tabindex.timing, Data.USC_tabindex.timing can have
 % UTC values with 6 decimals which DVAL-NG does not permit. Must therefore truncate or round to 3 decimals.
 function Kvpl = get_timestamps_KVPL(START_TIME, STOP_TIME, SPACECRAFT_CLOCK_START_COUNT, SPACECRAFT_CLOCK_STOP_COUNT)
     Kvpl = EJ_library.utils.KVPL2({ ...
