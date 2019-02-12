@@ -763,7 +763,7 @@ XCAL_L.t0(XCAL_M.lapind(indz))              =XCAL_M.t1(indz);
 XCAL_L.Te(XCAL_M.lapind(indz))              =XCAL_M.Te(indz);
 %I care less about these, so some values will be empty.
 %XCAL_L.mipID(XCAL_M.lapind(indz))           =XCAL_M.mipID(indz);
-XCAL_L.mipne_uncertainty(XCAL_M.lapind(indz)) =XCAL_M.mipne_uncertainty(indz);
+XCAL_L.mipne_uncertainty(XCAL_M.lapind(indz)) =XCAL_M.ne_uncertainty(indz);
 XCAL_L.mipnefilt(XCAL_M.lapind(indz))       =XCAL_M.mipnefilt(indz);
 
 
