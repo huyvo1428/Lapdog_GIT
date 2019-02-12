@@ -26,12 +26,12 @@
 % TERMINOLOGY, DEFINITIONS OF TERMS
 % =================================
 % true sweep              = The actual, intended sweep during which the bias changes in regular, same-sized steps.
-%                           All true sweeps (within a command block) should have the same length.
+%                           All true sweeps (within a macro block) should have the same length.
 % true pre-sweep samples  = Samples taken before the true sweep. There should be INITIAL_SWEEP_SMPLS of these in a given
 %                           sweep.
 % raw sweep/sequence      = "true sweep" + "true pre-sweep samples" = Sequence of samples read from EDITED1/CALIB1 (also arguments to this function).
 % final sweep/sequence    = "true sweep" + "final pre-sweep samples"
-%                           All final sweeps (within a command block) should have the same length, preferably also within all datasets.
+%                           All final sweeps (within a macro block) should have the same length, preferably also within all datasets.
 %                           These sweeps are return values from the function.
 % final pre-sweep samples = "true pre-sweep samples" + (optionally) fill values preceeding them. 
 %
@@ -40,7 +40,7 @@
 % =====
 % NOTE: As I recall, LAP_Px_INITIAL_SWEEP_SMPLS can be wrong sometimes (very, very large values). Unclear if bug in pds
 % or bitstream/TM. /Erik P G Johansson 2018-07-20.
-% NOTE: This function should be able to handle (correct for) one bad INITIAL_SWEEP_SMPLS value within command block (due to pds bug).
+% NOTE: This function should be able to handle (correct for) one bad INITIAL_SWEEP_SMPLS value within macro block (due to pds bug).
 % NOTE: This function should not be able to handle zero sweeps.
 % IMLEMENTATION NOTE: Implementation does not directly reference createLBL.constants
 % (N_FINAL_PRESWEEP_SAMPLES, MISSING_CONSTANT) to simplify automatic testing. Receives values via argument instead.
@@ -71,11 +71,11 @@ function [BxS_relativeTime, BxS_voltageArray, IxS_utc12, IxS_obt12, IxS_currentA
     if nOutliers > 0        
         % ASSERTION
         if nOutliers >= 2
-            error('Found sweeps with true sweep length that is inconsistent with other sweeps within command block. Too many (%i) to automatically fix. -- Aborting', ...
+            error('Found sweeps with true sweep length that is inconsistent with other sweeps within macro block. Too many (%i) to automatically fix. -- Aborting', ...
                 nOutliers)
         end
         
-        warning('Found one sweep with true sweep length that is inconsistent with other sweeps within command block. INITIAL_SWEEP_SMPLS_array(iOutliers) = [%s] -- Correcting it by correcting INITIAL_SWEEP_SMPLS_array value(s)', ...
+        warning('Found one sweep with true sweep length that is inconsistent with other sweeps within macro block. INITIAL_SWEEP_SMPLS_array(iOutliers) = [%s] -- Correcting it by correcting INITIAL_SWEEP_SMPLS_array value(s)', ...
             sprintf('%i ', INITIAL_SWEEP_SMPLS_array(iOutliers)))
         INITIAL_SWEEP_SMPLS_array(iOutliers) = rawSweepLengthArray(iOutliers) - trueSweepLength;    % NOTE: Should work for all indices (not just iOutliers).
     end

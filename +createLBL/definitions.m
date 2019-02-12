@@ -336,9 +336,9 @@ classdef definitions < handle
                     HF_LF_str, modeStr, probeStr), ...
                 DESCRIPTION_columnList];
         end    % function
-        
-        
-        
+
+
+
         % NOTE: Sweeps keep the PDS bias keywords since they give the surrounding bias.
         function LblData = get_BxS_data(obj, LhtKvpl, firstPlksFile, probeNbr, ixsTabFilename)
             
@@ -570,6 +570,17 @@ classdef definitions < handle
                 {'2019-02-04', 'EJ', 'Updated UNIT'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
+            % 2018-10-03_EJ_AE_RID_meeting.txt:
+            %   Värden på DATA_SET_PARAMETER_NAME att använda
+            %       Kan vara flera strängvärden (i array) för varje kolumn.
+            %       PLASMA_WAVE_SPECTRUM - Alla PSD
+            %       ELECTRIC FIELD SPECTRAL DENSITY - PSD E-fält (inte density)
+            %       Övriga uppenbara.
+
+            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
+            %    {'DATA_SET_PARAMETER_NAME', '{...}'; ...
+            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
+
             HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', sprintf('PSD spectra of HF %s data (snapshots) on probe %i for the frequencies described in file %s.', modeStr, probeNbr, frqTabFilename));
             
             LblData.HeaderKvpl           = HeaderKvpl;
@@ -770,9 +781,9 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                  'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
-        
-        
-        
+
+
+
         % NOTE: No LBL timestamps for now, and hence no such arguments.
         function LblData = get_NPL_data(obj)
             
@@ -1088,11 +1099,17 @@ classdef definitions < handle
             
             rowList = {};
             for i = 1:nItems
+                % ASSERTION
                 assert(numel(contentCellArray{i}) == 3)
                 
                 dateStr = contentCellArray{i}{1};
                 author  = contentCellArray{i}{2};
                 message = contentCellArray{i}{3};
+                
+                % ASSERTIONS
+                assert(~isempty(regexp(dateStr, '^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', 'once')))
+                assert(~isempty(regexp(author,  '^[A-ZÅÄÖ]+$', 'once')))
+                
                 rowList{i} = sprintf('%s, %s: %s', dateStr, author, message);
             end
 

@@ -122,6 +122,8 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %
     % PROPOSAL: Change to permit overwrite.
     % PROPOSAL: Remove "index" from pre_createLBL_workspace.mat.
+    %
+    % TODO: Change clfd-->Clfd.
     
     
     

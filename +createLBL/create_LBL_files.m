@@ -86,6 +86,8 @@
 % PROPOSAL: Have block lists use TAB columns for start & stop timestamps.
 % PROPOSAL: Replace strrep with own version which assert exactly N string replacements.
 %   PRO: Good for changes in filename convention.
+%
+% TODO: Change data-->Data
 %===================================================================================================
 
 function create_LBL_files(data)
@@ -168,13 +170,13 @@ function create_LBL_files(data)
     
     %===============================================
     %
-    % Create LBL files for (TAB files in) blockTAB.
+    % Create LBL files for TAB files in blockTAB.
     %
     %===============================================
     for i = 1:length(data.blockTAB)
                 
         % NOTE: Does NOT rely on reading old LBL file.
-        % BUG?/NOTE: Can not find any block list files with command block beginning before/ending after midnight (due to
+        % BUG?/NOTE: Can not find any block list files with macro block beginning before/ending after midnight (due to
         % "rounding") but should they not? /2018-10-19
         START_TIME = datestr(data.blockTAB(i).tmac0,   'yyyy-mm-ddT00:00:00.000');
         STOP_TIME  = datestr(data.blockTAB(i).tmac1+1, 'yyyy-mm-ddT00:00:00.000');   % Slightly unsafe (leap seconds, and in case macro block goes to or just after midnight).
@@ -218,11 +220,15 @@ function create_LBL_files(data)
         %
         %=============================================================
         if ~isempty(data.A1P_tabindex)
-            % IMPLEMENTATION NOTE: "der_struct"/A1P_tabindex is only defined/set when running Lapdog (DERIV1). However, since it is a
-            % global variable, it may survive from a Lapdog DERIV1 run until a edder_lapdog run. If so,
-            % data.A1P_tabindex.file{iFile} will contain paths to a DERIV1-data set. May thus lead to overwriting LBL files in
-            % DERIV1 data set if called when writing EDDER data set!!! Therefore important to NOT RUN this code for
-            % EDDER.
+            % IMPLEMENTATION NOTE: "der_struct"/A1P_tabindex is only defined/set when
+            % (1) running Lapdog (DERIV1), not edder_lapdog, and
+            % (2) analysis.m is not disabled
+            % Since it is a global variable, it may survive from a Lapdog DERIV1 run to a run where it should not be
+            % defined. NOTE: In that case, data.A1P_tabindex.file{iFile} will contain paths to the DERIV1-data set (the
+            % wrong data set) which may thus lead to overwriting LBL files in DERIV1 data set if called when writing
+            % EDDER data set!!! Therefore important to NOT RUN this code for EDDER.
+            % IMPLEMENTATION NOTE: "der_struct"/A1P_tabindex can be empty (size 0x0 array) and thus have no fields.
+            % ==> Must check for A1P_tabindex being empty.
             
             for iFile = 1:numel(data.A1P_tabindex.file)
                 try
