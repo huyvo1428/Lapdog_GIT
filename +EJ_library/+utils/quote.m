@@ -36,11 +36,12 @@ function [s, initiallyUnquoted] = quote(s, policy)
 %       end
 %       % s is now amended.
 %
-% TODO-DECISION: How handle interior quotes?
+% TODO-DECISION: How handle detection of interior quotes?
 %   NOTE: Interior quotes could be escaped and legal. Depends on syntax.
 %   PROPOSAL: Do not check for interior quotes.
 %   PROBLEM: Need to be able to determine whether string is quoted/unquoted. ==> How distinguish surrounding quotes from escaped internal quotes?
 %       PROPOSAL: Ideally, a separate (arbitrary) function should determine whether string is quoted or not.
+%   PROPOSAL: Assertion.
 
 isQuoted = EJ_library.utils.is_quoted(s);
 

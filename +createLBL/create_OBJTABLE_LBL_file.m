@@ -351,7 +351,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
 
     % Log message
     %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
-    EJ_library.PDS_utils.write_ODL_from_struct(lblFilePath, Ssl, {}, Settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
+    EJ_library.PDS_utils.write_ODL_file(lblFilePath, Ssl, {}, Settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
 end
 
 

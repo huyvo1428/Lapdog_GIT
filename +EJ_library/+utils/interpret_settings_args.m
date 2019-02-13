@@ -15,7 +15,7 @@
 % (1) SettingsArgListPairs
 % (2) SettingsArg1
 % (3) DefaultSettings
-% where fields are taken from the first top-most struct with that field, i.e. a higher one has precedense over a lower
+% where fields are taken from the first top-most struct with that field, i.e. a higher one has precedence over a lower
 % one, e.g. (1) has precedence over (2).
 %
 %
@@ -52,6 +52,8 @@ function [Settings] = interpret_settings_args(DefaultSettings, argList)
     % PROPOSAL: Assert SettingsArg1 and SettingsArgListPairs fields to always exist in DefaultSettings.
     %   CON: Makes it impossible to have default values for some settings/fields, but not for others.
     %   PROPOSAL: Option/flag for this behaviour.
+    %   NOTE: User can easily add an assertion after:
+    %       EJ_library.utils.assert.struct(Settings, fieldnames(DEFAULT_SETTINGS))
     
     import EJ_library.*
     

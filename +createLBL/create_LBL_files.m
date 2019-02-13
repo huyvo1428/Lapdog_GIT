@@ -1,7 +1,8 @@
 %
 % Create .LBL files for all .TAB files.
-% This function is intended to (1) be the "interface" between Lapdog variables, and (2) not contain (or minimize) the
-% amount of configuration code of LBL files.
+%
+% This function's outward interface (arguments, return values) is intended to (1) be the "interface" between Lapdog
+% variables, and (2) not contain (or minimize) the amount of configuration code of LBL files.
 %
 %
 % ARGUMENTS

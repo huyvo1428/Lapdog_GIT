@@ -46,11 +46,34 @@ classdef assert
 % PROPOSAL: Struct with minimum set of fieldnames.
 % PROPOSAL: isvector, iscolumnvector, isrowvector.
 % PROPOSAL: Add argument for name of argument so that can print better error messages.
+% PROPOSAL: Optional error message (string) as last argument to ~every method.
+%   CON: Can conflict with other string arguments.
+%       Ex: Method "struct".
+%       PROPOSAL: 
+% PROPOSAL: Assertion for checking that multiple variables have same size in specific dimensions/indices.
+%   PROPOSAL: Same dimensions in all dimensions except those specified.
+%       PRO: Better handling of "high dimensions to infinity".
+%   PROPOSAL: Check on all fields in struct.
+%       Ex: SSL (+KVPL?)
+%       Ex: 
+%
+% PROPOSAL: Redefine class as collection of standardized non-trivial "condition functions", used by an "assert" class.
+% PROPOSAL: Have methods return a true/false value for assertion result. If a value is returned, then raise no assertion error.
+%   PRO: Can be used with regular assert statements. (Not entirely sure why this would be useful.)
+%       PRO: MATLAB's assert can be used for raising exception with customized error message.
+%   PRO: Can use assertion methods for checking state/conditions (without raising errors).
+%       Ex: if <castring> elseif <castring_set> else ... end
+%   PRO: Can use assertion methods for raising customized exceptions (not just assertion exceptions), e.g. for UI
+%        errors.
+%   PRO: Can combine multiple assertion conditions into one assertion.
+%       Ex: assert(<castring> || <struct>)
 
     methods(Static)
         
         % NOTE: Empty string literal '' is 0x0.
+        % NOTE: Accepts all empty char arrays, e.g. size 2x0 (2 rows).
         function castring(s)
+            % PROPOSAL: Only accept empty char arrays of size 1x0 or 0x0.
             if ~ischar(s)
                 error('Expected castring (0x0, 1xN char array) is not char.')
             elseif ~(isempty(s) || size(s, 1) == 1)
@@ -60,10 +83,15 @@ classdef assert
         
         
         
-        % Cell matrix of unique strings.
+        % Cell matrix of UNIQUE strings.
         function castring_set(s)
+            % NOTE: Misleading name, since does not check for strings.
+            
             if ~iscell(s)
                 error('Expected cell array of unique strings, but is not cell array.')
+                
+            % IMPLEMENTATION NOTE: For cell arrays, "unique" requires the components to be strings. Therefor does not
+            % check (again), since probably slow.
             elseif numel(unique(s)) ~= numel(s)
                 error('Expected cell array of unique strings, but not all strings are unique.')
             end
@@ -82,6 +110,19 @@ classdef assert
             
             if ~ismember(s, strSet)
                 error('Expected string in string set is not in set.')
+            end
+        end
+        
+        
+        
+        % NOTE: Can also be used for checking supersets.
+        function subset(strSubset, strSet)
+            % PROPOSAL: Name without "string", since does not check for strings.
+            %   PROPOSAL: Change name?
+            
+            % NOTE: all({}) == all([]) == true
+            if ~all(ismember(strSubset, strSet))
+                error('Expected subset is not.')
             end
         end
         
@@ -219,6 +260,21 @@ classdef assert
         function isa(v, className)
             if ~isa(v, className)
                 error('Expected class=%s but found class=%s.', className, class(v))
+            end
+        end
+        
+        
+
+        % Assert v has non-one size in at most one dimension.
+        %
+        % NOTE: matlab's isvector uses different criterion which excludes numel(v) == 0, and length in third or higher
+        % dimension.
+        function vector(v)
+            dims = unique(size(v));
+            dims(dims==1) = [];
+            if numel(dims) > 1
+                sizeStr = sprintf('%ix', size(v));
+                error('Expected vector, but found variable of size %s.', sizeStr(1:end-1))
             end
         end
         

@@ -37,7 +37,7 @@ classdef KVPL2
     % PROPOSAL: Change name.
     %   PRO: Should change name away from KVPL2 anyway.
     %   PRO: There are other "key-value pair lists" which are not KVPLs in the meaning of this class.
-    %       Ex: *.utils.read_ODL_to_structs uses "AsgList", a list of key = value assignments where the same key can
+    %       Ex: *.utils.read_ODL_file uses "AsgList", a list of key = value assignments where the same key can
     %           occur twice.
     %   PROPOSAL: Indicate UNIQUE KEYS.
     %   PROPOSAL: Indicate that KEYS should be interpreted as a SET.
@@ -166,10 +166,20 @@ classdef KVPL2
                 obj.values = kvplContentCellArray(:,2);
                 
             elseif nargin == 2
-                % Normalize {}, and force column vectors.
-                obj.keys   = KVPL2.normalize_empty(varargin{1}(:), cell(0,1));
-                obj.values = KVPL2.normalize_empty(varargin{2}(:), cell(0,1));
+                v1 = varargin{1};
+                v2 = varargin{2};
                 
+                % ASSERTIONS
+                EJ_library.utils.assert.vector(v1)
+                EJ_library.utils.assert.vector(v2)
+                
+                % Normalize 0x0
+                v1 = KVPL2.normalize_empty(v1, cell(0,1));
+                v2 = KVPL2.normalize_empty(v2, cell(0,1));
+                
+                % Force column vectors.
+                obj.keys   = v1(:);
+                obj.values = v2(:);
             else
                 error('Illegal argument(s).')
             end
@@ -436,7 +446,8 @@ classdef KVPL2
         % Internal helper function
         % NOTE: Only replaces a 0x0x0x... array to be able to have assertions give error on e.g. 0x6 normalized format is Nx2.
         function v = normalize_empty(v, emptyReplacement)
-            if ~any(size(v))
+            if isequal(size(v), [0,0])
+            %if ~any(size(v))
                 v = emptyReplacement;
             end
         end
