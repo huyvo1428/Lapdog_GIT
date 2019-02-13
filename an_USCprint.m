@@ -58,7 +58,7 @@ switch mode
     
     case 'vz'
         
-
+        
         factor=-1;      
         satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
         %data_arr.Vz(satind,1)=data_arr.Vz(satind,1)*sign(factor); %either -1 or 1. will later be multiplied with 1, such that -1000 is still the only valid saturation constant
@@ -67,13 +67,17 @@ switch mode
         %time= data_arr.Tarr_mid
         %qvalue=0.7;
         
+        
+        
         for j = 1:length(data_arr.qf)
             
-            % NOTE: data_arr.Tarr_mid{j,1}(j,1) contains UTC strings with 6 second decimals. Truncates to have the same
-            % number of decimals as for case "vfloat". /Erik P G Johansson 2018-11-16
-            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.Vz(j,1),data_arr.Vz(j,2),data_arr.qf(j));            
-            %row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j),qvalue,data_arr.qf(j));
-            N_rows = N_rows + 1;
+            if data_arr.lum(j) > 0.9 %shadowed probe data is not allowed
+                % NOTE: data_arr.Tarr_mid{j,1}(j,1) contains UTC strings with 6 second decimals. Truncates to have the same
+                % number of decimals as for case "vfloat". /Erik P G Johansson 2018-11-16
+                row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.Vz(j,1),data_arr.Vz(j,2),data_arr.qf(j));
+                %row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j),qvalue,data_arr.qf(j));
+                N_rows = N_rows + 1;
+            end
             
             
         end

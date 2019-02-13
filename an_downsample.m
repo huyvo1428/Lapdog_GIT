@@ -26,11 +26,34 @@ foutarr=cell(1,7);
 % low sample size(for avgs) = +2
 % some zeropadding(for psd) = +2
 
+dynampath = strrep(mfilename('fullpath'),'/an_downsample','');
 
+kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
 hold_flag=0;
 i=1; %
 j=0;
+
+%%%------ MAKE E-FIELD FILES FIRST -------------------------------- %%%%
 global SATURATION_CONSTANT VFLOATMACROS
+k=0;
+tabfilez=([tabindex{an_ind(:) ,3}]);
+while k<length(an_ind) % alternatively length(tabfilez)
+    k=k+1;
+    
+    %is this file from a macro where we float both probes?
+    if    ismember(index(tabfilez(k)).macro,VFLOATMACROS{1}(ismember(VFLOATMACROS{1},VFLOATMACROS{2})))
+    
+        %pass only parts of the indices that I need:
+        %an_Efld_debug(tabindex(an_ind(k:k+1),:), index(tabfilez(k:k+1)),kernelFile)
+        an_Efld(tabindex(an_ind(k:k+1),:), index(tabfilez(k:k+1)),kernelFile)
+
+        k=k+1;% k increased by two in this loop. The wanted files are subesequent        
+    end    
+    
+end
+ 
+%%%----------------------------------------------------------------- %%%%
+
 
 try
         %fileflag = tabindex{an_ind(i),1}(end-6:end-4);
@@ -52,6 +75,10 @@ try
         %macroNodex=dec2hex(macroNo);
         %macroNostr=dec2hex(index(tabindex{an_ind(i) ,3}).macro);
         %          dec2hex(index(tabindex{ind_V1L(1),3}).macro)
+        
+
+        
+        
         
         arID = fopen(tabindex{an_ind(i),1},'r');
         if arID < 0
@@ -230,7 +257,7 @@ try
             
             for j = 2: length(scantemp{1,2})-1
                 
-                %leapfrog derivative method
+                %central difference derivative method
                 scantemp{1,6}(j)=scantemp{1,3}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dI/dt
                 scantemp{1,7}(j)=scantemp{1,4}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dV/dt
                 
@@ -278,8 +305,9 @@ try
         
         
         
-        clear scantemp imu isd vmu vsd inter junk %save electricity kids!
-        
+     %   clear scantemp imu isd vmu vsd inter junk %save electricity kids!
+        clear  imu isd vmu vsd  junk %save electricity kids!
+
         
         
         
@@ -317,23 +345,22 @@ try
         if  mode =='V' && ismember(macroNo,VFLOATMACROS{probenr})
                   
             %%%--------illumination check------------------------%%%
-            dynampath = strrep(mfilename('fullpath'),'/an_downsample','');
-            kernelFile = strcat(dynampath,'/metakernel_rosetta.txt');
+
             paths();
             
             cspice_furnsh(kernelFile);
             
-            tfoutarr
-            foutarr
-                
-            
-            lent = length(foutarr{1,7});
-            
-            [junk,SEA,SAA]=orbit('Rosetta',tfoutarr{1,1},target,'ECLIPJ2000','preloaded');
+%             tfoutarr
+%             foutarr
+                          
+            %New method  12/2 2019 check for all values, not just the downsampled timestamps.
+            [junk,SEA,SAA]=orbit('Rosetta',scantemp{1,2}(:),target,'ECLIPJ2000','preloaded');   
+            %[junk,SEA,SAA]=orbit('Rosetta',tfoutarr{1,1},target,'ECLIPJ2000','preloaded');
             cspice_kclear;
             
-            SEA=SEA(1:lent); %fix
-            SAA=SAA(1:lent);
+%             lent = length(foutarr{1,7});
+%             SEA=SEA(1:lent); %fix
+%             SAA=SAA(1:lent);
             
          % *Elias values* (from photoemission study):
             if probenr==1
@@ -351,8 +378,19 @@ try
             end
             SEA_OK = abs(SEA)<1; %  0 ?1 degree  = nominal pointing
             illuminati(~SEA_OK)=0.3;
+            
+            
+             lum_temp = accumarray(inter,illuminati,[],@mean,NaN);
+             %SAA_temp = accumarray(inter,SAA,[],@mean,NaN);
+             lum_mu(inter(1):inter(end),1) = lum_temp(inter(1):inter(end));
+            %SEA_mu(inter(1):inter(end),1) = SEA_temp(inter(1):inter(end));
+             
+            
+            
+            clear scantemp inter; % i don't remember why I need this anymore
 
-            dark_ind=illuminati<0.9;
+            %dark_ind=illuminati<0.9;
+            dark_ind=lum_mu<1; %
             foutarr{1,7}(dark_ind)=0; %won't be printed.
             %%%----------------------------------------------%%%
             
@@ -367,17 +405,15 @@ try
             
             
                 if(hold_flag) %ugh have to check which probe to use.
+                    %hold_flag default is 0. So this is 2nd iteration
 
                     %time_arr{1,1}(j,:)
-                    hold_flag = 0; %reset
-                    
-                    if probenr==1
-                        
+                    hold_flag = 0; %reset                    
+                    if probenr==1                        
                         foutarr_1=foutarr;
                         tfoutarr_1=tfoutarr;
                         
                     else
-                        
                         foutarr_2=foutarr;
                         %tfoutarr_2=tfoutarr; %only need this for debug
                     end
@@ -392,14 +428,18 @@ try
                         %length(dark_ind)
                         
 
-                    replaceind_lap1= (foutarr_1{1,7}(:)~=1);
-                    ok_tokeeplap2 = (foutarr_2{1,7}(:)==1);
+                    replace_these_lap1= (foutarr_1{1,7}(:)~=1);
+                    ok_tokeep_theselap2 = (foutarr_2{1,7}(:)==1);
                     %the indices that are ok to keep is replaceind_lap1
                     if length(foutarr_1{1,7})~=length(foutarr_2{1,7})
                         fprintf(1,'error wrong lengths %i vs lap2 %i',length(foutarr_1{1,7}),length(foutarr_2{1,7}))
                     end
-                    indz=replaceind_lap1&ok_tokeeplap2;
+                    indz=replace_these_lap1&ok_tokeep_theselap2; %only true if both lap1 in shadow and lap 2 in sunlight. 
 
+                    if sum(indz)>0
+                        fprintf(1,'LAP1 sometimes shadow, switch to LAP2 in file:%s \n',USCfname);
+                    end
+                    
                     %initialise foutarr.
                         foutarr=foutarr_1; %default == probe 1.
                         tfoutarr=tfoutarr_1; %default == probe 1.
@@ -407,13 +447,15 @@ try
                         foutarr{1,5}(indz)=foutarr_2{1,5}(indz);%
                         foutarr{1,8}(indz)=foutarr_2{1,8}(indz);   %here we went from LAP1 to LAP2, change flag                                             
 
-                    
+                    %print USC special case
                     an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,'vfloat');
                     
                     
                     clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 
                     
-                else
+                else% hold_flag
+                    %hold_flag default is 0. So this is 1st iteration
+
                     if probenr==1
                         foutarr_1=foutarr;
                         tfoutarr_1=tfoutarr;
@@ -424,10 +466,11 @@ try
                     
                     hold_flag = 1; 
 
-                end
+                end% hold_flag
             
             else%no problem, just output data.
-                
+            %print USC normal case
+
             an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,'vfloat');
             
             end
@@ -488,5 +531,189 @@ end
 
 
 end
+
+function []=an_Efld(red_tabindex,red_index,kernelFile)
+
+global efl_tabindex SATURATION_CONSTANT target
+  
+debug=0;
+if debug
+
+    red_tabindex{1,1}=strrep(red_tabindex{1,1},'/homelocal/frejon/squidcopy/','/mnt/spis/');
+    red_tabindex{2,1}=strrep(red_tabindex{2,1},'/homelocal/frejon/squidcopy/','/mnt/spis/');
+    
+    
+end
+
+probenr(1) = str2double(red_tabindex{1,1}(end-5));
+probenr(2) = str2double(red_tabindex{2,1}(end-5));
+
+macroNo(1) = red_index(1).macro;
+macroNo(2) = red_index(2).macro;
+fprintf(1,'macrono1=%s, 2=%s \n',dec2hex(macroNo(1)),dec2hex(macroNo(2)))
+
+p_ind=false(1,2);
+if probenr(1) == 1 && probenr(2) == 2
+    p_ind(1)=true;    
+elseif probenr(1) == 2 && probenr(2) == 1
+    p_ind(2)=true;
+else
+    'error'
+
+    
+end
+
+
+        ErID = fopen(red_tabindex{p_ind,1},'r'); %probe 1
+        if ErID < 0
+            fprintf(1,'Error, cannot open file1 %s\n',red_tabindex{p_ind,1});
+            return;
+        end % if I/O error
+        %    scantemp=textscan(arID,'%s%f%f%f%i','delimiter',',');
+        scantemp=textscan(ErID,'%s%f%f%f%d','delimiter',',');
+        fclose(ErID);
+        
+%       %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+        test_column = 4;
+        scantemp{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT) = NaN;
+%       %-------------------------------------------------------------%
+
+
+
+        ErID = fopen(red_tabindex{~p_ind,1},'r');%probe 2
+        if ErID < 0
+            fprintf(1,'Error, cannot open file2 %s\n', red_tabindex{~p_ind,1});
+            return;
+        end % if I/O error
+        %    scantemp=textscan(arID,'%s%f%f%f%i','delimiter',',');
+        scantemp2=textscan(ErID,'%s%f%f%f%d','delimiter',',');
+        fclose(ErID);
+        
+%       %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+        scantemp2{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT) = NaN;
+%       %-------------------------------------------------------------%
+             
+
+    %read files, handled NaNs. let's compute
+    lent1=length(scantemp{1,5});
+    if lent1~= length(scantemp2{1,5})
+        
+        fprintf(1,'Error, files not matching file1: %s, \n file2: %s \n', red_tabindex{1,1}, red_tabindex{2,1});
+
+    end
+    % prep output
+
+    
+        E_field2minus1 = scantemp2{1,4}-scantemp{1,4};
+        %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+        E_field2minus1(isnan(E_field2minus1))=SATURATION_CONSTANT;
+        %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+ 
+        qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!
+        
+        efname =red_tabindex{1,1};
+        efname(end-6:end-4) = 'EFL';
+        efolder = strrep(red_tabindex{1,1},red_tabindex{1,2},'');
+
+        
+        diffI =abs((scantemp2{1,3})-(scantemp{1,3}));
+        printbooleanind=diffI<3e-11;  
+        
+        if any(~printbooleanind)    
+            fprintf(1,'Error, Current bias values do not match')
+        end
+        
+        
+           %%%--------illumination check------------------------%%%
+
+        if ~debug %I don't want to do this while debugging at the moment
+            %dynampath = strrep(mfilename('fullpath'),'/an_Efld','');
+            paths();
+            
+            cspice_furnsh(kernelFile);
+    
+
+            
+            [junk,SEA,SAA]=orbit('Rosetta',scantemp{1,1},target,'ECLIPJ2000','preloaded');
+            cspice_kclear;
+            
+            SEA=SEA(1:lent1); %fix
+            SAA=SAA(1:lent1);
+            
+         % *Elias values* (from photoemission study):
+                Phi11 = 131.2;
+                Phi12 = 179.2;
+                illuminati1 = ((SAA < Phi11) | (SAA > Phi12)); 
+                               
+                Phi21 = 18;
+                Phi22 = 82;
+                Phi23 = 107;
+                illuminati2 = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
+            SEA_OK = abs(SEA)<1; %  0 ?1 degree  = nominal pointing
+
+            illuminati1(~SEA_OK)=0.3;
+
+            dark_ind=illuminati1<0.9| illuminati2<0.9; %not sure about the illumination of these measurements
+            printbooleanind(dark_ind)=0; %won't be printed.
+            %%%----------------------------------------------%%%
+        else
+            %plot? % sprintf('%d','E') =69
+            figure(69);plot(scantemp{1,2}-scantemp{1,2}(1),E_field2minus1)
+            ax=gca;ax.XLabel.String='Seconds [s]';ax.YLabel.String='V2-V1 [V]';ax.Title.String=sprintf('%s',red_tabindex{1,1});
+            grid on;
+        
+        end%~debug
+        
+        
+        timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
+
+        dummy=-1000;
+        %dummyqf=1000;
+        ewID= fopen(efname,'w');
+        N_rows = 0;
+        fprintf(1,'printing %s, macro: %s\n',efname, dec2hex(macroNo(1)));
+        for j = 1:lent1
+            
+            if printbooleanind(j) %
+
+                row_byte= fprintf(ewID,'%s, %16.6f, %16.6f, %16.6f, %05i\r\n',scantemp{1,1}{j,1},scantemp{1,2}(j),dummy,dummy,qf(j));
+                N_rows = N_rows + 1;
+            end
+
+            
+        end
+        fclose(ewID);
+        
+        
+        
+%     
+%         an_tabindex{end+1,1} = efname;                   % Start new line of an_tabindex, and record file name
+%         an_tabindex{end,2} = strrep(efname,efolder,''); % shortfilename
+%         an_tabindex{end,3} = red_tabindex{1,3}; % First calib data file index
+%         an_tabindex{end,4} = N_rows;                % length(foutarr{1,3}); % Number of rows
+%         an_tabindex{end,5} = 5;            % Number of columns
+%         an_tabindex{end,6} = [];
+%         an_tabindex{end,7} = 'Efield'; % Type
+%         an_tabindex{end,8} = timing;
+%         an_tabindex{end,9} = row_byte;     
+        
+        
+        efl_tabindex(end+1).fname = efname;                   % Start new line of an_tabindex, and record file name
+        efl_tabindex(end).fnameshort =  strrep(efname,efolder,''); % shortfilename
+        efl_tabindex(end).first_index = red_tabindex{1,3}; % First calib data file index
+        efl_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
+        efl_tabindex(end).no_of_columns = 5;            % Number of columns
+        % efl_tabindex{end,6] = an_ind(i);
+        efl_tabindex(end).type = 'Efield'; % Type
+        efl_tabindex(end).timing = timing;
+        efl_tabindex(end).row_byte = row_byte;
+
+end
+
+
+
+
+
+
 
 
