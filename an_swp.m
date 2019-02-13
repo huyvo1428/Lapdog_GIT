@@ -37,6 +37,8 @@ AP.diinf    = NaN;
 AP.d2iinf   = NaN;
 AP.Vz       = nan(1,2); %zero-crossing estimate
 AP.Vz(2)=0.5;
+AP.VzP= nan(1,2); 
+
        
 diag = 0;  % Set to one if diagnostic
 if(diag)
@@ -122,7 +124,8 @@ if((min(ip) >= 0) || (max(ip) <= 0)) % NB:There is a "return" command in here
     end
     
 
-    
+    AP.VzP=P;
+
 
     %%%%%%%%%%%%%%
     return; % Don't work any further on these horrible sweeps.
@@ -142,6 +145,44 @@ else
         %then there are multiple zero crossings, extrapolation is more
         %risky
         AP.Vz(2)=0.4; %maybe let this be a function of the Vb distance between lastneg/firstpos
+        
+        
+        eps=2;
+        if eps > length(ip_no_nans)-sum(ip_no_nans>0)||  length(ip_no_nans)-eps > sum(ip_no_nans>0)-length(ip_no_nans)
+            %if almost no positive currents, or almost all negative
+            %currents, then many or both of these crossings can be due to
+            %LDL interference
+            'this is bad'; 
+            
+            
+        end
+        
+       % iz_pos= 0<ip_no_nans;
+       % iz_neg= 0>ip_no_nans;
+        
+        %if the value after the first positive is negative, then maybe this
+%         %is a false (LDL) positive value
+%         tempip_no_nans=ip_no_nans;
+%         while tempip_no_nans(firstpos+1)<0 
+%             tempip_no_nans(firstpos) = ip_no_nans(firstpos)*-1;%flip sign
+%             
+%             
+%             firstpos = min(find(tempip_no_nans>0));
+%         end
+%         
+%          
+%         %if the value before the last negative is positive, then maybe this
+%         %is a false (LDL) negative value       
+%         
+%         while tempip_no_nans(lastneg-1)>0 %iterates 
+%             tempip_no_nans(lastneg) = ip_no_nans(lastneg)*-1;%flip sign
+%                         
+%             lastneg = max(find(tempip_no_nans<0));
+%         end
+%         
+        [firstpos,lastneg]=findbestzerocross(ip_no_nans,vb_no_nans);
+        
+        
     else
         AP.Vz(2)=0.8; %good fit might not be perfect anyway.
     end
@@ -175,7 +216,8 @@ else
    % AP.Vz(1)=interp1(ip_no_nans(ind_vz),vb_no_nans(ind_vz),0,'linear','extrap');
     P=polyfit(ip_no_nans(ind_vz),vb_no_nans(ind_vz),1);
     AP.Vz(1)=polyval(P,0);
-    
+    AP.VzP=P;
+   
     
 %        P=polyfit(ip(ind_vz),vb(ind_vz),1);
 %        AP.Vz=polyval(P,0);

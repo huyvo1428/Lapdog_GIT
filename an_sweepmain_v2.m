@@ -262,6 +262,7 @@ try
         AP(len).diinf    = [];
         AP(len).d2iinf   = [];
         AP(len).Vz       = [];
+        AP(len).VzP      = []; 
 
 
         %EP = extra parameters, not from functions
@@ -372,6 +373,11 @@ try
                 qf = qf+20; %rotation
             end
             
+           
+            if mean(SAA_OK(1,2*k-1:2*k)) <1
+                qf=qf+4;
+            end
+            
 %             if (any(satur_ind(:,k))) 
 %                 qf = qf+400; % saturation flagging
 %             end
@@ -384,6 +390,8 @@ try
             EP(k).tstamp = Tarr{3,k};
             EP(k).qf = qf;
             EP(k).dir = upd(1);
+
+            
 
             % Anders LP sweep analysis
             AP(k) = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(k).lum);
@@ -428,6 +436,11 @@ try
                     qf = qf+20; %rotation
                 end
                 
+                               
+                if mean(SAA_OK(1,2*k-1:2*k)) <1
+                   qf=qf+4;
+                end
+
 %                 
 %                 if (any(satur_ind2(:,k)))
 %                     qf = qf+400; % saturation flagging not necessary.
@@ -643,6 +656,7 @@ try
                 XXP_struct.asm_ion_slope(j,1:2)=DP_asm(j).ion_slope;
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
                 XXP_struct.Vz(j,1:2)=AP(j).Vz;
+                XXP_struct.VzP(j,1:2)=AP(j).VzP;
                 XXP_struct.Vsi(j,1:2)=DP(j).Vsi;
                 XXP_struct.Te_exp_belowVknee(j,1:2)=DP(j).Te_exp_belowVknee;
                 XXP_struct.Iph0(j,1:2)=DP(j).Iph0;
