@@ -338,9 +338,14 @@ classdef KVPL2
         % NOTE: To copy a key-value from a KVPL, use Kvpl = Kvpl.append(Kvpl.subset({key}))
         % ASSERTION: No intersection of key sets.
         function Kvpl = append_kvp(obj, key, value)
+            % IMPLEMENTATION NOTE: In order to value==string AND value==cell array (or at least when empty, or size 1x1), a
+            % merger [obj.values(:); value] does not work as expected.
+            % Ex: value == {} ==> Does not increase size of ".keys".
+            % IMPLEMENTATION NOTE: {obj.values{:}; value} does not work. Must instead merge a row
+            % vector (for some reason) and then transpose.
             Kvpl = EJ_library.utils.KVPL2(...
                 [obj.keys;   key], ...
-                [obj.values; value]);
+                [obj.values; {value}]);
         end
         
         
