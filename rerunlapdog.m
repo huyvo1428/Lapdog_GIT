@@ -389,7 +389,7 @@ if remake_analysis
    if remake_sweepsonly
 	analysis_test;
    else
-	analysis_test; %NB THIS WAS CHANGED!! 17/1 2019 FKJN
+	analysis; %NB THIS WAS CHANGED!! 17/1 2019 FKJN
    end
 end
 
