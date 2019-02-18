@@ -154,7 +154,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
     % NOTE: Includes both required and optional fields.
     D.PERMITTED_OBJCOL_FIELD_NAMES   = {'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', 'MISSING_CONSTANT', ...
-        'useFor'};
+        'DATA_SET_PARAMETER_NAME', 'CALIBRATION_SOURCE_ID', 'useFor'};
     
     % "Planetary Data Systems Standards Reference", Version 3.6, p12-11, section 12.3.4.
     % Applies to what PDS defines as identifiers, i.e. "values" without quotes.
@@ -485,11 +485,24 @@ function [Ssl, nSubcolumns] = create_OBJ_COLUMN_content(Cd)
     if isfield(Cd, 'MISSING_CONSTANT')
         S = add_SSL(S, 'MISSING_CONSTANT', '%f', Cd.MISSING_CONSTANT);
     end
+    if isfield(Cd, 'DATA_SET_PARAMETER_NAME')
+        S = add_SSL2(S, 'DATA_SET_PARAMETER_NAME', Cd.DATA_SET_PARAMETER_NAME);
+    end
+    if isfield(Cd, 'CALIBRATION_SOURCE_ID')
+        S = add_SSL2(S, 'CALIBRATION_SOURCE_ID', Cd.CALIBRATION_SOURCE_ID);
+    end
     
     Ssl = S;
 end
 
 
+
+function Ssl = add_SSL2(Ssl, key, value)
+    % PROPOSAL: Bad name. Change.
+    Ssl.keys   {end+1} = key;
+    Ssl.values {end+1} = value;
+    Ssl.objects{end+1} = [];
+end
 
 function Ssl = add_SSL(Ssl, key, pattern, value)
     Ssl.keys   {end+1} = key;
