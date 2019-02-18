@@ -472,13 +472,17 @@ classdef definitions < handle
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
                 {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
-                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}});
-            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
-
+                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}, ...
+                {'2019-02-18', 'EJ', 'Added CALIBRATION_SOURCE_ID'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);            
+            %HeaderKvpl = HeaderKvpl.append_kvp('CALIBRATION_SOURCE_ID', {'RPCLAP'});    % NOTE: Not used due to "append_kvp" method bug.
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
             HeaderKvpl = HeaderKvpl.set_value(...
                 'DESCRIPTION', ...
                 sprintf('Time series of LF %s data downsampled to a period of %g seconds on one probe.', ...
                     modeStr, samplingRateSeconds));
+
             LblData.HeaderKvpl           = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = sprintf(...
                 ['Table of timestamps, averaged currents, current standard deviation, averaged voltages, and voltage standard deviation for one probe.', ...
@@ -567,19 +571,23 @@ classdef definitions < handle
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
                 {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}, ...
-                {'2019-02-04', 'EJ', 'Updated UNIT'}});
+                {'2019-02-04', 'EJ', 'Updated UNIT'}, ...
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             % 2018-10-03_EJ_AE_RID_meeting.txt:
             %   Värden på DATA_SET_PARAMETER_NAME att använda
             %       Kan vara flera strängvärden (i array) för varje kolumn.
-            %       PLASMA_WAVE_SPECTRUM - Alla PSD
+            %       "PLASMA WAVE SPECTRUM" - Alla PSD
             %       ELECTRIC FIELD SPECTRAL DENSITY - PSD E-fält (inte density)
             %       Övriga uppenbara.
-
-            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
-            %    {'DATA_SET_PARAMETER_NAME', '{...}'; ...
-            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
+            DATA_SET_PARAMETER_NAME = {'"PLASMA WAVE SPECTRUM"'};
+            if ~isDensityMode
+                DATA_SET_PARAMETER_NAME{end+1} = '"ELECTRIC FIELD SPECTRAL DENSITY"';
+            end
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                'DATA_SET_PARAMETER_NAME', DATA_SET_PARAMETER_NAME; ...
+                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
 
             HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', sprintf('PSD spectra of HF %s data (snapshots) on probe %i for the frequencies described in file %s.', modeStr, probeNbr, frqTabFilename));
             
@@ -649,20 +657,21 @@ classdef definitions < handle
             % IMPLEMENTATION NOTE: Derives timestamps from columns since the Lapdog PHO struct does not contain timing
             % information. TEMPORARY SOLUTION.
 
-            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
-            %    {'DATA_SET_PARAMETER_NAME', '{"PHOTOSATURATION CURRENT"}'; ...
-            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
-
             HeaderKvpl = obj.HeaderAllKvpl.append(LhtKvpl);
             
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
                 {'2018-08-30', 'EJ', 'Initial version'}, ...
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
-                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}});
+                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}, ...
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
             HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             HeaderKvpl = createLBL.definitions.remove_INSTRUMENT_MODE_keywords(HeaderKvpl);
             
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                'DATA_SET_PARAMETER_NAME', {'"PHOTOSATURATION CURRENT"'}'; ...
+                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
+
             HeaderKvpl = HeaderKvpl.append_kvp('DESCRIPTION', 'Time series of photosaturation current.');
             
             LblData.HeaderKvpl           = HeaderKvpl;
@@ -690,26 +699,27 @@ classdef definitions < handle
         %   Still true? /EJ 2018-11-06
         function LblData = get_USC_data(obj, LhtKvpl, firstPlksFile)
             
-            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
-            %    {'DATA_SET_PARAMETER_NAME', '{"SPACECRAFT POTENTIAL"}'; ...
-            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP"}'});
-            
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
                 {'2018-08-29', 'AE', 'Initial version'}, ...
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}, ...
                 {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
-                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}});
+                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                'DATA_SET_PARAMETER_NAME', {'"SPACECRAFT POTENTIAL"'}; ...
+                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
+
             HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Time series of proxy for spacecraft potential.');
-            
+
             LblData.HeaderKvpl           = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = ['Table of timestamps, and a proxy for spacecraft potential, derived from either (1) zero current', ...
                 ' crossing in sweep, or (2) floating potential measurement (downsampled).', ...
                 ' Timestamps can thus refer to either the midpoint of a sweep, or an individual sample.'];    % TODO: Check with FJ/AE if timestamps can refer to individual LF/HF sample, or 32S sample.
-            
+
             %================
             % Define columns
             %================
@@ -729,9 +739,6 @@ classdef definitions < handle
         % ASW = Analyzed sweep parameters
         function LblData = get_ASW_data(obj, LhtKvpl, firstPlksFile)
             % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
-            %LblKvpl = KVPL_overwrite_add(LblKvpl, ...
-            %    {'DATA_SET_PARAMETER_NAME', '{"ELECTRON DENSITY", "PHOTOSATURATION CURRENT", "ION BULK VELOCITY", "ELECTRON TEMPERATURE"}'; ...
-            %    'CALIBRATION_SOURCE_ID',    '{"RPCLAP", "RPCMIP"}'});
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
@@ -739,8 +746,13 @@ classdef definitions < handle
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
                 {'2018-11-27', 'EJ', 'Updated global DESCRIPTION'}, ...
-                {'2019-02-04', 'EJ', 'Updated UNITs, ion bulk speed DESCRIPTION'}});
+                {'2019-02-04', 'EJ', 'Updated UNITs, ion bulk speed DESCRIPTION'}, ...
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                'DATA_SET_PARAMETER_NAME',  {'"ELECTRON DENSITY"', '"PHOTOSATURATION CURRENT"', '"ION BULK VELOCITY"','"ELECTRON TEMPERATURE"', '"SPACECRAFT POTENTIAL"'}; ...
+                'CALIBRATION_SOURCE_ID',    {'RPCLAP', 'RPCMIP'}}));
             
             HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Analyzed sweeps (ASW). Miscellaneous physical high-level quantities derived from individual sweeps.');
             
@@ -756,27 +768,27 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'START_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT'}}
             ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_STOP_COUNT'}}
             ocl{end+1} = struct('NAME', 'N_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3',    'DESCRIPTION', ['Electron density derived from individual sweep.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME', {{'"ELECTRON DENSITY"'}} , 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
             ocl{end+1} = struct('NAME', 'N_E_QUALITY_VALUE',             'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'I_PH0',                         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE',    'DESCRIPTION', ...
                 ['Photosaturation current derived from individual sweep.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"PHOTOSATURATION CURRENT"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
             ocl{end+1} = struct('NAME', 'I_PH0_QUALITY_VALUE',           'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'V_ION_BULK_XCAL',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'METER/SECOND',       ...
                 'DESCRIPTION', ['Ion bulk speed derived from individual sweep (speed; always non-negative scalar), while assuming a specific ion mass (see documentation). Cross-calibrated with RPCMIP.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ION BULK VELOCITY"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP', 'RPCMIP'}});
             ocl{end+1} = struct('NAME', 'V_ION_BULK_XCAL_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'T_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',        ...
                 'DESCRIPTION', ['Electron temperature derived from exponential part of sweep.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ELECTRON TEMPERATURE"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
             ocl{end+1} = struct('NAME', 'T_E_QUALITY_VALUE',             'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'T_E_XCAL',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',        ...
                 'DESCRIPTION', ['Electron temperature, derived by using the linear part of the electron current of the sweep, and density measurement from RPCMIP.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ELECTRON TEMPERATURE"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP', 'RPCMIP'}});
             ocl{end+1} = struct('NAME', 'T_E_XCAL_QUALITY_VALUE',        'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'V_PH_KNEE',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      ...
                 'DESCRIPTION', ['Photoelectron knee potential.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME', {{'"SPACECRAFT POTENTIAL"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
             ocl{end+1} = struct('NAME', 'V_PH_KNEE_QUALITY_VALUE',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                  'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
@@ -796,7 +808,8 @@ classdef definitions < handle
             
             HeaderKvpl = obj.HeaderAllKvpl;
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
-                {'2019-02-04', 'EJ', 'Updated UNIT'}});
+                {'2019-02-04', 'EJ', 'Updated UNIT'}, ...
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
             HeaderKvpl = HeaderKvpl.append_kvp('START_TIME', []);                    % Set empty header LBL timestamp to remind future reader to explicitly choose how to set timestamps.
             HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
@@ -805,10 +818,9 @@ classdef definitions < handle
             % """"PLASMA DENSITY [cross-calibration from ion and electron density; in the label, put ELECTRON DENSITY,
             % ION DENSITY and PLASMA DENSITY]""""
             % TODO-NEED-INFO: Use above?
-            
-            %LblKvpl = KVPL_overwrite_add(LblKvpl, {...
-            %        'DATA_SET_PARAMETER_NAME', '{"ELECTRON_DENSITY", "ION DENSITY", "PLASMA DENSITY"}'; ...
-            %        'CALIBRATION_SOURCE_ID',   '{"RPCLAP", "RPCMIP"}'});
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                    'DATA_SET_PARAMETER_NAME', {'"ELECTRON DENSITY"', '"ION DENSITY"', '"PLASMA DENSITY"'}'; ...    % Use all three *_DENSITY symbols?
+                    'CALIBRATION_SOURCE_ID',   {'RPCLAP', 'RPCMIP'}}));
             
             DESCRIPTION = 'Time series of plasma density.';
             HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
@@ -829,6 +841,12 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',   'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
+        
+        
+        
+        %function get_EFL_data(obj)
+        %    ELECTRIC_FIELD_COMPONENT
+        %end
 
 
 
