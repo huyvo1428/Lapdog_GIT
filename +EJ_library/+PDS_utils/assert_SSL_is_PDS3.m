@@ -4,6 +4,7 @@
 function assert_SSL_is_PDS3(Ssl)
 % PROPOSAL: Add other PDS3 checks.
 %   TODO-NEED-INFO: Which ones? Ideas?
+%   Ex: What DVAL indicates: ODL arrays must not be empty.
     
     % ASSERTION
     % ---------

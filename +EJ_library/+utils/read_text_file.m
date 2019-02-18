@@ -10,6 +10,9 @@ function [rowsList] = read_text_file(filePath)
 % PROPOSAL: Use s=textscan(fileId, '%s', 'delimiter', '\n').
 % PROPOSAL: Read entire file as a string, then split it using a specified line-break string.
 %   PROPOSAL: Return both string and row string list.
+%       CON: Unnecessary to return row string list. Trivial to produce with str_split.
+%       CON: Row string list is line break-dependent.
+%       CON: Row string list is dependent on how to interpret chars after last line break.
 
     %CR = char(13);
     %LF = char(10);

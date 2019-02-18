@@ -22,6 +22,7 @@
 % OCL  : Object Column List
 % KVPL : Key-Value Pair List
 % PLKS : Pds (s/w) Label Keyword Source (file(s)). EDITED1/CALIB1 label file from which information is retrieved.
+% LHT  : Label Header Timestamps (START_TIME etc)
 % --
 % Only uses argument flags for density mode (true/false). It is implicit that E field is the inverse.
 %
@@ -227,9 +228,9 @@ classdef definitions < handle
             HeaderKvpl = createLBL.definitions.remove_bias_keywords(HeaderKvpl);
             
             % Macros 710, 910 LF changes the downsampling and moving average cyclically. Therefore the true values of
-            % these keywords alternate in value over time. Therefore they should be removed (in agreement with LAP team
+            % these keywords alternate in value over time. Therefore they should be REMOVED (in agreement with LAP team
             % and ESA-PSA).
-            % NOTE: No assertion on actual removal of keywords.
+            % NOTE: No assertion on that removal actually takes place.
             if isLf && any(strcmp(HeaderKvpl.get_value('INSTRUMENT_MODE_ID'), {'MCID0X0710', 'MCID0X0910'}))
                 HeaderKvpl = HeaderKvpl.diff({'ROSETTA:LAP_P1P2_ADC20_DOWNSAMPLE', 'ROSETTA:LAP_P1P2_ADC20_MA_LENGTH'});
             end
@@ -407,7 +408,7 @@ classdef definitions < handle
                 ['Time series of sweep start and sweep stop timestamps, and measured sweep currents for the different sweep bias voltages.', ...
                 ' The actual bias voltages are specified in file %s.'], ...
                 bxsTabFilename);
-            
+
             %================
             % Define columns
             %================

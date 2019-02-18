@@ -161,7 +161,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     D.PDS_IDENTIFIER_PERMITTED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789';
     
     ROSETTA_NAIF_ID = -226;
-    %CONTENT_MAX_ROW_LENGTH         = 79;    % Number excludes line break characters.
+    %CONTENT_MAX_ROW_LENGTH         = 78;    % Number excludes line break characters.
     CONTENT_MAX_ROW_LENGTH         = 1000;    % Number excludes line break characters.
     
     D.BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns. Lapdog convention.
@@ -221,7 +221,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
         
         % ASSERTION: Check common user/caller error.
         if numel(Cd) ~= 1
-            error('One column object is a non-one size array. Guess: Due to defining .useFor value with "struct" command and ~single curly brackets. Must be double curly braces due to MATLAB syntax.')
+            error(['One column struct is a non-one size array. Guess: Caller has definied struct using the "struct"', ...
+                ' command and set a field value using cell array(s) using ~single curly brackets instead of double curly brackets.'])
         end
         
         [Cd, nSubcolumns] = complement_column_data(Cd, D, lblFilePath, tabLblInconsistencyPolicy);
@@ -236,7 +237,6 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
         end
 
         OBJCOL_namesList{end+1} = Cd.NAME;
-        %OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + nSubcolumns;    % BUG? Misunderstanding of PDS standard?!!
         OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + 1;              % CORRECT according to MB email 2018-08-08 and DVALNG. ITEMS<>1 still counts as 1 column here.
         PDS_START_BYTE = PDS_START_BYTE + Cd.BYTES + D.BYTES_BETWEEN_COLUMNS;
         

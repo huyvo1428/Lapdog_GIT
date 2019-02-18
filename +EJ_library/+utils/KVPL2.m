@@ -247,6 +247,7 @@ classdef KVPL2
         
         
         % ASSERTION: key must pre-exist (otherwise method would be called append_*).
+        % NOTE: Compare "append_kvp"
         function Kvpl = set_value(obj, key, value)
             i = find(strcmp(key, obj.keys));
     

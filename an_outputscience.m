@@ -1,5 +1,3 @@
-
-
 function []= an_outputscience(XXP)
 global SATURATION_CONSTANT;
 global ASW_tabindex
@@ -764,4 +762,3 @@ XCAL_L.mipnefilt(XCAL_M.lapind(indz))       =XCAL_M.mipnefilt(indz);
 
 
 end
-
