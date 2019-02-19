@@ -157,8 +157,8 @@ else
             
         end
         
-       % iz_pos= 0<ip_no_nans;
-       % iz_neg= 0>ip_no_nans;
+%         iz_pos= 0<ip_no_nans;
+%         iz_neg= 0>ip_no_nans;
         
         %if the value after the first positive is negative, then maybe this
 %         %is a false (LDL) positive value
@@ -180,9 +180,8 @@ else
 %             lastneg = max(find(tempip_no_nans<0));
 %         end
 %         
-        [firstpos,lastneg]=findbestzerocross(ip_no_nans,vb_no_nans);
         
-        
+        [firstpos,lastneg]=findbestzerocross(ip_no_nans);
     else
         AP.Vz(2)=0.8; %good fit might not be perfect anyway.
     end
@@ -430,7 +429,39 @@ AP.d2iinf   =d2iinf;
 end
 
 
+function [highestrankpos,highestrankneg]=findbestzerocross(ip_no_nans)
 
+%Function takes a sorted (increasing Vb) array of currents with multiple
+%zerocrossings, finds the crossing with the furthest distance to a current
+%flip (i.e. distance to nearest positive & negative pair.)
+%Proposal:actually, all positive currents followed by a negative currents are
+%bullshit. Either low signal-to-noise ratio or disturbance.
 
+        iz_pos= 0<ip_no_nans;
+%         iz_neg= 0>ip_no_nans;
 
+        
+        %all indices where the current flips positive;
+        flipupindz= find(diff(iz_pos)==1);
+        %all indices where the current flips negative;
+        flipdownindz= find(diff(iz_pos)==-1);
+        %matrix of distances between these indices:
+        matrixflipdistances=flipupindz.'-flipdownindz;
 
+        %max(min(abs(matrixflipdistances),[],2))) finds the column (flipupindz) where the
+        %distance to the nearest flipdownindz is farthest away
+        [maxdistance,highrankind] = max(min(abs(matrixflipdistances),[],2));
+
+        highestrankpos= flipupindz(highrankind)+1; %fix the diff 
+        highestrankneg= flipupindz(highrankind);
+        
+%         if maxdistance<3 %well, we're a bit unfortunate, with long LDL disturbance exactly around where we cross I=0.
+%             
+%             highestrankneg = max(find(ip_no_nans<0));
+%             highestrankpos = min(find(ip_no_nans>0));
+%             
+%         end
+        
+ 
+
+end
