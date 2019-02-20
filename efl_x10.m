@@ -24,7 +24,7 @@ function [out] = efl_x10(input)
 %Rewrote this function to give more outputs and to take a less messy
 %input. A bit obfusciated, but less messy, I hope. FKJN 2019-02-19
 t1l=input.t1l;
-v1l=input.t1l;
+v1l=input.v1l;
 t2l=input.t2l;
 v2l=input.v2l;
 %             input=[];
@@ -39,7 +39,6 @@ out=[];
 out.ef_out=[]; %the output field
 out.t_obt=[];  % the output time in OBT
 out.t_utc={};  % the output time in UTC
-out.ind_mf=[]; % index of which type of data is where.
 
 
 % For macro 710, there are more floating potential data for P1 than P2
@@ -51,23 +50,23 @@ l1 = length(v1l);
 l2 = length(v2l);
 if(l1 > l2) % Macro 0x710
      tb = t2l; % Will become the common timeline
-     tb_utc=input.t2_utc;
+     out.t_utc=input.t2utc;
      ind1 = 1:l1;
      ind = interp1(t1l,ind1,t2l,'nearest');
      % v1l(ind) will now be simultaneous with v2l
      eraw = 1000*(v2l-v1l(ind))/5;  % Raw E in mV/m
      cycle = 6; % 6 AQPs in each macro 0x710 cycle
-     qfraw=input.qf1(ind)-input.qf1;
-
+     out.qfraw=[input.qf1(ind) input.qf2];
 else        % Macro 0x910
      tb = t1l; % Will become the common timeline
-     tb_utc=input.t1_utc;
+     out.t_utc=input.t1utc;
      ind1 = 1:l2;
      ind = interp1(t2l,ind1,t1l,'nearest');
      % v2l(ind) will now be simultaneous with v1l
      eraw = 1000*(v2l(ind)-v1l)/5;  % Raw E in mV/m
      cycle = 5; % 5 AQPs in each macro 0x910 cycle
-     qfraw=[input.qf2(ind); input.qf1;
+     out.qfraw=[input.qf1 input.qf2(ind)];
+     
 end
 % Note that the case l1 == l2 is also OK: it just means the macro block
 % is so short that none of the probes ever goes into Vbias mode; can
@@ -102,14 +101,13 @@ end
 tl = tb(lfind);
 tm = tb(mfind);
 
-save_ind=false(1,legnth(ind1));
+save_ind=false(1,length(ind1));
 save_ind(lfind)=true;
 
 naqp = ceil((max(tb)-t_refaqp)*1.00/32);  % # of AQPs from the ref, the
          % last one perhaps truncated
 for(aqp = 1:naqp)  % Loop over all AQPs from ref AQP to end of block
-     ind = find(tb > t_refaqp+(aqp-1)*32/1.00-0.002/1.00 & tb < 
-t_refaqp+aqp*32/1.00-0.002/1.00);
+     ind = find(tb > t_refaqp+(aqp-1)*32/1.00-0.002/1.00 & tb < t_refaqp+aqp*32/1.00-0.002/1.00);
      if(ind) % Only do something if the AQP is non-empty
          save_ind(ind)=true;
          if(mod(aqp,cycle) == 1)  % First L data AQP
@@ -145,10 +143,8 @@ out.ef_out = [efl;efm];%vertcat should work
 [junk,ascind]=sort(out.t_obt,'ascend');
 out.ef_out=out.ef_out(ascind);
 out.t_obt=out.t_obt(ascind);
-out.t_utc=tb_utc(save_ind);
-out.freq_flag=9*ones(1,length(out.t_obt);
-out.freq_flag(out.t_obt==tm)=3; %see mail" kombinationer MA_LENGTH & DOWNSAMPLE 18/2 2019"
-
+out.freq_flag=9*ones(length(out.t_obt),1);
+out.freq_flag(ismemberf(out.t_obt,tm))=3; %see mail" kombinationer MA_LENGTH & DOWNSAMPLE 18/2 2019"
 end
 
 % That's all, folks!

@@ -36,6 +36,13 @@ ind_I3H= find(strcmp('I3H', antype));
 ind_I1S= find(strcmp('I1S', antype));
 ind_I2S= find(strcmp('I2S', antype));
 
+ind_VL=[ind_V1L;ind_V2L];
+
+if(~isempty(ind_VL))
+    ind_VL=sort(ind_VL,'ascend');
+   % an_downsample(ind_V1L,tabindex,8)
+    an_downsample(ind_VL,32,tabindex,index)
+end
 
 spath=sprintf('%s/XXP_save.mat',derivedpath);
 
@@ -89,13 +96,7 @@ fprintf(1,'Downsampling low frequency measurements\n')
 % end
 % 
 
-ind_VL=[ind_V1L;ind_V2L];
 
-if(~isempty(ind_VL))
-    ind_VL=sort(ind_VL,'ascend');
-   % an_downsample(ind_V1L,tabindex,8)
-    an_downsample(ind_VL,32,tabindex,index)
-end
 
 if(~isempty(ind_V1L))
    % an_downsample(ind_V1L,tabindex,8)

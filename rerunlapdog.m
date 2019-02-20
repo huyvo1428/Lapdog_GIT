@@ -171,11 +171,15 @@ if ge(remake_index,0) %remake index ~=-1
         
         load(indexfile);
         
+       
         substring = '/mnt/localhd/cron_script_temp/'; 
        % substring = '/data/LAP_ARCHIVE/cronworkfolder/';
         newstring= '/data/LAP_ARCHIVE/';
         fprintf(1,'replacing substrings...\n');
         
+        
+%         substring='/homelocal/frejon/squidcopy/'
+%         newstring='/mnt/spis/'
         index = struct_string_replace(index,substring,newstring); %third party code
 	
         substring = '/usr/local/src/cronworkfolder/';
@@ -362,8 +366,10 @@ if (exist(tabindexfile) == 2 && remake_tabindex == 0)
     tabindex(:,1) = cellfun(@(x) strrep(x,substring,newstring),tabindex(:,1),'un',0);
     fprintf(1,'lapdog: succesfully loaded tabfiles...\n');
 
-
-
+%     substring='/homelocal/frejon/squidcopy/'
+%      newstring='/mnt/spis/'
+%     tabindex(:,1) = cellfun(@(x) strrep(x,substring,newstring),tabindex(:,1),'un',0);
+% 
 
     
 else
