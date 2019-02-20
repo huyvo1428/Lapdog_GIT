@@ -33,6 +33,7 @@ hold_flag=0;
 i=1; %
 j=0;
 
+
 %%%------ MAKE E-FIELD FILES FIRST -------------------------------- %%%%
 global SATURATION_CONSTANT VFLOATMACROS
 k=0;
@@ -59,7 +60,12 @@ try
         %fileflag = tabindex{an_ind(i),1}(end-6:end-4);
     
         mode = tabindex{an_ind(i),1}(end-6);
-
+        
+        
+        %calling this inside the loop was madness
+        paths();
+        cspice_furnsh(kernelFile);
+        
 
         if mode =='V'  % Voltage  data
             test_column = 4;
@@ -348,9 +354,7 @@ try
             %%% ALL THIS SHOULD BE MOVED TO BE PART OF WHOLE DOWNSAMPLED
             %%% ALGORITHM. SO WE CAN PUT SHADOW CONDITIONS IN QUALITYFLAG
             %%% 13/2 2019 FKJN
-            paths();
-            
-            cspice_furnsh(kernelFile);
+
             
 %             tfoutarr
 %             foutarr
@@ -358,7 +362,6 @@ try
             %New method  12/2 2019 check for all values, not just the downsampled timestamps.
             [junk,SEA,SAA]=orbit('Rosetta',scantemp{1,1}(:),target,'ECLIPJ2000','preloaded');   
             %[junk,SEA,SAA]=orbit('Rosetta',tfoutarr{1,1},target,'ECLIPJ2000','preloaded');
-            cspice_kclear;
             
 %             lent = length(foutarr{1,7});
 %             SEA=SEA(1:lent); %fix
@@ -443,7 +446,7 @@ try
                     indz=replace_these_lap1&ok_tokeep_theselap2; %only true if both lap1 in shadow and lap 2 in sunlight. 
 
                     if sum(indz)>0
-                        fprintf(1,'LAP1 sometimes shadow, switch to LAP2 in file:%s \n',USCfname);
+                        fprintf(1,'LAP1 sometimes shadowed, switching to LAP2 in file:%s \n',USCfname);
                     end
                     
                     %initialise foutarr.
@@ -518,7 +521,11 @@ catch err
             fprintf(1,'%s, %i,',err.stack(i).name,err.stack(i).line);
         end
     end
+    
+    cspice_kclear;
+
 end   % try-catch
+    cspice_kclear;
 
 end   %function
 
@@ -545,6 +552,12 @@ function []=an_Efld(red_tabindex,red_index,kernelFile)
 
 global efl_tabindex SATURATION_CONSTANT target
   
+
+%calling this inside the loop was madness
+paths();
+cspice_furnsh(kernelFile);
+
+
 row_byte=0;
 debug=0;
 if debug
@@ -568,9 +581,10 @@ if probenr(1) == 1 && probenr(2) == 2
 elseif probenr(1) == 2 && probenr(2) == 1
     p_ind(2)=true;
 else
-    'error'
-
     
+
+    fprintf(1,'error, check files 1=%s, 2=%s \n',red_tabindex{1,1},red_tabindex{2,1})
+
 end
 
 
@@ -605,12 +619,8 @@ end
              
 
     %read files, handled NaNs. let's compute
-    lent1=length(scantemp{1,5});
-    if lent1~= length(scantemp2{1,5})
-        
-        fprintf(1,'Error, files not equally long. file1: %s, \n file2: %s \n', red_tabindex{1,1}, red_tabindex{2,1});
+   %lent1=length(scantemp{1,5});
 
-    end
     % prep output
 
 
@@ -618,17 +628,25 @@ end
 
         if ~debug %I don't want to do this while debugging at the moment
             %dynampath = strrep(mfilename('fullpath'),'/an_Efld','');
-            paths();
-            
-            cspice_furnsh(kernelFile);
-    
+
 
             
-            [junk,SEA,SAA]=orbit('Rosetta',scantemp{1,1},target,'ECLIPJ2000','preloaded');
+            if ismemberf(macroNo(1),hex2dec({'710'}))
+                [junk,SEA,SAA]=orbit('Rosetta',scantemp2{1,1},target,'ECLIPJ2000','preloaded');      
+                len=length(scantemp2{1,5});
+                timing={scantemp2{1,1}{1,1},scantemp2{1,1}{end,1},scantemp2{1,2}(1),scantemp2{1,2}(end)};
+
+                
+
+            else
+                [junk,SEA,SAA]=orbit('Rosetta',scantemp{1,1},target,'ECLIPJ2000','preloaded');
+                len=length(scantemp{1,5});
+                timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
+
+            end
             
-            SEA=SEA(1:lent1); %fix
-            SAA=SAA(1:lent1);
-            
+            SEA=SEA(1:len); %fix
+            SAA=SAA(1:len);
          % *Elias values* (from photoemission study):
                 Phi11 = 131.2;
                 Phi12 = 179.2;
@@ -643,7 +661,9 @@ end
             illuminati1(~SEA_OK)=0.3;
 
             dark_ind=illuminati1<0.9| illuminati2<0.9; %not sure about the illumination of these measurements
-            printbooleanind(dark_ind)=0; %won't be printed.
+            printbooleanind=~dark_ind; %print everything else
+            
+            %printbooleanind(dark_ind)=false; %won't be printed.
             %%%----------------------------------------------%%%
         else
             %plot? % sprintf('%d','E') =69
@@ -672,52 +692,81 @@ end
             x10_input.t1l=scantemp{1,2};
             x10_input.t2l=scantemp2{1,2};
             x10_input.t1utc=scantemp{1,1};
-            x10_input.t2utc=scantemp{1,1};
+            x10_input.t2utc=scantemp2{1,1};
             x10_input.qf1=scantemp{1,5};
             x10_input.qf2=scantemp2{1,5};
+           % x10_input.SAA=SAA;
+            
             
             
             efl = efl_x10(x10_input);
             %fprintf(1,'macrono1=%s, 2=%s \n',dec2hex(macroNo(1)),dec2hex(macroNo(2)))
+            efl.qf=bitor(efl.qfraw(:,1),efl.qfraw(:,2));
+        else
+            
+            if length(scantemp{1,5})~= length(scantemp2{1,5})  
+                fprintf(1,'Error, files not equally long. file1: %s, \n file2: %s \n', red_tabindex{1,1}, red_tabindex{2,1});
+                
+            end
+            efl=[];
+            
 
+%             
+%             out.t_obt=[tl;tm];%vertcat should work
+%             out.ef_out = [efl;efm];%vertcat should work
+%             [junk,ascind]=sort(out.t_obt,'ascend');
+%             out.ef_out=out.ef_out(ascind);
+%             out.t_obt=out.t_obt(ascind);
+%             out.t_utc=tb_utc(save_ind);
+%             out.freq_flag=9*ones(1,length(out.t_obt);
+%             out.freq_flag(out.t_obt==tm)=3; %see mail" kombinationer MA_LENGTH & DOWNSAMPLE 18/2 2019"
+%             out.qfraw=qfraw(save_ind);
+%             
+            efl.t_utc=scantemp{1,1};
+            efl.t_obt=scantemp{1,2};
+            efl.qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!
+            efl.ef_out = 1000*(scantemp2{1,4}-scantemp{1,4})/5;
+            %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+            efl.ef_out(isnan(efl.ef_out))=SATURATION_CONSTANT;
+            %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+            
+            
+            if macroNo(1)==hex2dec('801')
+                efl.freq_flag=7*ones(1,length(efl.t_obt)); %7 = 64 Dwnsmpl 64 Moving average
+            elseif macroNo(1)==hex2dec('802')
+                efl.freq_flag=0*ones(1,length(efl.t_obt)); %0 = full resolution
             else
-                
-                
-                qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!
-                
-             
-                E_field2minus1 = scantemp2{1,4}-scantemp{1,4};
-                %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-                E_field2minus1(isnan(E_field2minus1))=SATURATION_CONSTANT;
-                %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+                efl.freq_flag=nan;
+                'error. I didnt think we would get other this E-field macro'
+            end
+            
         end
         
         
         
         
-        diffI =abs((scantemp2{1,3})-(scantemp{1,3}));
-        printbooleanind=diffI<3e-11;  % bias not consistent.
-        
-        if any(~printbooleanind)    
-            fprintf(1,'Error, Current bias values do not match')
-        end
-        
-        
-        
+%         diffI =abs((scantemp2{1,3})-(scantemp{1,3}));
+%         printbooleanind(diffI>3e-11)=false;  % bias not consistent.
+%         
+%         if any(~printbooleanind)    
+%             fprintf(1,' some shadowed values, or current bias values do not match')
+%         end
+%         
         
         
-        timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
+        
+        
 
         dummy=-1000;
         %dummyqf=1000;
         ewID= fopen(efname,'w');
         N_rows = 0;
         fprintf(1,'printing %s, macro: %s\n',efname, dec2hex(macroNo(1)));
-        for j = 1:lent1
+        for j = 1:len
             
             if printbooleanind(j) %
-
-                row_byte= fprintf(ewID,'%s, %16.6f, %16.6f, %16.6f, %05i\r\n',scantemp{1,1}{j,1},scantemp{1,2}(j),dummy,dummy,qf(j));
+                                  %UTC   %OBT      Efield, frequencyflag, qf
+                row_byte= fprintf(ewID,'%s, %16.6f, %16.6f, %1i, %05i\r\n',efl.t_utc{j,1},efl.t_obt(j),efl.ef_out(j),efl.freq_flag(j),efl.qf(j));
                 N_rows = N_rows + 1;
             end
 
