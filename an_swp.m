@@ -446,7 +446,8 @@ function [highestrankpos,highestrankneg]=findbestzerocross(ip_no_nans)
         %all indices where the current flips negative;
         flipdownindz= find(diff(iz_pos)==-1);
         %matrix of distances between these indices:
-        matrixflipdistances=flipupindz.'-flipdownindz;
+        %matrixflipdistances=flipupindz.'-flipdownindz;   % Does not work on MATLAB R2009a (the version installed on squid).
+        matrixflipdistances = repmat(flipupindz, length(flipdownindz), 1).'-repmat(flipdownindz, length(flipupindz), 1);   % Works on MATLAB R2009a.
 
         %max(min(abs(matrixflipdistances),[],2))) finds the column (flipupindz) where the
         %distance to the nearest flipdownindz is farthest away
