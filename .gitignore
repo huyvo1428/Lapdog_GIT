@@ -56,3 +56,5 @@ test_deleteme.m
 LP_Ion_curr_backup.m
 
 *.swp
+
+metakernel_rosetta_mounted.txt

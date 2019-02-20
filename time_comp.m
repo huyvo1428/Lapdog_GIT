@@ -37,7 +37,8 @@ end
 archivePath = '~/Rosetta/temp/20Sep/RPCLAP_20160920_124156_412_V1L.TAB';
 archivePath = '~/Rosetta/temp/20Sep/';
 
-
+%/mnt/squid/RO-C-RPCLAP-5-1608-DERIV-V0.8/2016/AUG/D16/RPCLAP_20160816_182211_416_V1L.TAB
+archivePath='/mnt/squid/RO-C-RPCLAP-5-1608-DERIV-V0.8/2016/AUG/D16/';
 V1L_files = dir([archivePath '/*_V1L.TAB']);
 V1L = importdata([archivePath '/' V1L_files(1).name]);
 
@@ -50,10 +51,18 @@ V1L = importdata([archivePath '/' V1L_files(1).name]);
 % S/C clock string to ephemeris seconds past J2000 (ET)
  
 % Encoded S/C clock 'ticks' to string conversion, then to ET
-scdecd_V1L = cspice_scs2e(-226, cspice_scdecd(-226, V1L.data(:,1)'));
 
+for i = 1:length(V1L.data(:,1))
+    sct{i}=obt2sct(V1L.data(i,1));    
+    
+end
+scdecd_V1L = cspice_scs2e(-226, cspice_scdecd(-226, sct.'));
+
+
+
+scs2e_V1L=scdecd_V1L;
 % Encoded S/C clock 'ticks' to ephemeris seconds past J2000 (ET)
-sct2e_V1L = cspice_sct2e(-226, V1L.data(:,1)');
+sct2e_V1L = cspice_sct2e(-226, sct');
 
 % Convert all above ET:s to UTC for readability
 utc_scs2e = cspice_et2utc(sct2e_V1L, 'ISOC', 6);

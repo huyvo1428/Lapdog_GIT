@@ -27,7 +27,8 @@ iph0conditions.CONT = +1.51e-9;
 %     'asm_ion_slope' 'old_Vx' 'old_Vsi' 'Vsi' 'macroId' 'ion_slope' 'curr' 'B'...
 %     'asm_ne_5eV' 'asm_ni_v_dep'};
 
-dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf' 'macroId'}; %note, macroID is not actually in dataflds,but will be added to it in the struct_cleanup function
+dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf' 'macroId',}; %note, macroID is not actually in dataflds,but will be added to it in the struct_cleanup function
+%dataflds= {'t0' 'ion_slope' 'curr' 'B' 'Iph0' 'lum' 'qf' 'macroId','VzP','Vz','Vph_knee'}; %note, macroID is not actually in dataflds,but will be added to it in the struct_cleanup function
 
 %infoflds= {'macroId'};
 

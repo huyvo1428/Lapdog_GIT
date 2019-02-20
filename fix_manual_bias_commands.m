@@ -10,7 +10,7 @@ fclose(trID);
 
 
 
-for i=32:length(scantemp{1,1})
+for i=95:length(scantemp{1,1})
     
     
     if ~ismember(str2double(scantemp{1,3}{i}(3:end)),[304,305,306,307])
@@ -77,10 +77,10 @@ for i=32:length(scantemp{1,1})
             figure(61)
             subh(1)=subplot(2,1,1);
             plot(temp.t1(lapi1),temp.timeseries((lapi1),1)*1e9,'o')
-            ax=gca;ax.YLabel.String= 'Current [nA]';
+            ax1=gca;ax1.YLabel.String= 'Current [nA]';
             irf_timeaxis(gca,'usefig');
             grid on;
-            ax.Title.String=sprintf('%d',i);
+            ax1.Title.String=sprintf('%d',i);
             subh(2)=subplot(2,1,2);
             plot(temp.t1(lapi1),temp.timeseries((lapi1),2),'o')
             irf_timeaxis(gca,'usefig');
@@ -115,7 +115,21 @@ for i=32:length(scantemp{1,1})
             col2{i}='0xa8a8';
             
         end
+        str1= 'grep -rF "ROSETTA:LAP_P1P2_ADC20_MA_LENGTH"  /mnt/squid/';
+        str9='.LBL';
         
+       % if ~ismember(str2double(scantemp{1,3}{i}(3:end)),[604])
+            if ~strcmp(str8,'_I1H');
+
+            
+            command1 = strcat(str1,str2,str3,str4,str5,str6,str7,str8,str9);
+            [status,command_output_ma] = system(command1);
+            %sprintf('hex: %s, dec; %d',command_output_ma(1,end-6:end-3),hex2dec(command_output_ma(1,end-6:end-3)));
+            %fprintf(1,'dt = %f\n',hex2dec(command_output_ma(1,end-6:end-3))*0.5/57.8)
+            error_dt = hex2dec(command_output_ma(1,end-6:end-3))*0.5/57.8;
+            ax1.Title.String=sprintf('%d, errordt =%f',i,error_dt);
+            breakpoint=1;
+        end
     end
 end
 
@@ -127,11 +141,11 @@ col3='0x0000';
 % cell_listoffiles=textscan(command_output,'%s');
 % cell_listoffiles{1,1}
 
-    col1{1}= '2014-07-05T13:04:45.000';
-    col1{6}= '2014-07-20T10:46:22.000';
-    col1{7}= '2014-07-20T13:46:06.000';
-    col1{10}= '2014-07-26T11:51:26.000';%11:51:27.2149
-    col1{14}= '2014-07-28T17:51:26.000';%17:51:27.2827
+    col1{1}= '2014-07-05T13:04:46.000';%13:04:46.58'
+    col1{6}= '2014-07-20T10:46:22.500';%10:46:23.03
+    col1{7}= '2014-07-20T13:46:06.500';%13:46:07.030';
+    col1{10}= '2014-07-26T11:51:26.500';%11:51:27.2149
+    col1{14}= '2014-07-28T17:51:26.500';%17:51:27.2827
     col1{18}= '2014-07-30T23:51:27.000';%23:51:27.3500
     col1{21}= '2014-08-02T22:04:47.000';%22:04:47.4390
     col1{24}= '2014-08-03T22:04:47.000';%22:04:47.4690
@@ -180,6 +194,13 @@ col3='0x0000';
     col1{95}= '2014-11-14T10:04:50.000';%.4245
     col1{96}= '2014-11-21T00:09:38.000';%.6127
     %97 looks OK, m 204
+
+    
+   
+    
+    
+    
+    
     
 % 
         twID=fopen('~/lapdog/fake_pds.bias','w');

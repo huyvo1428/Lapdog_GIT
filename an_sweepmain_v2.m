@@ -397,13 +397,13 @@ try
             AP(k) = an_swp(Vb,Iarr(:,k),cspice_str2et(Tarr{1,k}),mode(2),EP(k).lum);
 
             
-            
-            if k>1
-                Vguess = DP(k-1).Vph_knee(1);
-
-            else
-                Vguess = 0;
-            end
+%             
+%             if k>1
+%                 Vguess = DP(k-1).Vph_knee(1);
+%             else
+%                 Vguess = 0;
+%             end
+                Vguess = AP(k).Vz(1);
 
             [DP(k),DP_asm(k)] = an_LP_Sweep_v2(Vb, Iarr(:,k),Vguess,EP(k).lum);
 
@@ -460,11 +460,13 @@ try
                 AP(m) = an_swp(Vb2,Iarr2(:,k),cspice_str2et(Tarr2{1,k}),mode(2),EP(m).lum);
 
 
-                if k>1
-                    Vguess = DP(m-1).Vph_knee;
-                else
-                    Vguess = 0; %use last calculation as a first guess
-                end
+%                 if k>1
+%                     Vguess = DP(m-1).Vph_knee;
+%                     
+%                 else
+%                     Vguess = 0; %use last calculation as a first guess
+%                 end
+                Vguess = AP(m).Vz(1);
 
                 [DP(m),DP_asm(m)] = an_LP_Sweep_v2(Vb2,Iarr2(:,k),Vguess,EP(m).lum);
 
@@ -663,8 +665,8 @@ try
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
                 XXP_struct.qf(j,1)=EP(j).qf;
                 XXP_struct.lum(j,1)=EP(j).lum;
-                XXP_struct.ne_5eV=EP(j).ne_5eV;
-                XXP_struct.asm_ne_5eV=EP(j).asm_ne_5eV;
+                XXP_struct.ne_5eV(j,1)=EP(j).ne_5eV;
+                XXP_struct.asm_ne_5eV(j,1)=EP(j).asm_ne_5eV;
 
             end
            % nan_ind=isnan(XXP_struct.ionslope); XXP_struct.ionslope(nan_ind)=SATURATION_CONSTANT;

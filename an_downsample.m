@@ -253,52 +253,52 @@ try
         
         
         
-        if intval ==0 %%analysis if
-            
-            for j = 2: length(scantemp{1,2})-1
-                
-                %central difference derivative method
-                scantemp{1,6}(j)=scantemp{1,3}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dI/dt
-                scantemp{1,7}(j)=scantemp{1,4}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dV/dt
-                
-            end%for
-            
-            scantemp{1,6}(1)   = scantemp{1,3}(1) - scantemp{1,3}(1+1)/(scantemp{1,2}(1) - scantemp{1,2}(1+1));  % dI/dt    forward differentiation, larger error
-            scantemp{1,6}(j+1) = scantemp{1,3}(j) - scantemp{1,3}(j+1)/(scantemp{1,2}(j) - scantemp{1,2}(j+1));  % dI/dt   backward differentiation, larger error
-            scantemp{1,7}(1)   = scantemp{1,4}(1) - scantemp{1,4}(1+1)/(scantemp{1,2}(1) - scantemp{1,2}(1+1));  % dV/dt    forward differentiation, larger error
-            scantemp{1,7}(j+1) = scantemp{1,4}(j) - scantemp{1,4}(j+1)/(scantemp{1,2}(j) - scantemp{1,2}(j+1));  % dV/dt   backward differentiation, larger error
-            
-            
-            
-            
-            dimu = accumarray(inter,scantemp{1,6}(:),[],@mean);
-            disd = accumarray(inter,scantemp{1,6}(:),[],@std);
-            dvmu = accumarray(inter,scantemp{1,7}(:),[],@mean);
-            dvsd = accumarray(inter,scantemp{1,7}(:),[],@std);
-            
-            
-            afoutarr=foutarr;
-            
-            afoutarr{1,8}( inter(1):inter(end),1) = dimu(inter(1):inter(end));
-            afoutarr{1,9}( inter(1):inter(end),1) = disd(inter(1):inter(end));
-            afoutarr{1,10}(inter(1):inter(end),1) = dvmu(inter(1):inter(end));
-            afoutarr{1,11}(inter(1):inter(end),1) = dvsd(inter(1):inter(end));
-            
-            
-            
-            
-            if mode == 'V' %analyse electric field mode
-                
-                
-                an_Emode(afoutarr);
-                
-            elseif mode == 'I' %analyse density mode
-                
-                an_Nmode(afoutarr);
-                
-            end%if
-            
-        end%if
+%         if intval ==0 %%analysis if
+%             
+%             for j = 2: length(scantemp{1,2})-1
+%                 
+%                 %central difference derivative method
+%                 scantemp{1,6}(j)=scantemp{1,3}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dI/dt
+%                 scantemp{1,7}(j)=scantemp{1,4}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dV/dt
+%                 
+%             end%for
+%             
+%             scantemp{1,6}(1)   = scantemp{1,3}(1) - scantemp{1,3}(1+1)/(scantemp{1,2}(1) - scantemp{1,2}(1+1));  % dI/dt    forward differentiation, larger error
+%             scantemp{1,6}(j+1) = scantemp{1,3}(j) - scantemp{1,3}(j+1)/(scantemp{1,2}(j) - scantemp{1,2}(j+1));  % dI/dt   backward differentiation, larger error
+%             scantemp{1,7}(1)   = scantemp{1,4}(1) - scantemp{1,4}(1+1)/(scantemp{1,2}(1) - scantemp{1,2}(1+1));  % dV/dt    forward differentiation, larger error
+%             scantemp{1,7}(j+1) = scantemp{1,4}(j) - scantemp{1,4}(j+1)/(scantemp{1,2}(j) - scantemp{1,2}(j+1));  % dV/dt   backward differentiation, larger error
+%             
+%             
+%             
+%             
+%             dimu = accumarray(inter,scantemp{1,6}(:),[],@mean);
+%             disd = accumarray(inter,scantemp{1,6}(:),[],@std);
+%             dvmu = accumarray(inter,scantemp{1,7}(:),[],@mean);
+%             dvsd = accumarray(inter,scantemp{1,7}(:),[],@std);
+%             
+%             
+%             afoutarr=foutarr;
+%             
+%             afoutarr{1,8}( inter(1):inter(end),1) = dimu(inter(1):inter(end));
+%             afoutarr{1,9}( inter(1):inter(end),1) = disd(inter(1):inter(end));
+%             afoutarr{1,10}(inter(1):inter(end),1) = dvmu(inter(1):inter(end));
+%             afoutarr{1,11}(inter(1):inter(end),1) = dvsd(inter(1):inter(end));
+%             
+%             
+%             
+%             
+%             if mode == 'V' %analyse electric field mode
+%                 
+%                 
+%                 an_Emode(afoutarr);
+%                 
+%             elseif mode == 'I' %analyse density mode
+%                 
+%                 an_Nmode(afoutarr);
+%                 
+%             end%if
+%             
+%         end%if
         
         
         
@@ -345,7 +345,9 @@ try
         if  mode =='V' && ismember(macroNo,VFLOATMACROS{probenr})
                   
             %%%--------illumination check------------------------%%%
-
+            %%% ALL THIS SHOULD BE MOVED TO BE PART OF WHOLE DOWNSAMPLED
+            %%% ALGORITHM. SO WE CAN PUT SHADOW CONDITIONS IN QUALITYFLAG
+            %%% 13/2 2019 FKJN
             paths();
             
             cspice_furnsh(kernelFile);
@@ -354,7 +356,7 @@ try
 %             foutarr
                           
             %New method  12/2 2019 check for all values, not just the downsampled timestamps.
-            [junk,SEA,SAA]=orbit('Rosetta',scantemp{1,2}(:),target,'ECLIPJ2000','preloaded');   
+            [junk,SEA,SAA]=orbit('Rosetta',scantemp{1,1}(:),target,'ECLIPJ2000','preloaded');   
             %[junk,SEA,SAA]=orbit('Rosetta',tfoutarr{1,1},target,'ECLIPJ2000','preloaded');
             cspice_kclear;
             
@@ -367,10 +369,10 @@ try
                 Phi11 = 131.2;
                 Phi12 = 179.2;
                 illuminati = ((SAA < Phi11) | (SAA > Phi12));
-               foutarr{1,8}=foutarr{1,8}+100;
+              % foutarr{1,8}=foutarr{1,8}+100;
                                
             else 
-                foutarr{1,8}=foutarr{1,8}+200;
+                %foutarr{1,8}=foutarr{1,8}+200;
                 Phi21 = 18;
                 Phi22 = 82;
                 Phi23 = 107;
@@ -387,9 +389,8 @@ try
              
             
             
-            clear scantemp inter; % i don't remember why I need this anymore
+            clear scantemp inter; % i don't remember why I need to clear this anymore, but let's do it for the kids
 
-            %dark_ind=illuminati<0.9;
             dark_ind=lum_mu<1; %
             foutarr{1,7}(dark_ind)=0; %won't be printed.
             %%%----------------------------------------------%%%
@@ -399,13 +400,18 @@ try
             USCfname(end-6:end-4)='USC';
             USCshort=strrep(USCfname,affolder,'');
             
+            
+            foutarr{1,2}=foutarr{1,7};
+            foutarr{1,2}(:) = probenr; % I'm hijacking this array to show the probenumber
+            
+            
             if ismember(macroNo,VFLOATMACROS{1}(ismember(VFLOATMACROS{1},VFLOATMACROS{2})))
             %is LAP2 % LAP1 floating in this macro? 710,910,802,801...            
             %then we need to save the data, wait for the next iteration (which, since it's a sorted list, will hold the corresponding probe number)
             
             
                 if(hold_flag) %ugh have to check which probe to use.
-                    %hold_flag default is 0. So this is 2nd iteration
+                    %hold_flag default is 0. So we are now in the 2nd iteration
 
                     %time_arr{1,1}(j,:)
                     hold_flag = 0; %reset                    
@@ -443,12 +449,15 @@ try
                     %initialise foutarr.
                         foutarr=foutarr_1; %default == probe 1.
                         tfoutarr=tfoutarr_1; %default == probe 1.
-
-                        foutarr{1,5}(indz)=foutarr_2{1,5}(indz);%
-                        foutarr{1,8}(indz)=foutarr_2{1,8}(indz);   %here we went from LAP1 to LAP2, change flag                                             
+                        %here we went from LAP1 to LAP2,
+                        foutarr{1,2}(indz)=foutarr_2{1,2}(indz);    %change probenumberflag                                        
+                        foutarr{1,5}(indz)=foutarr_2{1,5}(indz);%   %this is vf2
+                        foutarr{1,6}(indz)=foutarr_2{1,6}(indz);%   this is the sigma vf2
+                        foutarr{1,7}(indz)=foutarr_2{1,7}(indz);   %print boolean                                             
+                        foutarr{1,8}(indz)=foutarr_2{1,8}(indz);   %qflag                                             
 
                     %print USC special case
-                    an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,'vfloat');
+                    an_USCprint(USCfname,USCshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
                     
                     
                     clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 
@@ -536,6 +545,7 @@ function []=an_Efld(red_tabindex,red_index,kernelFile)
 
 global efl_tabindex SATURATION_CONSTANT target
   
+row_byte=0;
 debug=0;
 if debug
 
@@ -598,32 +608,12 @@ end
     lent1=length(scantemp{1,5});
     if lent1~= length(scantemp2{1,5})
         
-        fprintf(1,'Error, files not matching file1: %s, \n file2: %s \n', red_tabindex{1,1}, red_tabindex{2,1});
+        fprintf(1,'Error, files not equally long. file1: %s, \n file2: %s \n', red_tabindex{1,1}, red_tabindex{2,1});
 
     end
     % prep output
 
-    
-        E_field2minus1 = scantemp2{1,4}-scantemp{1,4};
-        %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-        E_field2minus1(isnan(E_field2minus1))=SATURATION_CONSTANT;
-        %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
- 
-        qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!
-        
-        efname =red_tabindex{1,1};
-        efname(end-6:end-4) = 'EFL';
-        efolder = strrep(red_tabindex{1,1},red_tabindex{1,2},'');
 
-        
-        diffI =abs((scantemp2{1,3})-(scantemp{1,3}));
-        printbooleanind=diffI<3e-11;  
-        
-        if any(~printbooleanind)    
-            fprintf(1,'Error, Current bias values do not match')
-        end
-        
-        
            %%%--------illumination check------------------------%%%
 
         if ~debug %I don't want to do this while debugging at the moment
@@ -635,7 +625,6 @@ end
 
             
             [junk,SEA,SAA]=orbit('Rosetta',scantemp{1,1},target,'ECLIPJ2000','preloaded');
-            cspice_kclear;
             
             SEA=SEA(1:lent1); %fix
             SAA=SAA(1:lent1);
@@ -658,11 +647,63 @@ end
             %%%----------------------------------------------%%%
         else
             %plot? % sprintf('%d','E') =69
-            figure(69);plot(scantemp{1,2}-scantemp{1,2}(1),E_field2minus1)
+            figure(69);plot(scantemp{1,2}-scantemp{1,2}(1),scantemp2{1,4}-scantemp{1,4})
             ax=gca;ax.XLabel.String='Seconds [s]';ax.YLabel.String='V2-V1 [V]';ax.Title.String=sprintf('%s',red_tabindex{1,1});
             grid on;
         
         end%~debug
+        
+        
+        
+        efname =red_tabindex{1,1};
+        efname(end-6:end-4) = 'EFL';
+        efolder = strrep(red_tabindex{1,1},red_tabindex{1,2},'');
+
+        if  ismemberf(macroNo(1),hex2dec({'710','910'}))
+            
+           
+            %v1l=
+            %v1l(printbooleanind)=nan;
+            %v2l=scantemp2{1,4};
+            %v2l(printbooleanind)=nan;   
+            x10_input=[];
+            x10_input.v1l=scantemp{1,4};
+            x10_input.v2l=scantemp2{1,4};
+            x10_input.t1l=scantemp{1,2};
+            x10_input.t2l=scantemp2{1,2};
+            x10_input.t1utc=scantemp{1,1};
+            x10_input.t2utc=scantemp{1,1};
+            x10_input.qf1=scantemp{1,5};
+            x10_input.qf2=scantemp2{1,5};
+            
+            
+            efl = efl_x10(x10_input);
+            %fprintf(1,'macrono1=%s, 2=%s \n',dec2hex(macroNo(1)),dec2hex(macroNo(2)))
+
+            else
+                
+                
+                qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!
+                
+             
+                E_field2minus1 = scantemp2{1,4}-scantemp{1,4};
+                %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+                E_field2minus1(isnan(E_field2minus1))=SATURATION_CONSTANT;
+                %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
+        end
+        
+        
+        
+        
+        diffI =abs((scantemp2{1,3})-(scantemp{1,3}));
+        printbooleanind=diffI<3e-11;  % bias not consistent.
+        
+        if any(~printbooleanind)    
+            fprintf(1,'Error, Current bias values do not match')
+        end
+        
+        
+        
         
         
         timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
@@ -683,7 +724,8 @@ end
             
         end
         fclose(ewID);
-        
+        cspice_kclear;
+
         
         
 %     

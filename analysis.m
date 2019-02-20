@@ -46,8 +46,6 @@ fprintf(1,'load XXP successful')
 
 catch err
 
-
-
         fprintf(1,'Analysing sweeps\n')
 
         if(~isempty(ind_I1S))
@@ -67,12 +65,14 @@ end
 
 
 
+
+
 fprintf(1,'Outputting Science\n')
-if(~isempty(ind_I1S))
+if(~isempty(XXP))
     an_outputscience(XXP)
+else
+    fprintf(1,'Error: an empty XXP was loaded, or no sweeps were analysed. aborting\n')     
 end 
-
-
 
 
 

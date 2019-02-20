@@ -24,6 +24,7 @@ switch mode
     satind=data_arr{1,5}==SATURATION_CONSTANT;
     factor=-1; 
     data_arr{1,5}(~satind)=data_arr{1,5}(~satind)*factor;
+    usc_flag=data_arr{1,2};%This is the probenumber flag
     for j =1:length(data_arr{1,3})
         
         if data_arr{1,7}(j)~=1 %check if measurement data exists on row
@@ -36,7 +37,7 @@ switch mode
             
             % NOTE: time_arr{1,1}(j,:) contains UTC strings with 3 second decimals. This should be the same number of
             % decimals as for case "vz". /Erik P G Johansson 2018-11-16
-            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,data_arr{1,8}(j));
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
             N_rows = N_rows + 1;
         end%if
         
@@ -48,7 +49,7 @@ switch mode
     usc_tabindex(end).fnameshort = USCshort; % shortfilename
     usc_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
     usc_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
-    usc_tabindex(end).no_of_columns = 5;            % Number of columns
+    usc_tabindex(end).no_of_columns = 6;            % Number of columns
     % usc_tabindex{end,6] = an_ind(i);
     usc_tabindex(end).type = 'Vfloat'; % Type
     usc_tabindex(end).timing = timing;
@@ -67,14 +68,14 @@ switch mode
         %time= data_arr.Tarr_mid
         %qvalue=0.7;
         
-        
+        usc_flag=3;%3 == sweep data, from lap1
         
         for j = 1:length(data_arr.qf)
             
             if data_arr.lum(j) > 0.9 %shadowed probe data is not allowed
                 % NOTE: data_arr.Tarr_mid{j,1}(j,1) contains UTC strings with 6 second decimals. Truncates to have the same
                 % number of decimals as for case "vfloat". /Erik P G Johansson 2018-11-16
-                row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.Vz(j,1),data_arr.Vz(j,2),data_arr.qf(j));
+                row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %05i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.Vz(j,1),data_arr.Vz(j,2),usc_flag,data_arr.qf(j));
                 %row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j),qvalue,data_arr.qf(j));
                 N_rows = N_rows + 1;
             end
@@ -89,7 +90,7 @@ switch mode
     usc_tabindex(end).fnameshort = USCshort; % shortfilename
     usc_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
     usc_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
-    usc_tabindex(end).no_of_columns = 5;            % Number of columns
+    usc_tabindex(end).no_of_columns = 6;            % Number of columns
     % usc_tabindex{end,6] = an_ind(i);
     usc_tabindex(end).type = 'Vz'; % Type
     usc_tabindex(end).timing = timing;
