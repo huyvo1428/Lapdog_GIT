@@ -88,8 +88,8 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         %remember i & j !!!
         
         %data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2}
-       % str1=sprintf('%s, %s, %16s, %16s,',XXP(i).data.Tarr{j,:});
-        str1=sprintf('%s, %16s,',XXP(i).data.Tarr_mid{j,:}); %XXP(i).data.Tarr_mid{j,1}<- UTC {j,2} <- OBT
+       % str1=sprintf('%s, %s, %16.6f, %16.6f,',XXP(i).data.Tarr{j,:});
+        str1=sprintf('%s, %16.6f,',XXP(i).data.Tarr_mid{j,:}); %XXP(i).data.Tarr_mid{j,1}<- UTC {j,2} <- OBT
   
         
         %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
