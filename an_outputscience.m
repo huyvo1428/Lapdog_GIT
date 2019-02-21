@@ -115,6 +115,22 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     ASW_tabindex(end).timing = XXP(i).info.timing;
     ASW_tabindex(end).row_byte = row_bytes;
     fclose(twID);
+    
+    
+    fileinfo = dir(filename);
+    if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
+        %  if N_rows > 0 %doublecheck!
+        delete(filename); %will this work on any OS, any user?
+        ASW_tabindex(end,:) = []; %delete tabindex listing to prevent errors.
+        % end
+        
+    else
+        
+    end
+    
+    
+    
+    
 
     end %debug(2)
     if ~debug(3)%USC.TAB
@@ -192,9 +208,9 @@ intval = resampled.conds.time_window;%seconds
         
         
         % Set starting spaceclock time to (UTC) 00:00:00.000000
-        ah= str2double(utc_str(12:13))
-        am= str2double(utc_str(15:16))
-        as= str2double(utc_str(18:end))
+        ah= str2double(utc_str(12:13));
+        am= str2double(utc_str(15:16));
+        as= str2double(utc_str(18:end));
 
        % ah =str2double(scantemp{1,1}{1,1}(12:13));
        % am =str2double(scantemp{1,1}{1,1}(15:16));
@@ -473,17 +489,23 @@ for i = min(inter):max(inter) %main for loop
 end%main loop
 
 
+%% clean up empty files
+delindz=[];
 for i = 1:length(PHO_tabindex)%clean up empty files
     
     if PHO_tabindex(i).no_of_rows == 0
         D= dir(PHO_tabindex(i).fname);
         
         fprintf(1,'%s size is %i',PHO_tabindex(i).fname,D.bytes);
-        delete(PHO_tabindex(end).fname);
+        delete(PHO_tabindex(i).fname);
+        delindz=[delindz;i];
+        
+        
     end
 end
 
-
+PHO_tabindex(delindz)=[];
+%%
  cspice_kclear;
 
 end%function

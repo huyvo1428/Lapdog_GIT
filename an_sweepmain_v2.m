@@ -187,7 +187,8 @@ try
             Phi23 = 107;
             %illuminati = ((SAA < Phi21) | (SAA > Phi22));
 
-            illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
+            SAA_OK = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
+            illuminati = SAA_OK;
             % illuminati = illuminati - 0.6*((SAA > Phi22) & (SAA < Phi23));
         end
         
@@ -295,6 +296,7 @@ try
         EP(len).asm_Vsc_ni_ne= [];
         EP(len).curr = [];
         EP(len).B = [];
+        EP(len).minmaxI = [];
         
 
 
@@ -360,9 +362,12 @@ try
 
         % analyse!
 
-
 %         parfor k=1:len    % Iterate over first sweep in every potential sweep pair (one/two sweeps)
         for k=1:len    % Iterate over first sweep in every potential sweep pair (one/two sweeps)
+
+            
+             EP(k).minmaxI=[min(Iarr(:,k)) max(Iarr(:,k))];
+
 
             %  a= cspice_str2et(timing{1,k});
 
@@ -428,6 +433,10 @@ try
             %parfor k=1:length(Iarr2(1,:))     % Iterate over second sweep in every sweep pair (two sweeps together)
             for k=1:length(Iarr2(1,:))     % Iterate over second sweep in every sweep pair (two sweeps together)
                 m=k+len;
+                
+                %minmaxI(k,1:2)=[min(Iarr2(:,k)) max(Iarr2(:,k))];
+                EP(m).minmaxI=[min(Iarr(:,k)) max(Iarr(:,k))];
+
                 %note Vb =! Vb2, Iarr =! Iarr2, etc.
                 % quality factor check
                 qf = Qfarr(k);
@@ -624,7 +633,7 @@ try
          
         %%%%%--------------------------------%%%%%%
         %Parameterfiles  Struct
-        if str2double(probe)==1
+       % if str2double(probe)==1
             
             info_struct=[];
             info_struct.file      =wfile;
@@ -636,6 +645,11 @@ try
             info_struct.macroId=str2double(diagmacro);
             info_struct.nroffiles=length(an_ind);
             info_struct.firstind= tabindex{an_ind(i),3};
+            info_struct.Vb_length=length(Vb);
+            info_struct.diff_Vb=nanmedian(diff(Vb));
+            
+        
+
             % XXP_struct.Tarr{i}=Tarrcat;
             %  XXP_struct.Tarr=XXP_struct.Tarr;
             
@@ -667,7 +681,8 @@ try
                 XXP_struct.lum(j,1)=EP(j).lum;
                 XXP_struct.ne_5eV(j,1)=EP(j).ne_5eV;
                 XXP_struct.asm_ne_5eV(j,1)=EP(j).asm_ne_5eV;
-
+                XXP_struct.minmaxI(j,1:2)= EP(j).minmaxI;
+                
             end
            % nan_ind=isnan(XXP_struct.ionslope); XXP_struct.ionslope(nan_ind)=SATURATION_CONSTANT;
             nan_ind=isnan(XXP_struct.Vph_knee); XXP_struct.Vph_knee(nan_ind)=SATURATION_CONSTANT;
@@ -694,7 +709,7 @@ try
             end
             
             
-        end%probenr
+      %  end%probenr
         
            %EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}
 
