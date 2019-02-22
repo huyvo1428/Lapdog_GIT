@@ -14,7 +14,7 @@ global usc_tabindex SATURATION_CONSTANT
 %fprintf(1,'printing: %s \r\n',USCfname)
 USCwID= fopen(USCfname,'w');
 N_rows = 0;
-
+row_byte=0;
 switch mode
         
         
@@ -85,21 +85,34 @@ switch mode
         
 
         
-        
-    usc_tabindex(end+1).fname = USCfname;                   % Start new line of an_tabindex, and record file name
-    usc_tabindex(end).fnameshort = USCshort; % shortfilename
-    usc_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
-    usc_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
-    usc_tabindex(end).no_of_columns = 6;            % Number of columns
-    % usc_tabindex{end,6] = an_ind(i);
-    usc_tabindex(end).type = 'Vz'; % Type
-    usc_tabindex(end).timing = timing;
-    usc_tabindex(end).row_byte = row_byte;
-    
-    
-        
-        
+            usc_tabindex(end+1).fname = USCfname;                   % Start new line of an_tabindex, and record file name
+            usc_tabindex(end).fnameshort = USCshort; % shortfilename
+            usc_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
+            usc_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
+            usc_tabindex(end).no_of_columns = 6;            % Number of columns
+            % usc_tabindex{end,6] = an_ind(i);
+            usc_tabindex(end).type = 'Vz'; % Type
+            usc_tabindex(end).timing = timing;
+            usc_tabindex(end).row_byte = row_byte;
+            
 end
+        
+    
+fileinfo = dir(USCfname);
+if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
+  %  if N_rows > 0 %doublecheck!
+        delete(USCfname); %will this work on any OS, any user?
+        usc_tabindex(end,:) = []; %delete tabindex listing to prevent errors.
+   % end
+    
+else
+
+end
+
+
+        
+        
+
 
 %elseif  strcmp(mode,'vfloat')
 

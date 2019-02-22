@@ -54,10 +54,13 @@ catch err
         save(spath,'XXP');
 
         if(~isempty(ind_I2S))
-        fprintf(1,'Skipping Analysing LAP2 sweeps\n')
-        %    an_sweepmain(ind_I2S,tabindex,targetfullname); 
+            fprintf(1,' Analysing LAP2 sweeps\n')
+            [XXP2]=an_sweepmain_v2(ind_I2S,tabindex,targetfullname);
+            save(spath,'XXP','XXP2');
         end
 
+
+        
 end
 
 

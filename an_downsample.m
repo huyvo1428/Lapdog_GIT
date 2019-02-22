@@ -775,29 +775,44 @@ end
         fclose(ewID);
         cspice_kclear;
 
+        fileinfo = dir(efname);
+        
+        if N_rows==0 || fileinfo.bytes==0
+       % if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
+            %  if N_rows > 0 %doublecheck!
+            
+            fprintf(1,'empty file?: %s \n bytes: %i, deleting...\n',efname,fileinfo.bytes);
+
+            delete(efname); %will this work on any OS, any user?
+            % end
+            
+        else % catalogue file
+            
+
+            %         an_tabindex{end+1,1} = efname;                   % Start new line of an_tabindex, and record file name
+            %         an_tabindex{end,2} = strrep(efname,efolder,''); % shortfilename
+            %         an_tabindex{end,3} = red_tabindex{1,3}; % First calib data file index
+            %         an_tabindex{end,4} = N_rows;                % length(foutarr{1,3}); % Number of rows
+            %         an_tabindex{end,5} = 5;            % Number of columns
+            %         an_tabindex{end,6} = [];
+            %         an_tabindex{end,7} = 'Efield'; % Type
+            %         an_tabindex{end,8} = timing;
+            %         an_tabindex{end,9} = row_byte;
+            
+            
+            efl_tabindex(end+1).fname = efname;                   % Start new line of an_tabindex, and record file name
+            efl_tabindex(end).fnameshort =  strrep(efname,efolder,''); % shortfilename
+            efl_tabindex(end).first_index = red_tabindex{1,3}; % First calib data file index
+            efl_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
+            efl_tabindex(end).no_of_columns = 5;            % Number of columns
+            % efl_tabindex{end,6] = an_ind(i);
+            efl_tabindex(end).type = 'Efield'; % Type
+            efl_tabindex(end).timing = timing;
+            efl_tabindex(end).row_byte = row_byte;
+        end
+
         
         
-%     
-%         an_tabindex{end+1,1} = efname;                   % Start new line of an_tabindex, and record file name
-%         an_tabindex{end,2} = strrep(efname,efolder,''); % shortfilename
-%         an_tabindex{end,3} = red_tabindex{1,3}; % First calib data file index
-%         an_tabindex{end,4} = N_rows;                % length(foutarr{1,3}); % Number of rows
-%         an_tabindex{end,5} = 5;            % Number of columns
-%         an_tabindex{end,6} = [];
-%         an_tabindex{end,7} = 'Efield'; % Type
-%         an_tabindex{end,8} = timing;
-%         an_tabindex{end,9} = row_byte;     
-        
-        
-        efl_tabindex(end+1).fname = efname;                   % Start new line of an_tabindex, and record file name
-        efl_tabindex(end).fnameshort =  strrep(efname,efolder,''); % shortfilename
-        efl_tabindex(end).first_index = red_tabindex{1,3}; % First calib data file index
-        efl_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
-        efl_tabindex(end).no_of_columns = 5;            % Number of columns
-        % efl_tabindex{end,6] = an_ind(i);
-        efl_tabindex(end).type = 'Efield'; % Type
-        efl_tabindex(end).timing = timing;
-        efl_tabindex(end).row_byte = row_byte;
 
 end
 
