@@ -724,7 +724,8 @@ end
 %             
             efl.t_utc=scantemp{1,1};
             efl.t_obt=scantemp{1,2};
-            efl.qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!
+            %efl.qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!    % Does not work on MATLAB R2009a since bitor then does not accept arguments of class/type int32 (but uint32, uint64 work).
+            efl.qf= bitor(uint64(scantemp{1,5}),uint64(scantemp2{1,5})); %qualityflag!
             efl.ef_out = 1000*(scantemp2{1,4}-scantemp{1,4})/5;
             %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
             efl.ef_out(isnan(efl.ef_out))=SATURATION_CONSTANT;
