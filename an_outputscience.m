@@ -107,7 +107,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 
     ASW_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
     ASW_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
-    %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
+    ASW_tabindex(end).first_index = XXP(i).info.firstind; % First calib data file index
     ASW_tabindex(end).no_of_rows = len;                % length(foutarr{1,3}); % Number of rows
     ASW_tabindex(end).no_of_columns = 15;            % Number of columns
     % usc_tabindex{end,6] = an_ind(i);

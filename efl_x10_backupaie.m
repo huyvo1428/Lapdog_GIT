@@ -1,4 +1,4 @@
-function [tl,efl,tm,efm] = efl_x10(t1l,v1l,t2l,v2l)
+function [tl,efl,tm,efm] = efl_x10_backupaie(t1l,v1l,t2l,v2l)
 % efl_x10 -- function to be used for generating LF and MF E-field from macro
 % 710 and 910. These macros are special in that the VxL sampling frequency
 % varies between a slow (L, 57.8/256 S/s) and a fast (M, 57.8/4 S/s)
@@ -76,8 +76,7 @@ tm = tb(mfind);
 naqp = ceil((max(tb)-t_refaqp)*86400/32);  % # of AQPs from the ref, the
          % last one perhaps truncated
 for(aqp = 1:naqp)  % Loop over all AQPs from ref AQP to end of block
-     ind = find(tb > t_refaqp+(aqp-1)*32/86400-0.002/86400 & tb < 
-t_refaqp+aqp*32/86400-0.002/86400);
+     ind = find(tb > t_refaqp+(aqp-1)*32/86400-0.002/86400 & tb < t_refaqp+aqp*32/86400-0.002/86400);
      if(ind) % Only do something if the AQP is non-empty
          if(mod(aqp,cycle) == 1)  % First L data AQP
              eflraw = eraw(ind);
