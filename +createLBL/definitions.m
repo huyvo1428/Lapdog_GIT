@@ -271,9 +271,10 @@ classdef definitions < handle
                 ocl{end+1} = voltageOc;
                 
             else
-                
+                %==========
                 % CASE: P3
-                %error('This code segment has not yet been completed for P3. Can not create LBL file for "%s".', stabindex(i).path)
+                %==========
+                %error('This code segment has not yet been completed for LAP3. Can not create LBL file for "%s".', stabindex(i).path)
                 if isDensityMode
                     % This case occurs at least on 2005-03-04 (EAR1). Appears to be the only day with V3x data for the
                     % entire mission. Appears to only happen for HF, but not LF.
@@ -316,7 +317,7 @@ classdef definitions < handle
             if isLf ; HF_LF_str = 'LF';
             else      HF_LF_str = 'HF';
             end
-            if probeNbr ==3 ; probeStr = 'differential measurements (also known as probe 3, or P3)';
+            if probeNbr ==3 ; probeStr = 'differential measurements (also known as probe 3)';
             else              probeStr = sprintf('probe %i', probeNbr);
             end
             if isDensityMode ; modeStr = 'density mode';

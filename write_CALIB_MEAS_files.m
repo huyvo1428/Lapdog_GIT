@@ -74,7 +74,7 @@
 %        ROSETTA:LAP_VOLTAGE_CAL_20B
 %        ROSETTA:LAP_CURRENT_CAL_20B_G1
 %        ROSETTA:LAP_CURRENT_CAL_20B_G0_05
-%     since their values are hereafter (1) different for P1 and P2, and (2) derived from the respective ADC16 values.
+%     since their values are hereafter (1) different for LAP1 and LAP2, and (2) derived from the respective ADC16 values.
 %     The old values also did not account for the moving average bug (factor) in the calibration data for 2015-05-28.
 %     /Erik P G Johansson 2017-07-11
 %
@@ -687,7 +687,7 @@ function write_LBL_TAB_file_pair(lblFilePath, tabFilePath, outFileNameBase, edit
         fprintf(fileId, 'UNIT = "TM UNITS"\r\n');
         fprintf(fileId, 'START_BYTE = 1\r\n');
         fprintf(fileId, 'BYTES = 3\r\n');
-        fprintf(fileId, 'DESCRIPTION = "Voltage applied to bias P1 and P2."\r\n');
+        fprintf(fileId, 'DESCRIPTION = "Bias voltage applied to probe 1 and probe 2, which are both in reality disconnected via relays."\r\n');
         fprintf(fileId, 'END_OBJECT = COLUMN\r\n');
         
         fprintf(fileId, 'OBJECT = COLUMN\r\n');
