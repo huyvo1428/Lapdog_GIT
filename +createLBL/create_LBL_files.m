@@ -98,6 +98,15 @@ function create_LBL_files(Data)
     if isnan(Data.failFastDebugMode)    % Check if field set to temporary value.
         error('Illegal argument Data.failFastDebugMode=%g', Data.failFastDebugMode)
     end
+    
+    
+    % ASSERTION
+    % NOTE 2019-02-27: This assertion should theoretically only be triggered for macro 910 until FJ fixes USC_tabindex.
+    % Macro 910 only runs 2016-07-15 and 2016-07-27.
+    assert(...
+        isempty(Data.USC_tabindex) ...
+        || (numel(Data.USC_tabindex) == numel(unique({Data.USC_tabindex(:).fname})) ...
+        ), 'Data.USC_tabindex appears to contain duplicate USC files.')
 
 
 
@@ -297,14 +306,15 @@ function create_LBL_files(Data)
         if ~isempty(Data.USC_tabindex)
             for iFile = 1:numel(Data.USC_tabindex)
                 try
-                    
+                    % NOTE: Data.USC_tabindex(iFile).timing{3:4} are sometimes numbers, and sometimes numbers as
+                    % strings.
                     startStopTimes = Data.USC_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
                     LhtKvpl = get_timestamps_KVPL(...
                         startStopTimes{1}, ...
                         startStopTimes{2}, ...
-                        obt2sctrc(str2double(startStopTimes{3})), ...
-                        obt2sctrc(str2double(startStopTimes{4})));
-                    
+                        obt2sctrc(strOrNbr2nbr(startStopTimes{3})), ...
+                        obt2sctrc(strOrNbr2nbr(startStopTimes{4})));
+
                     LblData = LblDefs.get_USC_data(...
                         LhtKvpl, ...
                         convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.USC_tabindex(iFile).first_index).lblfile));
@@ -587,3 +597,16 @@ end
 function tabPath = convert_PD_TAB_path(datasetPath, tabPath)
     tabPath = createLBL.convert_TAB_path(datasetPath, tabPath, 5);
 end
+
+
+
+function x = strOrNbr2nbr(x)
+    if ischar(x)
+        x = str2double(x);
+    elseif isnumeric(x)
+        ;
+    else
+        assert(0, 'Expected x to be either (1) string, or (2) number.')
+    end
+end
+    
