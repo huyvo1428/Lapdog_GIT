@@ -30,7 +30,7 @@ vp2 = 0;
 % low sample size(for avgs) = +2
 % some zeropadding(for psd) = +2
 
-qf=0;
+%qf=0;
 nfft=128;
 %fsamp = 18750;
 
@@ -250,7 +250,7 @@ try
                     
                     if ((std(ib1)>1e-12 || std(ib2)>1e-12) ||std(vp1)>1e-8 ||std(vp2)>1e-8) ...
                             ||((strcmp(fileflag(1),'V') &&  std(ib)>1e-12) ||(strcmp(fileflag(1),'I') &&  std(vp)>1e-8))
-                        qfarray=[qfarray;20];
+                        qfarray=[qfarray;10];
                         
                     end
                     if(lens < nfft)

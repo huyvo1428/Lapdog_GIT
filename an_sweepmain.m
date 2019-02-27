@@ -399,7 +399,7 @@ try
             qf = Qfarr(k);
 
             if (abs(SAA(1, 2*k-1)-SAA(1, 2*k)) >0.05) %rotation of more than 0.05 degrees  %arbitrary chosen value... seems decent
-                qf = qf+20; %rotation
+                qf = qf+10; %rotation
             end
             
 %             if (any(satur_ind(:,k))) 
@@ -449,7 +449,7 @@ try
                 qf = Qfarr(k);
 
                 if (abs(SAA(1, 2*k-1)-SAA(1, 2*k)) >0.05) %rotation of more than 0.01 degrees
-                    qf = qf+20; %rotation
+                    qf = qf+10; %rotation
                 end
                 
 %                 

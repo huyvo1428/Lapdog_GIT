@@ -196,7 +196,7 @@ try
                 %     qind = find(abs(diff(imu)) > 0); % find bias changes (NB, length(diff(imu))=length(imu) -1 )
                 if ~isempty(qind);
                     qind = qind +1; % correction
-                    qf(qind) = qf(qind)+20;% add + 20  qualityfactor for bias changes
+                    qf(qind) = qf(qind)+10;% add + 20  qualityfactor for bias changes
                     
                     isd(qind) = sdtemp(qind); %this might be interesting to know. or not.
                 end
@@ -225,7 +225,7 @@ try
                 qind = find(abs(diff(vmu)/nanmean(vmu)) > 1E-10); % find bias changes (NB, length(diff(imu))=length(imu) -1 )
                 if ~isempty(qind);
                     qind = qind +1;       % correction
-                    qf(qind) = qf(qind)+20;% add + 20  qualityfactor for bias changes
+                    qf(qind) = qf(qind)+10;% add + 20  qualityfactor for bias changes
                     
                     vsd(qind) = sdtemp(qind); %this might be interesting to know. or not.
                 end

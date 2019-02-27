@@ -9,6 +9,7 @@ t_start_analysis = clock;    % NOTE: Not number of seconds, but [year month day 
 global an_tabindex an_debug;
 an_tabindex = zeros(0, 9);
 an_debug = 0; %debugging on or off!
+global usc_tabindex;
 
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 
@@ -72,7 +73,9 @@ end
 
 fprintf(1,'Outputting Science\n')
 if(~isempty(XXP))
-    an_outputscience(XXP)
+    an_outputscience(XXP);
+       
+  
 else
     fprintf(1,'Error: an empty XXP was loaded, or no sweeps were analysed. aborting\n')     
 end 
@@ -122,6 +125,45 @@ if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
 if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
 if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
 
+
+
+try
+    if ~isempty(usc_tabindex)  % some USC (Vz) files might be overwritten by our routine, and creates duplicate entries in usc_tabindex. We should find these and delete them
+        [Uniquefname,~,k] = unique(usc_tabindex.fname);
+        % Uniquefname is a sorted list of usc_tabindex.fname
+        % k is indices of uniqueC that represents usc_tabindex.fname, some of them might be
+        % duplicates
+        N_Uniquefname = histc(k,1:numel(Uniquefname)); %
+        % N > 1 corresponds to indices of duplicates in the sorted list
+        % uniqueC
+        if any(N_Uniquefname>1)
+            fprintf(1,'Deleting duplicates in USC_TABINDEX \n')
+            
+            dupindz= find(N_Uniquefname>1);
+            delindz=[];
+            for i=1:length(dupindz)
+
+                checkindz=strcmp(Uniquefname(dupindz(i)),stuff); %this should only find two files, but it works for more.
+                delthis= find(checkindz & strcmp(usc_tabindex.type,'Vz')); %all duplicates that are also Vz files should be deleted. (this should keep the Vfloat files)
+                
+                delindz=[delindz;delthis];%append to list of deletion indices
+                
+            end
+            usc_tabindex(delindz)=[];
+            %loop finished, make deletion
+            
+        end
+        
+        
+        
+        
+    end
+    
+catch err
+    fprintf(1,'Error: Deleting of duplicate USC_TABINDEX failed \n')
+    
+    
+end
 
 
 %fprintf(1, 'Best estimates\n')
