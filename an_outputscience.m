@@ -141,7 +141,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             %if there's no vfloat measurements
             USCfname=filename;
             USCfname(end-6:end-4)='USC';
-            USCshort = strrep(filename,folder,'');
+            USCshort = strrep(USCfname,folder,'');
             
             an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
 

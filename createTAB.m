@@ -466,7 +466,7 @@ delfile = 1;
 
             %checks if macro is LDL macro, and downsamples current measurement
             if any(ismember(macroNo,LDLMACROS)) %if macro is any of the LDL macros
-                qualityF = qualityF+40; %LDL macro measurement
+                qualityF = qualityF+200; %LDL macro measurement
 
                 %filter LDL sweep for noisy points. the last two number
                 %dictate how heavy filtering is needed. 3 & 1 are good from
