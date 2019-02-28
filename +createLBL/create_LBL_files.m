@@ -103,10 +103,15 @@ function create_LBL_files(Data)
     % ASSERTION
     % NOTE 2019-02-27: This assertion should theoretically only be triggered for macro 910 until FJ fixes USC_tabindex.
     % Macro 910 only runs 2016-07-15 and 2016-07-27.
-    assert(...
-        isempty(Data.USC_tabindex) ...
-        || (numel(Data.USC_tabindex) == numel(unique({Data.USC_tabindex(:).fname})) ...
-        ), 'Data.USC_tabindex appears to contain duplicate USC files.')
+    % IMPLEMENTATION NOTE: 2019-02-28: USC_tabindex can contain empty values (double; not char/strings) as .fname value.
+    %   Ex: 2016-02 (month). Bug?
+    if ~isempty(Data.USC_tabindex)
+        hasEmptyUscFname = any(cellfun(@isempty, {Data.USC_tabindex(:).fname}));
+        assert(~hasEmptyUscFname, 'Data.USC_tabindex contains empty .fname values.')
+        assert( ...
+            numel(Data.USC_tabindex) == numel(unique({Data.USC_tabindex(:).fname})), ...
+            'Data.USC_tabindex contains duplicate USC files (.fname).')
+    end
 
 
 
