@@ -277,8 +277,7 @@ function create_LBL_files(Data)
         %==========================
         if ~isempty(Data.ASW_tabindex)
             for iFile = 1:numel(Data.ASW_tabindex)
-                try
-                    
+                try                    
                     startStopTimes = Data.ASW_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
                     LhtKvpl = get_timestamps_KVPL(...
                         startStopTimes{1}, ...
@@ -302,6 +301,8 @@ function create_LBL_files(Data)
                 end
             end
         end
+        
+        
         
         %==========================
         %
@@ -411,7 +412,7 @@ function create_LBL_files(Data)
         % TEMPORARY SOLUTION.
         % DELETE?!! Still creates NPL LBL files from found TAB files.
         createLBL.create_LBL_L5_sample_types(Data.ldDatasetPath)
-    end
+    end    % if Data.generatingDeriv1
     
     
     
@@ -554,7 +555,7 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
 
                 if strcmp(San_tabindex(i).dataType, 'downsample')
                     % CASE: IVxD
-                    samplingRateSeconds = str2double(tabFilename(end-10:end-9));   % Move to "createLBL.definitions" method?
+                    samplingRateSeconds = str2double(tabFilename(end-10:end-9));
                     LblData = LblDefs.get_IVxD_data(LhtKvpl, firstPlksFile, probeNbr, samplingRateSeconds, isDensityMode);
 
                 elseif strcmp(San_tabindex(i).dataType, 'spectra')
