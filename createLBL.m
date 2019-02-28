@@ -234,7 +234,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % NOTE: Can not write a function for this, since evalin can only work on the caller's workspace, not the caller's
     % caller.
     %===================================================================================================================
-    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex'};
+    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex'};
     for i = 1:length(POT_UNDEF_VARS)
         % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which "exist" may respond to
         %                      if not specifying "var".
@@ -278,6 +278,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     Clfd.ASW_tabindex      = ASW_tabindex;
     Clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable case for consistency.
     Clfd.PHO_tabindex      = PHO_tabindex;
+    Clfd.efl_tabindex      = efl_tabindex;
     
     Clfd.A1P_tabindex      = der_struct;     % Changing variable name for consistency.
     Clfd.C                 = C;

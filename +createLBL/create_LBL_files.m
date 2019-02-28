@@ -94,7 +94,7 @@ function create_LBL_files(Data)
     % ASSERTIONS
     EJ_library.utils.assert.struct(Data, {...
         'ldDatasetPath', 'pdDatasetPath', 'metakernel', 'C', 'failFastDebugMode', 'generatingDeriv1', ...
-        'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex'})
+        'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex', 'efl_tabindex'})
     if isnan(Data.failFastDebugMode)    % Check if field set to temporary value.
         error('Illegal argument Data.failFastDebugMode=%g', Data.failFastDebugMode)
     end
@@ -363,6 +363,40 @@ function create_LBL_files(Data)
                 end
             end
         end
+        
+        
+        
+        %==========================
+        %
+        % Create LBL files for EFL
+        %
+        %==========================
+        for iFile = 1:numel(Data.efl_tabindex)
+            try
+                startStopTimes = Data.efl_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+                LhtKvpl = get_timestamps_KVPL(...
+                    startStopTimes{1}, ...
+                    startStopTimes{2}, ...
+                    obt2sctrc(startStopTimes{3}), ...
+                    obt2sctrc(startStopTimes{4}));
+                
+                LblData = LblDefs.get_EFL_data(...
+                    LhtKvpl, ...
+                    convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.efl_tabindex(iFile).first_index).lblfile));
+                
+                createLBL.create_OBJTABLE_LBL_file(...
+                    convert_LD_TAB_path(Data.ldDatasetPath, Data.efl_tabindex(iFile).fname), ...
+                    LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                
+                clear   startStopTimes   LhtKvpl   LblData
+                
+            catch Exception
+                createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                fprintf(1,'Aborting LBL file for PHO_tabindex - Continuing\n');
+            end
+        end
+        
+        
         
         %==============================================================
         %

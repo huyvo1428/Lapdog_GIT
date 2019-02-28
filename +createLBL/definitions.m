@@ -811,6 +811,44 @@ classdef definitions < handle
 
 
 
+        % NOTE: Only generated for macros 710, 910, 801, 802. /FJ 2019-02-20
+        function LblData = get_EFL_data(obj, LhtKvpl, firstPlksFile)
+        %    ELECTRIC_FIELD_COMPONENT
+
+            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2019-02-27', 'EJ', 'Initial version'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);    % Unnecessary?
+            
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                    'DATA_SET_PARAMETER_NAME', {'"ELECTRIC_FIELD_COMPONENT"'}'; ...
+                    'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
+            
+            DESCRIPTION = 'Electric field strength, calculated on ground.';
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and electric field component values calculated on ground.';
+            
+            %================
+            % Define columns
+            %================
+            ocl = [];
+            ocl{end+1} = struct('NAME', 'TIME_UTC',         'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',          'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',          'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'EFIELD_COMPONENT', 'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'MILLIVOLT/METER', 'DESCRIPTION', ...
+                ['Electric field component, calculated on ground by taking the difference between floating probe measurements on both probes', ...
+                ' and dividing by distance, (V_P2-V_P1)/L. Positive value refers to electric field pointing in the direction from probe 1 to probe 2.', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+            ocl{end+1} = struct('NAME', 'SAMPLING_CONFIG',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
+                ['Number that describes the exact combination of onboard s/w averaging and downsampling. The exact values are pointers into a', ...
+                ' table that describes both the number of samples that are averaged over and the downsampling rate. See documentation for table.']);
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',     'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+            LblData.OBJTABLE.OBJCOL_list = ocl;
+        end
+
+
+
         % NOTE: No LBL timestamps for now, and hence no such arguments.
         function LblData = get_NPL_data(obj)
             
@@ -857,12 +895,6 @@ classdef definitions < handle
             LblData.OBJTABLE.OBJCOL_list = ocl;
             
         end
-        
-        
-        
-        %function get_EFL_data(obj)
-        %    ELECTRIC_FIELD_COMPONENT
-        %end
 
 
 
