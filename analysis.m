@@ -129,7 +129,7 @@ if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
 
 try
     if ~isempty(usc_tabindex)  % some USC (Vz) files might be overwritten by our routine, and creates duplicate entries in usc_tabindex. We should find these and delete them
-        [Uniquefname,~,k] = unique(usc_tabindex.fname);
+        [Uniquefname,junk,k] = unique(usc_tabindex.fname);
         % Uniquefname is a sorted list of usc_tabindex.fname
         % k is indices of uniqueC that represents usc_tabindex.fname, some of them might be
         % duplicates
