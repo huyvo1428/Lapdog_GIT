@@ -657,94 +657,6 @@ classdef definitions < handle
 
 
 
-        function LblData = get_PHO_data(obj, LhtKvpl)
-            % IMPLEMENTATION NOTE: Derives timestamps from columns since the Lapdog PHO struct does not contain timing
-            % information. TEMPORARY SOLUTION.
-
-            HeaderKvpl = obj.HeaderAllKvpl.append(LhtKvpl);
-            
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
-                {'2018-08-30', 'EJ', 'Initial version'}, ...
-                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
-                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}, ...
-                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
-            HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
-            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
-            HeaderKvpl = createLBL.definitions.remove_INSTRUMENT_MODE_keywords(HeaderKvpl);
-            
-            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
-                'DATA_SET_PARAMETER_NAME', {'"PHOTOSATURATION CURRENT"'}'; ...
-                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
-
-            HeaderKvpl = HeaderKvpl.append_kvp('DESCRIPTION', 'Time series of photosaturation current.');
-            
-            LblData.HeaderKvpl           = HeaderKvpl;
-            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).';
-
-            %================
-            % Define columns
-            %================
-            ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.',                           'useFor', {{'START_TIME', 'STOP_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
-            ocl{end+1} = struct('NAME', 'I_PH0',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE', 'DESCRIPTION', ...
-                ['Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
-            ocl{end+1} = struct('NAME', 'I_PH0_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',        'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
-            LblData.OBJTABLE.OBJCOL_list = ocl;
-        end
-
-
-
-        % USC = U_sc = Potential, Spacecraft
-        %    
-        % NOTE: BUG in Lapdog. UTC sometimes has 3 and sometimes 6 decimals. ==> Assertions will fail sometimes.
-        %   Still true? /EJ 2018-11-06
-        function LblData = get_USC_data(obj, LhtKvpl, firstPlksFile)
-            
-            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
-            
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
-                {'2018-08-29', 'AE', 'Initial version'}, ...
-                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}, ...
-                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
-                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
-                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
-                {'2019-02-21', 'EJ', 'Updated DESCRIPTIONs'}});
-            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
-            
-            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
-                'DATA_SET_PARAMETER_NAME', {'"SPACECRAFT POTENTIAL"'}; ...
-                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
-
-            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Time series of proxy for spacecraft potential.');
-
-            LblData.HeaderKvpl           = HeaderKvpl;
-            LblData.OBJTABLE.DESCRIPTION = ['Table of timestamps, and a proxy for spacecraft potential, derived from either (1) zero current', ...
-                ' crossing in sweep, or (2) floating potential measurement (downsampled).', ...
-                ' Timestamps can thus refer to either the midpoint of a sweep, or an individual sample.'];    % TODO: Check with FJ/AE if timestamps can refer to individual LF/HF sample, or 32S sample.
-
-            %================
-            % Define columns
-            %================
-            % FJ's proposal: 2019-02-21: V_SC_POT_PROXY: 'Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero
-            ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.');                                % 'useFor', {{'START_TIME'}}
-            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}}
-            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',   'DESCRIPTION', ...
-                ['Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero.', ...
-                ' Actual source of data depends on what is available.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
-            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'DATA_SOURCE',                  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
-                'Source of data for the spacecraft potential proxy value. 1 or 2=Floating potential measurement on probe 1 or 2 respectively. 3=Negated voltage in sweep on probe 1 for which current is zero.');
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);            
-            LblData.OBJTABLE.OBJCOL_list = ocl;
-        end
-
-
-
         % ASW = Analyzed sweep parameters
         function LblData = get_ASW_data(obj, LhtKvpl, firstPlksFile)
             % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
@@ -811,6 +723,94 @@ classdef definitions < handle
 
 
 
+        % USC = U_sc = Potential, Spacecraft
+        %    
+        % NOTE: BUG in Lapdog. UTC sometimes has 3 and sometimes 6 decimals. ==> Assertions will fail sometimes.
+        %   Still true? /EJ 2018-11-06
+        function LblData = get_USC_data(obj, LhtKvpl, firstPlksFile)
+            
+            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
+            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-29', 'AE', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}, ...
+                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
+                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
+                {'2019-02-21', 'EJ', 'Updated DESCRIPTIONs'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                'DATA_SET_PARAMETER_NAME', {'"SPACECRAFT POTENTIAL"'}; ...
+                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
+
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Time series of proxy for spacecraft potential.');
+
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = ['Table of timestamps, and a proxy for spacecraft potential, derived from either (1) zero current', ...
+                ' crossing in sweep, or (2) floating potential measurement (downsampled).', ...
+                ' Timestamps can thus refer to either the midpoint of a sweep, or an individual sample.'];    % TODO: Check with FJ/AE if timestamps can refer to individual LF/HF sample, or 32S sample.
+
+            %================
+            % Define columns
+            %================
+            % FJ's proposal: 2019-02-21: V_SC_POT_PROXY: 'Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero
+            ocl = [];
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.');                                % 'useFor', {{'START_TIME'}}
+            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}}
+            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',   'DESCRIPTION', ...
+                ['Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero.', ...
+                ' Actual source of data depends on what is available.', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            ocl{end+1} = struct('NAME', 'DATA_SOURCE',                  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
+                'Source of data for the spacecraft potential proxy value. 1 or 2=Floating potential measurement on probe 1 or 2 respectively. 3=Negated voltage in sweep on probe 1 for which current is zero.');
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);            
+            LblData.OBJTABLE.OBJCOL_list = ocl;
+        end
+
+
+
+        function LblData = get_PHO_data(obj, LhtKvpl)
+            % IMPLEMENTATION NOTE: Derives timestamps from columns since the Lapdog PHO struct does not contain timing
+            % information. TEMPORARY SOLUTION.
+
+            HeaderKvpl = obj.HeaderAllKvpl.append(LhtKvpl);
+            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-30', 'EJ', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}, ...
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
+            HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            HeaderKvpl = createLBL.definitions.remove_INSTRUMENT_MODE_keywords(HeaderKvpl);
+            
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                'DATA_SET_PARAMETER_NAME', {'"PHOTOSATURATION CURRENT"'}'; ...
+                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
+
+            HeaderKvpl = HeaderKvpl.append_kvp('DESCRIPTION', 'Time series of photosaturation current.');
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).';
+
+            %================
+            % Define columns
+            %================
+            ocl = [];
+            ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.',                           'useFor', {{'START_TIME', 'STOP_TIME'}});
+            ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
+            ocl{end+1} = struct('NAME', 'I_PH0',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE', 'DESCRIPTION', ...
+                ['Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+            ocl{end+1} = struct('NAME', 'I_PH0_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',        'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+            LblData.OBJTABLE.OBJCOL_list = ocl;
+        end
+
+
+
         % NOTE: Only generated for macros 710, 910, 801, 802. /FJ 2019-02-20
         function LblData = get_EFL_data(obj, LhtKvpl, firstPlksFile)
         %    ELECTRIC_FIELD_COMPONENT
@@ -851,6 +851,8 @@ classdef definitions < handle
 
         % NOTE: No LBL timestamps for now, and hence no such arguments.
         function LblData = get_NPL_data(obj)
+            
+            error('NOT YET IMPLEMENTED')
             
             % IMPLEMENTATION NOTE: As of 2018-11-13, no such data product has ever been produced (except dummy files),
             % and therefore no such label file has ever been produced. Must therefore set LBL header timestamps from
