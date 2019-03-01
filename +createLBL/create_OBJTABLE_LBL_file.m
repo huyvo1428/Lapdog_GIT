@@ -161,8 +161,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     D.PDS_IDENTIFIER_PERMITTED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789';
     
     ROSETTA_NAIF_ID = -226;
-    %CONTENT_MAX_ROW_LENGTH         = 78;    % Number excludes line break characters.
-    CONTENT_MAX_ROW_LENGTH         = 1000;    % Number excludes line break characters.
+    CONTENT_MAX_ROW_LENGTH         = 78;    % Number excludes line break characters.
+    %CONTENT_MAX_ROW_LENGTH         = 1000;    % Number excludes line break characters.
     
     D.BYTES_BETWEEN_COLUMNS = length(', ');      % ASSUMES absence of quotes in string columns. Lapdog convention.
     BYTES_PER_LINEBREAK     = 2;                 % Carriage return + line feed.

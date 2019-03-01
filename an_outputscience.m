@@ -88,8 +88,8 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         %remember i & j !!!
         
         %data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2}
-       % str1=sprintf('%s, %s, %16s, %16s,',XXP(i).data.Tarr{j,:});
-        str1=sprintf('%s, %16s,',XXP(i).data.Tarr_mid{j,:}); %XXP(i).data.Tarr_mid{j,1}<- UTC {j,2} <- OBT
+       % str1=sprintf('%s, %s, %16.6f, %16.6f,',XXP(i).data.Tarr{j,:});
+        str1=sprintf('%s, %16.6f,',XXP(i).data.Tarr_mid{j,:}); %XXP(i).data.Tarr_mid{j,1}<- UTC {j,2} <- OBT
   
         
         %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
@@ -107,7 +107,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 
     ASW_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
     ASW_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
-    %PHO_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
+    ASW_tabindex(end).first_index = XXP(i).info.firstind; % First calib data file index
     ASW_tabindex(end).no_of_rows = len;                % length(foutarr{1,3}); % Number of rows
     ASW_tabindex(end).no_of_columns = 15;            % Number of columns
     % usc_tabindex{end,6] = an_ind(i);
@@ -141,7 +141,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             %if there's no vfloat measurements
             USCfname=filename;
             USCfname(end-6:end-4)='USC';
-            USCshort = strrep(filename,folder,'');
+            USCshort = strrep(USCfname,folder,'');
             
             an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
 

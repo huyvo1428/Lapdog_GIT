@@ -701,7 +701,7 @@ try
             if i ==1
                 XXP.data=XXP_struct;
                 XXP.info=info_struct;
-                XXP(2).info=info_struct; %boom, I have now made an array of structs in this silly fashion, such that I can populate XXP(i), in future.      
+               % XXP(2).info=info_struct; %boom, I have now made an array of structs in this silly fashion, such that I can populate XXP(i), in future.      
             else
                 XXP(i).data=XXP_struct;
                 XXP(i).info=info_struct;

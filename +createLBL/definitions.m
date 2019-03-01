@@ -131,7 +131,8 @@ classdef definitions < handle
         HeaderAllKvpl
         
         MC_DESC_AMENDM       % Generic description string for MISSING_CONSTANT (MC). Is added at end of DESCRIPTION.
-        QFLAG1_DESCRIPTION = 'Quality flag constructed as the sum of multiple terms, depending on what quality related effects are present. From 00000 (best) to 77777 (worst).';
+        %QFLAG1_DESCRIPTION = 'Quality flag constructed as the sum of multiple terms, depending on what quality related effects are present. From 00000 (best) to 77777 (worst).';
+        QFLAG1_DESCRIPTION = 'Quality flag constructed as the sum of multiple terms, depending on what quality related effects are present. Each digit is either in the range 0 (best) to 7 (worst), or 9 (not used).';
         QVALUE_DESCRIPTION = 'Quality value in the range 0 (worst) to 1 (best). Corresponds to goodness of fit or how well the model fits the data.';
         
         DATA_DATA_TYPE
@@ -207,8 +208,8 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',       'DESCRIPTION', 'Start time of macro block, YYYY-MM-DD HH:MM:SS.sss.');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECONDS',       'DESCRIPTION', 'Last start time of data in macro block, YYYY-MM-DD HH:MM:SS.sss.');    % Correct? "Last start time"?
+            ocl{end+1} = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECOND',        'DESCRIPTION', 'Start time of macro block, YYYY-MM-DD HH:MM:SS.sss.');
+            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',  'DATA_TYPE', 'TIME',      'BYTES', 23, 'UNIT', 'SECOND',        'DESCRIPTION', 'Last start time of data in macro block, YYYY-MM-DD HH:MM:SS.sss.');    % Correct? "Last start time"?
             ocl{end+1} = struct('NAME', 'MACRO_ID',       'DATA_TYPE', 'CHARACTER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Hexadecimal macro identification number.');
             
             LblData.OBJTABLE.OBJCOL_list = ocl;
@@ -241,8 +242,8 @@ classdef definitions < handle
             % Define columns and global DESCRIPTION
             %=======================================
             ocl = {};
-            ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECONDS', 'BYTES', 26, 'DESCRIPTION', 'UTC time.');
-            ocl{end+1} = struct('NAME', 'TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECONDS', 'BYTES', 16, 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECOND', 'BYTES', 26, 'DESCRIPTION', 'UTC time.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECOND', 'BYTES', 16, 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             
             if probeNbr ~=3
                 
@@ -270,9 +271,10 @@ classdef definitions < handle
                 ocl{end+1} = voltageOc;
                 
             else
-                
+                %==========
                 % CASE: P3
-                %error('This code segment has not yet been completed for P3. Can not create LBL file for "%s".', stabindex(i).path)
+                %==========
+                %error('This code segment has not yet been completed for LAP3. Can not create LBL file for "%s".', stabindex(i).path)
                 if isDensityMode
                     % This case occurs at least on 2005-03-04 (EAR1). Appears to be the only day with V3x data for the
                     % entire mission. Appears to only happen for HF, but not LF.
@@ -315,7 +317,7 @@ classdef definitions < handle
             if isLf ; HF_LF_str = 'LF';
             else      HF_LF_str = 'HF';
             end
-            if probeNbr ==3 ; probeStr = 'differential measurements (also known as probe 3, or P3)';
+            if probeNbr ==3 ; probeStr = 'differential measurements (also known as probe 3)';
             else              probeStr = sprintf('probe %i', probeNbr);
             end
             if isDensityMode ; modeStr = 'density mode';
@@ -365,7 +367,7 @@ classdef definitions < handle
             %================
             % Define columns
             %================
-            oc1 = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECONDS');     % NOTE: Always ASCII_REAL, also for EDDER!
+            oc1 = struct('NAME', 'SWEEP_TIME',                     'DATA_TYPE', 'ASCII_REAL', 'BYTES', 14, 'UNIT', 'SECOND');     % NOTE: Always ASCII_REAL, also for EDDER!
             oc2 = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr), obj.DATA_DATA_TYPE{:},     'BYTES', 14, obj.DATA_UNIT_VOLTAGE{:});
 
             if ~obj.generatingDeriv1
@@ -414,13 +416,14 @@ classdef definitions < handle
             %================
             ocl = {};
             
-            oc1 = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION', 'Sweep start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            oc2 = struct('NAME',  'STOP_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS', 'DESCRIPTION',  'Sweep stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            oc3 = struct('NAME', 'START_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION', 'Sweep start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            oc4 = struct('NAME',  'STOP_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS', 'DESCRIPTION',  'Sweep stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            oc1 = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'Sweep start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            oc2 = struct('NAME',  'STOP_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION',  'Sweep stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            oc3 = struct('NAME', 'START_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Sweep start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            oc4 = struct('NAME',  'STOP_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION',  'Sweep stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             if ~obj.generatingDeriv1
-                oc1.DESCRIPTION = [oc1.DESCRIPTION, sprintf(' This effectively refers to the %g''th sample.', obj.nFinalPresweepSamples+1)];
-                oc3.DESCRIPTION = [oc3.DESCRIPTION, sprintf(' This effectively refers to the %g''th sample.', obj.nFinalPresweepSamples+1)];
+                tempStr = sprintf(' This effectively refers to the %g''th sample.', obj.nFinalPresweepSamples+1);
+                oc1.DESCRIPTION = [oc1.DESCRIPTION, tempStr];
+                oc3.DESCRIPTION = [oc3.DESCRIPTION, tempStr];
             end
             ocl(end+1:end+4) = {oc1, oc2, oc3, oc4};
             
@@ -504,8 +507,8 @@ classdef definitions < handle
             % downsampling code taking some shortcuts in producing the sequence of OBT+UTC values, i.e. manually
             % producing the series and NOT using SPICE for every such pair. Therefore using the last TIME_OBT value
             % for both SPACECRAFT_CLOCK_STOP_COUNT and STOP_TIME.
-            ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECONDS',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.',                              'useFor', {{'START_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECONDS',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}});
+            ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECOND',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.',                              'useFor', {{'START_TIME'}});
+            ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECOND',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}});
             
             oc1 = struct('NAME', sprintf('P%i_CURRENT',        probeNbr), obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, obj.DATA_DATA_TYPE{:}, 'DESCRIPTION', 'Averaged current.');
             oc2 = struct('NAME', sprintf('P%i_CURRENT_STDDEV', probeNbr), obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, obj.DATA_DATA_TYPE{:}, 'DESCRIPTION', 'Current standard deviation.');
@@ -602,10 +605,10 @@ classdef definitions < handle
             % Define columns
             %================
             ocl1 = {};
-            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECONDS',       'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECONDS',       'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_OBT', 'UNIT', 'SECONDS',       'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_OBT',  'UNIT', 'SECONDS',       'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_OBT', 'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_OBT',  'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             ocl1{end+1} = struct('NAME', 'QUALITY_FLAG',           'UNIT', obj.NO_ODL_UNIT, 'BYTES',  5, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             
             ocl2 = {};
@@ -654,6 +657,120 @@ classdef definitions < handle
 
 
 
+        % ASW = Analyzed sweep parameters
+        function LblData = get_ASW_data(obj, LhtKvpl, firstPlksFile)
+            % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
+            
+            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-30', 'EJ', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
+                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
+                {'2018-11-27', 'EJ', 'Updated global DESCRIPTION'}, ...
+                {'2019-02-04', 'EJ', 'Updated UNITs, ion bulk speed DESCRIPTION'}, ...
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
+                {'2019-02-20', 'EJ', 'Changed from timestamp interval to single timestamp per row'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                'DATA_SET_PARAMETER_NAME',  {'"ELECTRON DENSITY"', '"PHOTOSATURATION CURRENT"', '"ION BULK VELOCITY"','"ELECTRON TEMPERATURE"', '"SPACECRAFT POTENTIAL"'}; ...
+                'CALIBRATION_SOURCE_ID',    {'RPCLAP', 'RPCMIP'}}));
+            
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Analyzed sweeps (ASW). Miscellaneous physical high-level quantities derived from individual sweeps.');
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = 'Time series of sweep-based estimates of electron density, ion bulk speed, electron temperature, and photoelectron knee potential. Timestamps represent the middle of the corresponding sweeps.';
+            
+            %================
+            % Define columns
+            %================
+            ocl = [];
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');   % 'useFor', {{'STOP_TIME'}}
+            ocl{end+1} = struct('NAME', 'TIME_OBT',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT'}}
+
+            ocl{end+1} = struct('NAME', 'N_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ['Electron density derived from individual sweep.', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME', {{'"ELECTRON DENSITY"'}} , 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
+            ocl{end+1} = struct('NAME', 'N_E_QUALITY_VALUE',             'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            
+            ocl{end+1} = struct('NAME', 'I_PH0',                         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE',         'DESCRIPTION', ...
+                ['Photosaturation current derived from individual sweep.', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"PHOTOSATURATION CURRENT"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
+            ocl{end+1} = struct('NAME', 'I_PH0_QUALITY_VALUE',           'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            
+            ocl{end+1} = struct('NAME', 'V_ION_BULK_XCAL',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'METER/SECOND',       ...
+                'DESCRIPTION', ['Ion bulk speed derived from individual sweep (speed; always non-negative scalar), while assuming a specific ion mass (see documentation). Cross-calibrated with RPCMIP.', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ION BULK VELOCITY"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP', 'RPCMIP'}});
+            ocl{end+1} = struct('NAME', 'V_ION_BULK_XCAL_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            
+            ocl{end+1} = struct('NAME', 'T_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',        ...
+                'DESCRIPTION', ['Electron temperature derived from exponential part of sweep.', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ELECTRON TEMPERATURE"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
+            ocl{end+1} = struct('NAME', 'T_E_QUALITY_VALUE',             'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            
+            ocl{end+1} = struct('NAME', 'T_E_XCAL',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',        ...
+                'DESCRIPTION', ['Electron temperature, derived by using the linear part of the electron current of the sweep, and density measurement from RPCMIP.', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ELECTRON TEMPERATURE"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP', 'RPCMIP'}});
+            ocl{end+1} = struct('NAME', 'T_E_XCAL_QUALITY_VALUE',        'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            
+            ocl{end+1} = struct('NAME', 'V_PH_KNEE',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      ...
+                'DESCRIPTION', ['Photoelectron knee potential.', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME', {{'"SPACECRAFT POTENTIAL"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
+            ocl{end+1} = struct('NAME', 'V_PH_KNEE_QUALITY_VALUE',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                  'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+            LblData.OBJTABLE.OBJCOL_list = ocl;
+        end
+
+
+
+        % USC = U_sc = Potential, Spacecraft
+        %    
+        % NOTE: BUG in Lapdog. UTC sometimes has 3 and sometimes 6 decimals. ==> Assertions will fail sometimes.
+        %   Still true? /EJ 2018-11-06
+        function LblData = get_USC_data(obj, LhtKvpl, firstPlksFile)
+            
+            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
+            
+            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
+                {'2018-08-29', 'AE', 'Initial version'}, ...
+                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}, ...
+                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
+                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
+                {'2019-02-21', 'EJ', 'Updated DESCRIPTIONs'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                'DATA_SET_PARAMETER_NAME', {'"SPACECRAFT POTENTIAL"'}; ...
+                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
+
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Time series of proxy for spacecraft potential.');
+
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = ['Table of timestamps, and a proxy for spacecraft potential, derived from either (1) zero current', ...
+                ' crossing in sweep, or (2) floating potential measurement (downsampled).', ...
+                ' Timestamps can thus refer to either the midpoint of a sweep, or an individual sample.'];    % TODO: Check with FJ/AE if timestamps can refer to individual LF/HF sample, or 32S sample.
+
+            %================
+            % Define columns
+            %================
+            % FJ's proposal: 2019-02-21: V_SC_POT_PROXY: 'Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero
+            ocl = [];
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.');                                % 'useFor', {{'START_TIME'}}
+            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}}
+            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',   'DESCRIPTION', ...
+                ['Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero.', ...
+                ' Actual source of data depends on what is available.', obj.MC_DESC_AMENDM], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            ocl{end+1} = struct('NAME', 'DATA_SOURCE',                  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
+                'Source of data for the spacecraft potential proxy value. 1 or 2=Floating potential measurement on probe 1 or 2 respectively. 3=Negated voltage in sweep on probe 1 for which current is zero.');
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);            
+            LblData.OBJTABLE.OBJCOL_list = ocl;
+        end
+
+
+
         function LblData = get_PHO_data(obj, LhtKvpl)
             % IMPLEMENTATION NOTE: Derives timestamps from columns since the Lapdog PHO struct does not contain timing
             % information. TEMPORARY SOLUTION.
@@ -682,9 +799,9 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.',                           'useFor', {{'START_TIME', 'STOP_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
-            ocl{end+1} = struct('NAME', 'I_PH0',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE',    'DESCRIPTION', ...
+            ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.',                           'useFor', {{'START_TIME', 'STOP_TIME'}});
+            ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
+            ocl{end+1} = struct('NAME', 'I_PH0',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE', 'DESCRIPTION', ...
                 ['Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'I_PH0_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
@@ -694,104 +811,39 @@ classdef definitions < handle
 
 
 
-        % USC = U_sc = Potential, Spacecraft
-        %    
-        % NOTE: BUG in Lapdog. UTC sometimes has 3 and sometimes 6 decimals. ==> Assertions will fail sometimes.
-        %   Still true? /EJ 2018-11-06
-        function LblData = get_USC_data(obj, LhtKvpl, firstPlksFile)
-            
+        % NOTE: Only generated for macros 710, 910, 801, 802. /FJ 2019-02-20
+        function LblData = get_EFL_data(obj, LhtKvpl, firstPlksFile)
+        %    ELECTRIC_FIELD_COMPONENT
+
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
-            
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
-                {'2018-08-29', 'AE', 'Initial version'}, ...
-                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}, ...
-                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
-                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
-                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
-            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+                {'2019-02-27', 'EJ', 'Initial version'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);    % Unnecessary?
             
             HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
-                'DATA_SET_PARAMETER_NAME', {'"SPACECRAFT POTENTIAL"'}; ...
-                'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
-
-            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Time series of proxy for spacecraft potential.');
-
+                    'DATA_SET_PARAMETER_NAME', {'"ELECTRIC_FIELD_COMPONENT"'}'; ...
+                    'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
+            
+            DESCRIPTION = 'Electric field strength, calculated on ground.';
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
+            
             LblData.HeaderKvpl           = HeaderKvpl;
-            LblData.OBJTABLE.DESCRIPTION = ['Table of timestamps, and a proxy for spacecraft potential, derived from either (1) zero current', ...
-                ' crossing in sweep, or (2) floating potential measurement (downsampled).', ...
-                ' Timestamps can thus refer to either the midpoint of a sweep, or an individual sample.'];    % TODO: Check with FJ/AE if timestamps can refer to individual LF/HF sample, or 32S sample.
-
+            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and electric field component values calculated on ground.';
+            
             %================
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECONDS',   'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.');                                % 'useFor', {{'START_TIME'}}
-            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}}
-            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      'DESCRIPTION', ...
-                ['Proxy for spacecraft potential derived from either (1) photoelectron knee in sweep, or (2) floating potential measurement (downsampled), depending on available data.', obj.MC_DESC_AMENDM], ...
+            ocl{end+1} = struct('NAME', 'TIME_UTC',         'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',          'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',          'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'EFIELD_COMPONENT', 'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'MILLIVOLT/METER', 'DESCRIPTION', ...
+                ['Electric field component, calculated on ground by taking the difference between floating probe measurements on both probes', ...
+                ' and dividing by distance, (V_P2-V_P1)/L. Positive value refers to electric field pointing in the direction from probe 1 to probe 2.', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
-            ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);            
-            LblData.OBJTABLE.OBJCOL_list = ocl;
-        end
-
-
-
-        % ASW = Analyzed sweep parameters
-        function LblData = get_ASW_data(obj, LhtKvpl, firstPlksFile)
-            % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
-            
-            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
-            HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
-                {'2018-08-30', 'EJ', 'Initial version'}, ...
-                {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
-                {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
-                {'2018-11-27', 'EJ', 'Updated global DESCRIPTION'}, ...
-                {'2019-02-04', 'EJ', 'Updated UNITs, ion bulk speed DESCRIPTION'}, ...
-                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
-            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
-            
-            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
-                'DATA_SET_PARAMETER_NAME',  {'"ELECTRON DENSITY"', '"PHOTOSATURATION CURRENT"', '"ION BULK VELOCITY"','"ELECTRON TEMPERATURE"', '"SPACECRAFT POTENTIAL"'}; ...
-                'CALIBRATION_SOURCE_ID',    {'RPCLAP', 'RPCMIP'}}));
-            
-            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', 'Analyzed sweeps (ASW). Miscellaneous physical high-level quantities derived from individual sweeps.');
-            
-            LblData.HeaderKvpl           = HeaderKvpl;
-            LblData.OBJTABLE.DESCRIPTION = 'Time series of sweep timestamps, and sweep-based estimates of electron density, ion bulk speed, electron temperature, and photoelectron knee potential.';
-            
-            %================
-            % Define columns
-            %================
-            ocl = [];
-            ocl{end+1} = struct('NAME', 'START_TIME_UTC',      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');   % 'useFor', {{'START_TIME'}}
-            ocl{end+1} = struct('NAME',  'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECONDS',   'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');   % 'useFor', {{'STOP_TIME'}}
-            ocl{end+1} = struct('NAME', 'START_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT'}}
-            ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECONDS',   'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_STOP_COUNT'}}
-            ocl{end+1} = struct('NAME', 'N_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3',    'DESCRIPTION', ['Electron density derived from individual sweep.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME', {{'"ELECTRON DENSITY"'}} , 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
-            ocl{end+1} = struct('NAME', 'N_E_QUALITY_VALUE',             'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'I_PH0',                         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE',    'DESCRIPTION', ...
-                ['Photosaturation current derived from individual sweep.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"PHOTOSATURATION CURRENT"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
-            ocl{end+1} = struct('NAME', 'I_PH0_QUALITY_VALUE',           'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'V_ION_BULK_XCAL',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'METER/SECOND',       ...
-                'DESCRIPTION', ['Ion bulk speed derived from individual sweep (speed; always non-negative scalar), while assuming a specific ion mass (see documentation). Cross-calibrated with RPCMIP.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ION BULK VELOCITY"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP', 'RPCMIP'}});
-            ocl{end+1} = struct('NAME', 'V_ION_BULK_XCAL_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'T_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',        ...
-                'DESCRIPTION', ['Electron temperature derived from exponential part of sweep.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ELECTRON TEMPERATURE"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
-            ocl{end+1} = struct('NAME', 'T_E_QUALITY_VALUE',             'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'T_E_XCAL',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',        ...
-                'DESCRIPTION', ['Electron temperature, derived by using the linear part of the electron current of the sweep, and density measurement from RPCMIP.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ELECTRON TEMPERATURE"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP', 'RPCMIP'}});
-            ocl{end+1} = struct('NAME', 'T_E_XCAL_QUALITY_VALUE',        'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'V_PH_KNEE',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',      ...
-                'DESCRIPTION', ['Photoelectron knee potential.', obj.MC_DESC_AMENDM], ...
-                'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME', {{'"SPACECRAFT POTENTIAL"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
-            ocl{end+1} = struct('NAME', 'V_PH_KNEE_QUALITY_VALUE',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                  'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+            ocl{end+1} = struct('NAME', 'SAMPLING_CONFIG',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
+                ['Number that describes the exact combination of onboard s/w averaging and downsampling. The exact values are pointers into a', ...
+                ' table that describes both the number of samples that are averaged over and the downsampling rate. See documentation for table.']);
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',     'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
 
@@ -799,6 +851,8 @@ classdef definitions < handle
 
         % NOTE: No LBL timestamps for now, and hence no such arguments.
         function LblData = get_NPL_data(obj)
+            
+            error('NOT YET IMPLEMENTED')
             
             % IMPLEMENTATION NOTE: As of 2018-11-13, no such data product has ever been produced (except dummy files),
             % and therefore no such label file has ever been produced. Must therefore set LBL header timestamps from
@@ -833,21 +887,16 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',        'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');                             % 'useFor', {{'START_TIME', 'STOP_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',        'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
+            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');                             % 'useFor', {{'START_TIME', 'STOP_TIME'}});
+            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
             ocl{end+1} = struct('NAME', 'N_PL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ...
                 ['Plasma density derived from individual fix-bias density mode (current) measurements. Parameter derived from low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'QUALITY_VALUE',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',   'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
+            
         end
-        
-        
-        
-        %function get_EFL_data(obj)
-        %    ELECTRIC_FIELD_COMPONENT
-        %end
 
 
 
@@ -873,12 +922,12 @@ classdef definitions < handle
             % Define columns
             %================
             ocl1 = {};
-            ocl1{end+1} = struct('NAME', 'START_TIME_UTC',  'UNIT', 'SECONDS',       'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC time YYYY-MM-DD HH:MM:SS.FFF.');
-            ocl1{end+1} = struct('NAME', 'STOP_TIME_UTC',   'UNIT', 'SECONDS',       'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION',  'Stop time of sweep. UTC time YYYY-MM-DD HH:MM:SS.FFF.');
-            ocl1{end+1} = struct('NAME', 'START_TIME_OBT',  'UNIT', 'SECONDS',       'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Start time of sweep. Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECONDS',       'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION',  'Stop time of sweep. Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl1{end+1} = struct('NAME', 'START_TIME_UTC',  'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC time YYYY-MM-DD HH:MM:SS.FFF.');
+            ocl1{end+1} = struct('NAME', 'STOP_TIME_UTC',   'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION',  'Stop time of sweep. UTC time YYYY-MM-DD HH:MM:SS.FFF.');
+            ocl1{end+1} = struct('NAME', 'START_TIME_OBT',  'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Start time of sweep. Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION',  'Stop time of sweep. Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             ocl1{end+1} = struct('NAME', 'Qualityfactor',   'UNIT', obj.NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Quality factor from 0-100.');   % TODO: Correct?
-            ocl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'DEGREES',       'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle in spacecraft XZ plane, measured from Z+ axis.');
+            ocl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'DEGREE',        'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle in spacecraft XZ plane, measured from Z+ axis.');
             ocl1{end+1} = struct('NAME', 'Illumination',    'UNIT', obj.NO_ODL_UNIT, 'BYTES',  4, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
             ocl1{end+1} = struct('NAME', 'direction',       'UNIT', obj.NO_ODL_UNIT, 'BYTES',  1, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
             % ----- (NOTE: Switching from ocl1 to ocl2.) -----
@@ -1037,10 +1086,10 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',        'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',        'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',        'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',        'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'npl',                'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of plasma number density.');
             ocl{end+1} = struct('NAME', 'Te',                 'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',   'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of electron temperature.');
@@ -1060,7 +1109,7 @@ classdef definitions < handle
         
         
         % NOTE: TAB+LBL files will likely not be delivered.
-        function LblData = get_A1P_data(obj, LhtKvpl, firstPlksFile)            
+        function LblData = get_A1P_data(obj, LhtKvpl, firstPlksFile)
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             
@@ -1079,10 +1128,10 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',       'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME',  'STOP_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECONDS',       'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',       'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECONDS',       'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',        'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl{end+1} = struct('NAME',  'STOP_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',        'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',        'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',        'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Quality flag from 000 (best) to 777 (worst).');
             ocl{end+1} = struct('NAME', 'Vph_knee',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',          'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Potential at probe position from photoelectron current knee (gaussian fit of second derivative).');
             ocl{end+1} = struct('NAME', 'Te_exp_belowVknee',  'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',  'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Electron temperature from an exponential fit to the slope of the retardation region of the electron current.');

@@ -196,7 +196,7 @@ try
                 %     qind = find(abs(diff(imu)) > 0); % find bias changes (NB, length(diff(imu))=length(imu) -1 )
                 if ~isempty(qind);
                     qind = qind +1; % correction
-                    qf(qind) = qf(qind)+20;% add + 20  qualityfactor for bias changes
+                    qf(qind) = qf(qind)+10;% add + 20  qualityfactor for bias changes
                     
                     isd(qind) = sdtemp(qind); %this might be interesting to know. or not.
                 end
@@ -225,7 +225,7 @@ try
                 qind = find(abs(diff(vmu)/nanmean(vmu)) > 1E-10); % find bias changes (NB, length(diff(imu))=length(imu) -1 )
                 if ~isempty(qind);
                     qind = qind +1;       % correction
-                    qf(qind) = qf(qind)+20;% add + 20  qualityfactor for bias changes
+                    qf(qind) = qf(qind)+10;% add + 20  qualityfactor for bias changes
                     
                     vsd(qind) = sdtemp(qind); %this might be interesting to know. or not.
                 end
@@ -724,7 +724,8 @@ end
 %             
             efl.t_utc=scantemp{1,1};
             efl.t_obt=scantemp{1,2};
-            efl.qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!
+            %efl.qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!    % Does not work on MATLAB R2009a since bitor then does not accept arguments of class/type int32 (but uint32, uint64 work).
+            efl.qf= bitor(uint64(scantemp{1,5}),uint64(scantemp2{1,5})); %qualityflag!
             efl.ef_out = 1000*(scantemp2{1,4}-scantemp{1,4})/5;
             %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
             efl.ef_out(isnan(efl.ef_out))=SATURATION_CONSTANT;

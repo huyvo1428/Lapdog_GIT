@@ -94,9 +94,23 @@ function create_LBL_files(Data)
     % ASSERTIONS
     EJ_library.utils.assert.struct(Data, {...
         'ldDatasetPath', 'pdDatasetPath', 'metakernel', 'C', 'failFastDebugMode', 'generatingDeriv1', ...
-        'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex'})
+        'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex', 'efl_tabindex'})
     if isnan(Data.failFastDebugMode)    % Check if field set to temporary value.
         error('Illegal argument Data.failFastDebugMode=%g', Data.failFastDebugMode)
+    end
+    
+    
+    % ASSERTION
+    % NOTE 2019-02-27: This assertion should theoretically only be triggered for macro 910 until FJ fixes USC_tabindex.
+    % Macro 910 only runs 2016-07-15 and 2016-07-27.
+    % IMPLEMENTATION NOTE: 2019-02-28: USC_tabindex can contain empty values (double; not char/strings) as .fname value.
+    %   Ex: 2016-02 (month). Bug?
+    if ~isempty(Data.USC_tabindex)
+        hasEmptyUscFname = any(cellfun(@isempty, {Data.USC_tabindex(:).fname}));
+        assert(~hasEmptyUscFname, 'Data.USC_tabindex contains empty .fname values.')
+        assert( ...
+            numel(Data.USC_tabindex) == numel(unique({Data.USC_tabindex(:).fname})), ...
+            'Data.USC_tabindex contains duplicate USC files (.fname).')
     end
 
 
@@ -274,7 +288,7 @@ function create_LBL_files(Data)
                     
                     LblData = LblDefs.get_ASW_data(...
                         LhtKvpl, ...
-                        convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.USC_tabindex(iFile).first_index).lblfile));
+                        convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.ASW_tabindex(iFile).first_index).lblfile));
                     
                     createLBL.create_OBJTABLE_LBL_file(...
                         convert_LD_TAB_path(Data.ldDatasetPath, Data.ASW_tabindex(iFile).fname), ...
@@ -297,14 +311,15 @@ function create_LBL_files(Data)
         if ~isempty(Data.USC_tabindex)
             for iFile = 1:numel(Data.USC_tabindex)
                 try
-                    
+                    % NOTE: Data.USC_tabindex(iFile).timing{3:4} are sometimes numbers, and sometimes numbers as
+                    % strings.
                     startStopTimes = Data.USC_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
                     LhtKvpl = get_timestamps_KVPL(...
                         startStopTimes{1}, ...
                         startStopTimes{2}, ...
-                        obt2sctrc(str2double(startStopTimes{3})), ...
-                        obt2sctrc(str2double(startStopTimes{4})));
-                    
+                        obt2sctrc(strOrNbr2nbr(startStopTimes{3})), ...
+                        obt2sctrc(strOrNbr2nbr(startStopTimes{4})));
+
                     LblData = LblDefs.get_USC_data(...
                         LhtKvpl, ...
                         convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.USC_tabindex(iFile).first_index).lblfile));
@@ -353,6 +368,40 @@ function create_LBL_files(Data)
                 end
             end
         end
+        
+        
+        
+        %==========================
+        %
+        % Create LBL files for EFL
+        %
+        %==========================
+        for iFile = 1:numel(Data.efl_tabindex)
+            try
+                startStopTimes = Data.efl_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+                LhtKvpl = get_timestamps_KVPL(...
+                    startStopTimes{1}, ...
+                    startStopTimes{2}, ...
+                    obt2sctrc(startStopTimes{3}), ...
+                    obt2sctrc(startStopTimes{4}));
+                
+                LblData = LblDefs.get_EFL_data(...
+                    LhtKvpl, ...
+                    convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.efl_tabindex(iFile).first_index).lblfile));
+                
+                createLBL.create_OBJTABLE_LBL_file(...
+                    convert_LD_TAB_path(Data.ldDatasetPath, Data.efl_tabindex(iFile).fname), ...
+                    LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                
+                clear   startStopTimes   LhtKvpl   LblData
+                
+            catch Exception
+                createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                fprintf(1,'Aborting LBL file for PHO_tabindex - Continuing\n');
+            end
+        end
+        
+        
         
         %==============================================================
         %
@@ -587,3 +636,16 @@ end
 function tabPath = convert_PD_TAB_path(datasetPath, tabPath)
     tabPath = createLBL.convert_TAB_path(datasetPath, tabPath, 5);
 end
+
+
+
+function x = strOrNbr2nbr(x)
+    if ischar(x)
+        x = str2double(x);
+    elseif isnumeric(x)
+        ;
+    else
+        assert(0, 'Expected x to be either (1) string, or (2) number.')
+    end
+end
+    

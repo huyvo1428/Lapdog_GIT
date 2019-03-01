@@ -3,5 +3,6 @@
 % Wrapper around obt2sct to add the reset counter to the returned string.
 %
 function str = obt2sctrc(obt)
+    assert(isnumeric(obt))
     str = ['1/', obt2sct(obt)];
 end
