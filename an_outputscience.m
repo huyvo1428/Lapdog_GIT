@@ -245,7 +245,7 @@ t_etz=t_et0+intval/2+(intval* (min(inter):max(inter)));%midpoint of interval
 
 %                               ((1:3600*24/intval)-0.5)*intval
 
-t_obtz= t_obt0 +intval+(intval*(min(inter):max(inter)));%midpoint of interval
+t_obtz= t_obt0 +intval/2+(intval*(min(inter):max(inter)));%midpoint of interval
 t_utc= cspice_et2utc(t_etz(:).'+0.5, 'ISOC', 6);% buffer up with 0.5 second, before UTC conversion, and then round to closest second later in function
 t_matlab_date=nan(length(t_etz),1);
 for i = 1:length(t_etz)
@@ -455,7 +455,9 @@ for i = min(inter):max(inter) %main for loop
 
         elseif (~isempty(indz))
             t_utc(k,end-8:end)='00.000000';
-            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
+            %row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
+            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), t_obtz(k), resampled.iph0(k),dummy_qv,qf_array(k));
+
             rowcount=rowcount+1;
             PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
             PHO_tabindex(end).row_byte = row_byte; %will repeatedly get overwritten until  PHO_tabindex(end+1).fname = filename;        is called
