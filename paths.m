@@ -118,7 +118,7 @@ if ~isempty(micePath)
 else
     % NOTE: Useful not to give errors, so that Lapdog also works with metakernel without MICE path.
     % Remove the message since this is default behaviour nowadays?
-    fprintf('Notice: Can not find MICE path in metakernel. This is OK if the caller has already added MICE to the MATLAB path.\n')
+    %fprintf('Notice: Can not find MICE path in metakernel. This is OK if the caller has already added MICE to the MATLAB path.\n')
 end
 
 % Add irfu-matlab path
