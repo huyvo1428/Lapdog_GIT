@@ -214,9 +214,9 @@ classdef definitions < handle
             
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
-        
-        
-                
+
+
+
         function LblData = get_IVxHL_data(obj, LhtKvpl, firstPlksFile, isDensityMode, probeNbr, isLf)
             
             [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
@@ -246,8 +246,9 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECOND', 'BYTES', 16, 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             
             if probeNbr ~=3
-                
+                %================
                 % CASE: P1 or P2
+                %================
                 currentOc = struct('NAME', sprintf('P%i_CURRENT', probeNbr), obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14);
                 voltageOc = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr), obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14);
                 if isDensityMode
@@ -465,6 +466,8 @@ classdef definitions < handle
         % these values.
         %
         % NOTE: Has not found any "?3D" (P3, downsampled) data on old datasets. Should not exist since there (empirically) is no ?3L data.
+        %
+        % NOTE: TEMPORARY SOLUTION. Derives TIMESTAMPS from columns.
         function LblData = get_IVxD_data(obj, LhtKvpl, firstPlksFile, probeNbr, samplingRateSeconds, isDensityMode)
             if isDensityMode ; modeStr = 'density mode';
             else               modeStr = 'E field mode';
@@ -502,13 +505,15 @@ classdef definitions < handle
             % NOT cover the time interval of the downsampled time series. This is due to downsampling creating its
             % own timestamps. Must therefore actually read the LBL start & stop timestamps from the actual content
             % of the TAB file.
-            % IMPLEMENTATION NOTE: Columns TIME_UTC and TIME_OBT match for the first timestamp, but not do not match
+            % IMPLEMENTATION NOTE: Columns TIME_UTC and TIME_OBT match for the FIRST timestamp, but not do not match
             % well enough for the last timestamp for DVAL-NG not to give a warning. This is due to(?) the
             % downsampling code taking some shortcuts in producing the sequence of OBT+UTC values, i.e. manually
-            % producing the series and NOT using SPICE for every such pair. Therefore using the last TIME_OBT value
-            % for both SPACECRAFT_CLOCK_STOP_COUNT and STOP_TIME.
-            ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECOND',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.',                              'useFor', {{'START_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECOND',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}});
+            % producing the series and NOT using SPICE for every such pair. Therefore, if using "useFor", use the same
+            % same column (TIME_UTC or TIME_OBT) for deriving both SPACECRAFT_CLOCK_STOP_COUNT and STOP_TIME.
+            ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECOND',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.',                              ...
+                'useFor', {{'START_TIME'}});
+            ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECOND',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', ...
+                'useFor', {{'SPACECRAFT_CLOCK_START_COUNT'}});
             
             oc1 = struct('NAME', sprintf('P%i_CURRENT',        probeNbr), obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, obj.DATA_DATA_TYPE{:}, 'DESCRIPTION', 'Averaged current.');
             oc2 = struct('NAME', sprintf('P%i_CURRENT_STDDEV', probeNbr), obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, obj.DATA_DATA_TYPE{:}, 'DESCRIPTION', 'Current standard deviation.');
@@ -685,8 +690,8 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');   % 'useFor', {{'STOP_TIME'}}
-            ocl{end+1} = struct('NAME', 'TIME_OBT',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT'}}
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
 
             ocl{end+1} = struct('NAME', 'N_E',                           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ['Electron density derived from individual sweep.', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME', {{'"ELECTRON DENSITY"'}} , 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
@@ -756,8 +761,8 @@ classdef definitions < handle
             %================
             % FJ's proposal: 2019-02-21: V_SC_POT_PROXY: 'Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.');                                % 'useFor', {{'START_TIME'}}
-            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT', 'STOP_TIME_from_OBT'}}
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',   'DESCRIPTION', ...
                 ['Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero.', ...
                 ' Actual source of data depends on what is available.', obj.MC_DESC_AMENDM], ...
@@ -771,9 +776,9 @@ classdef definitions < handle
 
 
 
+        % IMPLEMENTATION NOTE: Derives TIMESTAMPS from columns since the Lapdog PHO struct does not contain timing
+        % information. TEMPORARY SOLUTION.
         function LblData = get_PHO_data(obj, LhtKvpl)
-            % IMPLEMENTATION NOTE: Derives timestamps from columns since the Lapdog PHO struct does not contain timing
-            % information. TEMPORARY SOLUTION.
 
             HeaderKvpl = obj.HeaderAllKvpl.append(LhtKvpl);
             
@@ -799,8 +804,10 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.',                           'useFor', {{'START_TIME', 'STOP_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
+            ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.',                           ...
+                'useFor', {{'START_TIME', 'STOP_TIME'}});
+            ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', ...
+                'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
             ocl{end+1} = struct('NAME', 'I_PH0',               'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE', 'DESCRIPTION', ...
                 ['Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
@@ -817,18 +824,18 @@ classdef definitions < handle
 
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
-                {'2019-02-27', 'EJ', 'Initial version'}});
+                {'2019-02-28', 'EJ', 'Initial version'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);    % Unnecessary?
             
             HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
                     'DATA_SET_PARAMETER_NAME', {'"ELECTRIC_FIELD_COMPONENT"'}'; ...
                     'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
             
-            DESCRIPTION = 'Electric field strength, calculated on ground.';
+            DESCRIPTION = 'Electric field component.';
             HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
             
             LblData.HeaderKvpl           = HeaderKvpl;
-            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and electric field component values calculated on ground.';
+            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and electric field component values.';
             
             %================
             % Define columns
@@ -887,8 +894,8 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');                             % 'useFor', {{'START_TIME', 'STOP_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');   % 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
+            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             ocl{end+1} = struct('NAME', 'N_PL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ...
                 ['Plasma density derived from individual fix-bias density mode (current) measurements. Parameter derived from low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);

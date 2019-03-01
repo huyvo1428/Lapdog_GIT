@@ -77,7 +77,7 @@
 %
 % NAMING CONVENTIONS
 % ==================
-% T2PK : TAB file to (2) PDS Keyword. Functionality for retrieving LBL header PDS keyword values from TAB file.
+% T2PK : TAB file to ("2") PDS Keyword. Functionality for retrieving LBL header PDS keyword values from TAB file.
 %
 function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings, tabLblInconsistencyPolicy)
     %
@@ -269,16 +269,13 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
 
     %################################################################################################
 
-    %---------------------------------------------
-    % Convert TAB file contents into PDS keywords
-    %---------------------------------------------
+    %----------------------------------------------------
+    % T2PK: Use TAB file contents to assign PDS keywords
+    %----------------------------------------------------
     
     % ASSERTION: Unique .useFor PDS keywords.
     % NOTE: Not foolproof due to changes. Should ideally check that the final PDS keywords are not set more than once.
     EJ_library.utils.assert.castring_set({T2pkArgsTable.argConst})
-    %if numel(unique({T2pkArgsTable.argConst})) ~= numel({T2pkArgsTable.argConst})
-    %    error('Specified the same argument constant multiple times in ".useFor" fields.')
-    %end
 
     [junk, iT2pkArgsTable, iT2pkProcTable] = intersect({T2pkArgsTable.argConst}, {T2PK_PROCESSING_TABLE.argConst});
     
