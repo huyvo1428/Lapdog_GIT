@@ -204,7 +204,7 @@ intval = resampled.conds.time_window;%seconds
       %  utc_str= XXP(1).info.timing{1,1};%this is start of file
         % utc_str=XXP(1).data.Tarr{1,1}; %this is start of first sweep data point, slightly different
   
-        utc_str=cspice_et2utc(lapstruct.t0(1),'ISOC',6)
+        utc_str=cspice_et2utc(lapstruct.t0(1),'ISOC',10);
         
         
         % Set starting spaceclock time to (UTC) 00:00:00.000000
@@ -245,11 +245,14 @@ t_etz=t_et0+intval/2+(intval* (min(inter):max(inter)));%midpoint of interval
 
 %                               ((1:3600*24/intval)-0.5)*intval
 
-t_obtz= t_obt0 +intval/2+(intval*(min(inter):max(inter)));%midpoint of interval
-t_utc= cspice_et2utc(t_etz(:).'+0.5, 'ISOC', 6);% buffer up with 0.5 second, before UTC conversion, and then round to closest second later in function
+
+t_obt= t_obt0 +intval/2+(intval*(min(inter):max(inter)));%midpoint of interval
+t_utc= cspice_et2utc(t_etz(:).'+0.5, 'ISOC', 10);% buffer up with 0.5 second, before UTC conversion, and then round to closest second later in function
 t_matlab_date=nan(length(t_etz),1);
 for i = 1:length(t_etz)
     t_matlab_date(i)=datenum(strrep(t_utc(i,:),'T',' '));
+    %t_obtz(i) = sct2obt(cspice_sce2s(-226,cspice_str2et('2016-09-03T01:00:01.500')))-sct2obt(cspice_sce2s(-226,cspice_str2et('2016-09-03T01:00:02.500')))
+    t_obt(i) = sct2obt(cspice_sce2s(-226,t_etz(i))); %convert from et to SCLK to OBT
 end
 
     
@@ -448,15 +451,20 @@ for i = min(inter):max(inter) %main for loop
 
         if (isempty(indz) && (rowcount>0))   % nothing here & file open. fill with SATURATION_CONSTANT
            % t_utc(end-8:end)='59.999797';
-            t_utc(k,end-8:end)='00.000000';
-
-            fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), t_obtz(k), SATURATION_CONSTANT,0,qf_array(k));
+           % t_utc(k,end-8:end)='00.000000';
+            t_utc(k,21:26)='000000';%increased UTC precision, now we need to floor away this 0.5s margin
+            %t_utc is now a string with more than 6 decimals precision, but we
+            %force the output to only print the first 6.
+            fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,1:26), t_obt(k), SATURATION_CONSTANT,0,qf_array(k));
             rowcount=rowcount+1;
 
         elseif (~isempty(indz))
-            t_utc(k,end-8:end)='00.000000';
+            %t_utc(k,end-8:end)='00.000000';
+            t_utc(k,21:26)='000000'; %increased UTC precision, now we need to floor away this 0.5s margin
+            %t_utc is now a string with more than 6 decimals precision, but we
+            %force the output to only print the first 6.
             %row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
-            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), t_obtz(k), resampled.iph0(k),dummy_qv,qf_array(k));
+            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,1:26), t_obt(k), resampled.iph0(k),dummy_qv,qf_array(k));
 
             rowcount=rowcount+1;
             PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
