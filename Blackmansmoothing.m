@@ -49,7 +49,7 @@ if ~isempty(nanind) %
             
             I_z(ind)=interp1(V(extrapind), I_z(extrapind),V(ind),'linear','extrap'); 
             else
-                I_filtered= Iz;
+                I_filtered= I_z;
                 fprintf(1,'8 NaN in a row. Give up\n')
                 return;
             end

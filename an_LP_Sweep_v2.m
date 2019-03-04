@@ -67,7 +67,7 @@ DP = [];
 
 DP.Iph0             = NaN;
 DP.Tph              = NaN;
-DP.Vsi              = nan(1,2);;
+DP.Vsi              = nan(1,2);
 DP.Te               = nan(1,2);
 DP.ne               = nan(1,2);
 
@@ -405,9 +405,25 @@ try %try the dynamic solution first, then the static.
 
         phind = find(Vdagger < 6 & Vdagger>0);
 
-        [phpol,S,mu]=polyfit(Vdagger(phind),log(abs(Iph(phind))),1);
+        [P_ph,S,mu]=polyfit(Vdagger(phind),log(abs(Iph(phind))),1);
         S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df);
 
+        %Edit FKJN 04 Mar 2019. At some point, Matlab complained about this
+        %fitting routine, asking to improve stability by calling polyfit
+        %with three outputs, scaling and centering the data. 
+        %This actually changes the other two outputs.
+        %That's not very nice. Now we have to undo the scaling and normalization 
+        % The only way I know how is to use symbolic functions, and to use
+        % vpa and coeffs to get the accuracy wanted and coefficients wanted
+        x_hit=Vdagger(phind);
+        %y_hit=log(abs(Iph(phind)));        
+        syms x_hit ;%y_hit
+        xhat = (x_hit - mu(1))/mu(2);
+        yhat = P_ph(1)*xhat + P_ph(2);
+        phpol=coeffs(vpa(yhat,10));
+        
+        
+        
         Tph = -1/phpol(1);
         Iftmp = -exp(phpol(2));
 
@@ -492,7 +508,7 @@ try %try the dynamic solution first, then the static.
             end
 
             %----------------------------------------------------------------------------------------------------------------------%
-            if Tph>0 %very bad
+            if Tph>0 
                 Iph(:) = DP.Iph0;  %set everything to photosaturation current
 
                 %    Iph(1:idx1)=DP.Iph0; %add photosaturation current
@@ -501,7 +517,7 @@ try %try the dynamic solution first, then the static.
                 %Iph(idx1:end)=Iftmp*exp(-(V(idx1:end)+Vsc-Vplasma)/Tph);
                 Iph(idx1+1:end)=Iftmp*exp(-Vdagger(idx1+1:end)/Tph);
 
-            else
+            else%very bad
                 Iph(:)=0;
             end
 
