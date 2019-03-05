@@ -6,7 +6,7 @@ CONT_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926
 global VFLOATMACROS
 
 debug=[0 0 0];
-
+%warning on verbose
 
 iph0conditions=[];
 iph0conditions.I_Vb=-17.0;%V from generating lap1 vector.
@@ -82,7 +82,10 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     dummy_v_ion=SATURATION_CONSTANT;
     %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
     
-
+    %filter positive values and outside LAP range
+    outside_range= XXP(i).data.Te_exp_belowVknee(:,1)<1e-3 |XXP(i).data.Te_exp_belowVknee(:,1)>30;%eV
+     XXP(i).data.Te_exp_belowVknee(outside_range,1)=SATURATION_CONSTANT;
+     XXP(i).data.Te_exp_belowVknee(outside_range,2)=0;%qv
     for j = 1:len
         
         %remember i & j !!!
@@ -99,7 +102,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv);
         str6=sprintf(' %14.7e, %2.1f,',XCAL_struct.Te(j),dummy_qv);
         str7=sprintf(' %14.7e, %2.1f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
-        str8=sprintf(' %05i',XXP(i).data.qf(j));
+        str8=sprintf(' %03i',XXP(i).data.qf(j));
         
         strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
         row_bytes= fprintf(twID,'%s\r\n',strtot);
@@ -321,7 +324,7 @@ for i = min(inter):max(inter) %main for loop
 %               
         % if  ge(length(curr),resampled.conds.samples) 
            %[P2,S2]= polyfit(ion_slope,curr,1);
-           
+           %warning off MATLAB:polyfit:RepeatedPointsOrRescale;
            [P2, outliers,S2] = fit_ols_ESD(ion_slope, curr); %new fitting routine with outlier removal.
 
            resampled.P(k,1:2) = P2;
@@ -352,7 +355,7 @@ for i = min(inter):max(inter) %main for loop
             
             resampled.iph0(k) = P2(2);% this is apparently iph0.
             try
-                S2.sigma = sqrt(diag(inv(S2.R)*inv(S2.R')).*S2.normr.^2./S2.df);
+                %S2.sigma = sqrt(diag(inv(S2.R)*inv(S2.R')).*S2.normr.^2./S2.df);
                 resampled.iph0_sigma(k) = S2.sigma(2);
                 
             catch err %horrible try catch.
@@ -428,7 +431,7 @@ for i = min(inter):max(inter) %main for loop
         if k>1 && strcmp(datestr(t_matlab_date(k-1),'yyyymmdd'), datestr(t_matlab_date(k),'yyyymmdd')) %%same calendar day? (won't check k==1)
             
             
-            twID = fopen(filename,'a+'); %new file.
+            twID = fopen(filename,'a+'); %append to old file.
            %fprintf(1,'a+ opening file: %s\r\n',filename)
 
         else
@@ -503,8 +506,13 @@ end%main loop
 delindz=[];
 for i = 1:length(PHO_tabindex)%clean up empty files
     
-    if PHO_tabindex(i).no_of_rows == 0
-        D= dir(PHO_tabindex(i).fname);
+    
+    D= dir(PHO_tabindex(i).fname);
+    
+    if (D.bytes==0 ||PHO_tabindex(i).no_of_rows == 0)
+        
+        %    if PHO_tabindex(i).no_of_rows == 0
+        %D= dir(PHO_tabindex(i).fname);
         
         fprintf(1,'%s size is %i',PHO_tabindex(i).fname,D.bytes);
         delete(PHO_tabindex(i).fname);

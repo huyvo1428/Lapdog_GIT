@@ -181,9 +181,6 @@ Ir = Ir(ind);       % rest of the data points are, again, discarded.
         P_Vb(1) = P_scaled(1)/mu(2);% slope , k
         
         
-        a(1) = P_Vb(1); % This is accordingly the slope of the line...
-        b(1) = P_Vb(2); % ...and this is the crossing on the y-axis of the line
-        
 
 
 %% upper ion current comparison
@@ -266,18 +263,9 @@ if upper_comparison_bool
 %             
             P_Vb= P_Vb_upper;
             
-            
-            a(1) = P_Vb(1); % This is accordingly the slope of the line...
-            b(1) = P_Vb(2); % ...and this is the crossing on the y-axis of the line
-
             S = S_upper;
-            S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
-            S.sigma(1)=S.sigma(1)/mu_upper(2);
-            
-        else
-                        
-            S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
-            S.sigma(1)=S.sigma(1)/mu(2);
+            mu=mu_upper;
+
         end %% Otherwise, this comparison has no impact below this line
         
     end
@@ -286,6 +274,13 @@ end
 
 
 %S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
+
+a(1) = P_Vb(1); % This is accordingly the slope of the line...
+b(1) = P_Vb(2); % ...and this is the crossing on the y-axis of the line
+
+
+S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
+S.sigma(1)=S.sigma(1)/mu(2);
 
 a(2) = abs(S.sigma(1)/P_Vb(1));   % Fractional error
 b(2) = abs(S.sigma(2)/P_Vb(2));   % Fractional error
