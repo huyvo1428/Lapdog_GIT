@@ -403,7 +403,7 @@ try %try the dynamic solution first, then the static.
 
         %Vdagger = V + Vsc - Vplasma;
 
-        phind = find(Vdagger < 6 & Vdagger>0);
+        phind = find(Vdagger < 6 & Vdagger>0 & ~isnan(Iph));
 
         [P_ph,S,mu]=polyfit(Vdagger(phind),log(abs(Iph(phind))),1);
         S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df);
@@ -415,14 +415,19 @@ try %try the dynamic solution first, then the static.
         %That's not very nice. Now we have to undo the scaling and normalization 
         % The only way I know how is to use symbolic functions, and to use
         % vpa and coeffs to get the accuracy wanted and coefficients wanted
-        x_hit=Vdagger(phind);
+        %x_hit=Vdagger(phind);
         %y_hit=log(abs(Iph(phind)));        
-        syms x_hit ;%y_hit
-        xhat = (x_hit - mu(1))/mu(2);
-        yhat = P_ph(1)*xhat + P_ph(2);
-        phpol=coeffs(vpa(yhat,10));
+        %syms x_hit ;%y_hit
+        %xhat = (x_hit - mu(1))/mu(2);
+        %yhat = P_ph(1)*xhat + P_ph(2);
+        %phpol=coeffs(vpa(yhat,10));
+        %edit FKJN 05 Mars 2019
+        %syms is goddamn slow. I just have to understand it and find a new
+        %way
+        %S.sigma
         
-        
+        phpol(2)= P_ph(2)-(P_ph(1)*mu(1)/mu(2)); % offset, m
+        phpol(1) = P_ph(1)/mu(2);% slope , k
         
         Tph = -1/phpol(1);
         Iftmp = -exp(phpol(2));

@@ -174,23 +174,3 @@ end
         efl_tabindex(end).row_byte = row_byte;
 
 end
-
-
-function x=frejonbitor(A)
-
-len = length(A);
-x=uint32(A(1));
-
-
-if len>1
-
-    for i = 1:len
-    x=bitor(x,uint32(A(i)));
-    end
-end
-
-
-
-
-end
-

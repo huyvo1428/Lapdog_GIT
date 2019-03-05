@@ -124,15 +124,22 @@ for i=1:8
 end
 
 
-[P,junk,mu]= polyfit(V_w,log(I_w),1); %sigma calculation doesn't make sense with weighted fit. Do sigma analysis on Ir,Vr fit
+[P_scaled,junk,mu]= polyfit(V_w,log(I_w),1); %sigma calculation doesn't make sense with weighted fit. Do sigma analysis on Ir,Vr fit
 
-
+        %Edit FKJN 04 Mar 2019. At some point, Matlab complained about this
+        %fitting routine, asking to improve stability by calling polyfit
+        %with three outputs, scaling and centering the data. 
+        %This actually changes the other two outputs.
+        %That's not very nice. Now we have to undo the scaling and normalization 
+        
+        P(2)= P_scaled(2)-(P_scaled(1)*mu(1)/mu(2)); % offset, m
+        P(1) = P_scaled(1)/mu(2);% slope , k
 
 Te = 1/P(1); %small slope -> large Te, Te<0 -> unphysical
 Ie0 = exp(P(2));
 
 try  %super risky sigma calculation. 
-    [Ps,S,mu]= polyfit(Vr,log(Ir),1);
+    [Ps,S]= polyfit(Vr,log(Ir),1);
 
     S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
     

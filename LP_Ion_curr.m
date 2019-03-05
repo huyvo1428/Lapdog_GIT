@@ -168,7 +168,23 @@ Ir = Ir(ind);       % rest of the data points are, again, discarded.
 % in a least-squares sense. P is a row vector of length
 % 2 containing the polynomial coefficients in descending
 % powers, P(1)*Vi+P(2)
-[P_Vb,S,mu] = polyfit(Vr,Ir,1);
+[P_scaled,S,mu] = polyfit(Vr,Ir,1);
+
+
+        %Edit FKJN 04 Mar 2019. At some point, Matlab complained about this
+        %fitting routine, asking to improve stability by calling polyfit
+        %with three outputs, scaling and centering the data. 
+        %This actually changes the other two outputs.
+        %That's not very nice. Now we have to undo the scaling and normalization 
+        
+        P_Vb(2)= P_scaled(2)-(P_scaled(1)*mu(1)/mu(2)); % offset, m
+        P_Vb(1) = P_scaled(1)/mu(2);% slope , k
+        
+        
+        a(1) = P_Vb(1); % This is accordingly the slope of the line...
+        b(1) = P_Vb(2); % ...and this is the crossing on the y-axis of the line
+        
+
 
 %% upper ion current comparison
 % This is basically the same thing, again although a bit higher on the
@@ -203,8 +219,16 @@ end
 
 
 if upper_comparison_bool
-    [P_Vb_upper,S_upper,mu] = polyfit(Vr_upper,Ir_upper,1);
-    
+    [P_scaled_upper,S_upper,mu_upper] = polyfit(Vr_upper,Ir_upper,1);
+        %Edit FKJN 04 Mar 2019. At some point, Matlab complained about this
+        %fitting routine, asking to improve stability by calling polyfit
+        %with three outputs, scaling and centering the data. 
+        %This actually changes the other two outputs.
+        %That's not very nice. Now we have to undo the scaling and normalization 
+        
+        P_Vb_upper(2)= P_scaled_upper(2)-(P_scaled_upper(1)*mu(1)/mu(2)); % offset, m
+        P_Vb_upper(1) = P_scaled_upper(1)/mu(2);% slope , k
+
     if P_Vb_upper(1) > P_Vb(1)
         % Do comparison Y/N? & is the upper ion current slope more positive than the
         % other?
@@ -216,8 +240,8 @@ if upper_comparison_bool
         q_ind = 2:floor(l_ind*0.7+0.5); %ignore first step, check 70%...
         q_ind(isnan(I(q_ind)))=[]; %remove nans...
         if isempty(q_ind);        q_ind = 2:floor(l_ind*0.7+0.5); end %ugh, foolproof. 
-        I_diff_low   = I(q_ind) - polyval(P_Vb,V(q_ind)); %
-        I_diff_upper = I(q_ind) - polyval(P_Vb_upper,V(q_ind));
+        I_diff_low   = I(q_ind) - polyval(P_scaled,V(q_ind),[],mu); %
+        I_diff_upper = I(q_ind) - polyval(P_scaled_upper,V(q_ind),[],mu_upper);
         
         Rsq_low_temp=  nansum((I_diff_low.^2))  /nansum(((I(q_ind)-nanmean(I(q_ind))).^2));
         Rsq_upper_temp=nansum((I_diff_upper.^2))/nansum(((I(q_ind)-nanmean(I(q_ind))).^2));
@@ -241,8 +265,19 @@ if upper_comparison_bool
  %            fprintf(1,'\n');
 %             
             P_Vb= P_Vb_upper;
+            
+            
+            a(1) = P_Vb(1); % This is accordingly the slope of the line...
+            b(1) = P_Vb(2); % ...and this is the crossing on the y-axis of the line
 
             S = S_upper;
+            S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
+            S.sigma(1)=S.sigma(1)/mu_upper(2);
+            
+        else
+                        
+            S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
+            S.sigma(1)=S.sigma(1)/mu(2);
         end %% Otherwise, this comparison has no impact below this line
         
     end
@@ -250,10 +285,7 @@ end
 %%
 
 
-a(1) = P_Vb(1); % This is accordingly the slope of the line...
-b(1) = P_Vb(2); % ...and this is the crossing on the y-axis of the line
-
-S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
+%S.sigma = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df); % the std errors in the slope and y-crossing
 
 a(2) = abs(S.sigma(1)/P_Vb(1));   % Fractional error
 b(2) = abs(S.sigma(2)/P_Vb(2));   % Fractional error

@@ -16,7 +16,7 @@ while k < numel(Y)-3
     k = k+1;
     %%%
     % Total least squares:
-    [pp, SS ,junk] = polyfit(X(~outliers), Y(~outliers), 1);
+    [pp, SS] = polyfit(X(~outliers), Y(~outliers), 1);
     %%%
     % Compute test statistic:
     residuals = abs(Y(~outliers) - polyval(pp, X(~outliers)));

@@ -189,7 +189,18 @@ Ir  = I(ind);     % The "electron-voltage" and "electron-current" are set. Note 
 %Ie0 = exp(b);
 
 
-[P, S, mu] = polyfit(Vpr,Ir,1); %mu added for less polyfit warnings...
+[P_scaled, S, mu] = polyfit(Vpr,Ir,1); %mu added for less polyfit warnings...
+
+        %Edit FKJN 04 Mar 2019. At some point, Matlab complained about this
+        %fitting routine, asking to improve stability by calling polyfit
+        %with three outputs, scaling and centering the data. 
+        %This actually changes the other two outputs.
+        %That's not very nice. Now we have to undo the scaling and normalization 
+        
+        P(2)= P_scaled(2)-(P_scaled(1)*mu(1)/mu(2)); % offset, m
+        P(1) = P_scaled(1)/mu(2);% slope , k
+        
+
 PVb = P;
 PVb(2) = P(1)*Vsc+P(2); %remove Vsc from fit
 

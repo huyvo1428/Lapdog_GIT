@@ -647,26 +647,6 @@ end
 end
 
 
-
-function x=frejonbitor(A)
-
-len = length(A);
-x=uint32(A(1));
-
-
-if len>1
-
-    for i = 1:len
-    x=bitor(x,uint32(A(i)));
-    end
-end
-
-
-
-
-end
-
-
 function XCAL_L= XCAL_lapdog(LAP,path_to_matfile)
 global MIP %change to persistent later
 global CO IN SATURATION_CONSTANT assmpt
