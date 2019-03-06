@@ -458,7 +458,7 @@ for i = min(inter):max(inter) %main for loop
             t_utc(k,21:26)='000000';%increased UTC precision, now we need to floor away this 0.5s margin
             %t_utc is now a string with more than 6 decimals precision, but we
             %force the output to only print the first 6.
-            fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,1:26), t_obt(k), SATURATION_CONSTANT,0,qf_array(k));
+            fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %03i\r\n', t_utc(k,1:26), t_obt(k), SATURATION_CONSTANT,0,qf_array(k));
             rowcount=rowcount+1;
 
         elseif (~isempty(indz))
@@ -467,7 +467,7 @@ for i = min(inter):max(inter) %main for loop
             %t_utc is now a string with more than 6 decimals precision, but we
             %force the output to only print the first 6.
             %row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
-            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,1:26), t_obt(k), resampled.iph0(k),dummy_qv,qf_array(k));
+            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %03i\r\n', t_utc(k,1:26), t_obt(k), resampled.iph0(k),dummy_qv,qf_array(k));
 
             rowcount=rowcount+1;
             PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows

@@ -327,7 +327,7 @@ try
                 % Don't print zero values.
             else
                 
-                row_byte= fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e, %05i\r\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j),sum(foutarr{1,8}(j)));
+                row_byte= fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e, %03i\r\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j),sum(foutarr{1,8}(j)));
 
                 N_rows = N_rows + 1;
             end%if
@@ -750,7 +750,7 @@ end
             
             if printbooleanind(j) %
                                   %UTC   %OBT      Efield, frequencyflag, qf
-                row_byte= fprintf(ewID,'%s, %16.6f, %16.6f, %1i, %05i\r\n',efl.t_utc{j,1},efl.t_obt(j),efl.ef_out(j),efl.freq_flag(j),efl.qf(j));
+                row_byte= fprintf(ewID,'%s, %16.6f, %16.6f, %1i, %03i\r\n',efl.t_utc{j,1},efl.t_obt(j),efl.ef_out(j),efl.freq_flag(j),efl.qf(j));
                 N_rows = N_rows + 1;
             end
 
