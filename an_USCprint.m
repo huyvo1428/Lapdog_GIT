@@ -84,7 +84,9 @@ switch mode
         end
         
 
-        
+
+            
+end        
             usc_tabindex(end+1).fname = USCfname;                   % Start new line of an_tabindex, and record file name
             usc_tabindex(end).fnameshort = USCshort; % shortfilename
             usc_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
@@ -94,15 +96,13 @@ switch mode
             usc_tabindex(end).type = 'Vz'; % Type
             usc_tabindex(end).timing = timing;
             usc_tabindex(end).row_byte = row_byte;
-            
-end
         
     
 fileinfo = dir(USCfname);
 if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
   %  if N_rows > 0 %doublecheck!
         delete(USCfname); %will this work on any OS, any user?
-        usc_tabindex(end,:) = []; %delete tabindex listing to prevent errors.
+        usc_tabindex(end) = []; %delete tabindex listing to prevent errors.
    % end
     
 else

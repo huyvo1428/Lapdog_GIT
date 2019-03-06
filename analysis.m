@@ -10,7 +10,7 @@ global an_tabindex an_debug;
 an_tabindex = zeros(0, 9);
 an_debug = 0; %debugging on or off!
 global usc_tabindex;
-
+usc_tabindex=[];
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 
 
@@ -40,12 +40,12 @@ ind_I2S= find(strcmp('I2S', antype));
 
 spath=sprintf('%s/XXP_save_v2.mat',derivedpath);
 
-try
+%try
 
-load(spath,'XXP')
-fprintf(1,'load XXP successful')
+%load(spath,'XXP')
+%fprintf(1,'load XXP successful')
 
-catch err
+%catch err
 
         fprintf(1,'Analysing sweeps\n')
 
@@ -62,7 +62,7 @@ catch err
 
 
         
-end
+%end
 
 
 
@@ -129,6 +129,7 @@ if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
 
 try
     if ~isempty(usc_tabindex)  % some USC (Vz) files might be overwritten by our routine, and creates duplicate entries in usc_tabindex. We should find these and delete them
+        usc_tabindex(:).fname
         [Uniquefname,junk,k] = unique({usc_tabindex(:).fname});
         % Uniquefname is a sorted list of usc_tabindex.fname
         % k is indices of uniqueC that represents usc_tabindex.fname, some of them might be
