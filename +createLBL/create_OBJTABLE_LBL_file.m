@@ -145,7 +145,9 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     %   PRO: Can use this to set temporary values in HeaderKvpl which must be overwritten somewhere else in Lapdog.
     %
     % PROPOSAL: Modularize code more into smaller functions. Separate T2PK?
-    
+    % PROPOSAL: Change .iByteLast --> .iByteLength
+
+
 
     %===========
     % Constants

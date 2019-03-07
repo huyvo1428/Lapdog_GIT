@@ -37,13 +37,10 @@ function [firstRowStringArray, lastRowStringArray, nBytesPerRow, nRows] = analyz
 % PROPOSAL: Retrieve number of columns.
 %   PRO: Can set ITEMS automatically.
 %   CON: Does not work for empty files.
-%       PRO: Problem if treating empty files as possibly valid.
-% PROPOSAL: Separate read-first&last-row function (one or two).
+%       PRO: Problem anyway if treating empty files as possibly valid.
 %
 % PROPOSAL: Separate functions for (1) verifying TAB file format (assertions) and (2) extracting data from first & last
 % row.
-%   PROPOSAL: Separate function for extracting first and last row. Could be used by above two functions separately, or
-%             once and then submitting the first & last row, for speed (needed?).
 %
 % PROPOSAL: Separate treatment of empty files since (the caller) can not say that the TAB file is inconsistent with the
 %       LBL file.
@@ -55,10 +52,13 @@ function [firstRowStringArray, lastRowStringArray, nBytesPerRow, nRows] = analyz
     if fileSize == 0
         error('Empty TAB file (0 bytes). Can not analyze.\n    File: "%s"', filePath)
     end
-    
+
+
+
+    % Read first and last row of file.
     % NOTE: Strings include trailing CR+LF.
-    firstRow = read_first_file_row(filePath);
-    lastRow  = read_last_file_row(filePath, fileSize);
+    firstRow = EJ_library.utils.read_first_file_row(filePath);
+    lastRow  = EJ_library.utils.read_last_file_row(filePath);
     
     % ASSERTION
     if length(firstRow) ~= length(lastRow)
@@ -94,43 +94,3 @@ function [stringArray] = extract_strings(s, iFirstByteArray, iLastByteArray)
     end
 end
 
-
-
-% NOTE: Returned string includes trailing CR+LF.
-function firstRow = read_first_file_row(filePath)
-    fileId = fopen(filePath,'r');
-    firstRow = fgets(fileId);
-    fclose(fileId);
-end
-
-
-
-% Read byte-by-byte from the end of the file until reaching either
-% (1) the first line feed (excluded from string) that is not at the end of the file, or
-% (2) beginning of file.
-%
-% NOTE: Can handle empty files. Empty file (zero bytes) ==> Empty string
-% NOTE: Returned string includes trailing CR+LF.
-function lastRow = read_last_file_row(filePath, fileSize)
-    NL = sprintf('\n');
-    
-    fileId = fopen(filePath,'r');       % Open the file as a binary
-    lastRow = '';                      % Initialize to empty
-    
-    offset = 1;                           % Offset from the end of file
-    
-    while (offset <= fileSize)
-        
-        fseek(fileId, -offset, 'eof');         % Seek to the file end, minus the offset
-        newChar = fread(fileId, 1, '*char');   % Read one character
-        
-        if (strcmp(newChar, NL)) && (offset ~= 1)
-            break
-        end
-        
-        lastRow = [newChar lastRow];   % Add the character to beginning of string
-        offset   = offset+1;
-    end
-    
-    fclose(fileId);                       % Close the file
-end
