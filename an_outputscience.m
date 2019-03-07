@@ -514,7 +514,7 @@ for i = 1:length(PHO_tabindex)%clean up empty files
         %    if PHO_tabindex(i).no_of_rows == 0
         %D= dir(PHO_tabindex(i).fname);
         
-        fprintf(1,'%s size is %i',PHO_tabindex(i).fname,D.bytes);
+        fprintf(1,'%s size is %i \n',PHO_tabindex(i).fname,D.bytes);
         delete(PHO_tabindex(i).fname);
         delindz=[delindz;i];
         
