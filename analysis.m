@@ -13,8 +13,8 @@ global usc_tabindex;
 usc_tabindex=[];
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 
-
-
+XXP =[];
+XXP2=[];
 %find datasets of different modes
 ind_I1L= find(strcmp('I1L', antype));
 ind_I2L= find(strcmp('I2L', antype));
@@ -47,23 +47,18 @@ spath=sprintf('%s/XXP_save_v2.mat',derivedpath);
 %
 % catch err
 
-        fprintf(1,'Analysing sweeps\n')
+fprintf(1,'Analysing sweeps\n')
 
-        if(~isempty(ind_I1S))
-                [XXP]=an_sweepmain_v2(ind_I1S,tabindex,targetfullname);
-        end
-        save(spath,'XXP');
+if(~isempty(ind_I1S))
+    [XXP]=an_sweepmain_v2(ind_I1S,tabindex,targetfullname);
+end
+save(spath,'XXP');
 
-        if(~isempty(ind_I2S))
-            fprintf(1,' Analysing LAP2 sweeps\n')
-            [XXP2]=an_sweepmain_v2(ind_I2S,tabindex,targetfullname);
-            save(spath,'XXP','XXP2');
-        end
-
-
-%
-% end
-
+if(~isempty(ind_I2S))
+    fprintf(1,' Analysing LAP2 sweeps\n')
+    [XXP2]=an_sweepmain_v2(ind_I2S,tabindex,targetfullname);
+    save(spath,'XXP','XXP2');
+end
 
 
 
