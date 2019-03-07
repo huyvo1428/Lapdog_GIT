@@ -856,7 +856,7 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'SAMPLING_CONFIG',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
                 ['Number that describes the exact combination of onboard s/w averaging and downsampling. The exact values are pointers into a', ...
                 ' table that describes both the number of samples that are averaged over and the downsampling rate. See documentation for table.']);
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',     'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',     'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
 
