@@ -579,7 +579,7 @@ try
         for k=1:klen
             % print variables to file. separated into substrings.
 
-            str1  = sprintf('%s, %s, %16s, %16s, %05i, %07.3f, %04.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
+            str1  = sprintf('%s, %s, %16s, %16s, %03i, %07.3f, %04.2f, %1i,', EP(k).Tarr{1,1}, EP(k).Tarr{1,2}, EP(k).Tarr{1,3}, EP(k).Tarr{1,4}, EP(k).qf,EP(k).SAA,EP(k).lum,EP(k).dir);
             str2  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).vs,  AP(k).vx,   AP(k).Vz);
             str3  = sprintf(' %14.7e, %14.7e, %14.7e, %14.7e,', AP(k).Tph, AP(k).Iph0, AP(k).lastneg, AP(k).firstpos);
             str4  = sprintf(' %14.7e, %14.7e, %14.7e,',AP(k).vbinf,AP(k).diinf,AP(k).d2iinf);

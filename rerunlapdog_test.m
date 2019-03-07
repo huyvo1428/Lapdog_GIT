@@ -36,17 +36,18 @@ fprintf(1,'LAPDOG - LAP Data Overview and Geometry \n');
 
 
 
- fprintf(1,'rerunlapdog_test(%s,%s,%s,%s) activated ...\n',archpath, archID, missioncalendar,rerun_mode);
+ fprintf(1,'rerunlapdog(%s,%s,%s,%s) activated ...\n',archpath, archID, missioncalendar,rerun_mode);
 
 
 rerun_mode = str2double(rerun_mode);
 remake_index = 1;
 remake_tabindex = 1;
 remake_analysis = 1;
+remake_sweepsonly = 0;
 %remake_bestestimates = 1;
 remake_LBL =1;
-
-
+remake_BLKLISTONLY = 0;
+remake_from_savestate=0; %default to 0
 
 switch rerun_mode
     
@@ -84,16 +85,54 @@ switch rerun_mode
         
         
      case 4
-         
-         remake_index = -1; % -1 skips index all together
+        
+
+         %remake_index = -1; % -1 skips index all together 
+         remake_index = 0;
          remake_tabindex = 0;
          remake_analysis = 1;
 %         remake_bestestimates = 0;
          remake_LBL =0;
 %         
-         fprintf(1,'lapdog: analysis test mode. Only used for test purposes, will crash and not create EST.TAB & LBL files..\n');
+         fprintf(1,'lapdog: analysis mode, no LBL files \n');
+
+         %fprintf(1,'lapdog: analysis test mode. Only used for test purposes, will crash and not create EST.TAB & LBL files..\n');
 %         
+    case 5
+        remake_index = 0;
+        remake_tabindex = 0;
+	remake_sweepsonly = 1;
+%        remake_analysis = 1;
+%        remake_bestestimates = 1;
+%        remake_LBL =1;
+
+        fprintf(1,'lapdog: Load all indices, rerun sweep analysis and best estimates, make lbl file (sweep mode) \n');
+
+    case 6
+
+    remake_index = -1;
+    remake_tabindex = 0;
+    remake_analysis = 0;
+    remake_sweepsonly = 0;
+    %remake_bestestimates = 1;
+    remake_LBL =0;
+    remake_BLKLISTONLY = 0;
+    
+    
+    remake_from_savestate=1;
+     fprintf(1,'lapdog: Load previously saved matlab state, redo parts of the analysis. \n');
+
         
+        
+    case 7
+
+
+         remake_index = -1; % -1 skips index all together
+         remake_tabindex = 0;
+         remake_analysis = 0;
+%         remake_bestestimates = 0;
+         remake_LBL =0;
+ 
         
 end
 
@@ -111,6 +150,7 @@ preamble;
 % fprintf(1,'lapdog: load indices if existing...')
 dynampath= mfilename('fullpath'); %find path & remove/lapdog from string
 dynampath = dynampath(1:end-17);
+
 
 fprintf(1,'lapdog: %s\n',dynampath);
 
@@ -131,13 +171,24 @@ if ge(remake_index,0) %remake index ~=-1
         
         load(indexfile);
         
-        
-        substring = '/data/LAP_ARCHIVE/cronworkfolder/';
-        newstring= '/data/LAP_ARCHIVE/';
+       
+       % substring = '/mnt/localhd/cron_script_temp/'; 
+        substring = '/homelocal/frejon/squidcopy/';
+        newstring= '/data/rosetta/LAP_ARCHIVE/';
         fprintf(1,'replacing substrings...\n');
         
-        index = struct_string_replace(index,substring,newstring); %third party code
         
+%         substring='/homelocal/frejon/squidcopy/'
+%         newstring='/mnt/spis/'
+        index = struct_string_replace(index,substring,newstring); %third party code
+	
+       % substring = '/usr/local/src/cronworkfolder/';
+        %newstring= '/data/LAP_ARCHIVE/';
+        %fprintf(1,'replacing substring type 2...\n');
+
+       % index = struct_string_replace(index,substring,newstring); %third party code
+        
+
         fprintf(1, 'lapdog: succesfully loaded server index\n');
         
         
@@ -176,9 +227,112 @@ if ge(remake_index,0)
     % Generate block list file:
     
     fprintf(1,'lapdog: calling opsblocks...\n');
-    opsblocks;
+ 
+if (remake_BLKLISTONLY)
+
+opsblocks;
+return;
+
+else
+   opsblocks;
 
 end
+
+end
+
+
+
+
+if remake_from_savestate
+
+load(sprintf('%s/pre_createLBL_workspace.mat',derivedpath));
+% antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
+% 
+% %find datasets of different modes
+% ind_I1L= find(strcmp('I1L', antype));
+% ind_I2L= find(strcmp('I2L', antype));
+% ind_I3L= find(strcmp('I3L', antype));
+% 
+% ind_V1L= find(strcmp('V1L', antype));
+% ind_V2L= find(strcmp('V2L', antype));
+% ind_V3L= find(strcmp('V3L', antype));
+% 
+% 
+% ind_V1H= find(strcmp('V1H', antype));
+% ind_V2H= find(strcmp('V2H', antype));
+% ind_V3H= find(strcmp('V3H', antype));
+% 
+% ind_I1H= find(strcmp('I1H', antype));
+% ind_I2H= find(strcmp('I2H', antype));
+% ind_I3H= find(strcmp('I3H', antype));
+% 
+% 
+% ind_I1S= find(strcmp('I1S', antype));
+% ind_I2S= find(strcmp('I2S', antype));
+
+
+analysis;
+
+
+%fprintf(1,'Outputting Science\n')
+%if(~isempty(ind_I1S))
+%    an_outputscience(XXP)
+%end 
+
+
+
+
+
+% fprintf(1,'Downsampling low frequency measurements\n')
+% 
+% if(~isempty(ind_I1L))
+%     %an_downsample(ind_I1L,tabindex,8)
+%     an_downsample(ind_I1L,32,tabindex,index)
+% end
+%  
+% if(~isempty(ind_I2L))
+%    % an_downsample(ind_I2L,tabindex,8)
+%     an_downsample(ind_I2L,32,tabindex,index)
+% end
+% 
+% 
+% ind_VL=[ind_V1L;ind_V2L];
+% 
+% if(~isempty(ind_VL))
+%     ind_VL=sort(ind_VL,'ascend');
+%    % an_downsample(ind_V1L,tabindex,8)
+%     an_downsample(ind_VL,32,tabindex,index)
+% end
+% 
+% if(~isempty(ind_V1L))
+%    % an_downsample(ind_V1L,tabindex,8)
+% %    an_downsample(ind_V1L,32,tabindex,index)
+% end
+%  
+% if(~isempty(ind_V2L))
+%   %  an_downsample(ind_V2L,tabindex,8)
+%  %   an_downsample(ind_V2L,32,tabindex,index)
+% end 
+% 
+% 
+%     
+
+
+    fprintf(1,'lapdog: generate LBL files....\n');
+    createLBL(0,1);
+    
+
+
+fprintf(1,'lapdog: DONE!\n');
+
+    return;
+    
+end
+
+
+
+
+
 
 % Resample data
 tabindexfile = sprintf('%s/tabindex/tabindex_%s.mat',dynampath,archiveid);
@@ -188,17 +342,36 @@ if (exist(tabindexfile) == 2 && remake_tabindex == 0)
     %    fclose(fp);
     fprintf(1,'lapdog: loading tabfiles...\n');
     load(tabindexfile);
+    substring = '/homelocal/frejon/squidcopy/';
+    newstring= '/data/rosetta/LAP_ARCHIVE/';
     
-    
-    substring = '/data/LAP_ARCHIVE/cronworkfolder/';
-    newstring= '/data/LAP_ARCHIVE/';
-    %	substring = strrep(tabindex(1,1),tabindex(1,2),'');
+    %substring = '/data/LAP_ARCHIVE/cronworkfolder/';
+  %  newstring= '/data/LAP_ARCHIVE/';
+   % 
+	%substring = strrep(tabindex(1,1),tabindex(1,2),'');
     %	tabindexsubstring= substring{1,1}(1:end-42);
     %	newstring= '/Users/frejon/Documents/RosettaArchive/PDS_Archives/DATASETS/SECOND_DELIVERY_VERSIONS/';
-    fprintf(1,'replacing substrings in tabindex...\n');
+	fprintf(1,'replacing substrings in tabindex...\n');
     tabindex(:,1) = cellfun(@(x) strrep(x,substring,newstring),tabindex(:,1),'un',0);
-    fprintf(1,'lapdog: succesfully loaded tabfiles...\n');
     
+    %substring = '/usr/local/src/cronworkfolder/';
+
+    %newstring= '/data/LAP_ARCHIVE/';
+    %fprintf(1,'replacing substrings type 2 in tabindex...\n');
+    %tabindex(:,1) = cellfun(@(x) strrep(x,substring,newstring),tabindex(:,1),'un',0);
+
+    %substring = '/mnt/localhd/cron_script_temp/'
+
+    %newstring= '/data/LAP_ARCHIVE/';
+    %fprintf(1,'replacing substrings type 3 in tabindex...\n');
+    %tabindex(:,1) = cellfun(@(x) strrep(x,substring,newstring),tabindex(:,1),'un',0);
+    %fprintf(1,'lapdog: succesfully loaded tabfiles...\n');
+
+%     substring='/homelocal/frejon/squidcopy/'
+%      newstring='/mnt/spis/'
+%     tabindex(:,1) = cellfun(@(x) strrep(x,substring,newstring),tabindex(:,1),'un',0);
+% 
+
     
 else
     
@@ -219,7 +392,12 @@ end
 
 
 if remake_analysis
-    analysis;
+    
+   if remake_sweepsonly
+	analysis_test;
+   else
+	analysis; %NB THIS WAS CHANGED!! 17/1 2019 FKJN
+   end
 end
 
 
@@ -230,6 +408,9 @@ if remake_LBL
     createLBL(0,1);
     
 end
+
+
+
 
 
 fprintf(1,'lapdog: DONE!\n');

@@ -37,7 +37,7 @@ switch mode
             
             % NOTE: time_arr{1,1}(j,:) contains UTC strings with 3 second decimals. This should be the same number of
             % decimals as for case "vz". /Erik P G Johansson 2018-11-16
-            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %05i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
             N_rows = N_rows + 1;
         end%if
         
@@ -75,7 +75,7 @@ switch mode
             if data_arr.lum(j) > 0.9 %shadowed probe data is not allowed
                 % NOTE: data_arr.Tarr_mid{j,1}(j,1) contains UTC strings with 6 second decimals. Truncates to have the same
                 % number of decimals as for case "vfloat". /Erik P G Johansson 2018-11-16
-                row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %05i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.Vz(j,1),data_arr.Vz(j,2),usc_flag,data_arr.qf(j));
+                row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.Vz(j,1),data_arr.Vz(j,2),usc_flag,data_arr.qf(j));
                 %row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j),qvalue,data_arr.qf(j));
                 N_rows = N_rows + 1;
             end
@@ -84,7 +84,9 @@ switch mode
         end
         
 
-        
+
+            
+end        
             usc_tabindex(end+1).fname = USCfname;                   % Start new line of an_tabindex, and record file name
             usc_tabindex(end).fnameshort = USCshort; % shortfilename
             usc_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
@@ -94,15 +96,13 @@ switch mode
             usc_tabindex(end).type = 'Vz'; % Type
             usc_tabindex(end).timing = timing;
             usc_tabindex(end).row_byte = row_byte;
-            
-end
         
     
 fileinfo = dir(USCfname);
 if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
   %  if N_rows > 0 %doublecheck!
         delete(USCfname); %will this work on any OS, any user?
-        usc_tabindex(end,:) = []; %delete tabindex listing to prevent errors.
+        usc_tabindex(end) = []; %delete tabindex listing to prevent errors.
    % end
     
 else

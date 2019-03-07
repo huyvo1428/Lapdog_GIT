@@ -141,7 +141,7 @@ end
             
             if printbooleanind(j) %
 
-                row_byte= fprintf(ewID,'%s, %16.6f, %16.6f, %16.6f, %05i\r\n',scantemp{1,1}{j,1},scantemp{1,2}(j),diffI(j),dummy,qf(j));
+                row_byte= fprintf(ewID,'%s, %16.6f, %16.6f, %16.6f, %03i\r\n',scantemp{1,1}{j,1},scantemp{1,2}(j),diffI(j),dummy,qf(j));
                 N_rows = N_rows + 1;
             end
 
