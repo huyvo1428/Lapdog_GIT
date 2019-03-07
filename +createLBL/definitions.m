@@ -265,7 +265,11 @@ classdef definitions < handle
                     
                     currentOc.DESCRIPTION = obj.CURRENT_BIAS_DESC;   % bias
                     voltageOc.DESCRIPTION = obj.VOLTAGE_MEAS_DESC;   % measured
-                    voltageOc = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, voltageOc, ...
+                    currentOc = createLBL.optionally_add_MISSING_CONSTANT(~obj.generatingDeriv1, obj.MISSING_CONSTANT, ...
+                        currentOc, ...
+                        sprintf('A value of %g means that the bias current was set to exactly zero via a relay (floating potential measurement).', obj.MISSING_CONSTANT));   % NOTE: Modifies currentOc.
+                    voltageOc = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, ...
+                        voltageOc, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));   % NOTE: Modifies voltageOc.
                 end
                 ocl{end+1} = currentOc;
@@ -296,6 +300,8 @@ classdef definitions < handle
                     oc1 = struct('NAME', 'P1_CURRENT',    obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', obj.CURRENT_BIAS_DESC);
                     oc2 = struct('NAME', 'P2_CURRENT',    obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, 'DESCRIPTION', obj.CURRENT_BIAS_DESC);
                     oc3 = struct('NAME', 'P1_P2_VOLTAGE', obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14, 'DESCRIPTION', 'Measured voltage difference. The difference is derived digitally onboard.');
+                    % ASSUMPTION: I assume that P3 was never used for floating potential measurements. Therefore no
+                    % MISSING_CONSTANT DESCRIPTION remark for P3 current bias.
                     
                     oc3 = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, oc3, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));
