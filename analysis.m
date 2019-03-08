@@ -62,10 +62,6 @@ end
 
 
 
-
-
-
-
 fprintf(1,'Outputting Science\n')
 if(~isempty(XXP))
     an_outputscience(XXP);

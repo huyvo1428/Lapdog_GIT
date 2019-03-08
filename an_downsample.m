@@ -676,8 +676,8 @@ end
             x10_input.t2l=scantemp2{1,2};
             x10_input.t1utc=scantemp{1,1};
             x10_input.t2utc=scantemp2{1,1};
-            x10_input.qf1=scantemp{1,5};
-            x10_input.qf2=scantemp2{1,5};
+            x10_input.qf1=uint64(scantemp{1,5});
+            x10_input.qf2=uint64(scantemp2{1,5});
            % x10_input.SAA=SAA;
 
 
