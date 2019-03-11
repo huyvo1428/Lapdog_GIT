@@ -21,5 +21,6 @@ gaps = find(dt > dtt+0.002/86400);  % 2 ms margin for roundoff errors
 n = median(diff(gaps));
 clear dt gaps;
 eraw = 1000*(v2l-v1l)/5;
-efl = eraw - movmean(eraw,n);
+%efl = eraw - movmean(eraw,n);
+efl = eraw - conv(eraw,ones(n,1),'same')/n;
 %tl = t; %I don't see the need for outputting tl when it's not being operated upon.
