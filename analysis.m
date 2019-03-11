@@ -139,7 +139,7 @@ try
                 delthis= find(checkindz & vz_inds); %all duplicates that are also Vz files should be deleted. (this should keep the Vfloat files)
                 %delthis= find(strcmp(usc_tabindex(checkindz).type,'Vz')); %all duplicates that are also Vz files should be deleted. (this should keep the Vfloat files)
 
-                delindz=[delindz;checkindz(delthis)];%append to list of deletion indices
+                delindz=[delindz;delthis];%append to list of deletion indices
 
             end
             usc_tabindex(delindz)=[];
