@@ -10,7 +10,7 @@ iph0_out = -6.647e-09;    % default value; just in case of error.
 trID = fopen(filepath);
 
 if trID < 0
-    fprintf(1,'Error, cannot open file %s', filepath);
+    fprintf(1,'Error, cannot open file %s\n', filepath);
     return
 end % if I/O error
 

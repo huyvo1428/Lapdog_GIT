@@ -48,7 +48,7 @@ for i=1:length(index)
             end
             
         else
-            fprintf(1,'Error, cannot open file %s', index(i).tabfile);
+            fprintf(1,'Error, cannot open file %s\n', index(i).tabfile);
             break
             
         end

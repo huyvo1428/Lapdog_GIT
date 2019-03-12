@@ -131,7 +131,7 @@ try
             trID = fopen(index(tabind(i)).tabfile);
             
             if trID < 0
-                fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
+                fprintf(1,'Error, cannot open file %s\n', index(tabind(i)).tabfile);
                 break
             end % if I/O error
             
@@ -279,7 +279,7 @@ try
                 fclose(trID); %close read file
                 edited1ColumnsListList{i} = scantemp;
             else
-                fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
+                fprintf(1,'Error, cannot open file %s\n', index(tabind(i)).tabfile);
                 break
             end % if I/O error
             

@@ -209,7 +209,7 @@ delfile = 1;
             trID = fopen(index(tabind(i)).tabfile);
 
             if trID < 0
-                fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
+                fprintf(1,'Error, cannot open file %s\n', index(tabind(i)).tabfile);
                 break
             end % if I/O error
 
@@ -405,7 +405,7 @@ delfile = 1;
                 scantemp = textscan(trID,'%s%f%f%f','delimiter',',');
                 fclose(trID); %close read file
             else            % if I/O error
-                fprintf(1,'Error, cannot open file %s', index(tabind(i)).tabfile);
+                fprintf(1,'Error, cannot open file %s\n', index(tabind(i)).tabfile);
                 break
             end
 
