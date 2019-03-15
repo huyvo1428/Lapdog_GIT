@@ -93,6 +93,7 @@ index(n).hf = -1;
 index(n).sweep = -1;
 index(n).probe = -1;
 index(n).pre_sweep_samples =-1;
+index(n).float =-1;
 
 macrotemp= '41000';
 
@@ -211,6 +212,22 @@ for ii=1:n  % Loop the label files
               index(i).pre_sweep_samples =in_smpls; % start collecting index
 
 
+              
+          else
+              
+              %added Vfloat stuff
+              index(i).float=0;
+
+              cstr= sprintf('ROSETTA:LAP_P%1d_STRATEGY_OR_RANGE',probe);
+              ind = find(strcmp(cstr,var));
+              if(~isempty(ind)) 
+                  str = strrep(strtrim(val(ind,:)),'"',''); %trim and strip from ""                 
+                  if(~isempty(str))
+                      if strcmp(str,'FLOAT') %found it!
+                          index(i).float=1;
+                      end                      
+                  end
+              end              
           end
 
           % % File assumed to contain LF data if covering more than 16 s:

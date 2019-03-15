@@ -9,7 +9,7 @@ t_start_analysis = clock;    % NOTE: Not number of seconds, but [year month day 
 global an_tabindex an_debug;
 an_tabindex = zeros(0, 9);
 an_debug = 0; %debugging on or off!
-global usc_tabindex;
+global usc_tabindex NPL_tabindex;
 usc_tabindex=[];
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 
@@ -92,6 +92,7 @@ if(~isempty(ind_VL))
     ind_VL=sort(ind_VL,'ascend');
    % an_downsample(ind_V1L,tabindex,8)
     an_downsample(ind_VL,32,tabindex,index)
+    an_NPL(ind_VL,tabindex,index);
 end
 
 if(~isempty(ind_V1L))
