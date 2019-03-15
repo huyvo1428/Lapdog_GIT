@@ -94,7 +94,8 @@ function create_LBL_files(Data)
     % ASSERTIONS
     EJ_library.utils.assert.struct(Data, {...
         'ldDatasetPath', 'pdDatasetPath', 'metakernel', 'C', 'failFastDebugMode', 'generatingDeriv1', ...
-        'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex', 'efl_tabindex'})
+        'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex', ...
+        'EFL_tabindex', 'NPL_tabindex'})
     if isnan(Data.failFastDebugMode)    % Check if field set to temporary value.
         error('Illegal argument Data.failFastDebugMode=%g', Data.failFastDebugMode)
     end
@@ -377,9 +378,9 @@ function create_LBL_files(Data)
         % Create LBL files for EFL
         %
         %==========================
-        for iFile = 1:numel(Data.efl_tabindex)
+        for iFile = 1:numel(Data.EFL_tabindex)
             try
-                startStopTimes = Data.efl_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+                startStopTimes = Data.EFL_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
                 LhtKvpl = get_timestamps_KVPL(...
                     startStopTimes{1}, ...
                     startStopTimes{2}, ...
@@ -388,30 +389,52 @@ function create_LBL_files(Data)
                 
                 LblData = LblDefs.get_EFL_data(...
                     LhtKvpl, ...
-                    convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.efl_tabindex(iFile).first_index).lblfile));
+                    convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.EFL_tabindex(iFile).first_index).lblfile));
                 
                 createLBL.create_OBJTABLE_LBL_file(...
-                    convert_LD_TAB_path(Data.ldDatasetPath, Data.efl_tabindex(iFile).fname), ...
+                    convert_LD_TAB_path(Data.ldDatasetPath, Data.EFL_tabindex(iFile).fname), ...
                     LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                 
                 clear   startStopTimes   LhtKvpl   LblData
                 
             catch Exception
                 createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
-                fprintf(1,'Aborting LBL file for PHO_tabindex - Continuing\n');
+                fprintf(1,'Aborting LBL file for EFL_tabindex - Continuing\n');
             end
         end
         
         
         
-        %==============================================================
+        %==========================
         %
-        % Create LBL files for NPL files. (DERIV1 only)
+        % Create LBL files for NPL
         %
-        %==============================================================
-        % TEMPORARY SOLUTION.
-        % DELETE?!! Still creates NPL LBL files from found TAB files.
-        createLBL.create_LBL_L5_sample_types(Data.ldDatasetPath)
+        %==========================
+        for iFile = 1:numel(Data.NPL_tabindex)
+            try
+                startStopTimes = Data.NPL_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+                LhtKvpl = get_timestamps_KVPL(...
+                    startStopTimes{1}, ...
+                    startStopTimes{2}, ...
+                    obt2sctrc(startStopTimes{3}), ...
+                    obt2sctrc(startStopTimes{4}));
+                
+                LblData = LblDefs.get_NPL_data(...
+                    LhtKvpl, ...
+                    convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.NPL_tabindex(iFile).first_index).lblfile));
+                
+                createLBL.create_OBJTABLE_LBL_file(...
+                    convert_LD_TAB_path(Data.ldDatasetPath, Data.NPL_tabindex(iFile).fname), ...
+                    LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                
+                clear   startStopTimes   LhtKvpl   LblData
+                
+            catch Exception
+                createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                fprintf(1,'Aborting LBL file for NPL_tabindex - Continuing\n');
+            end
+        end
+
     end    % if Data.generatingDeriv1
     
     

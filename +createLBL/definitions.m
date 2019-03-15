@@ -862,24 +862,14 @@ classdef definitions < handle
 
 
 
-        % NOTE: No LBL timestamps for now, and hence no such arguments.
-        function LblData = get_NPL_data(obj)
+        % 2019-03-15, FJ: Might add more DATA_SOURCE values later and hence columns.
+        function LblData = get_NPL_data(obj, LhtKvpl, firstPlksFile)
             
-            error('NOT YET IMPLEMENTED')
-            
-            % IMPLEMENTATION NOTE: As of 2018-11-13, no such data product has ever been produced (except dummy files),
-            % and therefore no such label file has ever been produced. Must therefore set LBL header timestamps from
-            % columns for now.
-            %   NOTE: Currently, not even empty timestamps are properly added to the LBL header.
-            % NOTE: Using this code without setting LABEL_REVISION_NOTE should trigger assertion error (overwriting is
-            % required).
-            
-            HeaderKvpl = obj.HeaderAllKvpl;
+            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
                 {'2019-02-04', 'EJ', 'Updated UNIT'}, ...
-                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
-            HeaderKvpl = HeaderKvpl.append_kvp('START_TIME', []);                    % Set empty header LBL timestamp to remind future reader to explicitly choose how to set timestamps.
-            HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
+                {'2019-03-15', 'EJ', 'Updated DESCRIPTION, added DATA_SOURCE column.'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             % MB states:
@@ -903,10 +893,16 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
             ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
             ocl{end+1} = struct('NAME', 'N_PL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ...
-                ['Plasma density derived from individual fix-bias density mode (current) measurements. The value is derived from low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', obj.MC_DESC_AMENDM], ...
+                ['Plasma density derived from individual E field mode floating potential LF measurements on an illuminated probe.', ...
+                ' The derivation additionally uses low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', ...
+                ' If no probe is illuminated, then the corresponding row is removed.', ...
+                sprintf(' A value of %g means that corresponding sample in the source data was saturated.', obj.MISSING_CONSTANT)], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'QUALITY_VALUE',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',   'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+            ocl{end+1} = struct('NAME', 'DATA_SOURCE',    'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
+                ['Source of data for the plasma density.', ...
+                ' 1 or 2=E field mode floating potential LF measurement on illuminated probe 1 or 2 respectively.']);
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',   'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
             
         end

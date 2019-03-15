@@ -278,7 +278,8 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     Clfd.ASW_tabindex      = ASW_tabindex;
     Clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable case for consistency.
     Clfd.PHO_tabindex      = PHO_tabindex;
-    Clfd.efl_tabindex      = efl_tabindex;
+    Clfd.EFL_tabindex      = efl_tabindex;    % Changing variable case for consistency.
+    Clfd.NPL_tabindex      = evalin(MWS, 'NPL_tabindex');
     
     Clfd.A1P_tabindex      = der_struct;     % Changing variable name for consistency.
     Clfd.C                 = C;
