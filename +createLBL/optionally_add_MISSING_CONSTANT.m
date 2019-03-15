@@ -5,8 +5,9 @@
 %
 % ARGUMENTS AND RETURN VALUES
 % ===========================
-% addMissingConstant    : True/false.
-% oc                    : OC = "OBJECT=COLUMN"
+% addMissingConstant    : True/false for whether oc should me modified or not.
+% oc                    : Struct describing LBL column with field .DESCRIPTION (which might be modified) and to which
+%                         .MISSING_CONSTANT might be added. OC = "OBJECT=COLUMN"
 % descriptionAmendement : String which is added to the end of DESCRIPTION (after adding one whitespace).
 % missingConstant       : MISSING_CONSTANT value.
 %

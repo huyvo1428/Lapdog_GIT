@@ -128,7 +128,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % Workspace used for Lapdog variables must be correct for createLBL being called from (1) the command line, (2)
     % main.m (a script), (3) lapdog.m (function), (4) rerun_createLBL (function, outside git repo). Can thus not be
     % 'base'.
-    MWS = 'caller';    % MWS = MATLAB workspace
+    MWS = 'caller';    % MWS = MATLAB Workspace
 
 
 
@@ -234,7 +234,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % NOTE: Can not write a function for this, since evalin can only work on the caller's workspace, not the caller's
     % caller.
     %===================================================================================================================
-    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex'};
+    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex'};   % Potentially undefined variables.
     for i = 1:length(POT_UNDEF_VARS)
         % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which "exist" may respond to
         %                      if not specifying "var".
@@ -245,6 +245,8 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
         end
         eval(sprintf('%s = temp;', POT_UNDEF_VARS{i}));                       % NOTE : eval
     end
+    
+    
     
     %=====================================================================================
     % Determine what "archiving level" dataset is produced:

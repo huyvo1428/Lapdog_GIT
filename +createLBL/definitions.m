@@ -1,3 +1,4 @@
+
 %
 % DESIGN INTENT
 % =============
@@ -32,16 +33,13 @@
 classdef definitions < handle
     % PROPOSAL: Change class to immutable non-handle class.
     %
-    % PROPOSAL: POLICY; Should collect hard-coded data.
+    % PROPOSAL: POLICY: Should collect hard-coded data.
     %           ==> Should not write LBL files.
     % NEED: The caller should have control over error-handling, LBL-TAB consistency checks.
     %
     % PROPOSAL: Better name.
     %   PROPOSAL: definition_creator, LBL_definition_creator.
     %       CON: Bad if using class for updating LBL header in the future.
-    %
-    % PROPOSAL: Submit (instance of) createLBL.constants instead of having field for MISSING_CONSTANT, N_FINAL_SWEEP_SAMPLES.
-    % PROPOSAL: Internally call createLBL.constants to eliminate arguments.
     %
     % PROPOSAL: Help functions for setting specific types of column descriptions.
     %   PRO: Does not need to write out struct field names: NAME, DESCRIPTION etc.
@@ -61,52 +59,15 @@ classdef definitions < handle
     %       PROPOSAL: oc_OBT(name, descrStr)
     %           NOTE: BYTES=16 always
     %
-    % TODO-DECISION: How handle difference root-level and OBJECT=TABLE-level DESCRIPTION ?
-    %   PROPOSAL: Eliminate one of them.
-    %   PROPOSAL: Have both be identical.
-    %   NOTE: Root-level DESCRIPTION can be inherited from pds.
-    %
-    % PROPOSAL: Modify ROSETTA:LAP_Px_ADC16_FILTER to upper case?
-    %   NOTE: Currently done in delivery code.
-    %
     % PROPOSAL: Consistent system for lower-/uppercase for class instance fields.
-    %
-    % PROPOSAL: Function for extracting flags from filename/PRODUCT_ID.
-    %   PRO: Can have assertions.
-    %   PROPOSAL: Use, combine with delivery code's classification function.
-    %       CON: The delievry code does not contain one such function, but several "decision functions" which are very
-    %            different. Those do not extract these variables or anything similar.
-    %           PRO: They decide on whether to copy file, if HK, if ODL-to-update, new filename.
     %
     % PROPOSAL: Move keyword removal functionality from delivery code to here.
     %   OhChanges.RemoveKeysList   = {'ROSETTA:LAP_P1_INITIAL_SWEEP_SMPLS', 'ROSETTA:LAP_P2_INITIAL_SWEEP_SMPLS'};   % For "all" ODL files.
     %   OhChanges.RemoveKeysListHk = {'INSTRUMENT_MODE_ID', 'INSTRUMENT_MODE_DESC'};    % Specific for HK.
     %   CON: Can not modify HK LBL in Lapdog.
     %
-    % PROPOSAL: Move optionally_add_MISSING_CONSTANT into createLBL.definitions.
-    %
-    % PROPOSAL: Make the data type functions have access to full EDITED1/CALIB1 LBL file contents.
-    %   TODO-DECISION: Proper name/term.
-    %       PROPOSAL: "source label file", "template label file", "IDP label file"
-    %   TODO-DECISION: How handle timestamps (START_TIME etc)?
-    %   PROPOSAL: Receive file path and read file itself.
-    %       CON: Too much repetition between data products (more than in create_LBL_files, since some loops cover
-    %            multiple types).
-    %   --
-    %   NOTE: Some data types use the same EDITED1/CALIB1 LBL file.
-    %       Ex: IxS & BxS, PSD & FRQ (if not removing all keywords stemming from EDITED1/CALIB1).
-    %   NOTE: EST uses 1-2 CALIB1 files.
-    %   --
-    %   CON: Same procedure for many data types. create_LBL_files groups code for many data types.
-    %   PRO: Clearer what is done for every data type. Otherwise it is create_LBL_files that decides.
-    %       Ex: Some datatypes do and some do not read from EDITED1/CALIB1 LBL files. 
-    %           Ex: BLKLIST, ASW etc ignore.
-    %       Ex: As is now it is not clear if needs to remove ROSETTA:* keywords or INSTRUMENT_MODE_*.
-    %           ASW,USC,PHO,NPL do not read CALIB1 file and hence does not at all have access to those files.
-    %
     % 
     %
-    % BUG/TODO: Somehow handle that ASW, USC DESCRIPTION (root-level), now inherited from CALIB1 (cryptic pds strings).
     % PROPOSAL: Copy whitelisted values from EDITED1/CALIB1 header: ROSETTA:*, INSTRUMENT_MODE_* instead of current model
     %           (copy all except for blacklist).
     %
@@ -252,7 +213,9 @@ classdef definitions < handle
                 currentOc = struct('NAME', sprintf('P%i_CURRENT', probeNbr), obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14);
                 voltageOc = struct('NAME', sprintf('P%i_VOLTAGE', probeNbr), obj.DATA_DATA_TYPE{:}, obj.DATA_UNIT_VOLTAGE{:}, 'BYTES', 14);
                 if isDensityMode
+                    %====================
                     % CASE: Density mode
+                    %====================
                     DESCRIPTION_columnList = 'Contains timestamps, measured current, and set voltage bias.';
                     
                     currentOc.DESCRIPTION = obj.CURRENT_MEAS_DESC;   % measured
@@ -260,7 +223,9 @@ classdef definitions < handle
                     currentOc = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, currentOc, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));   % NOTE: Modifies currentOc.
                 else
+                    %====================
                     % CASE: E field Mode
+                    %====================
                     DESCRIPTION_columnList = 'Contains timestamps, set bias current, and measured voltage.';
                     
                     currentOc.DESCRIPTION = obj.CURRENT_BIAS_DESC;   % bias
@@ -281,6 +246,9 @@ classdef definitions < handle
                 %==========
                 %error('This code segment has not yet been completed for LAP3. Can not create LBL file for "%s".', stabindex(i).path)
                 if isDensityMode
+                    %====================
+                    % CASE: Density mode
+                    %====================
                     % This case occurs at least on 2005-03-04 (EAR1). Appears to be the only day with V3x data for the
                     % entire mission. Appears to only happen for HF, but not LF.
                     DESCRIPTION_columnList = 'Contains timestamps, measured current difference between probes, and set voltage biases on both probes.';
@@ -292,7 +260,9 @@ classdef definitions < handle
                     oc1 = createLBL.optionally_add_MISSING_CONSTANT(obj.generatingDeriv1, obj.MISSING_CONSTANT, oc1, ...
                         sprintf('A value of %g means that the original sample was saturated.', obj.MISSING_CONSTANT));
                 else
+                    %====================
                     % CASE: E field Mode
+                    %====================
                     % This case occurs at least on 2007-11-07 (EAR2), which appears to be the first day it occurs.
                     % This case does appear to occur for HF, but not LF.
                     DESCRIPTION_columnList = 'Contains timestamps, set bias currents on both probes, and measured voltage difference between probes.';
@@ -748,7 +718,7 @@ classdef definitions < handle
                 {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
                 {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
                 {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
-                {'2019-02-21', 'EJ', 'Updated DESCRIPTIONs'}});
+                {'2019-03-14', 'EJ', 'Updated DESCRIPTIONs'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
@@ -775,7 +745,10 @@ classdef definitions < handle
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'V_SC_POT_PROXY_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'DATA_SOURCE',                  'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
-                'Source of data for the spacecraft potential proxy value. 1 or 2=Floating potential measurement on probe 1 or 2 respectively. 3=Negated voltage in sweep on probe 1 for which current is zero.');
+                ['Source of data for the spacecraft potential proxy value.', ...
+                ' 1 or 2=Floating potential measurement on probe 1 or 2 respectively.', ...
+                ' 3=The negated bias voltage in a sweep on probe 1 for which current is zero.', ...
+                ' 4=The negated bias voltage in an EXTRAPOLATED sweep on probe 1 for which current is zero']);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',                 'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);            
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
@@ -826,7 +799,6 @@ classdef definitions < handle
 
         % NOTE: Only generated for macros 710, 910, 801, 802. /FJ 2019-02-20
         function LblData = get_EFL_data(obj, LhtKvpl, firstPlksFile)
-        %    ELECTRIC_FIELD_COMPONENT
 
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
