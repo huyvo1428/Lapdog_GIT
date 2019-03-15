@@ -482,7 +482,7 @@ function [Ssl, nSubcolumns] = create_OBJ_COLUMN_content(Cd)
     end
     S = add_SSL(S, 'DESCRIPTION', '"%s"', Cd.DESCRIPTION);      % NOTE: Added quotes.
     if isfield(Cd, 'MISSING_CONSTANT')
-        S = add_SSL(S, 'MISSING_CONSTANT', '%f', Cd.MISSING_CONSTANT);
+        S = add_SSL(S, 'MISSING_CONSTANT', '%g', Cd.MISSING_CONSTANT);
     end
     if isfield(Cd, 'DATA_SET_PARAMETER_NAME')
         S = add_SSL2(S, 'DATA_SET_PARAMETER_NAME', Cd.DATA_SET_PARAMETER_NAME);

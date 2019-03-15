@@ -163,7 +163,7 @@ classdef definitions < handle
             obj.generatingDeriv1      = generatingDeriv1;
             obj.HeaderAllKvpl         = HeaderAllKvpl;
             
-            obj.MC_DESC_AMENDM        = sprintf(' A value of %e refers to that there is no value.', obj.MISSING_CONSTANT);    % Amendment to other strings. Therefore begins with whitespace.
+            obj.MC_DESC_AMENDM        = sprintf(' A value of %g refers to that there is no value.', obj.MISSING_CONSTANT);    % Amendment to other strings. Therefore begins with whitespace.
             
             % Set PDS keywords to use for column descriptions which differ between EDDER and DERIV1
             % -------------------------------------------------------------------------------------
