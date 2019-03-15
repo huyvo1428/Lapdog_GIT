@@ -1,4 +1,9 @@
-
+%FKJN: 14 March 2019
+%frejon at irfu.se
+%Input: filename, filenameshort, time, data,
+%index_nr_of_of_first_file,timing for NPL_TABINDEX, and mode
+%mode = 'vfloat' or 'ion' or 'electron'
+%Outputs USC.TAB files for the RPCLAP archive
 function [] = an_USCprint(USCfname,USCshort,time_arr,data_arr, index_nr_of_firstfile,timing,mode)
 
 
