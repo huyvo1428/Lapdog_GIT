@@ -6,14 +6,11 @@
 %Outputs USC.TAB files for the RPCLAP archive
 function [] = an_USCprint(USCfname,USCshort,time_arr,data_arr, index_nr_of_firstfile,timing,mode)
 
+global usc_tabindex SATURATION_CONSTANT
 
 fprintf(1,'printing %s, mode: %s\n',USCfname, mode);
 %'hello'
 %fprintf(1,'%s',time_arr{1,1}(1,:));
-
-
-
-global usc_tabindex SATURATION_CONSTANT
 
 
 %fprintf(1,'printing: %s \r\n',USCfname)

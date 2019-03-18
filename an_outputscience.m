@@ -82,10 +82,19 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     dummy_v_ion=SATURATION_CONSTANT;
     %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
     
-    %filter positive values and outside LAP range
+    %filter values outside LAP range
+    
+    qv_Te_exp_belowVknee=exp(-XXP(i).data.Te_exp_belowVknee(:,2));
+    
+    
     outside_range= XXP(i).data.Te_exp_belowVknee(:,1)<1e-3 |XXP(i).data.Te_exp_belowVknee(:,1)>30;%eV
      XXP(i).data.Te_exp_belowVknee(outside_range,1)=SATURATION_CONSTANT;
      XXP(i).data.Te_exp_belowVknee(outside_range,2)=0;%qv
+     outside_range= XXP(i).data.Iph0(:,1)>0;%%positive photoemission is not good
+     XXP(i).data.Iph0(outside_range,1)=SATURATION_CONSTANT;
+     XXP(i).data.Iph0(outside_range,2)=0;%qv
+     %qv_Te= exp
+     
     for j = 1:len
         
         %remember i & j !!!
@@ -96,12 +105,12 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
   
         
         %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
-        str2=sprintf(' %14.7e, %2.1f,',XXP(i).data.asm_ne_5eV(j,1),dummy_qv);
-        str3=sprintf(' %14.7e, %2.1f,',XXP(i).data.Iph0(j,1),dummy_qv);
-        str4=sprintf(' %14.7e, %2.1f,',XCAL_struct.ionV(j),dummy_qv);
-        str5=sprintf(' %14.7e, %2.1f,',XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv);
-        str6=sprintf(' %14.7e, %2.1f,',XCAL_struct.Te(j),dummy_qv);
-        str7=sprintf(' %14.7e, %2.1f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
+        str2=sprintf(' %14.7e, %3.2f,',XXP(i).data.asm_ne_5eV(j,1),dummy_qv);
+        str3=sprintf(' %14.7e, %3.2f,',XXP(i).data.Iph0(j,1),dummy_qv);
+        str4=sprintf(' %14.7e, %3.2f,',XCAL_struct.ionV(j),dummy_qv);
+        str5=sprintf(' %14.7e, %3.2f,',XXP(i).data.Te_exp_belowVknee(j,1),qv_Te_exp_belowVknee);
+        str6=sprintf(' %14.7e, %3.2f,',XCAL_struct.Te(j),dummy_qv);
+        str7=sprintf(' %14.7e, %3.2f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
         str8=sprintf(' %03i',XXP(i).data.qf(j));
         
         strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
@@ -147,7 +156,14 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             USCshort = strrep(USCfname,folder,'');
             
             an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
+            
+            NPLfname=filename;
+            NPLfname(end-6:end-4)='USC';
+            NPLshort = strrep(NPLfname,folder,'');
+            an_USCprint(NPLfname,NPLshort,XXP(i).data,XXP(i).info.firstind,NaN,XXP(i).info.timing,'vz');
 
+            
+            
         end
     end
     
@@ -687,9 +703,9 @@ end
 
 
 
-%assmpt=[];
-%assmpt.ionM=19;%a.u.
-%assmpt.vram=550;%m/s
+assmpt=[];
+assmpt.ionM=19;%a.u.
+assmpt.vram=550;%m/s
 
 % try
 %     preamble;
