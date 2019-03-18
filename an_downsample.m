@@ -358,9 +358,10 @@ try
 
 %             tfoutarr
 %             foutarr
+            t_et= cspice_str2et(scantemp{1,1}(:)); %I'll use this  in the print function later
 
             %New method  12/2 2019 check for all values, not just the downsampled timestamps.
-            [junk,SEA,SAA]=orbit('Rosetta',scantemp{1,1}(:),target,'ECLIPJ2000','preloaded');
+            [junk,SEA,SAA]=orbit('Rosetta',t_et,target,'ECLIPJ2000','preloaded');
             %[junk,SEA,SAA]=orbit('Rosetta',tfoutarr{1,1},target,'ECLIPJ2000','preloaded');
 
 %             lent = length(foutarr{1,7});
@@ -402,6 +403,9 @@ try
             USCfname= tabindex{an_ind(i),1};
             USCfname(end-6:end-4)='USC';
             USCshort=strrep(USCfname,affolder,'');
+            NPLfname= tabindex{an_ind(i),1};
+            NPLfname(end-6:end-4)='NPL';
+            NPLshort=strrep(NPLfname,affolder,'');
 
 
             foutarr{1,2}=foutarr{1,7};
@@ -419,10 +423,12 @@ try
                     %time_arr{1,1}(j,:)
                     hold_flag = 0; %reset
                     if probenr==1
+                        scantemp_1=scantemp;
                         foutarr_1=foutarr;
                         tfoutarr_1=tfoutarr;
 
                     else
+                        scantemp_2=scantemp;
                         foutarr_2=foutarr;
                         %tfoutarr_2=tfoutarr; %only need this for debug
                     end
@@ -457,12 +463,30 @@ try
                         foutarr{1,5}(indz)=foutarr_2{1,5}(indz);%   %this is vf2
                         foutarr{1,6}(indz)=foutarr_2{1,6}(indz);%   this is the sigma vf2
                         foutarr{1,7}(indz)=foutarr_2{1,7}(indz);   %print boolean
-                        foutarr{1,8}(indz)=foutarr_2{1,8}(indz);   %qflag
+                        foutarr{1,8}(indz)=foutarr_2{1,8}(indz); 
+                        
+                        data_arr=[];
+                        data_arr.V=scantemp_1{1,4};
+                        data_arr.t_utc=scantemp_1{1,1};
+                        data_arr.t_obt=scantemp_1{1,2};
+                        data_arr.qf=scantemp_1{1,5};
+                        data_arr.printboolean=~dark_ind_1;
+                        data_arr.probe=dark_ind_1;
+                        data_arr.probe(:)=1;%qflag
+
+                        %%default == probe 1.
+                        %here we went from LAP1 to LAP2,
+                        data_arr.probe(indz)=2;  %change probenumberflag
+                        data_arr.V(indz)=scantemp_2{1,4}(indz);%  %this is vf2
+                        data_arr.printboolean(indz)=dark_ind_2(indz);  %print boolean
+                        data_arr.qf(indz)=scantemp_2{1,5}(indz);   %qflag
 
                     %print USC special case
                     an_USCprint(USCfname,USCshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
+                   % an_NPLprint(NPLfname,NPLshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
+                    an_NPLprint(NPLfname,NPLshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
 
-
+                    %clear scantemp_1 scantemp_2
                     clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1
 
                 else% hold_flag
@@ -470,20 +494,34 @@ try
 
                     if probenr==1
                         foutarr_1=foutarr;
+                        scantemp_1=scantemp;
                         tfoutarr_1=tfoutarr;
+                        dark_ind_1=dark_ind;
+
                     else
                         foutarr_2=foutarr;
+                        scantemp_2=scantemp;
+                        dark_ind_2=dark_ind;
                        % tfoutarr_2=tfoutarr; %I only need this to debug
                     end
-
                     hold_flag = 1;
 
                 end% hold_flag
 
             else%no problem, just output data.
             %print USC normal case
-
+            %initialise foutarr.
+            data_arr=[];
+            data_arr.V=scantemp{1,4};
+            data_arr.t_utc=scantemp{1,1};
+            data_arr.t_obt=scantemp{1,2};
+            data_arr.qf=scantemp{1,5};
+            data_arr.printboolean=~dark_ind;
+            data_arr.probe=dark_ind;
+            data_arr.probe(:)=1;
             an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,'vfloat');
+            %an_NPLprint(NPLfname,NPLshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
+            an_NPLprint(NPLfname,NPLshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
 
             end
 

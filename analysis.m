@@ -92,7 +92,7 @@ if(~isempty(ind_VL))
     ind_VL=sort(ind_VL,'ascend');
    % an_downsample(ind_V1L,tabindex,8)
     an_downsample(ind_VL,32,tabindex,index)
-    an_NPL(ind_VL,tabindex,index);
+ %   an_NPL(ind_VL,tabindex,index);
 end
 
 if(~isempty(ind_V1L))
