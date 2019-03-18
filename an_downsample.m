@@ -393,7 +393,7 @@ try
 
 
 
-            clear scantemp inter; % i don't remember why I need to clear this anymore, but let's do it for the kids
+            %clear scantemp inter; % i don't remember why I need to clear this anymore, but let's do it for the kids
 
             dark_ind=lum_mu<1; %
             foutarr{1,7}(dark_ind)=0; %won't be printed.
