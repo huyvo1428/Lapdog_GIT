@@ -426,10 +426,13 @@ try
                         scantemp_1=scantemp;
                         foutarr_1=foutarr;
                         tfoutarr_1=tfoutarr;
+                        dark_ind_1=dark_ind;
 
                     else
                         scantemp_2=scantemp;
                         foutarr_2=foutarr;
+                        dark_ind_2=dark_ind;
+
                         %tfoutarr_2=tfoutarr; %only need this for debug
                     end
                        % fprintf(1,'\n tfoutarr_2{1,1}(1,:)=%s \n tfoutarr_1{1,1}(1,:)=%s \n', tfoutarr_2{1,1}(1,:),tfoutarr_1{1,1}(1,:));

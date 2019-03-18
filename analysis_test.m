@@ -17,8 +17,8 @@ antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 
 
 
-XXP =[];
-XXP2=[];
+%XXP =[];
+%XXP2=[];
 %find datasets of different modes
 ind_I1L= find(strcmp('I1L', antype));
 ind_I2L= find(strcmp('I2L', antype));
@@ -47,8 +47,8 @@ ind_VL=[ind_V1L;ind_V2L];
 if(~isempty(ind_VL))
     ind_VL=sort(ind_VL,'ascend');
    % an_downsample(ind_V1L,tabindex,8)
-   % an_downsample(ind_VL,32,tabindex,index)
-    an_NPL(ind_VL,tabindex,index);
+    an_downsample(ind_VL,32,tabindex,index)
+   % an_NPL(ind_VL,tabindex,index);
 end
 
 
@@ -60,19 +60,19 @@ spath=sprintf('%s/XXP_save_v2.mat',derivedpath);
 % fprintf(1,'load XXP successful')
 %
 % catch err
-
-fprintf(1,'Analysing sweeps\n')
-
-if(~isempty(ind_I1S))
-    [XXP]=an_sweepmain_v2(ind_I1S,tabindex,targetfullname);
-end
-save(spath,'XXP');
-
-if(~isempty(ind_I2S))
-    fprintf(1,' Analysing LAP2 sweeps\n')
-    [XXP2]=an_sweepmain_v2(ind_I2S,tabindex,targetfullname);
-    save(spath,'XXP','XXP2');
-end
+% 
+% fprintf(1,'Analysing sweeps\n')
+% 
+% if(~isempty(ind_I1S))
+% %    [XXP]=an_sweepmain_v2(ind_I1S,tabindex,targetfullname);
+% end
+% save(spath,'XXP');
+% 
+% if(~isempty(ind_I2S))
+%     fprintf(1,' Analysing LAP2 sweeps\n')
+%     [XXP2]=an_sweepmain_v2(ind_I2S,tabindex,targetfullname);
+%     save(spath,'XXP','XXP2');
+% end
 
 
 
