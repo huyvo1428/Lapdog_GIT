@@ -50,7 +50,7 @@ switch mode
             %fprintf(awID,'%s, %16.6f,,,,\r\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j));
             % Don't print zero values.
         else
-            qvalue=1;
+            qvalue=max(1-abs((data_arr{1,6}(j)/data_arr{1,5}(j))),0.5);
             %data_arr.V(j)=SATURATION_CONSTANT;
             row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.t_utc{j,1}(1:26),data_arr.t_obt(j), data_arr.NPL(j),qvalue,NPL_flag(j),data_arr.qf(j));
             N_rows = N_rows + 1;
@@ -83,19 +83,18 @@ switch mode
     p2=USC_FIT.P(ind,2);
     %y1 = exp(p2)*exp(usc.usc(indz)*p1);
     data_arr.NPL=data_arr.Vz;
-    satind=data_arr.V==SATURATION_CONSTANT;
-    
+    satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
+
     data_arr.NPL(~satind)=exp(p2)*exp(data_arr.Vz(~satind)*p1);
     %factor=1; 
     %data_arr.V(~satind)=data_arr.V(~satind)*factor;
    % NPL_flag=data_arr.probe;%This is the probenumber/product type flag
         
-        factor=-1; %Vz data is being outputted by bias potential it is identified on,
+      %  factor=-1; %Vz data is being outputted by bias potential it is identified on,
         %so opposite sign applies. However, if we want to change this from 
         %a proxy to a Spacecraft potential, we could manipulate this factor.
         %possibly to something like 1/0.8, or something.
         
-        satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
 
         %find all extrapolation points: I don't want to change the an_swp
         %routine, so let's do the conversion here instead
@@ -130,7 +129,7 @@ end
             NPL_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
             NPL_tabindex(end).no_of_columns = 6;            % Number of columns
             % NPL_tabindex{end,6] = an_ind(i);
-            NPL_tabindex(end).type = 'Ion'; % Type
+            NPL_tabindex(end).type = 'Vz'; % Type
             NPL_tabindex(end).timing = timing;
             NPL_tabindex(end).row_byte = row_byte;
         
