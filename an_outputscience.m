@@ -160,7 +160,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             NPLfname=filename;
             NPLfname(end-6:end-4)='USC';
             NPLshort = strrep(NPLfname,folder,'');
-            an_USCprint(NPLfname,NPLshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
+            an_USCprint(NPLfname,NPLshort,XXP(i).data,XXP(i).info.firstind,NaN,XXP(i).info.timing,'vz');
 
             
             

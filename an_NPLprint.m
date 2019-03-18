@@ -74,22 +74,33 @@ switch mode
     case 'vz'
         
         
+        
+    
+    %BASIC SOLUTION ONLY LOOKS FOR CLOSEST POINT
+    [junk,ind]= min(abs(USC_FIT.t_et-data_arr.t0(1)));
+        
+    p1=USC_FIT.P(ind,1);
+    p2=USC_FIT.P(ind,2);
+    %y1 = exp(p2)*exp(usc.usc(indz)*p1);
+    data_arr.NPL=data_arr.Vz;
+    satind=data_arr.V==SATURATION_CONSTANT;
+    
+    data_arr.NPL(~satind)=exp(p2)*exp(data_arr.Vz(~satind)*p1);
+    %factor=1; 
+    %data_arr.V(~satind)=data_arr.V(~satind)*factor;
+   % NPL_flag=data_arr.probe;%This is the probenumber/product type flag
+        
         factor=-1; %Vz data is being outputted by bias potential it is identified on,
         %so opposite sign applies. However, if we want to change this from 
         %a proxy to a Spacecraft potential, we could manipulate this factor.
         %possibly to something like 1/0.8, or something.
         
         satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
-        %data_arr.Vz(satind,1)=data_arr.Vz(satind,1)*sign(factor); %either -1 or 1. will later be multiplied with 1, such that -1000 is still the only valid saturation constant
-        data_arr.Vz(~satind,1)=factor*data_arr.Vz(~satind,1);
-        %Vz= data_arr.Vz;
-        %time= data_arr.Tarr_mid
-        %qvalue=0.7;
-        
+
         %find all extrapolation points: I don't want to change the an_swp
         %routine, so let's do the conversion here instead
-        extrap_indz=data_arr.Vz(:,2)==0.2;
-        data_arr.Vz(extrap_indz,2)=0.7; % change 0.2 to 0.7. I mean, it's clearly not several intersections. 
+%         extrap_indz=data_arr.Vz(:,2)==0.2;
+%         data_arr.Vz(extrap_indz,2)=0.7; % change 0.2 to 0.7. I mean, it's clearly not several intersections. 
         %and it survived ICA validation. It's clearly not as good quality as a detected zero-crossing though
         
         %prepare NPL_flag
@@ -101,7 +112,7 @@ switch mode
             if data_arr.lum(j) > 0.9 %shadowed probe data is not allowed
                 % NOTE: data_arr.Tarr_mid{j,1}(j,1) contains UTC strings with 6 second decimals. Truncates to have the same
                 % number of decimals as for case "vfloat". /Erik P G Johansson 2018-11-16
-                row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.Vz(j,1),data_arr.Vz(j,2),NPL_flag(j),data_arr.qf(j));
+                row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.NPL(j),data_arr.Vz(j,2),NPL_flag(j),data_arr.qf(j));
                 %row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j),qvalue,data_arr.qf(j));
                 N_rows = N_rows + 1;
             end
