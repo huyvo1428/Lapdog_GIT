@@ -31,7 +31,7 @@
 %
 % Initially created 2018-08-15 by Erik P G Johansson, IRF Uppsala.
 %
-function [firstRowStringArray, lastRowStringArray, nBytesPerRow, nRows] = analyze_TAB_file(filePath, iFirstByteArray, iLastByteArray)
+function [firstRowStringArray, lastRowStringArray, nBytesPerRow, nRows] = analyze_TAB_file(tabFilePath, iFirstByteArray, iLastByteArray)
 % PROPOSAL: Move to delivery code if setting LBL start & stop time.
 %
 % PROPOSAL: Retrieve number of columns.
@@ -45,24 +45,24 @@ function [firstRowStringArray, lastRowStringArray, nBytesPerRow, nRows] = analyz
 % PROPOSAL: Separate treatment of empty files since (the caller) can not say that the TAB file is inconsistent with the
 %       LBL file.
 
-    temp     = dir(filePath);
+    temp     = dir(tabFilePath);
     fileSize = temp.bytes;
 
     % ASSERTION
     if fileSize == 0
-        error('Empty TAB file (0 bytes). Can not analyze.\n    File: "%s"', filePath)
+        error('Empty TAB file (0 bytes). Can not analyze.\n    File: "%s"', tabFilePath)
     end
 
 
 
     % Read first and last row of file.
     % NOTE: Strings include trailing CR+LF.
-    firstRow = EJ_library.utils.read_first_file_row(filePath);
-    lastRow  = EJ_library.utils.read_last_file_row(filePath);
+    firstRow = EJ_library.utils.read_first_file_row(tabFilePath);
+    lastRow  = EJ_library.utils.read_last_file_row(tabFilePath);
     
     % ASSERTION
     if length(firstRow) ~= length(lastRow)
-        error('First and last row of TAB file have different lengths.\n    File: "%s"', filePath)
+        error('First and last row of TAB file have different lengths.\n    File: "%s"\n    First row: "%s"\n    Last row:  "%s"', tabFilePath, firstRow, lastRow)
     end
 
     nBytesPerRow = length(firstRow);
