@@ -86,12 +86,12 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     
     qv_Te_exp_belowVknee=exp(-XXP(i).data.Te_exp_belowVknee(:,2));
 %    qv_ionV=exp(-XXP(i).data.asm_ion_slope(:,2));
-    qv_Te_XCAL=exp(-XCAL_struct.frac_uncertainty.^2);
+   % qv_Te_XCAL=exp(-XCAL_struct.frac_uncertainty.^2);
     qv_Te_XCAL= exp(-(XXP(i).data.asm_ne_5eV(:,2).^2+XCAL_struct.frac_uncertainty.^2));
     qv_ionV=exp(-sqrt(XXP(i).data.asm_ion_slope(:,2).^2+XCAL_struct.frac_uncertainty.^2));
     %filt_thesemaybe= qv_ionV<0.5;
     qv_asm_ne_5eV= exp(-XXP(i).data.asm_ne_5eV(:,2));
-    qv_Vph_knee= exp(-XXP(i).data.Te_exp_belowVknee(j,2));
+    qv_Vph_knee= exp(-XXP(i).data.Te_exp_belowVknee(:,2));
     outside_range= XXP(i).data.Te_exp_belowVknee(:,1)<1e-3 |XXP(i).data.Te_exp_belowVknee(:,1)>30;%eV
      XXP(i).data.Te_exp_belowVknee(outside_range,1)=SATURATION_CONSTANT;
      XXP(i).data.Te_exp_belowVknee(outside_range,2)=0;%qv
@@ -790,9 +790,9 @@ end
 
 
 
-delind =isnan(XCAL_M.ionV);
+delind =isnan(XCAL_M.ionV)|isinf(XCAL_M.ionV);
 XCAL_M.ionV(delind)=SATURATION_CONSTANT;
-delind =isnan(XCAL_M.Te);
+delind =isnan(XCAL_M.Te)|isinf(XCAL_M.Te);
 XCAL_M.Te(delind)=SATURATION_CONSTANT;
 
 %change to XCAL_L with LAP indexing, instead of MIP indexing
