@@ -180,7 +180,7 @@ function [fileStr] = construct_key_assignment(key, value, postKeyPaddingLength, 
         end
     else
         % ASSERTION
-        error('Illegal value. Neither cell array, nor string. class(value)=%s', class(value))
+        error('Illegal value. Neither cell array, nor string. key="%s", class(value)=%s', key, class(value))
     end
     
 
