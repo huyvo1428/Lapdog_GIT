@@ -142,21 +142,13 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
   
         
         %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
-<<<<<<< Updated upstream
-        str2=sprintf(' %14.7e, %4.2f,',XXP(i).data.asm_ne_5eV(j,1),qv_asm_ne_5eV(j));
-        str3=sprintf(' %14.7e, %4.2f,',XXP(i).data.Iph0(j,1),dummy_qv);
-        str4=sprintf(' %14.7e, %4.2f,',XCAL_struct.ionV(j),qv_ionV(j));
-        str5=sprintf(' %14.7e, %4.2f,',XXP(i).data.Te_exp_belowVknee(j,1),qv_Te_exp_belowVknee(j));
-        str6=sprintf(' %14.7e, %4.2f,',XCAL_struct.Te(j),qv_Te_XCAL(j));
-        str7=sprintf(' %14.7e, %4.2f,',XXP(i).data.Vph_knee(j,1),qv_Vph_knee(j));
-=======
+
         str2=sprintf(' %14.7e, %3.2f,',XXP(i).data.asm_ne_5eV(j,1),qv_asm_ne_5eV(j));
         str3=sprintf(' %14.7e, %3.2f,',XXP(i).data.Iph0(j,1),qv_iph0(j));
         str4=sprintf(' %14.7e, %3.2f,',XCAL_struct.ionV(j),qv_ionV(j));
         str5=sprintf(' %14.7e, %3.2f,',XXP(i).data.Te_exp_belowVknee(j,1),qv_Te_exp_belowVknee(j));
         str6=sprintf(' %14.7e, %3.2f,',XCAL_struct.Te(j),qv_Te_XCAL(j));
         str7=sprintf(' %14.7e, %3.2f,',XXP(i).data.Vph_knee(j,1),qv_Vph_knee(j));
->>>>>>> Stashed changes
         str8=sprintf(' %03i',XXP(i).data.qf(j));
         
         strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
