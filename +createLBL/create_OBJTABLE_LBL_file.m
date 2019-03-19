@@ -300,16 +300,27 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     [T2pkExecTable(:).iByteLast]  = deal(T2pkArgsTable(:).iByteLast);
 
     LblData.nTabFileRows = NaN;   % Field must be created in case deriving the value later fails.
+    
+    rowStringArrayArray = {[], []};
     try
-        rowStringArrayArray = {[], []};
+        % IMPLEMENTATION NOTE: try-catch to capture "only" assertion error in createLBL.analyze_TAB_file.
         [rowStringArrayArray{:}, nBytesPerRow, LblData.nTabFileRows] = createLBL.analyze_TAB_file(tabFilePath, [T2pkExecTable(:).iByteFirst], [T2pkExecTable(:).iByteLast]);
-
+        
+        
         % ASSERTION: Number of bytes per row.
+        % IMPLEMENTATION NOTE: must not be run if createLBL.analyze_TAB_file throws error, since nBytesPerRow is not
+        % defined in that case.
+        % IMPLEMENTATION NOTE: Wise to (maybe) trhow an error, that is caught and then rethrown with the same function?!
         if nBytesPerRow ~= OBJTABLE_data.ROW_BYTES
             warning_error___LOCAL(sprintf('TAB file is inconsistent with LBL file. Bytes per row does not fit table description.\n    nBytesPerRow=%g\n    OBJTABLE_data.ROW_BYTES=%g\n    File: "%s"', ...
                 nBytesPerRow, OBJTABLE_data.ROW_BYTES, tabFilePath), tabLblInconsistencyPolicy)
         end
+    catch Exception
+        %warning_error___LOCAL(sprintf('createLBL.analyze_TAB_file failed for TAB file "%s".\n    Exception.message="%s"', tabFilePath, Exception.message), tabLblInconsistencyPolicy)
+        warning_error___LOCAL(Exception, tabLblInconsistencyPolicy)
+    end
 
+    try
         T2pkKvpl_keys   = {T2pkExecTable(:).pdsKeyword};
         T2pkKvpl_values = {};
         for iT2pk = 1:numel(T2pkKvpl_keys)
@@ -536,13 +547,25 @@ end
 
 
 % PROPOSAL: Remake into general function?!
-function warning_error___LOCAL(msg, policy)
+function warning_error___LOCAL(msgOrException, policy)
     if strcmp(policy, 'warning')
-        %fprintf(1, '%s\n', msg)     % Print since warning is sometimes turned off automatically. Change?
-        warning(msg)
+        %fprintf(1, '%s\n', msgOrException)     % Print since warning is sometimes turned off automatically. Change?
+        
+        if ischar(msgOrException)
+            warning(msgOrException)
+        else
+            warning(Exception.message)
+        end
+        
     elseif strcmp(policy, 'error')
-        error(msg)
+        
+        if ischar(msgOrException)
+            error(msgOrException)
+        else
+            throw(msgOrException)
+        end
     elseif ~strcmp(policy, 'nothing')
+        % CASE: Error
         error('Can not interpret warning/error policy.')
     end
 end
