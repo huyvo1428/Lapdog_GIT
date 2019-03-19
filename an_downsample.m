@@ -423,13 +423,11 @@ try
                     %time_arr{1,1}(j,:)
                     hold_flag = 0; %reset
                     if probenr==1
-                        scantemp_1=scantemp;
                         foutarr_1=foutarr;
                         tfoutarr_1=tfoutarr;
                         dark_ind_1=dark_ind;
 
                     else
-                        scantemp_2=scantemp;
                         foutarr_2=foutarr;
                         dark_ind_2=dark_ind;
 
@@ -469,20 +467,30 @@ try
                         foutarr{1,8}(indz)=foutarr_2{1,8}(indz); 
                         
                         data_arr=[];
-                        data_arr.V=scantemp_1{1,4};
-                        data_arr.t_utc=scantemp_1{1,1};
-                        data_arr.t_obt=scantemp_1{1,2};
-                        data_arr.qf=scantemp_1{1,5};
-                        data_arr.printboolean=~dark_ind_1;
+%                         data_arr.V=scantemp_1{1,4};
+%                         data_arr.t_utc=scantemp_1{1,1};
+%                         data_arr.t_obt=scantemp_1{1,2};
+%                         data_arr.qf=scantemp_1{1,5};
+%                         data_arr.printboolean=~dark_ind_1;
+%                         data_arr.probe=dark_ind_1;
+%                         data_arr.probe(:)=1;%qflag
+                        
+                        data_arr.V=foutarr{1,5};
+                        data_arr.V_sigma=foutarr{1,6};
+                        data_arr.t_utc=tfoutarr{1,1};
+                        data_arr.t_obt=tfoutarr{1,2};
+                        data_arr.qf=foutarr{1,8};
+                        data_arr.printboolean=foutarr{1,7};
                         data_arr.probe=dark_ind_1;
                         data_arr.probe(:)=1;%qflag
 
                         %%default == probe 1.
                         %here we went from LAP1 to LAP2,
                         data_arr.probe(indz)=2;  %change probenumberflag
-                        data_arr.V(indz)=scantemp_2{1,4}(indz);%  %this is vf2
-                        data_arr.printboolean(indz)=dark_ind_2(indz);  %print boolean
-                        data_arr.qf(indz)=scantemp_2{1,5}(indz);   %qflag
+                        data_arr.V(indz)=foutarr_2{1,5}(indz);%  %this is vf2
+                        data_arr.V_sigma(indz)=foutarr_2{1,6}(indz);%  %this is sigma vf2
+                        data_arr.printboolean(indz)=foutarr_2{1,7}(indz);  %print boolean
+                        data_arr.qf(indz)=foutarr_2{1,8}(indz);   %qflag
 
                     %print USC special case
                     an_USCprint(USCfname,USCshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
@@ -490,20 +498,18 @@ try
                     an_NPLprint(NPLfname,NPLshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
 
                     %clear scantemp_1 scantemp_2
-                    clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1
+                    clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 data_arr
 
                 else% hold_flag
                     %hold_flag default is 0. So this is 1st iteration
 
                     if probenr==1
                         foutarr_1=foutarr;
-                        scantemp_1=scantemp;
                         tfoutarr_1=tfoutarr;
                         dark_ind_1=dark_ind;
 
                     else
                         foutarr_2=foutarr;
-                        scantemp_2=scantemp;
                         dark_ind_2=dark_ind;
                        % tfoutarr_2=tfoutarr; %I only need this to debug
                     end

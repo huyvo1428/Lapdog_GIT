@@ -12,7 +12,6 @@
 function [] = an_NPLprint(NPLfname,NPLshort,data_arr,t_et,index_nr_of_firstfile,timing,mode)
 
 global NPL_tabindex SATURATION_CONSTANT
-
 fprintf(1,'printing %s, mode: %s\n',NPLfname, mode);
 %'hello'
 %fprintf(1,'%s',time_arr{1,1}(1,:));
@@ -27,6 +26,7 @@ switch mode
         
     case 'vfloat'        
 %if strcmp(mode,'vfloat')
+   % save bullshit.mat
 
     load('usc_resampled_fit.mat', 'USC_FIT');
 
@@ -50,9 +50,11 @@ switch mode
             %fprintf(awID,'%s, %16.6f,,,,\r\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j));
             % Don't print zero values.
         else
-            qvalue=max(1-abs((data_arr{1,6}(j)/data_arr{1,5}(j))),0.5);
+            qvalue=max(1-exp(-abs(data_arr.V_sigma(j)/data_arr.V(j))),0.5);
             %data_arr.V(j)=SATURATION_CONSTANT;
-            row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.t_utc{j,1}(1:26),data_arr.t_obt(j), data_arr.NPL(j),qvalue,NPL_flag(j),data_arr.qf(j));
+            row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %3.2f, %01i, %03i\r\n',data_arr.t_utc(j,:),data_arr.t_obt(j), data_arr.NPL(j),qvalue,NPL_flag(j),data_arr.qf(j));
+%            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
+
             N_rows = N_rows + 1;
         end%if
         
@@ -73,7 +75,8 @@ switch mode
     
     case 'vz'
         
-        
+    load('usc_resampled_fit.mat', 'USC_FIT');
+
         
     
     %BASIC SOLUTION ONLY LOOKS FOR CLOSEST POINT
@@ -98,8 +101,8 @@ switch mode
 
         %find all extrapolation points: I don't want to change the an_swp
         %routine, so let's do the conversion here instead
-%         extrap_indz=data_arr.Vz(:,2)==0.2;
-%         data_arr.Vz(extrap_indz,2)=0.7; % change 0.2 to 0.7. I mean, it's clearly not several intersections. 
+         extrap_indz=data_arr.Vz(:,2)==0.2;
+         data_arr.Vz(extrap_indz,2)=0.7; % change 0.2 to 0.7. I mean, it's clearly not several intersections. 
         %and it survived ICA validation. It's clearly not as good quality as a detected zero-crossing though
         
         %prepare NPL_flag
@@ -107,7 +110,8 @@ switch mode
         NPL_flag(extrap_indz)=4;
         
         for j = 1:length(data_arr.qf)
-            
+                        % row_byte= sprintf('%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.NPL(j),data_arr.Vz(j,2),NPL_flag(j),data_arr.qf(j));
+   
             if data_arr.lum(j) > 0.9 %shadowed probe data is not allowed
                 % NOTE: data_arr.Tarr_mid{j,1}(j,1) contains UTC strings with 6 second decimals. Truncates to have the same
                 % number of decimals as for case "vfloat". /Erik P G Johansson 2018-11-16

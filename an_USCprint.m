@@ -39,7 +39,7 @@ switch mode
             
             % NOTE: time_arr{1,1}(j,:) contains UTC strings with 3 second decimals. This should be the same number of
             % decimals as for case "vz". /Erik P G Johansson 2018-11-16
-            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
+            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.2f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
             N_rows = N_rows + 1;
         end%if
         
