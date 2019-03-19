@@ -85,8 +85,13 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     %filter values outside LAP range
     
     qv_Te_exp_belowVknee=exp(-XXP(i).data.Te_exp_belowVknee(:,2));
-    
-    
+%    qv_ionV=exp(-XXP(i).data.asm_ion_slope(:,2));
+    qv_Te_XCAL=exp(-XCAL_struct.frac_uncertainty.^2);
+    qv_Te_XCAL= exp(-(XXP(i).data.asm_ne_5eV(:,2).^2+XCAL_struct.frac_uncertainty.^2));
+    qv_ionV=exp(-sqrt(XXP(i).data.asm_ion_slope(:,2).^2+XCAL_struct.frac_uncertainty.^2));
+    %filt_thesemaybe= qv_ionV<0.5;
+    qv_asm_ne_5eV= exp(-XXP(i).data.asm_ne_5eV(:,2));
+    qv_Vph_knee= exp(-XXP(i).data.Te_exp_belowVknee(j,2));
     outside_range= XXP(i).data.Te_exp_belowVknee(:,1)<1e-3 |XXP(i).data.Te_exp_belowVknee(:,1)>30;%eV
      XXP(i).data.Te_exp_belowVknee(outside_range,1)=SATURATION_CONSTANT;
      XXP(i).data.Te_exp_belowVknee(outside_range,2)=0;%qv
@@ -105,12 +110,12 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
   
         
         %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
-        str2=sprintf(' %14.7e, %3.2f,',XXP(i).data.asm_ne_5eV(j,1),dummy_qv);
+        str2=sprintf(' %14.7e, %3.2f,',XXP(i).data.asm_ne_5eV(j,1),qv_asm_ne_5eV(j));
         str3=sprintf(' %14.7e, %3.2f,',XXP(i).data.Iph0(j,1),dummy_qv);
-        str4=sprintf(' %14.7e, %3.2f,',XCAL_struct.ionV(j),dummy_qv);
-        str5=sprintf(' %14.7e, %3.2f,',XXP(i).data.Te_exp_belowVknee(j,1),qv_Te_exp_belowVknee);
-        str6=sprintf(' %14.7e, %3.2f,',XCAL_struct.Te(j),dummy_qv);
-        str7=sprintf(' %14.7e, %3.2f,',XXP(i).data.Vph_knee(j,1),dummy_qv);
+        str4=sprintf(' %14.7e, %3.2f,',XCAL_struct.ionV(j),qv_ionV(j));
+        str5=sprintf(' %14.7e, %3.2f,',XXP(i).data.Te_exp_belowVknee(j,1),qv_Te_exp_belowVknee(j));
+        str6=sprintf(' %14.7e, %3.2f,',XCAL_struct.Te(j),qv_Te_XCAL(j));
+        str7=sprintf(' %14.7e, %3.2f,',XXP(i).data.Vph_knee(j,1),qv_Vph_knee(j));
         str8=sprintf(' %03i',XXP(i).data.qf(j));
         
         strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
@@ -158,7 +163,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
             
             NPLfname=filename;
-            NPLfname(end-6:end-4)='USC';
+            NPLfname(end-6:end-4)='NPL';
             NPLshort = strrep(NPLfname,folder,'');
             an_NPLprint(NPLfname,NPLshort,XXP(i).data,XXP(i).data.t0,XXP(i).info.firstind,XXP(i).info.timing,'vz');
 
@@ -686,11 +691,12 @@ pseudo_int_treshold=2.5e-1; %to filter out most unimportant MIP measurements. So
 XCAL_L=[];
 XCAL_L.ionV=LAP.t0;
 XCAL_L.ionV(:)=SATURATION_CONSTANT; %default to missing constant
+
 XCAL_L.t0=XCAL_L.ionV;
 XCAL_L.t0(:)=nan; %default to nan, for debug plotting
 XCAL_L.mipnefilt = XCAL_L.ionV;
 XCAL_L.Te= XCAL_L.ionV;
-XCAL_L.mipne_uncertainty= XCAL_L.ionV(:);
+XCAL_L.frac_uncertainty= XCAL_L.ionV(:);
 XCAL_L.mipnefilt= XCAL_L.ionV(:);
 
 
@@ -748,7 +754,7 @@ filt_inds=abs(pseudo_ind-floor(pseudo_ind+0.5))< pseudo_int_treshold;
 
 XCAL_M=[];
 XCAL_M.mipnefilt=MIP.ne(filt_inds);
-XCAL_M.ne_uncertainty=MIP.ne_uncertainty(filt_inds);
+XCAL_M.frac_uncertainty=MIP.frac_uncertainty(filt_inds);
 %XCAL_M.mipID=MIP.ID(filt_inds);
 XCAL_M.t1=MIP.tt(filt_inds);
 XCAL_M.lapind=nan(1,length(XCAL_M.t1)); %default to nan, useful later
@@ -798,7 +804,7 @@ XCAL_L.t0(XCAL_M.lapind(indz))              =XCAL_M.t1(indz);
 XCAL_L.Te(XCAL_M.lapind(indz))              =XCAL_M.Te(indz);
 %I care less about these, so some values will be empty.
 %XCAL_L.mipID(XCAL_M.lapind(indz))           =XCAL_M.mipID(indz);
-XCAL_L.mipne_uncertainty(XCAL_M.lapind(indz)) =XCAL_M.ne_uncertainty(indz);
+XCAL_L.frac_uncertainty(XCAL_M.lapind(indz)) =XCAL_M.frac_uncertainty(indz);
 XCAL_L.mipnefilt(XCAL_M.lapind(indz))       =XCAL_M.mipnefilt(indz);
 
 

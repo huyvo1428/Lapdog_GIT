@@ -680,7 +680,9 @@ try
                 XXP_struct.qf(j,1)=EP(j).qf;
                 XXP_struct.lum(j,1)=EP(j).lum;
                 XXP_struct.ne_5eV(j,1)=EP(j).ne_5eV;
-                XXP_struct.asm_ne_5eV(j,1)=EP(j).asm_ne_5eV;
+                XXP_struct.asm_ne_5eV(j,1)=EP(j).asm_ne_5eV; 
+                XXP_struct.asm_ne_5eV(j,2)=DP(j).e_slope(2); %fractional error of slope.
+
                 XXP_struct.minmaxI(j,1:2)= EP(j).minmaxI;
                 
             end
