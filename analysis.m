@@ -64,8 +64,21 @@ end
 
 fprintf(1,'Outputting Science\n')
 if(~isempty(XXP))
-    an_outputscience(XXP);
+try
 
+    an_outputscience(XXP);
+catch err
+    fprintf(1,'Error: an_outputscience failed \n')
+    err.identifier
+    err.message
+    len = length(err.stack);
+    if (~isempty(len))
+        for i=1:len
+            fprintf(1,'%s, %i; ',err.stack(i).name,err.stack(i).line);
+        end
+    end
+
+end
 
 else
     fprintf(1,'Error: an empty XXP was loaded, or no sweeps were analysed. aborting\n')

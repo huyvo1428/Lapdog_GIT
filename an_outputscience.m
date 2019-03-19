@@ -113,7 +113,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     error_ion_slope=XXP(i).data.ion_slope(:,2).*XXP(i).data.ion_slope(:,1);
     qv_iph0=exp(-(300*error_ion_slope./XXP(i).data.Iph0(:,1)));
     
-    qv_iph0(qv_iph0_2>1 | qv_iph0_2<0)=0;
+    qv_iph0(qv_iph0>1 | qv_iph0<0)=0;
     
     qv_iph0_test = XXP(i).data.Iph0(:,1)./(XXP(i).data.minmaxI(:,1)); %this value should be between 0 and 1;
 
