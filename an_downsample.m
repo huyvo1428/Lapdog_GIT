@@ -521,13 +521,16 @@ try
             %print USC normal case
             %initialise foutarr.
             data_arr=[];
-            data_arr.V=scantemp{1,4};
-            data_arr.t_utc=scantemp{1,1};
-            data_arr.t_obt=scantemp{1,2};
-            data_arr.qf=scantemp{1,5};
-            data_arr.printboolean=~dark_ind;
-            data_arr.probe=dark_ind;
-            data_arr.probe(:)=1;
+            data_arr.V=foutarr{1,5};
+            data_arr.V_sigma=foutarr{1,6};
+            data_arr.t_utc=tfoutarr{1,1};
+            data_arr.t_obt=tfoutarr{1,2};
+            data_arr.qf=foutarr{1,8};
+            data_arr.printboolean=foutarr{1,7};
+            data_arr.probe=dark_ind_1;
+            data_arr.probe(:)=1;%qflag
+            
+            
             an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,'vfloat');
             %an_NPLprint(NPLfname,NPLshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
             an_NPLprint(NPLfname,NPLshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');

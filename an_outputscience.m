@@ -85,19 +85,51 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     %filter values outside LAP range
     
     qv_Te_exp_belowVknee=exp(-XXP(i).data.Te_exp_belowVknee(:,2));
+    delind=isnan(qv_Te_exp_belowVknee)|isinf(qv_Te_exp_belowVknee);
+    qv_Te_exp_belowVknee(delind)=0;
 %    qv_ionV=exp(-XXP(i).data.asm_ion_slope(:,2));
    % qv_Te_XCAL=exp(-XCAL_struct.frac_uncertainty.^2);
     qv_Te_XCAL= exp(-(XXP(i).data.asm_ne_5eV(:,2).^2+XCAL_struct.frac_uncertainty.^2));
+    delind=isnan(qv_Te_XCAL)|isinf(qv_Te_XCAL);
+    qv_Te_XCAL(delind)=0;
+    
     qv_ionV=exp(-sqrt(XXP(i).data.asm_ion_slope(:,2).^2+XCAL_struct.frac_uncertainty.^2));
     %filt_thesemaybe= qv_ionV<0.5;
+    delind=isnan(qv_ionV)|isinf(qv_ionV);
+    qv_ionV(delind)=0;
+    
+    
     qv_asm_ne_5eV= exp(-XXP(i).data.asm_ne_5eV(:,2));
-    qv_Vph_knee= exp(-XXP(i).data.Te_exp_belowVknee(:,2));
-    outside_range= XXP(i).data.Te_exp_belowVknee(:,1)<1e-3 |XXP(i).data.Te_exp_belowVknee(:,1)>30;%eV
-     XXP(i).data.Te_exp_belowVknee(outside_range,1)=SATURATION_CONSTANT;
-     XXP(i).data.Te_exp_belowVknee(outside_range,2)=0;%qv
-     outside_range= XXP(i).data.Iph0(:,1)>0;%%positive photoemission is not good
-     XXP(i).data.Iph0(outside_range,1)=SATURATION_CONSTANT;
-     XXP(i).data.Iph0(outside_range,2)=0;%qv
+    delind=isnan(qv_asm_ne_5eV)|isinf(qv_asm_ne_5eV);
+    qv_asm_ne_5eV(delind)=0;
+    
+    
+    qv_Vph_knee= exp(-XXP(i).data.Te_exp_belowVknee(:,2));    
+    delind=isnan(qv_Vph_knee)|isinf(qv_Vph_knee);
+    qv_Vph_knee(delind)=0;
+    
+
+    
+    error_ion_slope=XXP(i).data.ion_slope(:,2).*XXP(i).data.ion_slope(:,1);
+    qv_iph0=exp(-(300*error_ion_slope./XXP(i).data.Iph0(:,1)));
+    
+    qv_iph0(qv_iph0_2>1 | qv_iph0_2<0)=0;
+    
+    qv_iph0_test = XXP(i).data.Iph0(:,1)./(XXP(i).data.minmaxI(:,1)); %this value should be between 0 and 1;
+
+    outside_range= XXP(i).data.Iph0(:,1)>0 | abs(qv_iph0_test)>1.01;    
+    %%positive photoemission is not good, also not good: Iph0 larger than
+    %%most negative current in sweep.
+    XXP(i).data.Iph0(outside_range,1)=SATURATION_CONSTANT;
+    qv_iph0(outside_range)=0;%qv
+    delind=isnan(qv_iph0)|isinf(qv_iph0);
+    qv_iph0(delind)=0;
+    
+%     qv_iph0_2 =qv_iph0_test;
+%     qv_iph0_2(:) = 0.2407/XXP(i).info.diff_Vb; % this is one, 0.5, 0.33, or 0.25;
+%     qv_iph0_3(:) = exp(-XXP(i).info.diff_Vb*XXP(i).info.Vb_length/60);
+%     
+
      %qv_Te= exp
      
     for j = 1:len
@@ -110,12 +142,21 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
   
         
         %str2=sprintf('%14.7e, %2.1f, %14.7e, %2.1f, %16.6f, %16.6f, %14.7e',dummy_ne,dummy_qv,XXP(i).data.Iph0(j,1),dummy_qv,dummy_v_ion,dummy_qv,XXP(i).data.Te_exp_belowVknee(j,1),dummy_qv,dummy_Te_XCAL,dummy_qv);
+<<<<<<< Updated upstream
         str2=sprintf(' %14.7e, %4.2f,',XXP(i).data.asm_ne_5eV(j,1),qv_asm_ne_5eV(j));
         str3=sprintf(' %14.7e, %4.2f,',XXP(i).data.Iph0(j,1),dummy_qv);
         str4=sprintf(' %14.7e, %4.2f,',XCAL_struct.ionV(j),qv_ionV(j));
         str5=sprintf(' %14.7e, %4.2f,',XXP(i).data.Te_exp_belowVknee(j,1),qv_Te_exp_belowVknee(j));
         str6=sprintf(' %14.7e, %4.2f,',XCAL_struct.Te(j),qv_Te_XCAL(j));
         str7=sprintf(' %14.7e, %4.2f,',XXP(i).data.Vph_knee(j,1),qv_Vph_knee(j));
+=======
+        str2=sprintf(' %14.7e, %3.2f,',XXP(i).data.asm_ne_5eV(j,1),qv_asm_ne_5eV(j));
+        str3=sprintf(' %14.7e, %3.2f,',XXP(i).data.Iph0(j,1),qv_iph0(j));
+        str4=sprintf(' %14.7e, %3.2f,',XCAL_struct.ionV(j),qv_ionV(j));
+        str5=sprintf(' %14.7e, %3.2f,',XXP(i).data.Te_exp_belowVknee(j,1),qv_Te_exp_belowVknee(j));
+        str6=sprintf(' %14.7e, %3.2f,',XCAL_struct.Te(j),qv_Te_XCAL(j));
+        str7=sprintf(' %14.7e, %3.2f,',XXP(i).data.Vph_knee(j,1),qv_Vph_knee(j));
+>>>>>>> Stashed changes
         str8=sprintf(' %03i',XXP(i).data.qf(j));
         
         strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
@@ -479,7 +520,7 @@ for i = min(inter):max(inter) %main for loop
             t_utc(k,21:26)='000000';%increased UTC precision, now we need to floor away this 0.5s margin
             %t_utc is now a string with more than 6 decimals precision, but we
             %force the output to only print the first 6.
-            fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %03i\r\n', t_utc(k,1:26), t_obt(k), SATURATION_CONSTANT,0,qf_array(k));
+            fprintf(twID,'%s, %16.6f, %14.7e, %3.2f, %03i\r\n', t_utc(k,1:26), t_obt(k), SATURATION_CONSTANT,0,qf_array(k));
             rowcount=rowcount+1;
 
         elseif (~isempty(indz))
@@ -488,7 +529,7 @@ for i = min(inter):max(inter) %main for loop
             %t_utc is now a string with more than 6 decimals precision, but we
             %force the output to only print the first 6.
             %row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
-            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %03i\r\n', t_utc(k,1:26), t_obt(k), resampled.iph0(k),dummy_qv,qf_array(k));
+            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.2f, %03i\r\n', t_utc(k,1:26), t_obt(k), resampled.iph0(k),dummy_qv,qf_array(k));
 
             rowcount=rowcount+1;
             PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
@@ -509,7 +550,7 @@ for i = min(inter):max(inter) %main for loop
 
 %         if(~isempty(indz))  % Print values!
 % 
-%             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i', utc, resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
+%             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.2f, %05i', utc, resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
 %             rowcount=rowcount+1;
 % 
 % 
@@ -760,7 +801,7 @@ XCAL_M.t1=MIP.tt(filt_inds);
 XCAL_M.lapind=nan(1,length(XCAL_M.t1)); %default to nan, useful later
 XCAL_M.ionV             =nan(length(XCAL_M.t1),1);
 XCAL_M.Te               =nan(length(XCAL_M.t1),1);
-
+XCAL_M.t_dur=MIP.t_dur(filt_inds);
 %XCAL.t1 = LAP.t1;
 
 
@@ -774,13 +815,13 @@ end
 for i = 1:length(pts_to_check)
 
     lap_ind=floor(pts_to_check(i)+0.5);
-    if min(abs(LAP.t0(floor(pts_to_check(i)+0.5))-XCAL_M.t1(i)))>1
+    if min(abs(LAP.t0(floor(pts_to_check(i)+0.5))-XCAL_M.t1(i)))>max(1,XCAL_M.t_dur(i))
         %'shit'
          % indz=vertcat(indz,i);
         %fprintf(1,'diff is %d sec k=%d, i = %d \n',abs(LAP.t1(floor(pts_to_check(i)+0.5))-XCAL.t1(i)),k,i);        
     else
 
-   XCAL_M.ionV(i) = XCAL_M.mipnefilt(i)*2*IN.probe_cA*(CO.e).^2/(assmpt.ionM*CO.mp*LAP.asm_ion_slope(lap_ind)*1e-6);
+   XCAL_M.ionV(i) = XCAL_M.mipnefilt(i)*2*IN.probe_cA*(CO.e).^2/(assmpt.ionM*CO.mp*LAP.asm_ion_slope(lap_ind,1)*1e-6);
    XCAL_M.Te(i) = 5* (XCAL_M.mipnefilt(i)/LAP.ne_5eV(lap_ind)).^2;
    XCAL_M.lapind(i) =floor(pts_to_check(i)+0.5);%
     end
@@ -790,9 +831,9 @@ end
 
 
 
-delind =isnan(XCAL_M.ionV)|isinf(XCAL_M.ionV);
+delind =isnan(XCAL_M.ionV)|isinf(XCAL_M.ionV)|XCAL_M.ionV==0;
 XCAL_M.ionV(delind)=SATURATION_CONSTANT;
-delind =isnan(XCAL_M.Te)|isinf(XCAL_M.Te);
+delind =isnan(XCAL_M.Te)|isinf(XCAL_M.Te)|XCAL_M.ionV==0;
 XCAL_M.Te(delind)=SATURATION_CONSTANT;
 
 %change to XCAL_L with LAP indexing, instead of MIP indexing
