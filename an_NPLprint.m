@@ -52,7 +52,7 @@ switch mode
         else
             qvalue=max(1-exp(-abs(data_arr.V_sigma(j)/data_arr.V(j))),0.5);
             %data_arr.V(j)=SATURATION_CONSTANT;
-            row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %3.2f, %01i, %03i\r\n',data_arr.t_utc(j,:),data_arr.t_obt(j), data_arr.NPL(j),qvalue,NPL_flag(j),data_arr.qf(j));
+            row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc(j,:),data_arr.t_obt(j), data_arr.NPL(j),qvalue,NPL_flag(j),data_arr.qf(j));
 %            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
 
             N_rows = N_rows + 1;
@@ -115,7 +115,7 @@ switch mode
             if data_arr.lum(j) > 0.9 %shadowed probe data is not allowed
                 % NOTE: data_arr.Tarr_mid{j,1}(j,1) contains UTC strings with 6 second decimals. Truncates to have the same
                 % number of decimals as for case "vfloat". /Erik P G Johansson 2018-11-16
-                row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %3.2f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.NPL(j),data_arr.Vz(j,2),NPL_flag(j),data_arr.qf(j));
+                row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.NPL(j),data_arr.Vz(j,2),NPL_flag(j),data_arr.qf(j));
                 %row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j),qvalue,data_arr.qf(j));
                 N_rows = N_rows + 1;
             end
