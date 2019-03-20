@@ -246,6 +246,8 @@ end
 if remake_from_savestate
 
 load(sprintf('%s/pre_createLBL_workspace.mat',derivedpath));
+load(sprintf('%s/MIP_v23_forlapdog.mat',dynampath));
+
 % antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 % 
 % %find datasets of different modes

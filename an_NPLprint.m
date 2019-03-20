@@ -40,7 +40,7 @@ switch mode
     data_arr.NPL=data_arr.V;
     satind=data_arr.V==SATURATION_CONSTANT;
     
-    data_arr.NPL(~satind)=exp(p2)*exp(data_arr.V(~satind)*p1);
+    data_arr.NPL(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
     %factor=1; 
     %data_arr.V(~satind)=data_arr.V(~satind)*factor;
     NPL_flag=data_arr.probe;%This is the probenumber/product type flag
@@ -88,7 +88,8 @@ switch mode
     data_arr.NPL=data_arr.Vz;
     satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
 
-    data_arr.NPL(~satind)=exp(p2)*exp(data_arr.Vz(~satind)*p1);
+    data_arr.NPL(~satind)=exp(p2)*exp(-data_arr.Vz(~satind,1)*p1);
+
     %factor=1; 
     %data_arr.V(~satind)=data_arr.V(~satind)*factor;
    % NPL_flag=data_arr.probe;%This is the probenumber/product type flag
