@@ -44,13 +44,6 @@ ind_I2S= find(strcmp('I2S', antype));
 
 ind_VL=[ind_V1L;ind_V2L];
 
-if(~isempty(ind_VL))
-    ind_VL=sort(ind_VL,'ascend');
-   % an_downsample(ind_V1L,tabindex,8)
-    an_downsample(ind_VL,32,tabindex,index)
-   % an_NPL(ind_VL,tabindex,index);
-end
-
 
 spath=sprintf('%s/XXP_save_v2.mat',derivedpath);
 %
@@ -86,6 +79,13 @@ else
 end
 
 
+
+if(~isempty(ind_VL))
+    ind_VL=sort(ind_VL,'ascend');
+   % an_downsample(ind_V1L,tabindex,8)
+    an_downsample(ind_VL,32,tabindex,index)
+   % an_NPL(ind_VL,tabindex,index);
+end
 
 fprintf(1,'Downsampling low frequency measurements\n')
 
@@ -127,7 +127,7 @@ if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
 
 try
     if ~isempty(usc_tabindex)  % some USC (Vz) files might be overwritten by our routine, and creates duplicate entries in usc_tabindex. We should find these and delete them
-        usc_tabindex(:).fname
+       % usc_tabindex(:).fname
         [Uniquefname,junk,k] = unique({usc_tabindex(:).fname});
         % Uniquefname is a sorted list of usc_tabindex.fname
         % k is indices of uniqueC that represents usc_tabindex.fname, some of them might be

@@ -47,6 +47,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     len =length(XXP(i).data.qf);
     filename=XXP(i).info.file;
     filename(end-6:end-4)='ASW';
+
     folder = strrep(XXP(i).info.file,XXP(i).info.shortname,'');
 
     if ~debug(2)%ASW.TAB
@@ -82,8 +83,9 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     dummy_v_ion=SATURATION_CONSTANT;
     %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
     
-    %filter values outside LAP range
     
+    
+    %% Quality value handling!
     qv_Te_exp_belowVknee=exp(-XXP(i).data.Te_exp_belowVknee(:,2));
     delind=isnan(qv_Te_exp_belowVknee)|isinf(qv_Te_exp_belowVknee);
     qv_Te_exp_belowVknee(delind)=0;
@@ -104,18 +106,21 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     qv_asm_ne_5eV(delind)=0;
     
     
-    qv_Vph_knee= exp(-XXP(i).data.Te_exp_belowVknee(:,2));    
+    qv_Vph_knee= exp(-XXP(i).data.Vph_knee(:,2));    
     delind=isnan(qv_Vph_knee)|isinf(qv_Vph_knee);
     qv_Vph_knee(delind)=0;
     
-
+%    figure(6);histogram((exp(-abs(300*error_ion_slope./XP1.Iph0(:,1)))),10000)
     
     error_ion_slope=XXP(i).data.ion_slope(:,2).*XXP(i).data.ion_slope(:,1);
-    qv_iph0=exp(-(300*error_ion_slope./XXP(i).data.Iph0(:,1)));
+    qv_iph0=exp((300*error_ion_slope./XXP(i).data.Iph0(:,1))); % was -1. but Iph0 is already minus. compare with histogram above.
     
     qv_iph0(qv_iph0>1 | qv_iph0<0)=0;
     
     qv_iph0_test = XXP(i).data.Iph0(:,1)./(XXP(i).data.minmaxI(:,1)); %this value should be between 0 and 1;
+
+    
+    %%    %filter values outside LAP range
 
     outside_range= XXP(i).data.Iph0(:,1)>0 | abs(qv_iph0_test)>1.01;    
     %%positive photoemission is not good, also not good: Iph0 larger than
@@ -125,13 +130,29 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     delind=isnan(qv_iph0)|isinf(qv_iph0);
     qv_iph0(delind)=0;
     
+    
+    inside_range= XXP(i).data.Te_exp_belowVknee(:,1)>0 | XXP(i).data.Te_exp_belowVknee(:,1)<30;    
+    XXP(i).data.Te_exp_belowVknee(~inside_range,1)=SATURATION_CONSTANT;
+    qv_Te_exp_belowVknee(~inside_range)=0;%qv
+
+    %out_of_valid_range=nansum(XCAL_struct.Te./XXP(i).data.Te_exp_belowVknee(:,1)>1) > 5; 
+    
+    inside_range= XCAL_struct.Te>0 | XCAL_struct.Te<30;    
+    XCAL_struct.Te(~inside_range)=SATURATION_CONSTANT;
+    qv_Te_XCAL(~inside_range)=0;%qv
+    %ne_5eV= max((1e-6*sqrt(2*pi*CO.me*Te_guess) *e_slope / (IN.probe_A*CO.e.^1.5)),0)
+    %ne_5eV(e_slope = 70nA/V) = 743.467535;
+    %for reference of 70nA, see Engelhardt 2017
+    
+    
+    
 %     qv_iph0_2 =qv_iph0_test;
 %     qv_iph0_2(:) = 0.2407/XXP(i).info.diff_Vb; % this is one, 0.5, 0.33, or 0.25;
 %     qv_iph0_3(:) = exp(-XXP(i).info.diff_Vb*XXP(i).info.Vb_length/60);
 %     
 
      %qv_Te= exp
-     
+     %%print ASW
     for j = 1:len
         
         %remember i & j !!!
@@ -193,6 +214,11 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             USCfname(end-6:end-4)='USC';
             USCshort = strrep(USCfname,folder,'');
             
+            
+            dark=XXP(i).data.lum<1;
+            XXP(i).data.Vz(dark,1)=nan;
+            
+            
             an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
             
             NPLfname=filename;
@@ -221,6 +247,8 @@ function resampled = PHOTABFILE(lapstruct,conditions,XXP)
 %niklas multi sweep method.
 global PHO_tabindex
 global SATURATION_CONSTANT;
+
+PHO_tabindex=[];
 
 lapstruct= fixlap1_cont_iph0(lapstruct,conditions.CONT); % check for contamination & prepare output
 an_diag = 0;

@@ -38,7 +38,7 @@ ind_I1S= find(strcmp('I1S', antype));
 ind_I2S= find(strcmp('I2S', antype));
 
 
-spath=sprintf('%s/XXP_save_v2.mat',derivedpath);
+spath=sprintf('%s/XXP_save.mat',derivedpath);
 %
 % try
 %
@@ -55,9 +55,9 @@ end
 save(spath,'XXP');
 
 if(~isempty(ind_I2S))
-    fprintf(1,' Analysing LAP2 sweeps\n')
-    [XXP2]=an_sweepmain_v2(ind_I2S,tabindex,targetfullname);
-    save(spath,'XXP','XXP2');
+  %  fprintf(1,' Analysing LAP2 sweeps\n')
+   % [XXP2]=an_sweepmain_v2(ind_I2S,tabindex,targetfullname);
+  %  save(spath,'XXP','XXP2');
 end
 
 
@@ -134,7 +134,7 @@ if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
 
 try
     if ~isempty(usc_tabindex)  % some USC (Vz) files might be overwritten by our routine, and creates duplicate entries in usc_tabindex. We should find these and delete them
-        usc_tabindex(:).fname
+        %usc_tabindex(:).fname
         [Uniquefname,junk,k] = unique({usc_tabindex(:).fname});
         % Uniquefname is a sorted list of usc_tabindex.fname
         % k is indices of uniqueC that represents usc_tabindex.fname, some of them might be
@@ -157,6 +157,7 @@ try
 
             end
             usc_tabindex(delindz)=[];
+            NPL_tabindex(delindz)=[];
             %loop finished, make deletion
 
         end
