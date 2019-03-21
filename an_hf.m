@@ -250,7 +250,7 @@ try
                     
                     if ((std(ib1)>1e-12 || std(ib2)>1e-12) ||std(vp1)>1e-8 ||std(vp2)>1e-8) ...
                             ||((strcmp(fileflag(1),'V') &&  std(ib)>1e-12) ||(strcmp(fileflag(1),'I') &&  std(vp)>1e-8))
-                        qfarray=[qfarray;10];
+                        qfarray=[qfarray;10]; %bias change
                         
                     end
                     if(lens < nfft)
