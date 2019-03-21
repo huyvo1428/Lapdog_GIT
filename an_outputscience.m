@@ -109,6 +109,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     
     satur_ind=XXP(i).data.Vph_knee(:,1)~=SATURATION_CONSTANT;
     
+    %Sweep_qv_dir_and_step = (1-abs(XXP(i).info.diff_Vb-0.05))/0.81;% range best bias resolution, from 0 to 1. Good resolution but poor direction(negative) is a bit less good
     Sweep_qv_range = abs(XXP(i).info.Vb_length*XXP(i).info.diff_Vb/60);% range of sweep, from 0 to 1 (max), scalar
     Sweep_qv_signal=exp(-1./(abs((XXP(i).data.minmaxI(:,1)/4e-9))));%also from 0 (low signal-to noise ion current) to 1(high signal); vector scaled to 4nA
     qv_Vph_knee=min((Sweep_qv_range*Sweep_qv_signal)./(abs(XXP(i).data.Vph_knee(:,2).*XXP(i).data.Vph_knee(:,1))),1);%from 0 to 1, Vph_knee quality convolved with sweep quality    
@@ -116,10 +117,26 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     %qv_Vphknee=((abs(XXP(i).data.Vph_knee(:,2).*XXP(i).data.Vph_knee(:,1))))
     
     
+    if XXP(i).info.diff_Vb < 0.6 %worst resolution, 0.72V
+        Sweep_qv_step=0.7;
+    elseif XXP(i).info.diff_Vb < 0.4 %medium resolution, 0.48V,
+        Sweep_qv_step=0.8;
+    elseif XXP(i).info.diff_Vb < 0.2 %highest resolution, 0.24V
+        Sweep_qv_step=1;
+    elseif XXP(i).info.diff_Vb < -0.3 %highest resolution, 0.24V, shitty direction
+        Sweep_qv_step=0.9;
+    elseif XXP(i).info.diff_Vb < -0.6 %medium resolution, 0.48V, shitty direction
+        Sweep_qv_step=0.8;
+    else %Worst direction, worst resolution doesn't exist.
+        Sweep_qv_step=0.6;
+    end
+    
+    qv_Vph_knee=qv_Vph_knee*Sweep_qv_step;
+    
     %qv_Vph_knee= exp(-XXP(i).data.Vph_knee(:,2));    
     delind=isnan(qv_Vph_knee)|isinf(qv_Vph_knee);
     qv_Vph_knee(delind)=0;
-    qv_Vph_knee(satur_ind)=Sweep_qv_signal(satur_ind)*Sweep_qv_range; % if shadowed, or otherwise. It can be nice to see the quality of the sweep.
+    qv_Vph_knee(satur_ind)=Sweep_qv_signal(satur_ind)*Sweep_qv_range*Sweep_qv_step; % if shadowed, or otherwise. It can be nice to see the quality of the sweep.
     
 %    figure(6);histogram((exp(-abs(300*error_ion_slope./XP1.Iph0(:,1)))),10000)
     
