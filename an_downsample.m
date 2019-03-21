@@ -527,7 +527,7 @@ try
             data_arr.t_obt=tfoutarr{1,2};
             data_arr.qf=foutarr{1,8};
             data_arr.printboolean=foutarr{1,7};
-            data_arr.probe=dark_ind_1;
+            data_arr.probe=dark_ind;
             data_arr.probe(:)=1;%qflag
             
             
