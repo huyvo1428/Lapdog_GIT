@@ -109,7 +109,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     
     satur_ind=XXP(i).data.Vph_knee(:,1)~=SATURATION_CONSTANT;
     
-    Sweep_qv_dir_and_step = 1-abs(XXP(i).info.diff_Vb-0.05))/0.81;% range best bias resolution, from 0 to 1. Good resolution but poor direction(negative) is a bit less good
+    %Sweep_qv_dir_and_step = (1-abs(XXP(i).info.diff_Vb-0.05))/0.81;% range best bias resolution, from 0 to 1. Good resolution but poor direction(negative) is a bit less good
     Sweep_qv_range = abs(XXP(i).info.Vb_length*XXP(i).info.diff_Vb/60);% range of sweep, from 0 to 1 (max), scalar
     Sweep_qv_signal=exp(-1./(abs((XXP(i).data.minmaxI(:,1)/4e-9))));%also from 0 (low signal-to noise ion current) to 1(high signal); vector scaled to 4nA
     qv_Vph_knee=min((Sweep_qv_range*Sweep_qv_signal)./(abs(XXP(i).data.Vph_knee(:,2).*XXP(i).data.Vph_knee(:,1))),1);%from 0 to 1, Vph_knee quality convolved with sweep quality    

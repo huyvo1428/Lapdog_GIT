@@ -33,11 +33,11 @@ switch mode
     
     %BASIC SOLUTION ONLY LOOKS FOR CLOSEST POINT
 
-    P_interp1=nan(1,length(t_et));%initialise
+    P_interp1=nan(length(t_et),1);%initialise
     P_interp2=P_interp1;
-    for i = 1:length(t_et)
-        [junk,P_interp1(i)]= interp1(USC_FIT.t_et,USC_FIT.P(:,1),t_et(i));
-        [junk,P_interp2(i)]= interp1(USC_FIT.t_et,USC_FIT.P(:,2),t_et(i));
+    for i = 1:length(t_et) %interpolate fit coefficients between closest points
+        P_interp1(i)= interp1(USC_FIT.t_et,USC_FIT.P(:,1),t_et(i));
+        P_interp2(i)= interp1(USC_FIT.t_et,USC_FIT.P(:,2),t_et(i));
     end
     
     %[junk,ind]= min(abs(USC_FIT.t_et-t_et(1)));        
@@ -102,25 +102,25 @@ switch mode
     data_arr.NPL=data_arr.Vz;
     satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
 
-    %data_arr.NPL(~satind)=exp(p2)*exp(-data_arr.Vz(~satind,1)*p1);
 
     %MORE ADVANCED LINEAR INTERPOLATION
-    P_interp1=nan(1,length(data_arr.t0));%initialise
+    P_interp1=nan(length(data_arr.t0),1);%initialise
     P_interp2=P_interp1;
     for i = 1:length(data_arr.t0)
-        [junk,P_interp1(i)]= interp1(USC_FIT.t_et,USC_FIT.P(:,1),data_arr.t0(i)) ;
-        [junk,P_interp2(i)]= interp1(USC_FIT.t_et,USC_FIT.P(:,2),data_arr.t0(i)) ;
+        P_interp1(i)= interp1(USC_FIT.t_et,USC_FIT.P(:,1),data_arr.t0(i)) ;
+        P_interp2(i)= interp1(USC_FIT.t_et,USC_FIT.P(:,2),data_arr.t0(i)) ;
     end
     
     %[junk,ind]= min(abs(USC_FIT.t_et-t_et(1)));        
     %p1=USC_FIT.P(ind,1);
     %p2=USC_FIT.P(ind,2);
     %y1 = exp(p2)*exp(usc.usc(indz)*p1);
-    data_arr.NPL=data_arr.V;
-    satind=data_arr.V==SATURATION_CONSTANT;
+    data_arr.NPL=data_arr.Vz(:,1);
+    satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
     
     %data_arr.NPL(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
-    data_arr.NPL(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.V(~satind).*P_interp1(~satind));
+    data_arr.NPL(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.Vz(~satind).*P_interp1(~satind));
+    %data_arr.NPL(~satind)=exp(p2)*exp(-data_arr.Vz(~satind,1)*p1);
 
     
     
