@@ -20,7 +20,7 @@ hold_flag=0;
 i=1; %
 j=0;
 
-global SATURATION_CONSTANT VFLOATMACROS
+global MISSING_CONSTANT VFLOATMACROS
 
 
 try
@@ -70,7 +70,7 @@ try
 %       %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
 %       %apparently an if/else case is 2.13 times faster than querying
 %       %both columns
-        scantemp{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT) = NaN;
+        scantemp{1,test_column}(scantemp{1,test_column}==MISSING_CONSTANT) = NaN;
 %       %-------------------------------------------------------------%
 
         timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};

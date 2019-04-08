@@ -52,7 +52,6 @@
 % (1) declare GLOBAL variables (in the caller workspace) so that they can be accessed and saved to file,
 % (2) save the Lapdog variables (in the caller workspace),
 % (3) retrieve variable values (from the caller workspace; they are many).
-% 
 %
 %
 % Initially created (reorganized) 2018-11-01 by Erik P G Johansson, IRF Uppsala.
@@ -74,7 +73,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % saving (to maximize backward compatibility).
     % (NEED? : Caller decides if DERIV1 or EDDER.)
     % --
-    % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex, SATURATION_CONSTANT-->MISSING_CONSTANT.
+    % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex.
     % PROPOSAL: Only save input to create_LBL_files in .mat file.
     %   PRO: Avoids problem of saving/loading global variables.
     %   CON: Sensitive to problems with .mat files not being backward-compatible.
@@ -170,7 +169,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % (2) missing new global variables, leading to .mat incompatibility.
     %===================================================================================================================
     globalVarsList = who('global');
-    % globalVarsList = {'N_FINAL_PRESWEEP_SAMPLES', 'SATURATION_CONSTANT', 'tabindex', 'an_tabindex', ...
+    % globalVarsList = {'N_FINAL_PRESWEEP_SAMPLES', 'MISSING_CONSTANT', 'tabindex', 'an_tabindex', ...
     % 'ASW_tabindex', 'PHO_tabindex', 'usc_tabindex'};   % "index" is not a global variable.
     for iVar = 1:numel(globalVarsList)
         cmd = sprintf('global %s', globalVarsList{iVar});

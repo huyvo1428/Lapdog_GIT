@@ -14,7 +14,7 @@
 % DESIGN INTENT
 % =============
 % Should not take values from anywhere (through execution). ==> Should not read "global" constants (variables declared as
-% "global". Ex: SATURATION_CONSTANT, N_FINAL_PRESWEEP_SAMPLES
+% "global". Ex: MISSING_CONSTANT, N_FINAL_PRESWEEP_SAMPLES
 %
 %
 % Initially created 2018-08-22 by Erik P G Johansson, IRF Uppsala
@@ -49,8 +49,8 @@ classdef constants < handle
     properties(Access=public)
         ROSETTA_NAIF_ID                        = -226;     % Used by SPICE.
         ODL_INDENTATION_LENGTH                 = 4;
-        MISSING_CONSTANT                       = -1000;    % Same as SATURATION_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
-        N_FINAL_PRESWEEP_SAMPLES               = 16;       % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
+        MISSING_CONSTANT                       = -1000000000;    % Same as global variable MISSING_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
+        N_FINAL_PRESWEEP_SAMPLES               = 16;             % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
         PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
         PRE_CREATELBL_SAVED_INDEX_PREFIX       = 'pre_createLBL_workspace.index.';
         
@@ -85,13 +85,13 @@ classdef constants < handle
                 error('Wrong number of arguments.')
             end
             
-            % ASSERTION: Compare with global constant with the same meaning.
-            if ismember('SATURATION_CONSTANT', who('global'))
-                % CASE: SATURATION_CONSTANT is already a global constant, although it might not have been declared as
+            % ASSERTION: Compare with global constant which should have the same value.
+            if ismember('MISSING_CONSTANT', who('global'))
+                % CASE: MISSING_CONSTANT is already a global constant, although it might not have been declared as
                 % such in the current workspace.
-                global SATURATION_CONSTANT
-                if obj.MISSING_CONSTANT ~= SATURATION_CONSTANT
-                    error('Global variable SATURATION_CONSTANT inconsistent with internally hard-coded MISSING_CONSTANT.')
+                global MISSING_CONSTANT
+                if obj.MISSING_CONSTANT ~= MISSING_CONSTANT
+                    error('Global variable MISSING_CONSTANT inconsistent with internally hard-coded MISSING_CONSTANT.')
                 end                                
             end
 
