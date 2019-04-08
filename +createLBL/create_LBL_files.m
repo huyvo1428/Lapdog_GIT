@@ -263,7 +263,7 @@ function create_LBL_files(Data)
                     clear   startStopTimes   LhtKvpl   iIndex   LblData
                     
                 catch Exception
-                    createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
+                    EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
                     fprintf(1,'Aborting A1P LBL file for A1P_tabindex - Continuing\n');
                 end
             end
@@ -297,7 +297,7 @@ function create_LBL_files(Data)
                     clear   startStopTimes   LhtKvpl   LblData
                     
                 catch Exception
-                    createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                    EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
                     fprintf(1,'Aborting LBL file for ASW_tabindex - Continuing\n');
                 end
             end
@@ -333,7 +333,7 @@ function create_LBL_files(Data)
                     clear   startStopTimes   LhtKvpl   LblData
                     
                 catch Exception
-                    createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                    EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
                     fprintf(1,'Aborting LBL file for USC_tabindex - Continuing\n');
                 end
             end
@@ -365,7 +365,7 @@ function create_LBL_files(Data)
                     clear   LhtKvpl   LblData
                     
                 catch Exception
-                    createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                    EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
                     fprintf(1,'Aborting LBL file for PHO_tabindex - Continuing\n');
                 end
             end
@@ -398,7 +398,7 @@ function create_LBL_files(Data)
                 clear   startStopTimes   LhtKvpl   LblData
                 
             catch Exception
-                createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
                 fprintf(1,'Aborting LBL file for EFL_tabindex - Continuing\n');
             end
         end
@@ -431,7 +431,7 @@ function create_LBL_files(Data)
                 clear   startStopTimes   LhtKvpl   LblData
                 
             catch Exception
-                createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
                 fprintf(1,'Aborting LBL file for NPL_tabindex - Continuing\n');
             end
         end
@@ -614,7 +614,7 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
             
             
         catch Exception
-            createLBL.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
+            EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
             fprintf(1,'lapdog: Skipping LBL file (an_tabindex) - Continuing\n');
         end
 
