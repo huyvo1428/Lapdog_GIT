@@ -233,10 +233,10 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % NOTE: Can not write a function for this, since evalin can only work on the caller's workspace, not the caller's
     % caller.
     %===================================================================================================================
-    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex'};   % Potentially undefined variables.
+    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex', 'NPL_tabindex'};   % Potentially undefined variables.
     for i = 1:length(POT_UNDEF_VARS)
-        % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which "exist" may respond to
-        %                      if not specifying "var".
+        % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which the function "exist"
+        %                      may detect/respond to if not specifying "var".
         if evalin(MWS, sprintf('exist(''%s'', ''var'')', POT_UNDEF_VARS{i}))
             temp = evalin(MWS, POT_UNDEF_VARS{i});                            % NOTE: evalin
         else
@@ -280,7 +280,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     Clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable case for consistency.
     Clfd.PHO_tabindex      = PHO_tabindex;
     Clfd.EFL_tabindex      = efl_tabindex;    % Changing variable case for consistency.
-    Clfd.NPL_tabindex      = evalin(MWS, 'NPL_tabindex');
+    Clfd.NPL_tabindex      = NPL_tabindex;
     
     Clfd.A1P_tabindex      = der_struct;     % Changing variable name for consistency.
     Clfd.C                 = C;
