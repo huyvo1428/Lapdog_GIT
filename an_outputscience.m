@@ -14,7 +14,7 @@ iph0conditions.I_Vb_eps=1.0;%V epsilon, from generating lap1vector
 iph0conditions.time_window=1*60*60;%s  time window
 iph0conditions.time_samples=20;%minimum samples in time window
 iph0conditions.samples=11;%Samples minimum.
-iph0conditions.CONT = +1.51e-9;
+iph0conditions.CONT = -1.51e-9;
 %default value of CONT = +1.51e-9;
 % for i= 1:XXP(1).info.nroffiles
 %
@@ -37,7 +37,6 @@ if ~debug(1) %PHO.TAB
 PHO= struct_cleanup(XXP,dataflds);
 
 PHO= PHOTABFILE(PHO,iph0conditions,XXP);
-
 
 end
 
@@ -394,6 +393,7 @@ for i = min(inter):max(inter) %main for loop
     curr= resampled.curr(k,colz).';
     %curr = lapstruct.curr(indz);
     resampled.ion_slope(k,colz)=lapstruct.ion_slope(indz,1);
+    resampled.ion_slope_sigma(k,colz)=lapstruct.ion_slope(indz,2);
     ion_slope = resampled.ion_slope(k,colz).';
    % ion_slope = lapstruct.ion_slope(indz,1); %need non structure variables.
     resampled.t0(k,colz) = lapstruct.t0(indz);    
@@ -577,7 +577,7 @@ for i = min(inter):max(inter) %main for loop
             %t_utc is now a string with more than 6 decimals precision, but we
             %force the output to only print the first 6.
             %row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
-            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %4.2f, %03i\r\n', t_utc(k,1:26), t_obt(k), resampled.iph0(k),dummy_qv,qf_array(k));
+            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %4.2f, %03i\r\n', t_utc(k,1:26), t_obt(k), resampled.iph0(k),resampled.iph0_sigma(k)/resampled.iph0(k),qf_array(k));
 
             rowcount=rowcount+1;
             PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows

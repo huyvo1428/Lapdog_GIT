@@ -50,21 +50,24 @@ switch mode
     %data_arr.NPL(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
     data_arr.NPL(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.V(~satind).*P_interp1(~satind));
 
-    
-    
-    
     %factor=1; 
     %data_arr.V(~satind)=data_arr.V(~satind)*factor;
     NPL_flag=data_arr.probe;%This is the probenumber/product type flag
+    %take this out of the loop
+    qvalue=max(1-abs(data_arr.V_sigma(:)./data_arr.V(:)),0.5);
+    qvalue(satind)=0;
+    
     for j =1:length(data_arr.V)
         
         if data_arr.printboolean(j)~=1 %check if measurement data exists on row
             %fprintf(awID,'%s, %16.6f,,,,\r\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j));
             % Don't print zero values.
         else
-            qvalue=max(1-exp(-abs(data_arr.V_sigma(j)/data_arr.V(j))),0.5);
+            %qvalue=max(1-abs(data_arr.V_sigma(j)/data_arr.V(j)),0.5);
+            %qvalue=max(1-abs((data_arr{1,6}(j)  /data_arr{1,5}(j))),0.5);
+
             %data_arr.V(j)=MISSING_CONSTANT;
-            row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc(j,:),data_arr.t_obt(j), data_arr.NPL(j),qvalue,NPL_flag(j),data_arr.qf(j));
+            row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc(j,:),data_arr.t_obt(j), data_arr.NPL(j),qvalue(j),NPL_flag(j),data_arr.qf(j));
 %            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
 
             N_rows = N_rows + 1;
