@@ -3,7 +3,8 @@
 % DESIGN INTENT
 % =============
 % Class which stores hard-coded data related to the creation of LBL files. Should at least collect functions which
-% define and return data structures defining LBL files, one file/data type per function.
+% define and return data structures defining LBL files, one file/data type per function. Should not write LBL files.
+% Should not catch errors.
 %
 % The class is instantiated with variable values which are anyway likely constant during a session, and can be used by
 % the methods (e.g. whether EDDER/DERIV1, MISSING_CONSTANT etc).
@@ -32,10 +33,6 @@
 %
 classdef definitions < handle
     % PROPOSAL: Change class to immutable non-handle class.
-    %
-    % PROPOSAL: POLICY: Should collect hard-coded data.
-    %           ==> Should not write LBL files.
-    % NEED: The caller should have control over error-handling, LBL-TAB consistency checks.
     %
     % PROPOSAL: Better name.
     %   PROPOSAL: definition_creator, LBL_definition_creator.
@@ -881,7 +878,7 @@ classdef definitions < handle
                 ['Plasma density derived from individual E field mode floating potential LF measurements on an illuminated probe.', ...
                 ' The derivation additionally uses low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', ...
                 ' If no probe is illuminated, then the corresponding row is removed.', ...
-                sprintf(' A value of %g means that corresponding sample in the source data was saturated.', obj.MISSING_CONSTANT)], ...
+                sprintf(' A value of %g means that the corresponding sample in the source data was saturated.', obj.MISSING_CONSTANT)], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'QUALITY_VALUE',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'DATA_SOURCE',    'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...

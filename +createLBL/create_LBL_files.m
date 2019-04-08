@@ -119,13 +119,13 @@ function create_LBL_files(Data)
     executionBeginDateVec = clock;    % NOTE: NOT a scalar (e.g. number of seconds), but [year month day hour minute seconds].
     prevWarningsSettings = warning('query');
     warning('on', 'all')
-    
 
-    
+
+
     COTLF_SETTINGS = struct('indentationLength', Data.C.ODL_INDENTATION_LENGTH);
-    
 
-    
+
+
     % Set policy for errors/warning
     % (1) when failing to generate a file,
     % (2) when LBL files are (believed to be) inconsistent with TAB files.

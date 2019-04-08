@@ -121,6 +121,31 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %
     % PROPOSAL: Change to permit overwrite.
     % PROPOSAL: Remove "index" from pre_createLBL_workspace.mat.
+    %
+    % PROPOSAL: Save global variables by first declaring them global in the LOCAL workspace, not the CALLER workspace.
+    % PROPOSAL: General-purpose functionality for saving and loading the "state" of MATLAB, i.e. all variables,
+    %           including
+    %           (1) non-global variables
+    %           (2) global variables, both those currently (a) accessible, and (b) not accessible in the calling workspace.
+    %           (3) variables too large for .mat files (uses EJ_library.utils.store_split_array).
+    %       NOTE: Empirically, it appears that a non-global variable is destroyed after a global variable with the same
+    %             name is made accessible. (Not entirely sure.)
+    %
+    %   PROPOSAL: Use a script (so that evalin could optionally be used).
+    %   PROPOSAL: Save/restore global variables separately, by declaring them in the local workspace inside a function.
+    %       PRO: No name collisions between non-global and global variables (except non-global variables used by the
+    %           algorithm).
+    %   PROPOSAL: To avoid using local variables (e.g. if implemented as script, or in local function which declares
+    %               global variables), use a function with a persistent variable. Can store multiple variables using
+    %               struct and string argument.
+    %   CON/PROBLEM: There appears to be no way to distinguish a (1) a local variable, and (2) a locally available global
+    %   variable with the same name. ==> Can not restore properly.
+    %       PROPOSAL: Save (1) all locally defined variables (incl. available global variables), and (2) all global variables
+    %           separately. If there a globa variable is available locally, then there is an overlap, and the same
+    %           variable will be saved twice.
+    %           CON: Can not restore accurately because does not know if local variables.
+    %               PROPOSAL: Can use isglobal.
+    %                   CON: Will be discontinued, and there is no replacement.
     
     
     
@@ -199,7 +224,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
             % MAT-file whose version is older than 7.3.". Note that it is a warning, not an error. Lapdog continues to
             % execute, but the .mat file saved to disk simply does not contain the "index" variables. One should in
             % principle be able to solve this by using flag "-v7.3" but experience is that this is (1) impractically
-            % slow, and (2) result in much larger .mat files.
+            % slow, and (2) results in much larger .mat files.
             
             saveCmd = sprintf('save(''%s'')', savedWorkspaceFile);    % TEMPORARY. Should really exclude "index" variable.
             executionBeginDateVec = clock;
