@@ -2,7 +2,7 @@
 
 function []=an_Efld_debug(red_tabindex,red_index,kernelFile)
 
-global efl_tabindex SATURATION_CONSTANT target
+global efl_tabindex MISSING_CONSTANT target
   
 debug=1;
 if debug
@@ -43,7 +43,7 @@ end
         
 %       %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
         test_column = 4;
-        scantemp{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT) = NaN;
+        scantemp{1,test_column}(scantemp{1,test_column}==MISSING_CONSTANT) = NaN;
 %       %-------------------------------------------------------------%
 
 
@@ -58,7 +58,7 @@ end
         fclose(ErID);
         
 %       %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-        scantemp2{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT) = NaN;
+        scantemp2{1,test_column}(scantemp{1,test_column}==MISSING_CONSTANT) = NaN;
 %       %-------------------------------------------------------------%
              
 
@@ -74,7 +74,7 @@ end
     
         E_field2minus1 = scantemp2{1,4}-scantemp{1,4};
         %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-        E_field2minus1(isnan(E_field2minus1))=SATURATION_CONSTANT;
+        E_field2minus1(isnan(E_field2minus1))=MISSING_CONSTANT;
         %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
  
         qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!

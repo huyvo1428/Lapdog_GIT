@@ -116,7 +116,7 @@ function [AsgList, endRowsList] = read_keys_values_list(rowStrList)
     LINE_BREAK = sprintf('\r\n');   % String that represents line break in value strings. NOTE: Additionally hardcoded in various regexp..
     WSLB_RE         = '[ \t\r\n]*';                   % WSLB = Whitespace (and tab), Line Break. RE = Regular expression.
     KEYWORD_RE      = '[A-Za-z0-9^:_]+';              % NOTE: Must include ":" due to "ROSETTA:". Includes lower case, which PDS3 does not allow?
-    VALUE_STRING_RE = '([A-Za-z0-9_:.-]+|"[^"]*")';   % NOTE: Must include ":", "-", and "." due to e.g. START_TIME = 2016-06-28T23:58:10.148 .
+    VALUE_STRING_RE = '([A-Za-z0-9_:.+-]+|"[^"]*")';  % NOTE: Must include ":", "-", and "." due to e.g. START_TIME = 2016-06-28T23:58:10.148.  "+" due to MISSING_CONSTANT = -1.0e+09.
     
     keyList   = cell(0, 1);
     valueList = cell(0, 1);

@@ -14,7 +14,7 @@ j=0;
 
 
 %%%------ MAKE E-FIELD FILES FIRST -------------------------------- %%%%
-global SATURATION_CONSTANT VFLOATMACROS
+global MISSING_CONSTANT VFLOATMACROS
 k=0;
 tabfilez=([tabindex{an_ind(:) ,3}]);
 while k<length(an_ind) % alternatively length(tabfilez)
@@ -37,7 +37,7 @@ end
 
 function []=an_Efld(red_tabindex,red_index,kernelFile)
 
-global efl_tabindex SATURATION_CONSTANT target
+global efl_tabindex MISSING_CONSTANT target
 
 
 %calling this inside the loop was madness
@@ -86,7 +86,7 @@ end
 
 %       %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
         test_column = 4;
-        scantemp{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT) = NaN;
+        scantemp{1,test_column}(scantemp{1,test_column}==MISSING_CONSTANT) = NaN;
 %       %-------------------------------------------------------------%
 
 
@@ -101,7 +101,7 @@ end
         fclose(ErID);
 
 %       %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-        scantemp2{1,test_column}(scantemp{1,test_column}==SATURATION_CONSTANT) = NaN;
+        scantemp2{1,test_column}(scantemp{1,test_column}==MISSING_CONSTANT) = NaN;
 %       %-------------------------------------------------------------%
 
 
@@ -221,7 +221,7 @@ end
 
 
             %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-            efh.ef_out(isnan(efh.ef_out))=SATURATION_CONSTANT;
+            efh.ef_out(isnan(efh.ef_out))=MISSING_CONSTANT;
             %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
 
             efh.freq_flag=0*ones(1,length(efh.t_obt)); %7 = 64 Dwnsmpl 64 Moving average

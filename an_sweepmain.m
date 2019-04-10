@@ -6,7 +6,7 @@ global an_tabindex der_struct;
 global target;
 global diag_info
 global CO IN     % Physical & instrumental constants
-global SATURATION_CONSTANT;
+global MISSING_CONSTANT;
 
 
 global assmpt;
@@ -87,8 +87,8 @@ try
         
         
         %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-        satur_ind = Iarr==SATURATION_CONSTANT; % logical matrix which is true if any current is saturated (pds outputs -1000 as of 6/3 2018)
-        %Iarr(Iarr==SATURATION_CONSTANT)    = NaN;
+        satur_ind = Iarr==MISSING_CONSTANT; % logical matrix which is true if any current is saturated (pds outputs -1000 as of 6/3 2018)
+        %Iarr(Iarr==MISSING_CONSTANT)    = NaN;
         Iarr(satur_ind) = NaN;% This should also work, so we don't have to
         %do this twice
         %

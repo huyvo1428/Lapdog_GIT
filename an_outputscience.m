@@ -1,5 +1,5 @@
 function []= an_outputscience(XXP)
-global SATURATION_CONSTANT;
+global MISSING_CONSTANT;
 global ASW_tabindex
 ASW_tabindex=[];
 CONT_macros=[516;525;610;611;613;615;617;624;816;817;900;901;903;904;905;916;926];
@@ -60,26 +60,26 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 %     delind=find(isnan(XXP(i).data.Iph0(:,1)));
 %     if ~isempty(delind)
 %         for k=1:length(delind)
-%             XXP(i).data.Iph0(delind(k),1)= SATURATION_CONSTANT;
+%             XXP(i).data.Iph0(delind(k),1)= MISSING_CONSTANT;
 %         end
 %     end
 %     
 %    
 
-    %This line can generate strange error if SATURATION_CONSTANT isn't
+    %This line can generate strange error if MISSING_CONSTANT isn't
     %already well defined
 
-    XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=SATURATION_CONSTANT;
+    XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=MISSING_CONSTANT;
     
     %fix contamination issues)
     path_to_mat_file='MIP_v23_forlapdog.mat';
     %    path_to_mat_file='MIP_v23_forlapdog.mat';
     XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
     
-    dummy_ne=SATURATION_CONSTANT;
-    dummy_Te_XCAL=SATURATION_CONSTANT;
+    dummy_ne=MISSING_CONSTANT;
+    dummy_Te_XCAL=MISSING_CONSTANT;
     dummy_qv=1.0;
-    dummy_v_ion=SATURATION_CONSTANT;
+    dummy_v_ion=MISSING_CONSTANT;
     %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
     
     
@@ -106,7 +106,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     
     
     
-    satur_ind=XXP(i).data.Vph_knee(:,1)~=SATURATION_CONSTANT;
+    satur_ind=XXP(i).data.Vph_knee(:,1)~=MISSING_CONSTANT;
     
     %Sweep_qv_dir_and_step = (1-abs(XXP(i).info.diff_Vb-0.05))/0.81;% range best bias resolution, from 0 to 1. Good resolution but poor direction(negative) is a bit less good
     Sweep_qv_range = abs(XXP(i).info.Vb_length*XXP(i).info.diff_Vb/60);% range of sweep, from 0 to 1 (max), scalar
@@ -152,20 +152,20 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     outside_range= XXP(i).data.Iph0(:,1)>0 | abs(qv_iph0_test)>1.01;    
     %%positive photoemission is not good, also not good: Iph0 larger than
     %%most negative current in sweep.
-    XXP(i).data.Iph0(outside_range,1)=SATURATION_CONSTANT;
+    XXP(i).data.Iph0(outside_range,1)=MISSING_CONSTANT;
     qv_iph0(outside_range)=0;%qv
     delind=isnan(qv_iph0)|isinf(qv_iph0);
     qv_iph0(delind)=0;
     
     
     inside_range= XXP(i).data.Te_exp_belowVknee(:,1)>0 | XXP(i).data.Te_exp_belowVknee(:,1)<30;    
-    XXP(i).data.Te_exp_belowVknee(~inside_range,1)=SATURATION_CONSTANT;
+    XXP(i).data.Te_exp_belowVknee(~inside_range,1)=MISSING_CONSTANT;
     qv_Te_exp_belowVknee(~inside_range)=0;%qv
 
     %out_of_valid_range=nansum(XCAL_struct.Te./XXP(i).data.Te_exp_belowVknee(:,1)>1) > 5; 
     
     inside_range= XCAL_struct.Te>0 | XCAL_struct.Te<30;    
-    XCAL_struct.Te(~inside_range)=SATURATION_CONSTANT;
+    XCAL_struct.Te(~inside_range)=MISSING_CONSTANT;
     qv_Te_XCAL(~inside_range)=0;%qv
     %ne_5eV= max((1e-6*sqrt(2*pi*CO.me*Te_guess) *e_slope / (IN.probe_A*CO.e.^1.5)),0)
     %ne_5eV(e_slope = 70nA/V) = 743.467535;
@@ -273,7 +273,7 @@ function resampled = PHOTABFILE(lapstruct,conditions,XXP)
 %takes a SORTED struct with A1S fields, groups them and computes iph0 via
 %niklas multi sweep method.
 global PHO_tabindex
-global SATURATION_CONSTANT;
+global MISSING_CONSTANT;
 
 PHO_tabindex=[];
 
@@ -474,14 +474,14 @@ for i = min(inter):max(inter) %main for loop
             
             %resampled.iph0_sigma(i) = S2.sigma(2);
         else
-            resampled.iph0(k) = SATURATION_CONSTANT;% fill with nan.
+            resampled.iph0(k) = MISSING_CONSTANT;% fill with nan.
             resampled.iph0_sigma(k) = nan;
             
         end
         
     else
         
-        resampled.iph0(k) = SATURATION_CONSTANT;% fill with nan.
+        resampled.iph0(k) = MISSING_CONSTANT;% fill with nan.
         resampled.iph0_sigma(k) = nan;
         resampled.P(k,1:2) = nan;
         
@@ -562,13 +562,13 @@ for i = min(inter):max(inter) %main for loop
 
         dummy_qv=0.5;
 
-        if (isempty(indz) && (rowcount>0))   % nothing here & file open. fill with SATURATION_CONSTANT
+        if (isempty(indz) && (rowcount>0))   % nothing here & file open. fill with MISSING_CONSTANT
            % t_utc(end-8:end)='59.999797';
            % t_utc(k,end-8:end)='00.000000';
             t_utc(k,21:26)='000000';%increased UTC precision, now we need to floor away this 0.5s margin
             %t_utc is now a string with more than 6 decimals precision, but we
             %force the output to only print the first 6.
-            fprintf(twID,'%s, %16.6f, %14.7e, %4.2f, %03i\r\n', t_utc(k,1:26), t_obt(k), SATURATION_CONSTANT,0,qf_array(k));
+            fprintf(twID,'%s, %16.6f, %14.7e, %4.2f, %03i\r\n', t_utc(k,1:26), t_obt(k), MISSING_CONSTANT,0,qf_array(k));
             rowcount=rowcount+1;
 
         elseif (~isempty(indz))
@@ -602,8 +602,8 @@ for i = min(inter):max(inter) %main for loop
 %             rowcount=rowcount+1;
 % 
 % 
-%         else % nothing here. fill with SATURATION_CONSTANT
-%             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i', utc, t_obtz(k), SATURATION_CONSTANT,0,qf_array(k));
+%         else % nothing here. fill with MISSING_CONSTANT
+%             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i', utc, t_obtz(k), MISSING_CONSTANT,0,qf_array(k));
 %             rowcount=rowcount+1;
 % 
 % 
@@ -767,7 +767,7 @@ end
 
 function XCAL_L= XCAL_lapdog(LAP,path_to_matfile)
 global MIP %change to persistent later
-global CO IN SATURATION_CONSTANT assmpt
+global CO IN MISSING_CONSTANT assmpt
 
 
 pseudo_int_treshold=2.5e-1; %to filter out most unimportant MIP measurements. Some others will be removed later
@@ -779,7 +779,7 @@ pseudo_int_treshold=2.5e-1; %to filter out most unimportant MIP measurements. So
 
 XCAL_L=[];
 XCAL_L.ionV=LAP.t0;
-XCAL_L.ionV(:)=SATURATION_CONSTANT; %default to missing constant
+XCAL_L.ionV(:)=MISSING_CONSTANT; %default to missing constant
 
 XCAL_L.t0=XCAL_L.ionV;
 XCAL_L.t0(:)=nan; %default to nan, for debug plotting
@@ -880,9 +880,9 @@ end
 
 
 delind =isnan(XCAL_M.ionV)|isinf(XCAL_M.ionV)|XCAL_M.ionV==0;
-XCAL_M.ionV(delind)=SATURATION_CONSTANT;
+XCAL_M.ionV(delind)=MISSING_CONSTANT;
 delind =isnan(XCAL_M.Te)|isinf(XCAL_M.Te)|XCAL_M.ionV==0;
-XCAL_M.Te(delind)=SATURATION_CONSTANT;
+XCAL_M.Te(delind)=MISSING_CONSTANT;
 
 %change to XCAL_L with LAP indexing, instead of MIP indexing
 

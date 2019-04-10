@@ -6,7 +6,7 @@
 %Outputs USC.TAB files for the RPCLAP archive
 function [] = an_USCprint(USCfname,USCshort,time_arr,data_arr, index_nr_of_firstfile,timing,mode)
 
-global usc_tabindex SATURATION_CONSTANT
+global usc_tabindex MISSING_CONSTANT
 
 fprintf(1,'printing %s, mode: %s\n',USCfname, mode);
 %'hello'
@@ -23,7 +23,7 @@ switch mode
     case 'vfloat'        
 %if strcmp(mode,'vfloat')
 
-    satind=data_arr{1,5}==SATURATION_CONSTANT;
+    satind=data_arr{1,5}==MISSING_CONSTANT;
     factor=-1; 
     data_arr{1,5}(~satind)=data_arr{1,5}(~satind)*factor;
     usc_flag=data_arr{1,2};%This is the probenumber flag
@@ -67,7 +67,7 @@ switch mode
         %a proxy to a Spacecraft potential, we could manipulate this factor.
         %possibly to something like 1/0.8, or something.
         
-        satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
+        satind=data_arr.Vz(:,1)==MISSING_CONSTANT;
         %data_arr.Vz(satind,1)=data_arr.Vz(satind,1)*sign(factor); %either -1 or 1. will later be multiplied with 1, such that -1000 is still the only valid saturation constant
         data_arr.Vz(~satind,1)=factor*data_arr.Vz(~satind,1);
         %Vz= data_arr.Vz;
