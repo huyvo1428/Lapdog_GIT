@@ -52,7 +52,6 @@
 % (1) declare GLOBAL variables (in the caller workspace) so that they can be accessed and saved to file,
 % (2) save the Lapdog variables (in the caller workspace),
 % (3) retrieve variable values (from the caller workspace; they are many).
-% 
 %
 %
 % Initially created (reorganized) 2018-11-01 by Erik P G Johansson, IRF Uppsala.
@@ -74,7 +73,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % saving (to maximize backward compatibility).
     % (NEED? : Caller decides if DERIV1 or EDDER.)
     % --
-    % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex, SATURATION_CONSTANT-->MISSING_CONSTANT.
+    % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex.
     % PROPOSAL: Only save input to create_LBL_files in .mat file.
     %   PRO: Avoids problem of saving/loading global variables.
     %   CON: Sensitive to problems with .mat files not being backward-compatible.
@@ -122,6 +121,31 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %
     % PROPOSAL: Change to permit overwrite.
     % PROPOSAL: Remove "index" from pre_createLBL_workspace.mat.
+    %
+    % PROPOSAL: Save global variables by first declaring them global in the LOCAL workspace, not the CALLER workspace.
+    % PROPOSAL: General-purpose functionality for saving and loading the "state" of MATLAB, i.e. all variables,
+    %           including
+    %           (1) non-global variables
+    %           (2) global variables, both those currently (a) accessible, and (b) not accessible in the calling workspace.
+    %           (3) variables too large for .mat files (uses EJ_library.utils.store_split_array).
+    %       NOTE: Empirically, it appears that a non-global variable is destroyed after a global variable with the same
+    %             name is made accessible. (Not entirely sure.)
+    %
+    %   PROPOSAL: Use a script (so that evalin could optionally be used).
+    %   PROPOSAL: Save/restore global variables separately, by declaring them in the local workspace inside a function.
+    %       PRO: No name collisions between non-global and global variables (except non-global variables used by the
+    %           algorithm).
+    %   PROPOSAL: To avoid using local variables (e.g. if implemented as script, or in local function which declares
+    %               global variables), use a function with a persistent variable. Can store multiple variables using
+    %               struct and string argument.
+    %   CON/PROBLEM: There appears to be no way to distinguish a (1) a local variable, and (2) a locally available global
+    %   variable with the same name. ==> Can not restore properly.
+    %       PROPOSAL: Save (1) all locally defined variables (incl. available global variables), and (2) all global variables
+    %           separately. If there a globa variable is available locally, then there is an overlap, and the same
+    %           variable will be saved twice.
+    %           CON: Can not restore accurately because does not know if local variables.
+    %               PROPOSAL: Can use isglobal.
+    %                   CON: Will be discontinued, and there is no replacement.
     
     
     
@@ -170,7 +194,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % (2) missing new global variables, leading to .mat incompatibility.
     %===================================================================================================================
     globalVarsList = who('global');
-    % globalVarsList = {'N_FINAL_PRESWEEP_SAMPLES', 'SATURATION_CONSTANT', 'tabindex', 'an_tabindex', ...
+    % globalVarsList = {'N_FINAL_PRESWEEP_SAMPLES', 'MISSING_CONSTANT', 'tabindex', 'an_tabindex', ...
     % 'ASW_tabindex', 'PHO_tabindex', 'usc_tabindex'};   % "index" is not a global variable.
     for iVar = 1:numel(globalVarsList)
         cmd = sprintf('global %s', globalVarsList{iVar});
@@ -200,7 +224,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
             % MAT-file whose version is older than 7.3.". Note that it is a warning, not an error. Lapdog continues to
             % execute, but the .mat file saved to disk simply does not contain the "index" variables. One should in
             % principle be able to solve this by using flag "-v7.3" but experience is that this is (1) impractically
-            % slow, and (2) result in much larger .mat files.
+            % slow, and (2) results in much larger .mat files.
             
             saveCmd = sprintf('save(''%s'')', savedWorkspaceFile);    % TEMPORARY. Should really exclude "index" variable.
             executionBeginDateVec = clock;
@@ -234,10 +258,10 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % NOTE: Can not write a function for this, since evalin can only work on the caller's workspace, not the caller's
     % caller.
     %===================================================================================================================
-    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex'};   % Potentially undefined variables.
+    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex', 'NPL_tabindex'};   % Potentially undefined variables.
     for i = 1:length(POT_UNDEF_VARS)
-        % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which "exist" may respond to
-        %                      if not specifying "var".
+        % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which the function "exist"
+        %                      may detect/respond to if not specifying "var".
         if evalin(MWS, sprintf('exist(''%s'', ''var'')', POT_UNDEF_VARS{i}))
             temp = evalin(MWS, POT_UNDEF_VARS{i});                            % NOTE: evalin
         else
@@ -281,7 +305,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     Clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable case for consistency.
     Clfd.PHO_tabindex      = PHO_tabindex;
     Clfd.EFL_tabindex      = efl_tabindex;    % Changing variable case for consistency.
-    Clfd.NPL_tabindex      = evalin(MWS, 'NPL_tabindex');
+    Clfd.NPL_tabindex      = NPL_tabindex;
     
     Clfd.A1P_tabindex      = der_struct;     % Changing variable name for consistency.
     Clfd.C                 = C;

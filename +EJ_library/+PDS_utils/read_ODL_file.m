@@ -41,22 +41,24 @@ function [Ssl, Ss, endRowsList] = read_ODL_file(filePath)
     if (~exist(filePath, 'file'))
         error('Can not find file: "%s"', filePath)
     end
-    
+
     try
         % Read list of lines/rows. No parsing. 
         %rowStrList = read_file_to_line_list(filePath);
         rowStrList = EJ_library.utils.read_text_file(filePath);
     catch Exception
         Me = MException('', sprintf('Can not read file: %s\n    Exception.message="%s"', filePath, Exception.message));
-        Me.addCause(Exception);
+        Me = Me.addCause(Exception);    % NOTE: Assignment is necessary (immutable object?)
         throw(Me)
     end
-    
+
     try
         [Ssl, Ss, endRowsList] = EJ_library.PDS_utils.convert_ODL_to_structs(rowStrList);
     catch Exception
+        EJ_library.utils.exception_message(Exception, 'message+stack trace')
+
         Me = MException('', sprintf('Can not interpret contents of file "%s".\n%s', filePath, Exception.message));
-        Me.addCause(Exception);
+        Me = Me.addCause(Exception);    % NOTE: Assignment is necessary (immutable object?)
         throw(Me)
     end
 end

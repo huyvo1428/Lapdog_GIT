@@ -15,7 +15,7 @@
 %    May therefore contain extra code on memory use. Only a limited effort on reducing
 %    memory usage have been made so far.
 %
-% NOTE: Uses global variables SATURATION_CONSTANT.
+% NOTE: Uses global variables MISSING_CONSTANT.
 %
 function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 
@@ -75,13 +75,12 @@ function an_tabindex = best_estimates(an_tabindex, tabindex, index, obe)
 % PROPOSAL: Do not build up PO_table.
 %===========================================================================================
 
-    global SATURATION_CONSTANT
+    global MISSING_CONSTANT
 
     try
         warnings_settings = warning('query');
         warning('on', 'all')
         
-        MISSING_CONSTANT       = SATURATION_CONSTANT;
         MEMORY_USE_LOG_ENABLED = 0;  % Enable/disable memory usage log output. Printouts should be removed permanently some day.
         t_start = clock;             % NOTE: Not number of seconds, but [year month day hour minute seconds].
     

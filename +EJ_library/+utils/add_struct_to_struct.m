@@ -40,7 +40,7 @@ function a = add_struct_to_struct(a, b, DuplicateFieldBehaviours)
 %   PROPOSAL: (Flag) always/never recurse structs (if present in both a and b).
 %
 % PROPOSAL: Use EJ_library.utils.interpret_settings_args.
-%   CON: Can not use it since it calls this function! Would get infite recursion!!!
+%   CON: Can not use it since it calls this function! Would get infinite recursion!!!
 
 
 % NOTE: In reality designed for merging "compatible" data structures (types are compatible; field names may or may not overlap).

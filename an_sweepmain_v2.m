@@ -6,7 +6,7 @@ global an_tabindex ;
 global target;
 global diag_info
 global CO IN     % Physical & instrumental constants
-global SATURATION_CONSTANT;
+global MISSING_CONSTANT;
 
 
 global assmpt;
@@ -89,8 +89,8 @@ try
         
         
         %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-        satur_ind = Iarr==SATURATION_CONSTANT; % logical matrix which is true if any current is saturated (pds outputs -1000 as of 6/3 2018)
-        %Iarr(Iarr==SATURATION_CONSTANT)    = NaN;
+        satur_ind = Iarr==MISSING_CONSTANT; % logical matrix which is true if any current is saturated (pds outputs -1000 as of 6/3 2018)
+        %Iarr(Iarr==MISSING_CONSTANT)    = NaN;
         Iarr(satur_ind) = NaN;% This should also work, so we don't have to
         %do this twice
         %
@@ -686,13 +686,13 @@ try
                 XXP_struct.minmaxI(j,1:2)= EP(j).minmaxI;
                 
             end
-           % nan_ind=isnan(XXP_struct.ionslope); XXP_struct.ionslope(nan_ind)=SATURATION_CONSTANT;
-            nan_ind=isnan(XXP_struct.Vph_knee); XXP_struct.Vph_knee(nan_ind)=SATURATION_CONSTANT;
-            nan_ind=isnan(XXP_struct.Vz);       XXP_struct.Vz(nan_ind)=SATURATION_CONSTANT;
-            nan_ind=isnan(XXP_struct.Vsi);      XXP_struct.Vsi(nan_ind)=SATURATION_CONSTANT;
-            nan_ind=isnan(XXP_struct.Te_exp_belowVknee);XXP_struct.Te_exp_belowVknee(nan_ind)=SATURATION_CONSTANT;          
-           % nan_ind=isnan(XXP_struct.Iph0);     XXP_struct.Iph0(nan_ind)=SATURATION_CONSTANT;          
-            nan_ind=isnan(XXP_struct.Vph_knee); XXP_struct.Vph_knee(nan_ind)=SATURATION_CONSTANT;
+           % nan_ind=isnan(XXP_struct.ionslope); XXP_struct.ionslope(nan_ind)=MISSING_CONSTANT;
+            nan_ind=isnan(XXP_struct.Vph_knee); XXP_struct.Vph_knee(nan_ind)=MISSING_CONSTANT;
+            nan_ind=isnan(XXP_struct.Vz);       XXP_struct.Vz(nan_ind)=MISSING_CONSTANT;
+            nan_ind=isnan(XXP_struct.Vsi);      XXP_struct.Vsi(nan_ind)=MISSING_CONSTANT;
+            nan_ind=isnan(XXP_struct.Te_exp_belowVknee);XXP_struct.Te_exp_belowVknee(nan_ind)=MISSING_CONSTANT;          
+           % nan_ind=isnan(XXP_struct.Iph0);     XXP_struct.Iph0(nan_ind)=MISSING_CONSTANT;          
+            nan_ind=isnan(XXP_struct.Vph_knee); XXP_struct.Vph_knee(nan_ind)=MISSING_CONSTANT;
             
             
             %some variables exist in both structs at the moment.

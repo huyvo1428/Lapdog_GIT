@@ -11,7 +11,7 @@
 %
 function [] = an_NPLprint(NPLfname,NPLshort,data_arr,t_et,index_nr_of_firstfile,timing,mode)
 
-global NPL_tabindex SATURATION_CONSTANT
+global NPL_tabindex MISSING_CONSTANT
 fprintf(1,'printing %s, mode: %s\n',NPLfname, mode);
 %'hello'
 %fprintf(1,'%s',time_arr{1,1}(1,:));
@@ -45,7 +45,7 @@ switch mode
     %p2=USC_FIT.P(ind,2);
     %y1 = exp(p2)*exp(usc.usc(indz)*p1);
     data_arr.NPL=data_arr.V;
-    satind=data_arr.V==SATURATION_CONSTANT;
+    satind=data_arr.V==MISSING_CONSTANT;
     
     %data_arr.NPL(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
     data_arr.NPL(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.V(~satind).*P_interp1(~satind));
@@ -66,7 +66,7 @@ switch mode
             %qvalue=max(1-abs(data_arr.V_sigma(j)/data_arr.V(j)),0.5);
             %qvalue=max(1-abs((data_arr{1,6}(j)  /data_arr{1,5}(j))),0.5);
 
-            %data_arr.V(j)=SATURATION_CONSTANT;
+            %data_arr.V(j)=MISSING_CONSTANT;
             row_byte= fprintf(NPLwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc(j,:),data_arr.t_obt(j), data_arr.NPL(j),qvalue(j),NPL_flag(j),data_arr.qf(j));
 %            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
 
@@ -103,7 +103,7 @@ switch mode
     p2=USC_FIT.P(ind,2);
     %y1 = exp(p2)*exp(usc.usc(indz)*p1);
     data_arr.NPL=data_arr.Vz;
-    satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
+    satind=data_arr.Vz(:,1)==MISSING_CONSTANT;
 
 
     %MORE ADVANCED LINEAR INTERPOLATION
@@ -119,7 +119,7 @@ switch mode
     %p2=USC_FIT.P(ind,2);
     %y1 = exp(p2)*exp(usc.usc(indz)*p1);
     data_arr.NPL=data_arr.Vz(:,1);
-    satind=data_arr.Vz(:,1)==SATURATION_CONSTANT;
+    satind=data_arr.Vz(:,1)==MISSING_CONSTANT;
     
     %data_arr.NPL(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
     data_arr.NPL(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.Vz(~satind).*P_interp1(~satind));

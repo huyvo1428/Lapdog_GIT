@@ -19,6 +19,9 @@
 % -- Force correct spelling of LABEL_REVISION_NOTE (which would otherwise be hardcoded in multiple places, although
 %    ".set_value" requires keyword to pre-exist in KVPL, which should help).
 %
+%
+% Initially created 2019-03-18 by Erik P G Johansson based on older method.
+%
 function Kvpl = set_LABEL_REVISION_NOTE(Kvpl, indentLength, contentCellArray)
     % PROPOSAL: Set hardcoded "author" here. Remove as argument.
     

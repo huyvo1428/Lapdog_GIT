@@ -6,7 +6,7 @@
 function [] = an_hf(an_ind,tabindex,fileflag)
 
 global an_tabindex;
-%global SATURATION_CONSTANT  %found a way to get around using this global
+%global MISSING_CONSTANT  %found a way to get around using this global
 diag = 0;
 
 plotpsd=[];
@@ -191,10 +191,10 @@ try
                 qfarray = scantemp{1,end}(ob(1):ob(end));  % Quality factor, always at the end.
 
                 %-----------------Saturation Handling 8/3 FKJN-------------------------------------%
-                if isempty(qfarray(qfarray > 399.9)) %400 is the saturation constant. if this value is below it, no measurement  is saturated. This way I don't have to remember the global paramter SATURATION_CONSTANT
+                if isempty(qfarray(qfarray > 399.9)) %400 is the saturation constant. if this value is below it, no measurement  is saturated. This way I don't have to remember the global paramter MISSING_CONSTANT
                  % i.e. if no value is saturated then continue, else ignore(won't be printed)  
                 
-               %  if isempty(ib(ib==SATURATION_CONSTANT)) && isempty(vp(vp==SATURATION_CONSTANT)) % if no value is saturated then continue, else ignore(won't be printed)  
+               %  if isempty(ib(ib==MISSING_CONSTANT)) && isempty(vp(vp==MISSING_CONSTANT)) % if no value is saturated then continue, else ignore(won't be printed)  
                %  if ~(any(isnan(ib)) || any(isnan(vp))) % if any is saturated then ignore, else continue
                 %----------------------------------------------------------------------------------%
 

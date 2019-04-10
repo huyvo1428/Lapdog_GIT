@@ -57,7 +57,7 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 %  QF =000 ALL OK.
 
 %globals
-global SATURATION_CONSTANT;
+global MISSING_CONSTANT;
 global tabindex;  %global index
 global LDLMACROS; %global constant list
 
@@ -161,15 +161,6 @@ tabfolder = strcat(derivedpath,'/',dirY,'/',dirM,'/',dirD,'/');
 
 %fprintf(1,'CURRENTOFFSET = %e \n',CURRENTOFFSET);
 
-if ~isempty(SATURATION_CONSTANT)
-    
-    %fprintf(1,'SATURATION_CONSTANT = %e \n',SATURATION_CONSTANT);
-else
-    fprintf(1,'SATURATION_CONSTANT not set, setting...\n');
-    SATURATION_CONSTANT = -1000;
-end
- 
-
 % I only think I need this for sweep data (since it's averaged in this
 % function)
 
@@ -234,15 +225,15 @@ delfile = 1;
                      %apparently an if/else case is 2.13 times faster than querying
                      %both columns
                 if fileflag(1) =='V'  %for macro 700,701,702,705,706
-                   % scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;    
-                   % scantemp{1,4}(scantemp{1,4}==SATURATION_CONSTANT)    = NaN;
+                   % scantemp{1,3}(scantemp{1,3}==MISSING_CONSTANT)    = NaN;    
+                   % scantemp{1,4}(scantemp{1,4}==MISSING_CONSTANT)    = NaN;
                    
-                    satur_ind = scantemp{1,3} ==SATURATION_CONSTANT; 
-                    satur_ind2= scantemp{1,4} ==SATURATION_CONSTANT; 
+                    satur_ind = scantemp{1,3} ==MISSING_CONSTANT; 
+                    satur_ind2= scantemp{1,4} ==MISSING_CONSTANT; 
                     satur_ind = satur_ind2 | satur_ind; %combine logical matrices
                 else  %hypothetically, we could have I1-I2. (no current macro)
-                    %scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
-                    satur_ind= scantemp{1,3}==SATURATION_CONSTANT; 
+                    %scantemp{1,3}(scantemp{1,3}==MISSING_CONSTANT)    = NaN;
+                    satur_ind= scantemp{1,3}==MISSING_CONSTANT; 
                 end
 
                      %-------------------------------------------------------------%
@@ -258,11 +249,11 @@ delfile = 1;
                      %apparently an if/else case is 2.13 times faster than querying
                      %both columns
                  if fileflag(1) =='V'  % Voltage  data
-                   %  scantemp{1,4}(scantemp{1,4}==SATURATION_CONSTANT)    = NaN;
-                     satur_ind= scantemp{1,4}==SATURATION_CONSTANT; 
+                   %  scantemp{1,4}(scantemp{1,4}==MISSING_CONSTANT)    = NaN;
+                     satur_ind= scantemp{1,4}==MISSING_CONSTANT; 
                  else  %Current data 
-                   %  scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
-                     satur_ind= scantemp{1,3}==SATURATION_CONSTANT; 
+                   %  scantemp{1,3}(scantemp{1,3}==MISSING_CONSTANT)    = NaN;
+                     satur_ind= scantemp{1,3}==MISSING_CONSTANT; 
                  end
 
                      %-------------------------------------------------------------%
@@ -424,8 +415,8 @@ delfile = 1;
 
             
             %----------- SATURATION HANDLING FKJN 6/3 2018 ---------------%
-             satur_ind = scantemp{1,3}==SATURATION_CONSTANT; % logical vector which is true if any current is saturated (pds outputs -1000 as of 6/3 2018)
-             %scantemp{1,3}(scantemp{1,3}==SATURATION_CONSTANT)    = NaN;
+             satur_ind = scantemp{1,3}==MISSING_CONSTANT; % logical vector which is true if any current is saturated (pds outputs -1000 as of 6/3 2018)
+             %scantemp{1,3}(scantemp{1,3}==MISSING_CONSTANT)    = NaN;
              scantemp{1,3}(satur_ind) = NaN;% This should also work, so we don't have to
         
             
@@ -579,7 +570,7 @@ delfile = 1;
                   %the awkward handling is due to qualityF being a value
 
 
-                 curArray(isnan(curArray))  = SATURATION_CONSTANT; %not only aturated values, but filtered(LDL offsets) NaN's too.
+                 curArray(isnan(curArray))  = MISSING_CONSTANT; %not only aturated values, but filtered(LDL offsets) NaN's too.
             %-------------------------------------------------------------%
 
             
