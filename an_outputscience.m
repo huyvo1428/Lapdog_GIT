@@ -101,7 +101,6 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     qv_asm_ne_5eV(delind)=0;
 
 
-
     satur_ind=XXP(i).data.Vph_knee(:,1)~=MISSING_CONSTANT;
 
     %Sweep_qv_dir_and_step = (1-abs(XXP(i).info.diff_Vb-0.05))/0.81;% range best bias resolution, from 0 to 1. Good resolution but poor direction(negative) is a bit less good
@@ -153,7 +152,6 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     delind=isnan(qv_iph0)|isinf(qv_iph0);
     qv_iph0(delind)=0;
 
-
     inside_range= XXP(i).data.Te_exp_belowVknee(:,1)>0 | XXP(i).data.Te_exp_belowVknee(:,1)<30;
     XXP(i).data.Te_exp_belowVknee(~inside_range,1)=MISSING_CONSTANT;
     qv_Te_exp_belowVknee(~inside_range)=0;%qv
@@ -161,6 +159,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     %out_of_valid_range=nansum(XCAL_struct.Te./XXP(i).data.Te_exp_belowVknee(:,1)>1) > 5;
 
     inside_range= XCAL_struct.Te>0 | XCAL_struct.Te<30;
+
     XCAL_struct.Te(~inside_range)=MISSING_CONSTANT;
     qv_Te_XCAL(~inside_range)=0;%qv
     %ne_5eV= max((1e-6*sqrt(2*pi*CO.me*Te_guess) *e_slope / (IN.probe_A*CO.e.^1.5)),0)
@@ -596,8 +595,6 @@ for i = min(inter):max(inter) %main for loop
 %
 %             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %4.2f, %05i', utc, resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
 %             rowcount=rowcount+1;
-%
-%
 %         else % nothing here. fill with MISSING_CONSTANT
 %             row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i', utc, t_obtz(k), MISSING_CONSTANT,0,qf_array(k));
 %             rowcount=rowcount+1;
