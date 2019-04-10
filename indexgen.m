@@ -94,6 +94,8 @@ index(n).sweep = -1;
 index(n).probe = -1;
 index(n).pre_sweep_samples =-1;
 index(n).float =-1;
+index(n).adc20ma_length =-1;
+
 
 macrotemp= '41000';
 
@@ -215,6 +217,9 @@ for ii=1:n  % Loop the label files
               
           else
               
+              index(i).adc20ma_length=1;
+              %  
+              
               %added Vfloat stuff
               index(i).float=0;
 
@@ -227,7 +232,20 @@ for ii=1:n  % Loop the label files
                           index(i).float=1;
                       end                      
                   end
-              end              
+              end
+              
+              cstr= sprintf('ROSETTA:LAP_P1P2_ADC20_MA_LENGTH');
+              ind = find(strcmp(cstr,var));
+              if(~isempty(ind)) 
+                  str = strrep(strtrim(val(ind,:)),'"',''); %trim and strip from ""      
+                  str = strrep(str,'0x','');
+                  str = strrep(str,'0X','');
+                  if(~isempty(str))
+                      
+                      index(i).adc20ma_length=hex2dec(str);
+
+                  end
+              end     
           end
 
           % % File assumed to contain LF data if covering more than 16 s:
