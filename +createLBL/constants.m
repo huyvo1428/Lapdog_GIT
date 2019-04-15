@@ -17,6 +17,9 @@
 % "global". Ex: MISSING_CONSTANT, N_FINAL_PRESWEEP_SAMPLES
 %
 %
+% NOTE: get_state_filenaming() is technically not relevant for LBL files, but is here anyway.
+%
+%
 % Initially created 2018-08-22 by Erik P G Johansson, IRF Uppsala
 %
 classdef constants < handle
@@ -51,9 +54,7 @@ classdef constants < handle
         ODL_INDENTATION_LENGTH                 = 4;
         MISSING_CONSTANT                       = -1000000000;    % Same as global variable MISSING_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
         N_FINAL_PRESWEEP_SAMPLES               = 16;             % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
-        PRE_CREATELBL_SAVED_WORKSPACE_FILENAME = 'pre_createLBL_workspace.mat';
-        PRE_CREATELBL_SAVED_INDEX_PREFIX       = 'pre_createLBL_workspace.index.';
-        
+
         % When splitting "index" into multiple parts for saving to disk, this is how large every part should be, in
         % number of index values. Lapdog's ESC2 "index" variable is size "1x661300" and can be saved to disk as one
         % (empirically).
@@ -317,5 +318,30 @@ classdef constants < handle
                 }    ...
             );
         end
-    end    % methods
+        
+    end    % methods(Access=public)
+
+    
+    
+    methods(Static, Access=public)
+        
+        % Defines the ~filenaming convention for state files.
+        function [accVarsFile, inaccVarsFile, indexPathPrefix] = get_state_filenaming(parentDir, stateNaming)
+
+            switch(stateNaming)
+                case 'pre-analysis'
+                    base = 'pre_analysis_workspace.';
+                case 'pre-createLBL'
+                    base = 'pre_createLBL_workspace.';
+                otherwise
+                    error('Illegal stateNaming="%s"', stateNaming)
+            end
+
+            accVarsFile     = fullfile(parentDir, [base, 'accessible.mat'  ]);
+            inaccVarsFile   = fullfile(parentDir, [base, 'inaccessible.mat']);
+            indexPathPrefix = fullfile(parentDir, [base, 'index.'          ]);    % NOTE: Period at end since the file suffix (file type) will note be directly appended, but indirectly.
+        end
+
+    end    % methods(Static, Access=public)
+    
 end    % classdef

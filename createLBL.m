@@ -20,10 +20,10 @@
 % saveCallerWorkspace
 %   1/True  : Try to save MATLAB workspace to file. If intended path is already used, do not write but fail silently.
 %   0/False : Do not save MATLAB workspace to file.
-% varargin
-%   <Empty>  : Use Lapdog variable for dataset path.
-%   1 string : Dataset path to use.
-%              NOTE: Not needed by Lapdog, but by separate code that runs createLBL for potentially moved dataset.
+% varargin : Either
+%   (1) <Empty>  : Use Lapdog variable for dataset path.
+%   (2) varargin{1} : pds    dataset path to use.
+%       varargin{2} : Lapdog dataset path to use.
 %
 %
 % IMPLEMENTATION NOTES, RATIONALE
@@ -74,29 +74,9 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % (NEED? : Caller decides if DERIV1 or EDDER.)
     % --
     % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex.
-    % PROPOSAL: Only save input to create_LBL_files in .mat file.
-    %   PRO: Avoids problem of saving/loading global variables.
-    %   CON: Sensitive to problems with .mat files not being backward-compatible.
     %
     % PROPOSAL: Save exakt metakernel used?!! De-reference symlink.
     %   TODO-DECISION: How save? Set variable in caller workspace?! Architecture not designed to save additional info.
-    %
-    % PROPOSAL: createLBL (script) always saves .mat file, then calls function which loads file and hence loads all
-    %           Lapdog workspace into its own function workspace.
-    %   PRO: Simplifies code.
-    %   ~CON: Ugly
-    %   ~CON: Only works if there is a .mat file, i.e. Lapdog generations must save .mat a file just to generate a dataset.
-    %
-    % PROPOSAL: Iterate over who('global') and declare all global variables accessible (before saving to .mat).
-    %   PRO: Prevents misspelling
-    %   PRO: Prevents mistakenly not saving global Lapdog state.
-    %       PRO: More important than other kinds of bugs, since cannot fix saved .mat file without rerunning Lapdog (for every file).
-    %
-    % PROPOSAL: Iterate over caller workspace variables and import all of them to a struct, instead of separately.
-    %   ~CON: Still do not want to save this struct for backward compatibility.
-    %
-    % PROPOSAL: Argument for only trying to generate for data products belonging to CALIB2 or DERIV2.
-    %   CON: Lapdog should preferably not have any knowledge of which data products belong to which archiving level.
     %
     % TODO-DECISION: What to do about slow save -v7.3?
     %   PROPOSAL: Only use -v7.3 "when necessary" (ESC3, PRL).
@@ -120,32 +100,6 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %       Ex: MIP
     %
     % PROPOSAL: Change to permit overwrite.
-    % PROPOSAL: Remove "index" from pre_createLBL_workspace.mat.
-    %
-    % PROPOSAL: Save global variables by first declaring them global in the LOCAL workspace, not the CALLER workspace.
-    % PROPOSAL: General-purpose functionality for saving and loading the "state" of MATLAB, i.e. all variables,
-    %           including
-    %           (1) non-global variables
-    %           (2) global variables, both those currently (a) accessible, and (b) not accessible in the calling workspace.
-    %           (3) variables too large for .mat files (uses EJ_library.utils.store_split_array).
-    %       NOTE: Empirically, it appears that a non-global variable is destroyed after a global variable with the same
-    %             name is made accessible. (Not entirely sure.)
-    %
-    %   PROPOSAL: Use a script (so that evalin could optionally be used).
-    %   PROPOSAL: Save/restore global variables separately, by declaring them in the local workspace inside a function.
-    %       PRO: No name collisions between non-global and global variables (except non-global variables used by the
-    %           algorithm).
-    %   PROPOSAL: To avoid using local variables (e.g. if implemented as script, or in local function which declares
-    %               global variables), use a function with a persistent variable. Can store multiple variables using
-    %               struct and string argument.
-    %   CON/PROBLEM: There appears to be no way to distinguish a (1) a local variable, and (2) a locally available global
-    %   variable with the same name. ==> Can not restore properly.
-    %       PROPOSAL: Save (1) all locally defined variables (incl. available global variables), and (2) all global variables
-    %           separately. If there a globa variable is available locally, then there is an overlap, and the same
-    %           variable will be saved twice.
-    %           CON: Can not restore accurately because does not know if local variables.
-    %               PROPOSAL: Can use isglobal.
-    %                   CON: Will be discontinued, and there is no replacement.
     
     
     
@@ -170,105 +124,53 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % NOTE: Needed for saving .mat file, and must hence precede it.
     %===============================================================
     if isempty(varargin)
-        ldDatasetPath = evalin(MWS, 'derivedpath');    % Value used twice. NOTE: evalin
         pdDatasetPath = evalin(MWS, 'archivepath');                      % NOTE: evalin
+        ldDatasetPath = evalin(MWS, 'derivedpath');    % Value used twice. NOTE: evalin
     elseif length(varargin) == 2
-        ldDatasetPath = varargin{1};
-        pdDatasetPath = varargin{2};
+        pdDatasetPath = varargin{1};
+        ldDatasetPath = varargin{2};
     else
         error('Illegal number of arguments.')
     end
 
 
 
-    %===================================================================================================================
-    % IN THE CALLER WORKSPACE: Declare all global variables as global (accessible) so that:
-    %   (1) they can be saved to file,
-    %   (2) they are accessible by later commands (in this function)
-    % --------------------------------------------------------------------------------------------------------------
-    % IMPLEMENTATION NOTE: Variables are declared global in the caller/base workspace so that they can be saved to .mat
-    % file. All global variables are declared global, just to make sure that no new ones are missed in case ~createLBL
-    % has to be modified after a dataset has been generated.
-    % Could iterate over list of specific global variables, but then there are the risks of
-    % (1) misspelling, and
-    % (2) missing new global variables, leading to .mat incompatibility.
-    %===================================================================================================================
-    globalVarsList = who('global');
-    % globalVarsList = {'N_FINAL_PRESWEEP_SAMPLES', 'MISSING_CONSTANT', 'tabindex', 'an_tabindex', ...
-    % 'ASW_tabindex', 'PHO_tabindex', 'usc_tabindex'};   % "index" is not a global variable.
-    for iVar = 1:numel(globalVarsList)
-        cmd = sprintf('global %s', globalVarsList{iVar});
-        evalin(MWS, cmd);                                                                               % NOTE: evalin
-        %fprintf('Declare global variable in caller workspace: "%s"\n', cmd)    % DEBUG
-        %eval(       sprintf('global %s', globalVarsList{iVar}));
-    end
-    index = evalin(MWS, 'index');
-    %===================================================================================================================
-    % (Optionally) Save MATLAB CALLER WORKSPACE to file
-    % -------------------------------------------------
-    % Save all Lapdog variables needed for createLBL to function.
-    % This file can be used for re-running createLBL (fast) without rerunning Lapdog (slow) for large datasets.
-    % NOTE: Must include relevant global variables.
-    % MATLAB "save" command only includes global variables which have been declared as such with a "global statement" in
-    % the current workspace, but not if they have only been declared as such in OTHER workspaces (other parts of the
-    % code)!! Must therefore declare relevant variables as "global" before saving file.
-    %===================================================================================================================
     if saveCallerWorkspace
-        savedWorkspaceFile = fullfile(ldDatasetPath, C.PRE_CREATELBL_SAVED_WORKSPACE_FILENAME);
-        fprintf('Saving pre-createLBL MATLAB workspace+globals in "%s"\n', savedWorkspaceFile);
-        if exist(savedWorkspaceFile, 'file')
-            fprintf('    Ignoring - There already is such a file/directory. Will not overwrite.\n', savedWorkspaceFile)
-        else
-            % IMPLEMENTATION NOTE: It has been observed (2018-12-01) that variable "index" can be too large to save to
-            % disk for PRL and ESC3, thus generating a warning message "Warning: Variable 'index' cannot be saved to a
-            % MAT-file whose version is older than 7.3.". Note that it is a warning, not an error. Lapdog continues to
-            % execute, but the .mat file saved to disk simply does not contain the "index" variables. One should in
-            % principle be able to solve this by using flag "-v7.3" but experience is that this is (1) impractically
-            % slow, and (2) results in much larger .mat files.
-            
-            saveCmd = sprintf('save(''%s'')', savedWorkspaceFile);    % TEMPORARY. Should really exclude "index" variable.
-            executionBeginDateVec = clock;
-            evalin(MWS, saveCmd)                         % NOTE: evalin
-            fprintf('    Done: %.0f s (elapsed wall time)\n', etime(clock, executionBeginDateVec));
-            
-            try
-                % EXPERIMENTAL CODE
-                savedIndexPathPrefix = fullfile(ldDatasetPath, C.PRE_CREATELBL_SAVED_INDEX_PREFIX);
-                fprintf('Saving pre-createLBL MATLAB "index" in "%s*"\n', savedIndexPathPrefix);
-                EJ_library.utils.store_split_array.save(index, savedIndexPathPrefix, C.N_INDEX_INDICES_PER_PART)
-                fprintf('    Done: %.0f s (elapsed wall time)\n', etime(clock, executionBeginDateVec));
-            catch Exception
-                warning('EJ_library.utils.store_split_array.save failed to save "index" variable to disk.')
-            end
-        end
+        %===============================================================================================================
+        % Save MATLAB VARIABLES to files
+        % ------------------------------
+        % Save all "Lapdog variables" to disk. The saved variables can be used for re-running createLBL (fast) without
+        % rerunning all of Lapdog (slow) for large datasets.
+        %===============================================================================================================
+        evalin(MWS, sprintf('save_Lapdog_state(''%s'', true, ''pre-createLBL'')', ldDatasetPath))
     end
 
 
 
     %===================================================================================================================
-    % Set variables (local workspace) which are expected but might not be defined (in caller's workspace)
-    % ---------------------------------------------------------------------------------------------------
-    % Ex: Different TAB files disabled inside an_outputscience.m
-    % Ex: an_outputscience.m disabled
+    % Set variables (local workspace) which are needed but might not be defined (in caller's workspace)
+    % -------------------------------------------------------------------------------------------------
+    % Ex: Due to different TAB files disabled inside an_outputscience.m
+    % Ex: Due to an_outputscience.m disabled
     % Ex: Lapdog run where analysis.m is disabled (useful for CALIB2 generation)
     % Ex: EDDER does not call analysis.m
     % In principle, the same problem could exist for other global variables (e.g. when disabling an_outputscience) but
     % it does not appear to do so from testing.
     %
-    % NOTE: Can not write a function for this, since evalin can only work on the caller's workspace, not the caller's
-    % caller.
+    % NOTE: Can not write an (elegant) function for this, since evalin can only work on the caller's workspace, not the
+    % caller's caller.
     %===================================================================================================================
-    POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex', 'NPL_tabindex'};   % Potentially undefined variables.
-    for i = 1:length(POT_UNDEF_VARS)
-        % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which the function "exist"
-        %                      may detect/respond to if not specifying "var".
-        if evalin(MWS, sprintf('exist(''%s'', ''var'')', POT_UNDEF_VARS{i}))
-            temp = evalin(MWS, POT_UNDEF_VARS{i});                            % NOTE: evalin
-        else
-            temp = [];
-        end
-        eval(sprintf('%s = temp;', POT_UNDEF_VARS{i}));                       % NOTE : eval
-    end
+%     POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex', 'NPL_tabindex'};   % Potentially undefined variables.
+%     for i = 1:length(POT_UNDEF_VARS)
+%         % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which the function "exist"
+%         %                      may detect/respond to if not specifying "var".
+%         if evalin(MWS, sprintf('exist(''%s'', ''var'')', POT_UNDEF_VARS{i}))
+%             temp = evalin(MWS, POT_UNDEF_VARS{i});                            % NOTE: evalin
+%         else
+%             temp = [];
+%         end
+%         WorkspaceVars.(POT_UNDEF_VARS{i}) = temp;
+%     end
     
     
     
@@ -295,19 +197,19 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     Clfd = [];   % CLFD = create_LBL_files data
     Clfd.ldDatasetPath     = ldDatasetPath;
     Clfd.pdDatasetPath     = pdDatasetPath;
-    Clfd.metakernel        = get_lapdog_metakernel();   % NOTE: Technically not part of the Lapdog state. Useful.
+    Clfd.metakernel        = get_lapdog_metakernel();   % NOTE: Technically not part of the Lapdog state. Useful though.
     
     Clfd.index             = evalin(MWS, 'index');
     Clfd.tabindex          = evalin(MWS, 'tabindex');
-    Clfd.an_tabindex       = an_tabindex;
+    Clfd.an_tabindex       = evalin(MWS, 'get_Lapdog_var(''an_tabindex'')');     % WorkspaceVars.an_tabindex;
     Clfd.blockTAB          = evalin(MWS, 'blockTAB');
-    Clfd.ASW_tabindex      = ASW_tabindex;
-    Clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');   % Changing variable case for consistency.
-    Clfd.PHO_tabindex      = PHO_tabindex;
-    Clfd.EFL_tabindex      = efl_tabindex;    % Changing variable case for consistency.
-    Clfd.NPL_tabindex      = NPL_tabindex;
+    Clfd.ASW_tabindex      = evalin(MWS, 'get_Lapdog_var(''ASW_tabindex'')');    %  WorkspaceVars.ASW_tabindex;
+    Clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');                        % Changing variable case for consistency.
+    Clfd.PHO_tabindex      = evalin(MWS, 'get_Lapdog_var(''PHO_tabindex'')');    % WorkspaceVars.PHO_tabindex;
+    Clfd.EFL_tabindex      = evalin(MWS, 'get_Lapdog_var(''efl_tabindex'')');    % WorkspaceVars.efl_tabindex;    % Changing variable case for consistency.
+    Clfd.NPL_tabindex      = evalin(MWS, 'get_Lapdog_var(''NPL_tabindex'')');    % WorkspaceVars.NPL_tabindex;
     
-    Clfd.A1P_tabindex      = der_struct;     % Changing variable name for consistency.
+    Clfd.A1P_tabindex      = evalin(MWS, 'get_Lapdog_var(''der_struct'')');      % WorkspaceVars.der_struct;      % Changing variable name for consistency.
     Clfd.C                 = C;
     Clfd.failFastDebugMode = failFastDebugMode;
     Clfd.generatingDeriv1  = generatingDeriv1;
@@ -323,4 +225,43 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % should try to ignore these data.
     createLBL.create_LBL_files(Clfd)
 
+end
+
+
+
+% Return
+% (a) value of named variable in caller workspace, if there is exists exactly one such among the accessible & inaccessible, global & non-global variables, or
+% (b) a default value if the named variable does not pre-exist.
+% Assertion error, if there is both a non-global accessible variable and an inaccessible variable of the same name.
+%
+% RATIONALE
+% =========
+% Function is useful for variables which may or may not exist depending on the Lapdog configuration, the type of
+% dataset, and EDDER/DERIV1.
+%
+% NOTE: It is dangerous to misspell variable names, since they will be silently accepted (not a bug but a feature).
+%
+function value = get_Lapdog_var(name)
+    % PROPOSAL: Move to Vars_state.
+    
+    DEFAULT_VALUE = [];
+    
+    VarsInfo = evalin('caller', 'EJ_library.utils.Vars_state.get_all_vars_info()');    
+    VarsInfo = VarsInfo(strcmp(name, {VarsInfo.name}));    % Only keep entries with the right name.
+    
+    if numel(VarsInfo) < 1
+        % CASE: There is no such variable.
+        value = DEFAULT_VALUE;
+    elseif numel(VarsInfo) == 1
+        if VarsInfo.global
+            % CASE: There is such a global variable.
+            value = EJ_library.utils.Vars_state.get_global_var(name);
+        else
+            % CASE: There is such a non-global accessible variable.
+            value = evalin('caller', name);
+        end        
+    else
+        % ASSERTION
+        error('Can not read Lapdog variable "%s" due to ambiguity: There is one accessible non-global variable, and on inaccessible global variable by the same name.', name)
+    end
 end
