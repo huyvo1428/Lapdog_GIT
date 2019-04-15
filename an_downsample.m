@@ -38,6 +38,11 @@ j=0;
 global MISSING_CONSTANT VFLOATMACROS
 k=0;
 tabfilez=([tabindex{an_ind(:) ,3}]);
+
+debug=[0 0 0];
+
+if ~debug(1)
+
 while k<length(an_ind) % alternatively length(tabfilez)
     k=k+1;
 
@@ -52,6 +57,8 @@ while k<length(an_ind) % alternatively length(tabfilez)
     end
 
 end
+end
+
 
 %%%----------------------------------------------------------------- %%%%
 
