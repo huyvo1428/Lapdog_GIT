@@ -273,16 +273,28 @@ delfile = 1;
 
                 %lee= length(scantemp{1,2}(:));
                 %del = false(1,lee);
-
-
-                if scantemp{1,2}(end)<sweept(1,1) || scantemp{1,2}(1)>sweept(2,end)
+                
+                
+                % We can be more careful later. This is the maximum moving
+                % average in the entire mission, and sweeps always start at
+                % an AQP. I don't want to slow up this script, so this
+                % inexact thing works for now
+                eps_ma_dt=256/(2*57.8);
+                if scantemp{1,2}(end)<sweept(1,1) || (scantemp{1,2}(1)-eps_ma_dt)>sweept(2,end)
 
                     %all measurements before first sweep or after last sweep.
                 else
 
 
-
-                    tol=sweept(2,1)-sweept(1,1);
+                    ma_length = index(tabind(1)).adc20ma_length;
+                    if ma_length >1
+                        ma_length_corr = ma_length/(2*57.8);
+                    else
+                        ma_length_corr=0;
+                    end
+                    
+                    
+                    tol=sweept(2,1)-sweept(1,1)+ma_length_corr;
                     sweept2=sweept(1,:)+tol/2;
                     %'ismember time:'
                     del=ismemberf(scantemp{1,2}(:),sweept2,'tol',tol);
