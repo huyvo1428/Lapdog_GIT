@@ -555,7 +555,6 @@ for i = min(inter):max(inter) %main for loop
             %PHO_tabindex(end).timing = timing;
         end
 
-        dummy_qv=0.5;
 
         if (isempty(indz) && (rowcount>0))   % nothing here & file open. fill with MISSING_CONSTANT
            % t_utc(end-8:end)='59.999797';
@@ -571,8 +570,15 @@ for i = min(inter):max(inter) %main for loop
             t_utc(k,21:26)='000000'; %increased UTC precision, now we need to floor away this 0.5s margin
             %t_utc is now a string with more than 6 decimals precision, but we
             %force the output to only print the first 6.
+            if resampled.iph0(k)==MISSING_CONSTANT
+                pho_60M_qv=0;
+            else
+                pho_60M_qv= exp(-abs(resampled.iph0_sigma(k)/resampled.iph0(k)));
+            end
+            
+            
             %row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n', t_utc(k,:), resampled.t_OBT(k), resampled.iph0(k),dummy_qv,qf_array(k));
-            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %4.2f, %03i\r\n', t_utc(k,1:26), t_obt(k), resampled.iph0(k),exp(-abs(resampled.iph0_sigma(k)/resampled.iph0(k))),qf_array(k));
+            row_byte= fprintf(twID,'%s, %16.6f, %14.7e, %4.2f, %03i\r\n', t_utc(k,1:26), t_obt(k), resampled.iph0(k),pho_60M_qv,qf_array(k));
 
             rowcount=rowcount+1;
             PHO_tabindex(end).no_of_rows = rowcount;                % length(foutarr{1,3}); % Number of rows
