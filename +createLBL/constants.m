@@ -40,12 +40,6 @@ classdef constants < handle
     %       PROPOSAL: (1) Internal hard-coded default values 
     %                 (2) Constructor that looks for and compares with the corresponding global variables, if defined.
     %
-    % NOTE: Not all constants here are really related to LBL files.
-    %   Ex: MISSING_CONSTANT
-    %       CON: Needed for LBL DESCRIPTION.
-    %   Ex: N_FINAL_PRESWEEP_SAMPLES
-    %       CON: Needed for LBL DESCRIPTION.
-    %
     % PROPOSAL: Include metakernel_rosetta.txt
     %   PRO:/NOTE: Used by lapdog_convention_wrapper, get_lapdog_metakernel.
     
@@ -76,7 +70,9 @@ classdef constants < handle
 
 
     methods(Access=public)
-
+        
+        
+        
         % Constructor
         % 
         function obj = constants(varargin)
@@ -95,6 +91,19 @@ classdef constants < handle
                     error('Global variable MISSING_CONSTANT inconsistent with internally hard-coded MISSING_CONSTANT.')
                 end                                
             end
+            
+            
+            
+            %obj.STATE_NAMING = containers.Map()
+            %obj.STATE_FILE_NAMES('pre-createLBL') = struct(...
+            %    'accessible',   'pre_analysis_workspace.accessible.mat', ...
+            %    'inaccessible', 'pre_analysis_workspace.inaccessible.mat', ...
+            %    'indexPrefix',  'pre_analysis_workspace.accessible.mat');
+            %obj.STATE_FILE_NAMES('pre-analysis') = struct(...
+            %    'accessible',   'pre_analysis_workspace.accessible.mat', ...
+            %    'inaccessible', 'pre_analysis_workspace.accessible.mat', ...
+            %    'indexPrefix',  'pre_analysis_workspace.accessible.mat');
+            
 
 
             %==================================================================
@@ -267,7 +276,7 @@ classdef constants < handle
                 'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
         end
         
-
+        
         
         % Construct list of key-value pairs to use for all LBL files.
         % 

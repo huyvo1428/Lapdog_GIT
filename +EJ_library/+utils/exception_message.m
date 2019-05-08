@@ -7,6 +7,7 @@
 % all the nodes (Exceptions) but does not print out the relationsships between them in any clear way. The printout is
 % sensible when there is zero or one causes for an exception, but will still print every exception also when there is
 % more than one cause.
+% NOTE: Prints all messages to stdout.
 %
 %
 % IMPLEMENTATION NOTE: I have tried to implement printing stack trace with "dbstack" but not been able to make it work.
@@ -33,20 +34,24 @@ function exception_message(Exception, policy)
 % PROPOSAL: Use print_variable_recursively.
 
 
+    FID = 1;
+
+
+
     % ASSERTION
     % NOTE: Fails nicely (not error) with default setting in case "policy" is e.g. misspelled.
     if ~any(strcmp(policy, {'nothing', 'message', 'message+stack trace'}))
         warning('Illegal "policy" argument.')
         policy = 'message+stack trace';
     end
-    
-    
-    
+
+
+
     if any(strcmp(policy, {'message', 'message+stack trace'}))
         % Print error message.
-        fprintf(1, '======== An exception has occurred ========\n')
-        fprintf(1, 'Exception.message    = "%s"\n', Exception.message);    
-        fprintf(1, 'Exception.identifier = "%s"\n', Exception.identifier);    
+        fprintf(FID, '======== An exception has occurred ========\n')
+        fprintf(FID, 'Exception.message    = "%s"\n', Exception.message);    
+        fprintf(FID, 'Exception.identifier = "%s"\n', Exception.identifier);    
     end
 
     if any(strcmp(policy, {'message+stack trace'}))
@@ -56,7 +61,7 @@ function exception_message(Exception, policy)
             for i=1:len
                 % NOTE: Must print .name since it could refer to an internal function, i.e. one might not be able to
                 % derive it from .file.
-                fprintf(1,'row %3i, %s: %s\n', Exception.stack(i).line, Exception.stack(i).file, Exception.stack(i).name);
+                fprintf(FID,'row %3i, %s: %s\n', Exception.stack(i).line, Exception.stack(i).file, Exception.stack(i).name);
             end
         end
     end
@@ -64,7 +69,7 @@ function exception_message(Exception, policy)
     for iCause = 1:numel(Exception.cause)
         % NOTE: Not printing this log message as a "header" since the recursive call trigger another "header" log
         % message (above).
-        fprintf(1, 'Displaying cause of exception (recursive): Exception.cause{%i}\n', iCause)
+        fprintf(FID, 'Displaying cause of exception (recursive): Exception.cause{%i}\n', iCause)
         EJ_library.utils.exception_message(Exception.cause{iCause}, policy);    % RECURSIVE CALL
     end
 

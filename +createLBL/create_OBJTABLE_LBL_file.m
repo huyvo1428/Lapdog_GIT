@@ -162,7 +162,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     % Applies to what PDS defines as identifiers, i.e. "values" without quotes.
     D.PDS_IDENTIFIER_PERMITTED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789';
     
-    ROSETTA_NAIF_ID = -226;
+    ROSETTA_NAIF_ID                = -226;
     CONTENT_MAX_ROW_LENGTH         = 78;    % Number excludes line break characters.
     %CONTENT_MAX_ROW_LENGTH         = 1000;    % Number excludes line break characters.
     
