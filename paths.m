@@ -16,6 +16,9 @@ function [spiceDirectory] = paths()
 
 % Read metakernel file
 fid = fopen('metakernel_rosetta.txt');
+if fid == -1
+    error('Can not open metakernel_rosetta.txt. pwd = %s', pwd)
+end
 C = textscan(fid, '%s');
 fclose(fid);
 
