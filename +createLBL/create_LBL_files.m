@@ -354,7 +354,7 @@ function create_LBL_files(Data)
                     % IMPLEMENTATION NOTE: TEMPORARY SOLUTION. Timestamps are set via the columns, not here. Submitting
                     % empty values forces the rest of the code to overwrite the values though (assertions are triggered
                     % otherwise).
-                    LhtKvpl = get_timestamps_KVPL([], [], [], []);
+                    LhtKvpl = get_timestamps_KVPL('not set', 'not set', 'not set', 'not set');
                     
                     LblData = LblDefs.get_PHO_data(LhtKvpl);
                     
@@ -474,10 +474,11 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
         % Therefore not using it. LBL header start timestamps are set later.
         % Example: LAP_20150503_210047_525_I2L.LBL
         firstPlksSs = convert_PD_TAB_path(pdDatasetPath, index(iIndexFirst).lblfile);
+        %assert()
         LhtKvpl = get_timestamps_KVPL(...
-            [], ...
+            'not set', ...
             Stabindex(i).utcStop, ...
-            [], ...
+            'not set', ...
             obt2sctrc(Stabindex(i).sctStop));
 
         %=======================================
@@ -572,9 +573,9 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
                 % BUG: Does not work for 32S_IVxD. Produces too narrow time limits.
                 firstPlksFile = convert_PD_TAB_path(pdDatasetPath, index(San_tabindex(i).iIndex).lblfile);
                 LhtKvpl = get_timestamps_KVPL(...
-                    [], ...
+                    'not set', ...
                     Stabindex(San_tabindex(i).iTabindex).utcStop, ...
-                    [], ...
+                    'not set', ...
                     obt2sctrc(Stabindex(San_tabindex(i).iTabindex).sctStop));
 
                 if strcmp(San_tabindex(i).dataType, 'downsample')
@@ -625,14 +626,34 @@ end
 
 % Utility function to shorten code.
 %
+% START_TIME, STOP_TIME, SPACECRAFT_CLOCK_START_COUNT,
+% SPACECRAFT_CLOCK_STOP_COUNT : 'not set' (i.e. value not set here), or corresponding string.
+%
+% IMPLEMENTATION NOTE: Using special string for not setting value, instead
+% of [], in order to have assertion which captures when an unintended (and
+% illegal) [] is submitted. This assertion captures bugs/exceptions which
+% would otherwise trigger exceptions much later, deep down in
+% "convert_struct_to_ODL>construct_key_assignment at 183".
+% 
 % IMPLEMENTATION NOTE: From experience, Data.A1P_tabindex.timing, asw_tabindex.timing, Data.USC_tabindex.timing can have
 % UTC values with 6 decimals which DVAL-NG does not permit. Must therefore truncate or round to 3 decimals.
+% 
 function Kvpl = get_timestamps_KVPL(START_TIME, STOP_TIME, SPACECRAFT_CLOCK_START_COUNT, SPACECRAFT_CLOCK_STOP_COUNT)
+
     Kvpl = EJ_library.utils.KVPL2({ ...
-        'START_TIME',                   shorten_UTC(START_TIME); ...
-        'STOP_TIME',                    shorten_UTC(STOP_TIME); ...
-        'SPACECRAFT_CLOCK_START_COUNT', SPACECRAFT_CLOCK_START_COUNT; ...
-        'SPACECRAFT_CLOCK_STOP_COUNT',  SPACECRAFT_CLOCK_STOP_COUNT});
+        'START_TIME',                   interpret_arg(shorten_UTC(START_TIME)); ...
+        'STOP_TIME',                    interpret_arg(shorten_UTC(STOP_TIME)); ...
+        'SPACECRAFT_CLOCK_START_COUNT', interpret_arg(SPACECRAFT_CLOCK_START_COUNT); ...
+        'SPACECRAFT_CLOCK_STOP_COUNT',  interpret_arg(SPACECRAFT_CLOCK_STOP_COUNT)}  );
+    
+    function str = interpret_arg(argStr)
+        EJ_library.utils.assert.castring(argStr)
+        if strcmp(argStr, 'not set')
+            str = [];
+        else
+            str = argStr;
+        end
+    end
 end
 
 
