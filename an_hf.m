@@ -328,7 +328,8 @@ try
             
             
             %--------------------- LET'S PRINT!
-            
+            if(sum(cell2mat(fout(:,end)))>0)% is there a non-empty file to print?
+
             awID = fopen(sname,'w');
             
             lbl_rows = 0;
@@ -374,13 +375,12 @@ try
             
             
             fclose(awID);
-            afID = fopen(fname,'w');            
             
-            f1 = fprintf(afID,'%14.7e, ',   freq(1:end-1));
-            f2 = fprintf(afID,'%14.7e\r\n', freq(end));
-            
-            
-            fclose(afID);
+                afID = fopen(fname,'w');
+    
+                f1 = fprintf(afID,'%14.7e, ',   freq(1:end-1));
+                f2 = fprintf(afID,'%14.7e\r\n', freq(end));
+                fclose(afID);
             
             
             
@@ -436,7 +436,8 @@ try
             an_tabindex{end,7} = 'spectra'; %type
             an_tabindex{end,8} = timing;
             an_tabindex{end,9} = row_byte;
-            
+            end%file empty?
+
         end %Invalid Macro
         
     end    
