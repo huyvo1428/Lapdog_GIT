@@ -289,7 +289,12 @@ classdef Vars_state
         % Save SPECIFIED global variables (e.g. only inaccessible global variables).
         function save_global_variables(saveFile, globalVarNameList)
             if ~isempty(globalVarNameList)
-                feval('global', globalVarNameList{:})
+                % feval('global', globalVarNameList{:}) % NOTE: Works in MATLAB R2009a, but not R2016a.
+                
+                for i = 1:numel(globalVarNameList)
+                    eval(sprintf('global %s', globalVarNameList{i}))
+                end
+                
                 save(saveFile,  globalVarNameList{:})
             end
         end
