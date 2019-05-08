@@ -186,7 +186,8 @@ classdef definitions < handle
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-16', 'EJ', 'Removed bias keywords'}, ...
-                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}});
+                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTION'}});
             HeaderKvpl = createLBL.definitions.remove_bias_keywords(HeaderKvpl);
             
             % Macros 710, 910 LF changes the downsampling and moving average cyclically. Therefore the true values of
@@ -203,8 +204,8 @@ classdef definitions < handle
             % Define columns and global DESCRIPTION
             %=======================================
             ocl = {};
-            ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECOND', 'BYTES', 26, 'DESCRIPTION', 'UTC time.');
-            ocl{end+1} = struct('NAME', 'TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECOND', 'BYTES', 16, 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECOND', 'BYTES', 26, 'DESCRIPTION', 'UTC time. YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECOND', 'BYTES', 16, 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             
             if probeNbr ~=3
                 %================
@@ -378,7 +379,8 @@ classdef definitions < handle
             %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
-                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}});
+                {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}});
 
             HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', ...
                 sprintf('Sweep data, i.e. measured currents while the bias voltage sweeps over a continuous range of values (repeatedly). %s.', ...
@@ -395,10 +397,10 @@ classdef definitions < handle
             %================
             ocl = {};
             
-            oc1 = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'Sweep start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            oc2 = struct('NAME',  'STOP_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION',  'Sweep stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            oc3 = struct('NAME', 'START_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Sweep start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            oc4 = struct('NAME',  'STOP_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION',  'Sweep stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            oc1 = struct('NAME', 'START_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'Sweep start UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            oc2 = struct('NAME',  'STOP_TIME_UTC', 'DATA_TYPE', 'TIME',       'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION',  'Sweep stop UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            oc3 = struct('NAME', 'START_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Sweep start spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
+            oc4 = struct('NAME',  'STOP_TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION',  'Sweep stop spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             if ~obj.generatingDeriv1
                 tempStr = sprintf(' This effectively refers to the %g''th sample.', obj.nFinalPresweepSamples+1);
                 oc1.DESCRIPTION = [oc1.DESCRIPTION, tempStr];
@@ -459,7 +461,8 @@ classdef definitions < handle
                 {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
                 {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}, ...
-                {'2019-02-18', 'EJ', 'Added CALIBRATION_SOURCE_ID'}});
+                {'2019-02-18', 'EJ', 'Added CALIBRATION_SOURCE_ID'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTION'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);            
             %HeaderKvpl = HeaderKvpl.append_kvp('CALIBRATION_SOURCE_ID', {'RPCLAP'});    % NOTE: Not used due to "append_kvp" method bug.
             HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
@@ -489,9 +492,9 @@ classdef definitions < handle
             % downsampling code taking some shortcuts in producing the sequence of OBT+UTC values, i.e. manually
             % producing the series and NOT using SPICE for every such pair. Therefore, if using "useFor", use the same
             % same column (TIME_UTC or TIME_OBT) for deriving both SPACECRAFT_CLOCK_STOP_COUNT and STOP_TIME.
-            ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECOND',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.',                              ...
+            ocl{end+1} = struct('NAME', 'TIME_UTC', 'UNIT', 'SECOND',   'BYTES', 23, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.sss.',                              ...
                 'useFor', {{'START_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECOND',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', ...
+            ocl{end+1} = struct('NAME', 'TIME_OBT', 'UNIT', 'SECOND',   'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).', ...
                 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT'}});
             
             oc1 = struct('NAME', sprintf('P%i_CURRENT',        probeNbr), obj.DATA_UNIT_CURRENT{:}, 'BYTES', 14, obj.DATA_DATA_TYPE{:}, 'DESCRIPTION', 'Averaged current.');
@@ -562,7 +565,8 @@ classdef definitions < handle
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
                 {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}, ...
                 {'2019-02-04', 'EJ', 'Updated UNIT'}, ...
-                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             % 2018-10-03_EJ_AE_RID_meeting.txt:
@@ -591,10 +595,10 @@ classdef definitions < handle
             % Define columns
             %================
             ocl1 = {};
-            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_OBT', 'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_OBT',  'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_UTC', 'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_UTC',  'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',          'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl1{end+1} = struct('NAME', 'SPECTRA_START_TIME_OBT', 'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
+            ocl1{end+1} = struct('NAME', 'SPECTRA_STOP_TIME_OBT',  'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL',    'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl1{end+1} = struct('NAME', 'QUALITY_FLAG',           'UNIT', obj.NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_INTEGER', 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             
             ocl2 = {};
@@ -656,7 +660,8 @@ classdef definitions < handle
                 {'2018-11-27', 'EJ', 'Updated global DESCRIPTION'}, ...
                 {'2019-02-04', 'EJ', 'Updated UNITs, ion bulk speed DESCRIPTION'}, ...
                 {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
-                {'2019-02-20', 'EJ', 'Changed from timestamp interval to single timestamp per row'}});
+                {'2019-02-20', 'EJ', 'Changed from timestamp interval to single timestamp per row'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
@@ -672,8 +677,8 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME', 'TIME_OBT',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',                      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
 
             ocl{end+1} = struct('NAME', 'N_E_FIX_T',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ['Electron density derived from individual sweep.', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME', {{'"ELECTRON DENSITY"'}} , 'CALIBRATION_SOURCE_ID', {{'RPCLAP'}});
@@ -725,7 +730,8 @@ classdef definitions < handle
                 {'2018-11-16', 'EJ', 'Added INSTRUMENT_MODE_* keywords'}, ...
                 {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
                 {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
-                {'2019-03-21', 'EJ', 'Updated DESCRIPTIONs'}});
+                {'2019-03-21', 'EJ', 'Updated DESCRIPTIONs'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
@@ -744,8 +750,8 @@ classdef definitions < handle
             %================
             % FJ's proposal: 2019-02-21: V_SC_POT_PROXY: 'Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFF.');
-            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'TIME_UTC',                     'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.sss.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',                     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl{end+1} = struct('NAME', 'U_SC',                         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',   'DESCRIPTION', ...
                 ['Proxy for spacecraft potential derived from either (a) floating potential measurement (downsampled), or (b) negated estimate of bias potential in sweep where the current is zero.', ...
                 ' Actual source of data depends on what is available.', obj.MC_DESC_AMENDM], ...
@@ -773,7 +779,8 @@ classdef definitions < handle
                 {'2018-08-30', 'EJ', 'Initial version'}, ...
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}, ...
-                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}});
+                {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}});
             HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             HeaderKvpl = createLBL.definitions.remove_INSTRUMENT_MODE_keywords(HeaderKvpl);
@@ -791,9 +798,9 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.',                           ...
+            ocl{end+1} = struct('NAME', 'TIME_UTC',            'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND', 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.ssssss.',                           ...
                 'useFor', {{'START_TIME', 'STOP_TIME'}});
-            ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).', ...
+            ocl{end+1} = struct('NAME', 'TIME_OBT',            'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND', 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).', ...
                 'useFor', {{'SPACECRAFT_CLOCK_START_COUNT', 'SPACECRAFT_CLOCK_STOP_COUNT'}});
             ocl{end+1} = struct('NAME', 'I_PH0_60M',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'AMPERE', 'DESCRIPTION', ...
                 ['Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).', obj.MC_DESC_AMENDM], ...
@@ -811,7 +818,8 @@ classdef definitions < handle
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
-                {'2019-02-28', 'EJ', 'Initial version'}});
+                {'2019-02-28', 'EJ', 'Initial version'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);    % Unnecessary?
             
             HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
@@ -828,8 +836,8 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',         'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',          'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME', 'TIME_OBT',         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',          'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'TIME_UTC',         'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',          'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',         'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',          'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl{end+1} = struct('NAME', 'EFIELD_COMPONENT', 'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'MILLIVOLT/METER', 'DESCRIPTION', ...
                 ['Electric field component, calculated on ground by taking the difference between floating probe measurements on both probes', ...
                 ' and dividing by distance, (V_P2-V_P1)/L. Positive value refers to electric field pointing in the direction from probe 1 to probe 2.', obj.MC_DESC_AMENDM], ...
@@ -851,7 +859,8 @@ classdef definitions < handle
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2019-02-04', 'EJ', 'Updated UNIT'}, ...
                 {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
-                {'2019-03-15', 'EJ', 'Updated DESCRIPTION, added DATA_SOURCE column.'}});
+                {'2019-03-15', 'EJ', 'Updated DESCRIPTION, added DATA_SOURCE column.'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs, including fixing typo'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             % MB states:
@@ -872,8 +881,8 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.sss.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl{end+1} = struct('NAME', 'N_PL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ...
                 ['Plasma density derived from individual E field mode floating potential LF measurements on an illuminated probe.', ...
                 ' The derivation additionally uses low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', ...
@@ -902,7 +911,8 @@ classdef definitions < handle
                 {'2018-11-13', 'EJ', 'First documented version'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
                 {'2018-11-21', 'EJ', 'Update global DESCRIPTION'}, ...
-                {'2019-02-04', 'EJ', 'Updated UNITs'}});
+                {'2019-02-04', 'EJ', 'Updated UNITs'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs, including fixing typo'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
 
             DESCRIPTION = sprintf('Model fitted analysis of %s sweep file.', ixsFilename);
@@ -915,10 +925,10 @@ classdef definitions < handle
             % Define columns
             %================
             ocl1 = {};
-            ocl1{end+1} = struct('NAME', 'START_TIME_UTC',  'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC time YYYY-MM-DD HH:MM:SS.FFF.');
-            ocl1{end+1} = struct('NAME', 'STOP_TIME_UTC',   'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION',  'Stop time of sweep. UTC time YYYY-MM-DD HH:MM:SS.FFF.');
-            ocl1{end+1} = struct('NAME', 'START_TIME_OBT',  'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Start time of sweep. Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION',  'Stop time of sweep. Spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl1{end+1} = struct('NAME', 'START_TIME_UTC',  'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION', 'Start time of sweep. UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl1{end+1} = struct('NAME', 'STOP_TIME_UTC',   'UNIT', 'SECOND',        'BYTES', 26, 'DATA_TYPE', 'TIME',       'DESCRIPTION',  'Stop time of sweep. UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl1{end+1} = struct('NAME', 'START_TIME_OBT',  'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Start time of sweep. Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
+            ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION',  'Stop time of sweep. Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl1{end+1} = struct('NAME', 'Qualityfactor',   'UNIT', obj.NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Quality factor from 0-100.');   % TODO: Correct?
             ocl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'DEGREE',        'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle in spacecraft XZ plane, measured from Z+ axis.');
             ocl1{end+1} = struct('NAME', 'Illumination',    'UNIT', obj.NO_ODL_UNIT, 'BYTES',  4, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
@@ -1067,7 +1077,8 @@ classdef definitions < handle
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-14', 'EJ', 'First documented version'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
-                {'2019-02-04', 'EJ', 'Updated UNITs'}});
+                {'2019-02-04', 'EJ', 'Updated UNITs'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             DESCRIPTION = 'Best estimates of physical values from model fitted analysis based on sweeps.';
@@ -1080,10 +1091,10 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
+            ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             ocl{end+1} = struct('NAME', 'npl',                'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of plasma number density.');
             ocl{end+1} = struct('NAME', 'Te',                 'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',   'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of electron temperature.');
@@ -1110,7 +1121,8 @@ classdef definitions < handle
             %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-14', 'EJ', 'First documented version'}, ...
-                {'2018-11-21', 'EJ', 'Update global DESCRIPTION'}});
+                {'2018-11-21', 'EJ', 'Update global DESCRIPTION'}, ...
+                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             DESCRIPTION = 'Analyzed probe 1 parameters.';
@@ -1123,10 +1135,10 @@ classdef definitions < handle
             % Define columns
             %================
             ocl = [];
-            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',        'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME',  'STOP_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',        'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.FFFFFF.');
-            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',        'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
-            ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',        'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.FFFFFF (true decimal point).');
+            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',        'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl{end+1} = struct('NAME',  'STOP_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',        'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',        'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
+            ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',        'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Quality flag from 000 (best) to 777 (worst).');
             ocl{end+1} = struct('NAME', 'Vph_knee',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',          'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Potential at probe position from photoelectron current knee (gaussian fit of second derivative).');
             ocl{end+1} = struct('NAME', 'Te_exp_belowVknee',  'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',  'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Electron temperature from an exponential fit to the slope of the retardation region of the electron current.');
