@@ -1,7 +1,9 @@
 %
-% Take string of human-readable text and break it into multiple pieces/"rows" assuming maximum row length.
+% Take string of ~human-readable text and break it into multiple pieces/"rows" assuming maximum row length.
 % Replaces certain substrings (LBC) with a specified string representing a line break.
-% NOTE: The problem is not entirely well defined. A human can see multiple "solutions" to line-breaking the same text.
+%
+% NOTE: The task of line-breaking is not entirely well defined. A human can see multiple "solutions" to line-breaking
+% the same text.
 %
 %
 % RATIONALE
@@ -18,12 +20,15 @@
 % varargin           : Settings as interpreted by EJ_library.utils.interpret_settings_args.
 %   lineBreakStr                : String to be used to represent inserted line break.
 %   errorPolicy                 : String constant. Whether to trigger error when can not satisfy the rowMaxLength values.
-%       'Error'                 : Error
-%       'Warning'               : Warning. Permit longer rows, but only when necessary to.
-%       'Nothing'               : No error/warning/log message. Permit longer rows, but only when necessary to.
+%       'Error'                     : Error
+%       'Warning'                   : Warning. Permit longer rows, but only when necessary to.
+%       'Nothing'                   : No error/warning/log message. Permit longer rows, but only when necessary to.
 %                                 NOTE: The caller can still give error/warning by analyzing the returned string list.
 %   permitEmptyFirstRow         : True/false. Whether to permit first row to be empty.
 %   lineBreakCandidateRegexp
+%   nonBreakingSpace            : String to identified as non-breaking space. Should not be matched by
+%                                 lineBreakCandidateRegexp.
+%   nonBreakingSpaceReplacement : Occurrences of nonBreakingSpace are replaced by this string, after the line-breaking.
 %
 % NOTE: Row max lengths EXCLUDE the length of lineBreakStr.
 %
@@ -85,23 +90,34 @@ function [str, strList] = break_text(str, firstRowMaxLength, midRowsMaxLength, l
 % PROPOSAL: Change algorithm to first find all LBCs, then break text.
 %   PRO: Might speed up algorithm by reducing calls to find LBCs.
 %   PRO: Might be possible to improve algorithm (speed up, clarify).
+%
+% PROPOSAL: Assertion: search string for linebreaks before algorithm.
 
-    DEFAULT_SETTINGS.lineBreakCandidateRegexp = '[\t ]*';    % \t = tab
-    DEFAULT_SETTINGS.lineBreakStr             = sprintf('\n');
-    DEFAULT_SETTINGS.errorPolicy              = 'Error';
-    DEFAULT_SETTINGS.permitEmptyFirstRow      = false;
+    DEFAULT_SETTINGS.lineBreakCandidateRegexp    = '[\t ]*';    % \t = tab.
+    DEFAULT_SETTINGS.lineBreakStr                = sprintf('\n');
+    DEFAULT_SETTINGS.errorPolicy                 = 'Error';
+    DEFAULT_SETTINGS.permitEmptyFirstRow         = false;
+    DEFAULT_SETTINGS.nonBreakingSpace            = '';
+    DEFAULT_SETTINGS.nonBreakingSpaceReplacement = ' ';
     Settings = EJ_library.utils.interpret_settings_args(DEFAULT_SETTINGS, varargin);
     EJ_library.utils.assert.struct(Settings, fieldnames(DEFAULT_SETTINGS))
     
     
 
     % ASSERTION: Check row max lengths.
-    % Useful to check this in case the row max lengths are automatically calculated (can go wrong).
+    % Useful to check this in case the row max lengths are automatically calculated by the caller (can go wrong).
     if ~all([firstRowMaxLength, midRowsMaxLength, lastRowMaxLength] > 0)
         error('At least one row-max length argument is non-positive.')
     end
-    % ASSERTION
-    EJ_library.utils.assert.castring(str)
+    % ASSERTIONS
+    EJ_library.utils.assert.castring(str)    
+    % ASSERTION: Check that string contains no linebreaks.
+    if ~isempty(regexp(str, Settings.lineBreakStr, 'once'))
+        % IMPLEMENTATION NOTE: Does not print Settings.lineBreakStr since it is typically a linebreak etc which
+        % typically have to be printed with escape codes to be (easily) human-readable.
+        error('str="%s" (first chars) contains at least once matching occurrence of Settings.lineBreakStr.', ...
+            str(1:min(numel(str), 60)))
+    end
     
     
     
@@ -169,6 +185,19 @@ function [str, strList] = break_text(str, firstRowMaxLength, midRowsMaxLength, l
         end
         strList{end+1} = str;
     end
+    
+    
+    if ~isempty(Settings.nonBreakingSpace)
+        %==========================================
+        % Convert non-breaking space to whitespace
+        %==========================================
+        for i = 1:numel(strList)
+            % NOTE: strrep does nothing if the old substring (Settings.nonBreakingSpace) is empty, so in principle one
+            % does not need to disable using this condition.
+            strList{i} = strrep(strList{i}, Settings.nonBreakingSpace, Settings.nonBreakingSpaceReplacement);
+        end
+    end
+    
         
 
     % Convert list of strings to string with characters for line breaks.

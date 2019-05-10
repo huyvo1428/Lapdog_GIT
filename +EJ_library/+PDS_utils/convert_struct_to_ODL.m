@@ -7,7 +7,7 @@
 %
 % ARGUMENTS
 % =========
-% Ssl                : SSL data structure. See EJ_library.PDS_utils.convert_struct_to_ODL.
+% Ssl                : SSL data structure. See EJ_library.PDS_utils.convert_ODL_to_structs.
 % contentRowMaxWidth : Max number of characters per row, excluding line break.
 %                      NOTE: Not strictly implemented. Could be exceeded in rare special cases with too much
 %                      indentation, too long keywords or (non-line-breakable) key values.
@@ -127,7 +127,12 @@ function [fileStr] = construct_key_assignment(key, value, postKeyPaddingLength, 
     % PROPOSAL: If first row of line-broken value does not fit row, and removing post-key padding is not enough, then
     %           try removing indentation.
 
-    EQUALITY_STR = ' = ';
+    EQUALITY_STR       = ' = ';
+    % String which represents non-breaking space when line-breaking ODL array components.
+    % ASSERTS: Must not be used in actual ODL array component.
+    NON_BREAKING_SPACE = '~~';
+    
+        
 
     %==========================================================
     % Handle different cases. Determine whether to line-break.
@@ -149,7 +154,26 @@ function [fileStr] = construct_key_assignment(key, value, postKeyPaddingLength, 
     % (2) quoted and unquoted individual values (must not be consistent within array).
     %
     if iscell(value)
+        %=================
         % CASE: ODL array
+        %=================
+        
+        %----------------------------------------------------------------------------------
+        % Replace whitespace-->Non-breaking space (constant value) in ODL array components
+        %----------------------------------------------------------------------------------
+        % Prevents line-breaking inside array components, but not between them.
+        for i = 1:numel(value)
+            % ASSERTION
+            if ~isempty(strfind(value{i}, NON_BREAKING_SPACE))
+                error([...
+                    'ODL array subvalue contains substring that represents non-breaking space, as currently configured (hardcoded).\n', ...
+                    '    value{%i}          = "%s"\n', ...
+                    '    NON_BREAKING_SPACE = "%s"\n'], ...
+                    i, value{i}, NON_BREAKING_SPACE)
+            end
+            
+            value{i} = strrep(value{i}, ' ', NON_BREAKING_SPACE);
+        end
         
         % NOTE: Re-makes ODL array into string (which can be line-broken).
         % NOTE: Whitespace between left curly bracket and first string value, so that algorithm can line break in
@@ -159,10 +183,12 @@ function [fileStr] = construct_key_assignment(key, value, postKeyPaddingLength, 
         shouldLineBreak     = true;
         
     elseif ischar(value)
-        % CASE: String value
+        %=============================================
+        % CASE: String value (with or without quotes)
+        %=============================================
         
         containsLineBreaks = ~isempty(strfind(value, lineBreak));
-        if EJ_library.utils.is_quoted(value)            
+        if EJ_library.utils.is_quoted(value)
             % CASE: Quoted string value
             permitEmptyFirstRow = true;
             shouldLineBreak     = ~containsLineBreaks;
@@ -190,13 +216,17 @@ function [fileStr] = construct_key_assignment(key, value, postKeyPaddingLength, 
         %========================
         % CASE: Line break value
         %========================
+        
+        % NOTE: Permit failed line breaking without error. ==> Check manually instead.        
         [value, rowList] = EJ_library.utils.break_text(value, ...
             firstLbValueRowMaxLength, ...    % NOTE: String contains beginning quote. Therefore does NOT need to subtract 1 from rowMaxLength.
             rowMaxLength, ...
-            rowMaxLength, ...         % NOTE: String contains ending quote. Therefore does NOT need to subtract 1 from rowMaxLength.
-            'lineBreakStr',        lineBreak, ...
-            'errorPolicy',         'Warning', ...
-            'permitEmptyFirstRow', permitEmptyFirstRow);   % NOTE: Permit failed line breaking without error. ==> Check manually instead.        
+            rowMaxLength, ...                % NOTE: String contains ending quote. Therefore does NOT need to subtract 1 from rowMaxLength.
+            'lineBreakStr',                lineBreak, ...
+            'errorPolicy',                 'Warning', ...
+            'permitEmptyFirstRow',         permitEmptyFirstRow, ...
+            'nonBreakingSpace',            NON_BREAKING_SPACE,...
+            'nonBreakingSpaceReplacement', ' ');
 
         firstLbValueRowLength = length(rowList{1});
 

@@ -22,7 +22,7 @@
 % AsgList = Assignment List
 %           IMPLEMENTATION NOTE: Data struct is similar but not the same as KVPL="Key-Value Pair List" class. The
 %           difference is that KVPL only contains unique keys, AsgList does not.
-% SS  = "Simple Struct" (historical)
+% SS  = "Simple Struct" (historical name)
 %    Data struct that approximately represents the structured part of an ODL file. This format is easy to use for
 %    retrieving specific values.
 %    MATLAB struct where the fields correspond to ODL keys and their values correspond
@@ -55,12 +55,15 @@
 %      s.OBJECT___TABLE{1}.OBJECT___COLUMN{2}.START_BYTE
 %      ...
 % SSL = "Struct String Lists" (or "string lists struct")
-%   Data struct that represents the structured part of an ODL file.
+%   Recursive data struct that represents the structured part of an ODL file.
 %   ODL keys/values as arrays of strings, ODL OBJECT statements recursively in list of such objects.
 %    - Preserves exact order of everything.
 %    - "OBJECT = ...", but not "END_OBJECT = ...", are represented as key-value pairs.
 %       Ssl.keys    : Cell vector of key names as strings
-%       Ssl.values  : Cell vector of key values as strings, including surrounding quotes if any
+%       Ssl.values  : Cell vector of key values. Each value can be one of two types:
+%           String    : String. Includes surrounding quotes if value should be quoted.
+%           ODL array : 1D cell array of strings. Strings include surrounding quotes if values should be quoted.
+%                       Strings must NOT contain line breaks.
 %       Ssl.objects : Cell vector where every component is:
 %           For non-"OBJECT = ..." statements: Empty, [].
 %           For     "OBJECT = ..." statements: An SSL struct, recursively.
@@ -109,15 +112,27 @@ end
 
 
 % Extract assignments VARIABLE_NAME = VALUE from list of lines.
+%
 % Empty lines and "END" are permitted but are not represented in the returned result.
 % Makes no other interpretation.
 function [AsgList, endRowsList] = read_keys_values_list(rowStrList)
     
-    LINE_BREAK = sprintf('\r\n');   % String that represents line break in value strings. NOTE: Additionally hardcoded in various regexp..
-    WSLB_RE         = '[ \t\r\n]*';                   % WSLB = Whitespace (and tab), Line Break. RE = Regular expression.
+    % RE = Regular expression
+    LINE_BREAK      = sprintf('\r\n');   % String that represents line break in value strings. NOTE: Additionally hardcoded in various regexp..
+    WSLB_RE         = '[ \t\r\n]*';                   % WSLB = WhiteSpace (and tab), Line Break.
     KEYWORD_RE      = '[A-Za-z0-9^:_]+';              % NOTE: Must include ":" due to "ROSETTA:". Includes lower case, which PDS3 does not allow?
-    VALUE_STRING_RE = '([A-Za-z0-9_:.+-]+|"[^"]*")';  % NOTE: Must include ":", "-", and "." due to e.g. START_TIME = 2016-06-28T23:58:10.148.  "+" due to MISSING_CONSTANT = -1.0e+09.
     
+    % Definition of permitted value string (not ODL array).
+    % NOTE: Must include ":", "-", and "." due to e.g. START_TIME = 2016-06-28T23:58:10.148. "+" due to MISSING_CONSTANT = -1.0e+09.
+    VALUE_STRING_RE       = '([A-Za-z0-9_:.+-]+|"[^"]*")';     
+    
+    % Definition of permitted ODL array value string.
+    % Almost identical to plain value string.
+    % NOTE: Forbids CR+LF also within quotes.
+    VALUE_ARRAY_STRING_RE = '([A-Za-z0-9_:.+-]+|"[^"\r\n]*")'; 
+
+    
+
     keyList   = cell(0, 1);
     valueList = cell(0, 1);
     
@@ -135,20 +150,19 @@ function [AsgList, endRowsList] = read_keys_values_list(rowStrList)
                 %[str, token, n] = read_token_req(str, 'END[ \t]*\r\n', KEYWORD_RE);    % Read (1) END, or (2) key.
                 % IMPLEMENTATION NOTE: Must check for END first, so that algorithm does not think that END is the name of a
                 % keyword.
-                
-                
+
                 switch n
                     case 1
                         state = 'END';
                     case 2
                         state = 'KEYWORD';
                 end
-                
+
             case 'KEYWORD'
                 key = token;
                 str             = read_token_req(str, [WSLB_RE, '=', WSLB_RE]);            % Read equals.
                 [str, token, n] = read_token_req(str, VALUE_STRING_RE, ['{', WSLB_RE]);    % Read (1) value string, or (2) left curly brace.
-                
+
                 switch n
                     case 1
                         % CASE: Unquoted/quoted value
@@ -158,16 +172,16 @@ function [AsgList, endRowsList] = read_keys_values_list(rowStrList)
                     case 2
                         state = 'VALUE_ARRAY_BEGIN_BRACKET';
                 end
-                
+
             case 'VALUE_STRING'
                 % NOTE: PDS/ODL requires at most one keyword assignment per row. Therefore reads at AT LEAST ONE LINE
                 %       BREAK.
                 str   = read_token_req(str, [WSLB_RE, '\r\n']);
                 state = 'DONE_PARSING_ASSIGNMENT';
-                
+
             case 'VALUE_ARRAY_BEGIN_BRACKET'
                 value = cell(0,1);
-                [str, arrayCompValue, n] = read_token_req(str, [WSLB_RE, '}'], VALUE_STRING_RE);    % Read (1) right curly bracket, or (2) value string.
+                [str, arrayCompValue, n] = read_token_req(str, ['}'], VALUE_ARRAY_STRING_RE);    % Read (1) right curly bracket, or (2) value string.
                 
                 switch n
                     case 1
@@ -179,21 +193,21 @@ function [AsgList, endRowsList] = read_keys_values_list(rowStrList)
                         state = 'VALUE_ARRAY_COMPONENT';
                         
                 end   % switch
-                
+
             case 'VALUE_ARRAY_COMPONENT'
                 value{end+1, 1} = arrayCompValue;
                 [str, junk, n] = read_token_req(str, [WSLB_RE, ',' WSLB_RE], [WSLB_RE, '}']);    % Read (1) comma, or (2) right curly bracket
                 switch n
                     case 1
                         % CASE: Has read comma.
-                        [str, arrayCompValue] = read_token_req(str, VALUE_STRING_RE);    % Read (1) value string, or (2) right curly bracket.
+                        [str, arrayCompValue] = read_token_req(str, VALUE_ARRAY_STRING_RE);    % Read (1) value string, or (2) right curly bracket.
                         state = 'VALUE_ARRAY_COMPONENT';
                         
                     case 2
                         % CASE: Reached end of ODL array.
                         state = 'DONE_PARSING_ASSIGNMENT';
                 end
-                
+
             case 'DONE_PARSING_ASSIGNMENT'
                 keyList{end+1, 1}   = key;
                 valueList{end+1, 1} = value;
@@ -217,7 +231,7 @@ function [AsgList, endRowsList] = read_keys_values_list(rowStrList)
                     % represent a row NOT followed by line break. It is doubtful whether such strings/rows should be
                     % regarded as rows when empty. Therefore removing them.
                     % Ex: String being split is empty ==> splitting will result in one empty string.
-                    endRowsList = EJ_library.utils.str_split(str, '\r\n');
+                    endRowsList = EJ_library.utils.str_split(str, LINE_BREAK);
                     if isempty(endRowsList{end})
                         endRowsList(end) = [];
                     end
@@ -234,133 +248,7 @@ function [AsgList, endRowsList] = read_keys_values_list(rowStrList)
     
     AsgList.keys   = keyList;
     AsgList.values = valueList;
-    
 
-
-%  ##############################
-%   OLD IMPLEMENTATION - DELETE?
-%  ##############################
-%     iKv  = 0;
-%     iRow = 0;
-%     
-%     %----------------------------------------------------------------
-%     % NOTE: Uses variables defined outside of function equivalent to
-%     % "[rowStr, iRow] = new_row(rowStrList, iRow)".
-%     % This is only to simplify and speed up the calls.
-%     %   PROPOSAL: Change?!
-%     function next_row()
-%         iRow = iRow + 1;
-%         if iRow > length(rowStrList)
-%             error('Reached end of file sooner than syntax implied.')
-%         end
-%         rowStr = rowStrList{iRow};
-%     end
-%     %----------------------------------------------------------------
-%     
-%     state = 'new_statement';    % Value represents "where the algorithm thinks it is", "what it expects".
-%     rowStr = [];    % Must define to prevent overloading with some MATLAB function.
-%     while true
-% 
-%         switch state
-% 
-%             % Assume key = value, END, or empty line.
-%             case 'new_statement'
-% 
-%                 next_row();
-%                 rowTrimmed = strtrim(rowStr);
-%                 if strcmp(rowTrimmed, '')
-%                     % CASE: Empty line
-%                     state = 'new_statement';
-%                 elseif strcmp(rowTrimmed, 'END')
-%                     % CASE: "END"
-%                     state = 'end';
-%                 else
-%                     iComment1 = regexp(rowStr, '/\*', 'once');
-%                     if ~isempty(iComment1)
-%                         iComment2 = regexp(rowStr(iComment1+2:end), '\*/', 'once');   % NOTE: Star is escaped with backslash.
-%                         if isempty(iComment2)
-%                             error('Row %i: Can not find end of comment.', iRow);
-%                         end
-%                         state = 'new_statement';
-%                     else                    
-%                         state = 'begin_assignment';
-%                     end
-%                 end
-% 
-%             case 'begin_assignment'
-% 
-%                 % CASE: key = value
-%                 iEq = regexp(rowStr, '=', 'once');
-%                 if isempty(iEq)
-%                     error('Row %i: Can not find the expected equals ("=") character on the same row.', iRow)
-%                 end
-%                 
-%                 key    = strtrim(rowStr(1:(iEq-1)));
-%                 rowStr = rowStr((iEq+1):end);
-%                 
-%                 iQuote1 = regexp(rowStr, '"', 'once');
-%                 if isempty(iQuote1)
-%                     % CASE: Unquoted value
-%                     
-%                     value = strtrim(rowStr);
-%                     state = 'key_value_done';
-% 
-%                 else                    
-%                     % CASE: Quoted value
-% 
-%                     rowStr = rowStr(iQuote1:end);   % INCLUDE THE QUOTE!
-% 
-%                     iQuote2 = 1+regexp(rowStr(2:end), '"', 'once');   % Search for SECOND quote.
-%                     if ~isempty(iQuote2)
-%                         % CASE: Second quote on the SAME line.
-%                         value = rowStr(1:iQuote2);    % INCLUDE THE QUOTE
-%                         state = 'key_value_done';
-%                     else
-%                         % CASE: Second quote on OTHER line.
-%                         value = rowStr;
-%                         state = 'quoted_value_nonfirst_line';
-%                     end
-% 
-%                 end
-% 
-%             case 'quoted_value_nonfirst_line'
-% 
-%                 next_row();
-%                 iQuote2 = regexp(rowStr, '"', 'once');
-%                 if isempty(iQuote2)
-%                     valueAddition = rowStr;
-%                     state = 'quoted_value_nonfirst_line';
-%                 else
-%                     valueAddition = rowStr(1:iQuote2);   % INCLUDE THE QUOTE
-%                     state = 'key_value_done';
-%                 end
-%                 value = [value, LINE_BREAK, valueAddition];
-% 
-%             case 'key_value_done'
-% 
-%                 iKv = iKv + 1;
-%                 values{iKv} = value;
-%                 keys{iKv}   = key;
-%                 state = 'new_statement';
-%                 
-%             case 'end'
-%                 
-%                 endRowsList = rowStrList(iRow+1:end);
-%                 break   % Break the while loop.
-%                 
-%             otherwise
-%                 
-%                 error('Unknown state');
-%         end
-%         
-%         
-%         
-%     end
-%
-%     % Shorten cell arrays to remove unused entries (since these are preallocated variables).
-%     AsgList.keys   = keys(1:iKv);
-%     AsgList.values = values(1:iKv);
-    
 end
 
 %###################################################################################################
@@ -540,7 +428,8 @@ end
 
 %###################################################################################################
 
-% Derive a string/number to be used as a structure field value from the ODL variable/key value (string).
+% Derive a string/number to be used as a structure field value in SS from the ODL variable/key value (string).
+%
 % Value is quoted ==> Save unquoted value as string
 % Value not quoted ==> Try to save as number. If fails, save as (unquoted) string.
 % Value is empty ==> Save as empty string.

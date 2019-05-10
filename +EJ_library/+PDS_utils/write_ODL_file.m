@@ -37,7 +37,6 @@ function write_ODL_file(filePath, Ssl, endRowsList, indentationLength, contentRo
 %   PROPOSAL: Optional argument with default value?
 % PROPOSAL: Change name: write_ODL_file
 
-
     LINE_BREAK = sprintf('\r\n');
     
     % ASSERTION
