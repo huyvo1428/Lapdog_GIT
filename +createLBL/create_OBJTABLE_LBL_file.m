@@ -452,11 +452,11 @@ end
 function Ssl = create_OBJ_TABLE_content(OBJTABLE_data, nTabFileRows)
     S = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
 
-    S = add_SSL(S, 'INTERCHANGE_FORMAT','%s',   'ASCII');
-    S = add_SSL(S, 'ROWS',              '%d',   nTabFileRows);
-    S = add_SSL(S, 'COLUMNS',           '%d',   OBJTABLE_data.COLUMNS);
-    S = add_SSL(S, 'ROW_BYTES',         '%d',   OBJTABLE_data.ROW_BYTES);
-    S = add_SSL(S, 'DESCRIPTION',       '"%s"', OBJTABLE_data.DESCRIPTION);
+    S = add_SSL_form(S, 'INTERCHANGE_FORMAT','%s',   'ASCII');
+    S = add_SSL_form(S, 'ROWS',              '%d',   nTabFileRows);
+    S = add_SSL_form(S, 'COLUMNS',           '%d',   OBJTABLE_data.COLUMNS);
+    S = add_SSL_form(S, 'ROW_BYTES',         '%d',   OBJTABLE_data.ROW_BYTES);
+    S = add_SSL_form(S, 'DESCRIPTION',       '"%s"', OBJTABLE_data.DESCRIPTION);
 
     for i = 1:length(OBJTABLE_data.OBJCOL_list)           % Iterate over list of ODL OBJECT COLUMN
         ColumnData = OBJTABLE_data.OBJCOL_list{i};        % Cd = column OBJTABLE_data
@@ -475,31 +475,33 @@ end
 function [Ssl, nSubcolumns] = create_OBJ_COLUMN_content(Cd)
     S = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
     
-    S = add_SSL(S, 'NAME',       '%s', Cd.NAME);
-    S = add_SSL(S, 'START_BYTE', '%i', Cd.START_BYTE);      % Move down to ITEMS?
-    S = add_SSL(S, 'BYTES',      '%i', Cd.BYTES);            % Move down to ITEMS?
-    S = add_SSL(S, 'DATA_TYPE',  '%s', Cd.DATA_TYPE);
+    S = add_SSL_form(S, 'NAME',       '%s', Cd.NAME);
+    S = add_SSL_form(S, 'START_BYTE', '%i', Cd.START_BYTE);      % Move down to ITEMS?
+    S = add_SSL_form(S, 'BYTES',      '%i', Cd.BYTES);           % Move down to ITEMS?
+    S = add_SSL_form(S, 'DATA_TYPE',  '%s', Cd.DATA_TYPE);
     
     if isfield(Cd, 'UNIT')
-        S = add_SSL(S, 'UNIT', '"%s"', Cd.UNIT);
+        S = add_SSL_form(S, 'UNIT', '"%s"', Cd.UNIT);
     end
     if isfield(Cd, 'ITEMS')
-        S = add_SSL(S, 'ITEMS',       '%i', Cd.ITEMS);
-        S = add_SSL(S, 'ITEM_BYTES',  '%i', Cd.ITEM_BYTES);
-        S = add_SSL(S, 'ITEM_OFFSET', '%i', Cd.ITEM_OFFSET);
+        S = add_SSL_form(S, 'ITEMS',       '%i', Cd.ITEMS);
+        S = add_SSL_form(S, 'ITEM_BYTES',  '%i', Cd.ITEM_BYTES);
+        S = add_SSL_form(S, 'ITEM_OFFSET', '%i', Cd.ITEM_OFFSET);
         nSubcolumns = Cd.ITEMS;
     else
         nSubcolumns = 1;
     end
-    S = add_SSL(S, 'DESCRIPTION', '"%s"', Cd.DESCRIPTION);      % NOTE: Added quotes.
+    S = add_SSL_form(S, 'DESCRIPTION', '"%s"', Cd.DESCRIPTION);      % NOTE: Added quotes.
     if isfield(Cd, 'MISSING_CONSTANT')
-        S = add_SSL(S, 'MISSING_CONSTANT', '%g', Cd.MISSING_CONSTANT);
+        % IMPLEMENTATION NOTE: Needs %E for printing floating point numbers. %G is not enough since DVALNG appears to
+        % require at least one decimal place, i.e. "-1.0E+09" and "-1.000000E+09" work, but not "-1E+09".
+        S = add_SSL_form(S, 'MISSING_CONSTANT', '%E', Cd.MISSING_CONSTANT);
     end
     if isfield(Cd, 'DATA_SET_PARAMETER_NAME')
-        S = add_SSL2(S, 'DATA_SET_PARAMETER_NAME', Cd.DATA_SET_PARAMETER_NAME);
+        S = add_SSL_str(S, 'DATA_SET_PARAMETER_NAME', Cd.DATA_SET_PARAMETER_NAME);
     end
     if isfield(Cd, 'CALIBRATION_SOURCE_ID')
-        S = add_SSL2(S, 'CALIBRATION_SOURCE_ID', Cd.CALIBRATION_SOURCE_ID);
+        S = add_SSL_str(S, 'CALIBRATION_SOURCE_ID', Cd.CALIBRATION_SOURCE_ID);
     end
     
     Ssl = S;
@@ -507,19 +509,21 @@ end
 
 
 
-function Ssl = add_SSL2(Ssl, key, value)
-    % PROPOSAL: Bad name. Change.
+% Add key with plain string value.
+function Ssl = add_SSL_str(Ssl, key, value)
     Ssl.keys   {end+1} = key;
     Ssl.values {end+1} = value;
     Ssl.objects{end+1} = [];
 end
 
-function Ssl = add_SSL(Ssl, key, pattern, value)
+% Add key with formatted string value.
+function Ssl = add_SSL_form(Ssl, key, pattern, value)
     Ssl.keys   {end+1} = key;
-    Ssl.values {end+1} = sprintf(pattern, value);
+    Ssl.values {end+1} = sprintf(pattern, value);     % NOTE: sprintf
     Ssl.objects{end+1} = [];
 end
 
+% Add key with OBJECT SSL.
 function Ssl = add_SSL_OBJECT(Ssl, objectValue, sslObjectContents)
     Ssl.keys   {end+1} = 'OBJECT';
     Ssl.values {end+1} = objectValue;
