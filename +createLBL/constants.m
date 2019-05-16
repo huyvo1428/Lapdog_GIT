@@ -49,13 +49,15 @@ classdef constants < handle
         MISSING_CONSTANT                       = -1000000000;    % Same as global variable MISSING_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
         N_FINAL_PRESWEEP_SAMPLES               = 16;             % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
 
-        % When splitting "index" into multiple parts for saving to disk, this is how large every part should be, in
-        % number of index values. Lapdog's ESC2 "index" variable is size "1x661300" and can be saved to disk as one
-        % (empirically).
+        % When splitting "index" into multiple parts (.mat files) for saving to disk, this is how large every part
+        % should be, in number of index values.
+        %
+        % NOTE: Lapdog's ESC2 "index" variable is size "1x661300" and there have been times when it has been both
+        % possible and not possible to save it, so it is probably close to the limit.
         % NOTE: The true upper limit may depend on the length of strings, in particular paths stored in "index". Should
         % maybe therefore lower the value to have more margin.
-        N_INDEX_INDICES_PER_PART               = 662000;       
-        %N_INDEX_INDICES_PER_PART               = 670;
+        %N_INDEX_INDICES_PER_PART               = 662000;       % Has failed for ESC2, ESC3 ~2019-05-15.
+        N_INDEX_INDICES_PER_PART               = 200000;
         
         % Used by createLBL.create_OBJTABLE_LBL_file
         COTLF_HEADER_OPTIONS   % Set in constructor
