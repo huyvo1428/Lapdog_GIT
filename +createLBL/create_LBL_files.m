@@ -278,7 +278,7 @@ function create_LBL_files(Data)
         %==========================
         if ~isempty(Data.ASW_tabindex)
             for iFile = 1:numel(Data.ASW_tabindex)
-                try                    
+                try
                     startStopTimes = Data.ASW_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
                     LhtKvpl = get_timestamps_KVPL(...
                         startStopTimes{1}, ...

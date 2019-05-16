@@ -18,8 +18,8 @@
 %   1/True  : Fail fast, generate errors. Good for debugging and production of datasets for official delivery.
 %   0/False : Continue running for errors. Less messages. Useful if one does not really care about LBL files.
 % saveCallerWorkspace
-%   1/True  : Try to save MATLAB workspace to file. If intended path is already used, do not write but fail silently.
-%   0/False : Do not save MATLAB workspace to file.
+%   1/True  : Try to save MATLAB workspace to file(s). Will overwrite any old state files.
+%   0/False : Do not save MATLAB workspace to file(s).
 % varargin : Either
 %   (1) <Empty>  : Use Lapdog variable for dataset path.
 %   (2) varargin{1} : pds    dataset path to use.
@@ -32,7 +32,7 @@
 % (1) separate many ugly hacks and assumptions from the main LBL file-creating code code due to the interface between
 %     Lapdog and ~createLBL:
 %   (1a) make it explicit which of the Lapdog workspace variables are used,
-%   (1b) separate the dependence on global variables,
+%   (1b) isolate/concentrate the dependence on global variables,
 %   (1c) making assumptions on where the metakernel is,
 %   (1d) figure out the output dataset type (EDDER, DERIV1),
 % (2) optionally save the necessary input to a .mat file to make it possible to rerun the createLBL (or its main function) separately
@@ -98,9 +98,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     %   PROPOSAL: Save to other data format.
     %   PROPOSAL: Remove certain other variables from saving.
     %       Ex: MIP
-    %
-    % PROPOSAL: Change to permit overwrite.
-    
+
     
     
     % Workspace used for Lapdog variables must be correct for createLBL being called from (1) the command line, (2)
@@ -144,7 +142,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
         % Save all "Lapdog variables" to disk. The saved variables can be used for re-running createLBL (fast) without
         % rerunning all of Lapdog (slow) for large datasets.
         %===============================================================================================================
-        evalin(MWS, sprintf('save_Lapdog_state(''%s'', true, ''pre-createLBL'')', ldDatasetPath))
+        evalin(MWS, sprintf('save_Lapdog_state(''%s'', true, ''pre-createLBL'')', ldDatasetPath))    % true = permitOverwrite
     end
 
 

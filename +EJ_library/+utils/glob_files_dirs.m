@@ -41,6 +41,8 @@ function objectInfoList = glob_files_dirs(rootDirPath, regexPatternList, varargi
 %   PROPOSAL: select_files, specify_files, *_by_name, *_by_path
 %   PROPOSAL: regexp_files_dirs
 %   PROPOSAL: Something with "path". 
+%
+% PROPOSAL: Modify to use interpret_settings_args.
 
 
 % ASSERTION

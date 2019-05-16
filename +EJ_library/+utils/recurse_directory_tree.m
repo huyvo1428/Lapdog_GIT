@@ -103,7 +103,6 @@
 %     distinguish calls to FileFunc and DirFunc). Therefore, argStruct has as many identical field names as possible.
 %
 %
-%
 % HANDLING OF SPECIAL CASES -- SHOULD BE CONFIRMED
 % =========================
 % Should work for:
@@ -367,9 +366,11 @@ end
 %
 % Should be called only once, for the root directory.
 function dirCmdResult = get_dir_cmd_result_for_single_object(path)
-    % FRÅGA: Hur hanterar "/"?
-
-    absPath = EJ_library.utils.get_abs_path(path);   % Need absolute path to later determine the name of the directory (e.g. for relative paths, "/").
+    % TODO-DECISION: How handle "/"?
+    
+    % IMPLEMENTATION NOTE: Need correct path to later determine the name of the directory (e.g. for relative paths, "/", "..").
+    % EJ_library.utils.get_abs_path might not be enough.
+    absPath = EJ_library.utils.get_abs_path(path);   
     
     dirCmdResultsList = dir(absPath);
 

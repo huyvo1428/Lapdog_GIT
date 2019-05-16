@@ -14,6 +14,7 @@
 %
 % ARGUMENTS
 % =========
+% str                : String to be line-broken. ASSUMES: Must not contain any substring equal to lineBreakStr.
 % firstRowMaxLength  : Max length of first row.
 % midRowsMaxLength   : Max length of rows which are not first or last.
 % lastRowMaxLength   : Max length of last row.

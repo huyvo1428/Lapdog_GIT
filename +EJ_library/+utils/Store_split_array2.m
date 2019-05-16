@@ -6,7 +6,7 @@
 %
 %
 % NOTE: Using MATLAB's "save" with the flag "-v7.3" should in theory solve the same problem but has been shown to be
-% impractically slow and generate too large files.
+% impractically slow (very) and generate far too large files.
 % NOTE: Can not choose filenames entirely.
 % NOTE: Will overwrite preexisting files.
 %
