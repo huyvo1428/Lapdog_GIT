@@ -365,10 +365,10 @@ try
 
 %             tfoutarr
 %             foutarr
-            t_et= cspice_str2et(scantemp{1,1}(:)); %I'll use this  in the print function later
+            t_etfull= cspice_str2et(scantemp{1,1}(:)); %I'll use this  in the print function later
 
             %New method  12/2 2019 check for all values, not just the downsampled timestamps.
-            [junk,SEA,SAA]=orbit('Rosetta',t_et,target,'ECLIPJ2000','preloaded');
+            [junk,SEA,SAA]=orbit('Rosetta',t_etfull,target,'ECLIPJ2000','preloaded');
             %[junk,SEA,SAA]=orbit('Rosetta',tfoutarr{1,1},target,'ECLIPJ2000','preloaded');
 
 %             lent = length(foutarr{1,7});
@@ -394,9 +394,11 @@ try
 
 
              lum_temp = accumarray(inter,illuminati,[],@mean,NaN);
+             t_et_temp     = accumarray(inter,t_etfull,[],@mean,NaN);
              %SAA_temp = accumarray(inter,SAA,[],@mean,NaN);
              lum_mu(inter(1):inter(end),1) = lum_temp(inter(1):inter(end));
             %SEA_mu(inter(1):inter(end),1) = SEA_temp(inter(1):inter(end));
+             t_et(inter(1):inter(end),1) = t_et_temp(inter(1):inter(end));
 
 
 
