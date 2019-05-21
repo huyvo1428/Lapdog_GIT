@@ -65,6 +65,7 @@ function fileStr = write_key_values(Ssl, C, indentationLevel)
     maxNonObjectKeyLength = max(cellfun(@length, nonObjectKeyList));     % NOTE/BUG?: May be undetermined if there are only OBJECT keys.
 
     indentationStr = repmat(' ', 1, C.indentationLength*indentationLevel);
+    prevRowEmpty = false;
 
     for i = 1:length(Ssl.keys)
         key    = Ssl.keys{i};
@@ -87,17 +88,24 @@ function fileStr = write_key_values(Ssl, C, indentationLevel)
             str = construct_key_assignment(key, value, postKeyPaddingLength, indentationStr, C.contentRowMaxLength, C.lineBreak);
             
             fileStr = [fileStr, str];
-
+            prevRowEmpty = false;
+            
         elseif strcmp(key, 'OBJECT') && ~isempty(value) && ~isempty(object) && isstruct(object)
             %==================
             % CASE: OBJECT key
             %==================
             
+            if ~prevRowEmpty
+                fileStr = [fileStr, C.lineBreak];    % Add extra empty row.
+            end
             % Print OBJECT with different "post-key" whitespace padding.
             fileStr = [fileStr, sprintf('%s%s = %s%s', indentationStr, key, value, C.lineBreak)];
 
             fileStr = [fileStr, write_key_values(object, C, indentationLevel+1)];             % NOTE: RECURSIVE CALL
             fileStr = [fileStr, sprintf('%sEND_OBJECT = %s%s', indentationStr, value, C.lineBreak)];
+            
+            fileStr = [fileStr, C.lineBreak];    % Add extra empty row.
+            prevRowEmpty = true;
         else
             % ASSERTION
             error('Inconsistent combination of key, value, and object.')
