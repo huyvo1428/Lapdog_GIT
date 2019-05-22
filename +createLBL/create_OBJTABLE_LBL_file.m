@@ -160,7 +160,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     % "Planetary Data Systems Standards Reference", Version 3.6, p12-11, section 12.3.4.
     % Applies to what PDS defines as identifiers, i.e. "values" without quotes.
     D.PDS_IDENTIFIER_PERMITTED_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789';
-    D.EMPTY_UNIT_DEFAULT = 'N/A';
+    D.EMPTY_UNIT_DEFAULT             = 'N/A';
+    D.VALUE_NOT_SET                  = '<UNSET>';
     
     ROSETTA_NAIF_ID                = -226;
     CONTENT_MAX_ROW_LENGTH         = 78;    % Number excludes line break characters.
@@ -231,6 +232,12 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
         % IMPLEMENTATION NOTE: Does not put the following code (in the "if" statement) inside the same try statement
         % that sets readingTabSuccessful since we want errors here to NOT be caught.
         
+        % Set FORMAT.
+        for iOBJCOL = 1:numel(LblData.OBJTABLE.OBJCOL_list)
+            LblData.OBJTABLE.OBJCOL_list{iOBJCOL} = set_FORMAT(...
+                LblData.OBJTABLE.OBJCOL_list{iOBJCOL}, firstTabRow, lastTabRow, tabLblInconsistencyPolicy);            
+        end
+        
         % ASSERTION: Number of bytes per TAB row.
         if nBytesPerRow ~= LblData.OBJTABLE.ROW_BYTES
             warning_error___LOCAL(sprintf(...
@@ -274,6 +281,33 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     % Log message
     %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
     EJ_library.PDS_utils.write_ODL_file(lblFilePath, Ssl, {}, Settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
+end
+
+
+
+% Derive the value of the FORMAT keyword using other PDS keywords and the first and last TAB file row.
+%
+% Implicitly also checks some of the TAB file format through assertions in createLBL.derive_FORMAT.
+function OBJCOL = set_FORMAT(OBJCOL, firstTabRow, lastTabRow, tabLblInconsistencyPolicy)
+    % Derive nBytes taking into account the possibility of multiple columns per OBJECT=COLUMN (only use the first one).
+    if isfield(OBJCOL, 'ITEM_BYTES')
+        nBytes = OBJCOL.ITEM_BYTES;
+    else
+        nBytes = OBJCOL.BYTES;
+    end
+    
+    tabValueStr1  = firstTabRow(OBJCOL.START_BYTE : (OBJCOL.START_BYTE+nBytes-1));
+    tabValueStr2  = lastTabRow( OBJCOL.START_BYTE : (OBJCOL.START_BYTE+nBytes-1));
+    
+    FORMAT_1 = createLBL.derive_FORMAT(tabValueStr1, OBJCOL.DATA_TYPE, nBytes);    
+    FORMAT_2 = createLBL.derive_FORMAT(tabValueStr2, OBJCOL.DATA_TYPE, nBytes);
+    
+    % ASSERTION
+    if ~strcmp(FORMAT_1, FORMAT_2)
+        warning_error___LOCAL('First and last TAB row imply different values for FORMAT.', tabLblInconsistencyPolicy)
+    end
+    
+    OBJCOL.FORMAT = FORMAT_1;
 end
 
 
@@ -413,6 +447,11 @@ function [ColumnData] = adjust_OBJECT_COLUMN_data(ColumnData, D)
     end
     % ASSERTION: Does not contain quotes.    
     assert_nonempty_unquoted(Cd.DESCRIPTION)
+    
+    
+    
+    % Add unset FORMAT field in case reading TAB file does not work but error/warning policy permits the code to continue.
+    Cd.FORMAT = D.VALUE_NOT_SET;
 
     
     
@@ -547,10 +586,11 @@ end
 function [Ssl] = create_OBJ_COLUMN_content(Cd)
     S = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
     
-    S = add_SSL_form(S, 'NAME',       '%s', Cd.NAME);
-    S = add_SSL_form(S, 'START_BYTE', '%i', Cd.START_BYTE);      % Move down to ITEMS?
-    S = add_SSL_form(S, 'BYTES',      '%i', Cd.BYTES);           % Move down to ITEMS?
-    S = add_SSL_form(S, 'DATA_TYPE',  '%s', Cd.DATA_TYPE);
+    S = add_SSL_form(S, 'NAME',        '%s',  Cd.NAME);
+    S = add_SSL_form(S, 'START_BYTE',  '%i',  Cd.START_BYTE);        % Move down to ITEMS?
+    S = add_SSL_form(S, 'BYTES',       '%i',  Cd.BYTES);             % Move down to ITEMS?
+    S = add_SSL_form(S, 'DATA_TYPE',   '%s',  Cd.DATA_TYPE);    
+    S = add_SSL_form(S, 'FORMAT',     '"%s"', Cd.FORMAT);            % Empirically (pvv label), needs to be quoted if value contains period.
     
     if isfield(Cd, 'UNIT')
         S = add_SSL_form(S, 'UNIT', '"%s"', Cd.UNIT);
@@ -618,7 +658,7 @@ end
 
 
 
-% PROPOSAL: Remake into general function?!
+% PROPOSAL: Remake into generic function?!
 function warning_error___LOCAL(msgOrException, policy)
     if strcmp(policy, 'warning')
         
@@ -635,6 +675,7 @@ function warning_error___LOCAL(msgOrException, policy)
         else
             throw(msgOrException)
         end
+        
     elseif ~strcmp(policy, 'nothing')
         % CASE: Error
         error('Can not interpret warning/error policy.')
