@@ -238,17 +238,21 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 
 
             dark=XXP(i).data.lum<1;
-            XXP(i).data.Vz(dark,1)=nan;
-
-
+            XXP(i).data.Vz(dark,1)=MISSING_CONSTANT;
+              
+            dark=XXP(i).data.lum<1;
+            XXP(i).data.Vph_knee(dark,1)=MISSING_CONSTANT;
+            
+            
+            
             an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
+            
+            NEDfname=filename;
+            NEDfname(end-6:end-4)='NED';
+            NEDshort = strrep(NEDfname,folder,'');
+            an_NEDprint(NEDfname,NEDshort,XXP(i).data,XXP(i).data.t0,XXP(i).info.firstind,XXP(i).info.timing,'vz');
 
-            NPLfname=filename;
-            NPLfname(end-6:end-4)='NPL';
-            NPLshort = strrep(NPLfname,folder,'');
-            an_NPLprint(NPLfname,NPLshort,XXP(i).data,XXP(i).data.t0,XXP(i).info.firstind,XXP(i).info.timing,'vz');
-
-
+            
 
         end
     end

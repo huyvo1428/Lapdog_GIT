@@ -412,9 +412,9 @@ try
             USCfname= tabindex{an_ind(i),1};
             USCfname(end-6:end-4)='USC';
             USCshort=strrep(USCfname,affolder,'');
-            NPLfname= tabindex{an_ind(i),1};
-            NPLfname(end-6:end-4)='NPL';
-            NPLshort=strrep(NPLfname,affolder,'');
+            NEDfname= tabindex{an_ind(i),1};
+            NEDfname(end-6:end-4)='NED';
+            NEDshort=strrep(NEDfname,affolder,'');
 
 
             foutarr{1,2}=foutarr{1,7};
@@ -503,8 +503,8 @@ try
 
                     %print USC special case
                     an_USCprint(USCfname,USCshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
-                   % an_NPLprint(NPLfname,NPLshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
-                    an_NPLprint(NPLfname,NPLshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
+                   % an_NEDprint(NEDfname,NEDshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
+                    an_NEDprint(NEDfname,NEDshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
 
                     %clear scantemp_1 scantemp_2
                     clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 data_arr
@@ -541,8 +541,8 @@ try
             
             
             an_USCprint(USCfname,USCshort,tfoutarr,foutarr, tabindex{an_ind(i),3},timing,'vfloat');
-            %an_NPLprint(NPLfname,NPLshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
-            an_NPLprint(NPLfname,NPLshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
+            %an_NEDprint(NEDfname,NEDshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
+            an_NEDprint(NEDfname,NEDshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
 
             end
 
