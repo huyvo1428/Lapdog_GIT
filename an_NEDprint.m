@@ -72,8 +72,8 @@ switch mode
     satind=data_arr.V==MISSING_CONSTANT;
     vj = -3;
 
-    VS1 = -data_arr.Vz+5.5*exp(-data_arr.Vz/8); % correct USC to VS1 according to Anders' model. 
-    VS1(-data_arr.Vz>0)=nan;  
+    VS1 = -data_arr.V+5.5*exp(-data_arr.V/8); % correct USC to VS1 according to Anders' model. 
+    VS1(-data_arr.V>0)=nan;  
     %del_ind=-data_arr.Vz>0;
     
     %I think we can safely assume that there are no Vph_knee data in Vfloat

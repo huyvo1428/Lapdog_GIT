@@ -82,9 +82,11 @@ try
 
     for i=1:length(an_ind)     % Iterate over files (indices).
 
-
+        
         probenr = str2double(tabindex{an_ind(i),1}(end-5));
         macroNo=index(tabindex{an_ind(i) ,3}).macro;
+        %macroNo=hex2dec(tabindex{an_ind(i),1}(end-10:end-8));
+        %tabindex{an_ind(i),1}=strrep(tabindex{an_ind(i),1},'/data/rosetta/','/mnt/spis/');
         %macroNodex=dec2hex(macroNo);
         %macroNostr=dec2hex(index(tabindex{an_ind(i) ,3}).macro);
         %          dec2hex(index(tabindex{ind_V1L(1),3}).macro)
@@ -404,7 +406,7 @@ try
 
             %clear scantemp inter; % i don't remember why I need to clear this anymore, but let's do it for the kids
 
-            dark_ind=lum_mu<1; %
+            dark_ind=lum_mu<1; %   I HAVE TO DELETE LUM_MU AFTER THIS
             foutarr{1,7}(dark_ind)=0; %won't be printed.
             %%%----------------------------------------------%%%
 
@@ -507,8 +509,8 @@ try
                     an_NEDprint(NEDfname,NEDshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
 
                     %clear scantemp_1 scantemp_2
-                    clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 data_arr
-
+                    clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 data_arr dark_ind lum_mu t_et %These are important
+ 
                 else% hold_flag
                     %hold_flag default is 0. So this is 1st iteration
 
