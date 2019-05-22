@@ -9,6 +9,7 @@
 *.TSC
 *.asv
 *.mat
+!NED_FIT.mat
 
 gout.txt
 gtimes.txt
@@ -42,8 +43,6 @@ temp/
 summary.xlsx
 
 dustgrains
-
-*.mat
 
 ManualSweepanalysis.m
 
