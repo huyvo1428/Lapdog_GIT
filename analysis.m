@@ -9,7 +9,7 @@ t_start_analysis = clock;    % NOTE: Not number of seconds, but [year month day 
 global an_tabindex an_debug;
 an_tabindex = zeros(0, 9);
 an_debug = 0; %debugging on or off!
-global usc_tabindex NPL_tabindex;
+global usc_tabindex NED_tabindex;
 usc_tabindex=[];
 antype = cellfun(@(x) x(end-6:end-4),tabindex(:,2),'un',0);
 
@@ -157,7 +157,7 @@ try
 
             end
             usc_tabindex(delindz)=[];
-            NPL_tabindex(delindz)=[];
+            NED_tabindex(delindz)=[];
             %loop finished, make deletion
 
         end

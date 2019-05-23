@@ -52,7 +52,6 @@ switch mode
     usc_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
     usc_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
     usc_tabindex(end).no_of_columns = 6;            % Number of columns
-    % usc_tabindex{end,6] = an_ind(i);
     usc_tabindex(end).type = 'Vfloat'; % Type
     usc_tabindex(end).timing = timing;
     usc_tabindex(end).row_byte = row_byte;
@@ -98,18 +97,15 @@ switch mode
         end
         
 
-
-            
-end        
             usc_tabindex(end+1).fname = USCfname;                   % Start new line of an_tabindex, and record file name
             usc_tabindex(end).fnameshort = USCshort; % shortfilename
             usc_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
             usc_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
             usc_tabindex(end).no_of_columns = 6;            % Number of columns
-            % usc_tabindex{end,6] = an_ind(i);
             usc_tabindex(end).type = 'Vz'; % Type
             usc_tabindex(end).timing = timing;
-            usc_tabindex(end).row_byte = row_byte;
+            usc_tabindex(end).row_byte = row_byte;         
+end%switch mode        
         
     
 fileinfo = dir(USCfname);

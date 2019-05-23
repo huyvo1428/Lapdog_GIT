@@ -247,19 +247,18 @@ switch mode
         end
         
 
-
-            
-end        
             NED_tabindex(end+1).fname = NEDfname;                   % Start new line of an_tabindex, and record file name
             NED_tabindex(end).fnameshort = NEDshort; % shortfilename
             NED_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
             NED_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
             NED_tabindex(end).no_of_columns = 6;            % Number of columns
-            % NED_tabindex{end,6] = an_ind(i);
             NED_tabindex(end).type = 'Vz'; % Type
             NED_tabindex(end).timing = timing;
             NED_tabindex(end).row_byte = row_byte;
         
+            
+end%switch mode        
+
     
 fileinfo = dir(NEDfname);
 if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
