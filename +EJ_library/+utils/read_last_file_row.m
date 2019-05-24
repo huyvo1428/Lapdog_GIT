@@ -12,6 +12,8 @@
 %
 % NOTE: Can handle empty files. Empty file (zero bytes) ==> Empty string
 % NOTE: Returned string includes trailing LF (e.g. CR+LF).
+% NOTE/BUG: Does NOT work for symbolic links, since "dir" returns the file size of the symlink, not the file.
+%   (Reading the file works though.)
 %
 %
 % Initially created ~2018-08-15 by Erik P G Johansson.

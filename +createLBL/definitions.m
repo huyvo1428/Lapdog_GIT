@@ -44,7 +44,6 @@ classdef definitions < handle
     %   --
     %   TODO-DECISION: Need to think about how to handle DERIV2 TAB columns (here part of DERIV1)?
     %   --
-    %   PROPOSAL: Automatically set constants for BYTES, DATA_TYPE, UNIT (implicit from choice of helper function).
     %   PROPOSAL: OPTIONAL sprintf options for NAME ?
     %       PROBLEM: How implement optionality?
     %   PROPOSAL: UTC, OBT (separately to also be able to handle sweeps)
@@ -62,8 +61,6 @@ classdef definitions < handle
     %   OhChanges.RemoveKeysList   = {'ROSETTA:LAP_P1_INITIAL_SWEEP_SMPLS', 'ROSETTA:LAP_P2_INITIAL_SWEEP_SMPLS'};   % For "all" ODL files.
     %   OhChanges.RemoveKeysListHk = {'INSTRUMENT_MODE_ID', 'INSTRUMENT_MODE_DESC'};    % Specific for HK.
     %   CON: Can not modify HK LBL in Lapdog.
-    %
-    % 
     %
     % PROPOSAL: Copy whitelisted values from EDITED1/CALIB1 header: ROSETTA:*, INSTRUMENT_MODE_* instead of current model
     %           (copy all except for blacklist).
@@ -155,7 +152,6 @@ classdef definitions < handle
 
         function LblData = get_BLKLIST_data(obj, LhtKvpl)
             HeaderKvpl = obj.HeaderAllKvpl.append(LhtKvpl);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {{'2018-11-27', 'EJ', 'Descriptions clean-up, lowercase'}});
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-27', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2019-05-22', 'EJ', 'Added FORMAT keyword'}});
@@ -183,7 +179,6 @@ classdef definitions < handle
             [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
             HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
             HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-16', 'EJ', 'Removed bias keywords'}, ...
@@ -327,7 +322,6 @@ classdef definitions < handle
             [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
             HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
             HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-27', 'EJ', 'Updated global DESCRIPTIONs'}, ...
@@ -377,7 +371,6 @@ classdef definitions < handle
             [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
             HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
             HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);            
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-27', 'EJ', 'Updated DESCRIPTIONs'}, ...
@@ -457,7 +450,6 @@ classdef definitions < handle
             [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
             HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
             HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-12', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
@@ -466,7 +458,6 @@ classdef definitions < handle
                 {'2019-05-07', 'EJ', 'Updated time DESCRIPTION'}, ...
                 {'2019-05-22', 'EJ', 'Added FORMAT keyword'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);            
-            %HeaderKvpl = HeaderKvpl.append_kvp('CALIBRATION_SOURCE_ID', {'RPCLAP'});    % NOTE: Not used due to "append_kvp" method bug.
             HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
                 'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
             HeaderKvpl = HeaderKvpl.set_value(...
@@ -522,7 +513,6 @@ classdef definitions < handle
             [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
             HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
             HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
@@ -562,7 +552,6 @@ classdef definitions < handle
             [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
             HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
             HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
@@ -656,7 +645,6 @@ classdef definitions < handle
             % TODO-NEED-INFO: Add SPACECRAFT POTENTIAL for Photoelectron knee potential?
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-08-30', 'EJ', 'Initial version'}, ...
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
@@ -729,7 +717,6 @@ classdef definitions < handle
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-08-29', 'AE', 'Initial version'}, ...
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase. 6 UTC decimals'}, ...
@@ -781,7 +768,6 @@ classdef definitions < handle
 
             HeaderKvpl = obj.HeaderAllKvpl.append(LhtKvpl);
             
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-08-30', 'EJ', 'Initial version'}, ...
                 {'2018-11-13', 'EJ', 'Descriptions clean-up, lowercase'}, ...
@@ -824,7 +810,6 @@ classdef definitions < handle
         function LblData = get_EFL_data(obj, LhtKvpl, firstPlksFile)
 
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2019-02-28', 'EJ', 'Initial version'}, ...
                 {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}, ...
@@ -864,7 +849,6 @@ classdef definitions < handle
         function LblData = get_NED_data(obj, LhtKvpl, firstPlksFile)
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2019-02-04', 'EJ', 'Updated UNIT'}, ...
                 {'2019-02-18', 'EJ', 'Added DATA_SET_PARAMETER_NAME, CALIBRATION_SOURCE_ID'}, ...
@@ -917,7 +901,6 @@ classdef definitions < handle
             [HeaderKvpl, FirstPlksSs] = build_header_KVPL_from_single_PLKS(obj, LhtKvpl, firstPlksFile);
             HeaderKvpl = HeaderKvpl.set_value('START_TIME',                   FirstPlksSs.START_TIME);
             HeaderKvpl = HeaderKvpl.set_value('SPACECRAFT_CLOCK_START_COUNT', FirstPlksSs.SPACECRAFT_CLOCK_START_COUNT);
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-13', 'EJ', 'First documented version'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
@@ -952,46 +935,46 @@ classdef definitions < handle
             ocl2{end+1} = struct('NAME', 'Vsg',                    'UNIT', 'VOLT',          'DESCRIPTION', 'Spacecraft potential from gaussian fit to second derivative.');
             ocl2{end+1} = struct('NAME', 'sigma_Vsg',              'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for spacecraft potential from gaussian fit to second derivative.');
             ocl2{end+1} = struct('NAME', 'old_Tph',                'UNIT', 'ELECTRONVOLT',  'DESCRIPTION', 'Photoelectron temperature. Older analysis method.');
-            ocl2{end+1} = struct('NAME', 'old_Iph0',               'UNIT', 'AMPERE',         'DESCRIPTION', 'Photosaturation current. Older analysis method.');
+            ocl2{end+1} = struct('NAME', 'old_Iph0',               'UNIT', 'AMPERE',        'DESCRIPTION', 'Photosaturation current. Older analysis method.');
             ocl2{end+1} = struct('NAME', 'Vb_lastnegcurrent',      'UNIT', 'VOLT',          'DESCRIPTION', 'Bias potential below zero current.');
             ocl2{end+1} = struct('NAME', 'Vb_firstposcurrent',     'UNIT', 'VOLT',          'DESCRIPTION', 'Bias potential above zero current.');
             ocl2{end+1} = struct('NAME', 'Vbinfl',                 'UNIT', 'VOLT',          'DESCRIPTION', 'Bias potential of inflection point in current.');
-            ocl2{end+1} = struct('NAME', 'dIinfl',                 'UNIT', 'AMPERE/VOLT',       'DESCRIPTION', 'Derivative of current in inflection point.');
+            ocl2{end+1} = struct('NAME', 'dIinfl',                 'UNIT', 'AMPERE/VOLT',   'DESCRIPTION', 'Derivative of current in inflection point.');
             ocl2{end+1} = struct('NAME', 'd2Iinfl',                'UNIT', 'AMPERE/(VOLT**2)',     'DESCRIPTION', 'Second derivative of current in inflection point.');
-            ocl2{end+1} = struct('NAME', 'Iph0',                   'UNIT', 'AMPERE',         'DESCRIPTION', 'Photosaturation current.');
-            ocl2{end+1} = struct('NAME', 'Tph',                    'UNIT', 'ELECTRONVOLT',        'DESCRIPTION', 'Photoelectron temperature.');
-            ocl2{end+1} = struct('NAME', 'Vsi',                    'UNIT', 'VOLT',         'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current.');
-            ocl2{end+1} = struct('NAME',       'Vph_knee',         'UNIT', 'VOLT',         'DESCRIPTION',                               'Potential at probe position from photoelectron current knee (gaussian fit to second derivative).');
+            ocl2{end+1} = struct('NAME', 'Iph0',                   'UNIT', 'AMPERE',        'DESCRIPTION', 'Photosaturation current.');
+            ocl2{end+1} = struct('NAME', 'Tph',                    'UNIT', 'ELECTRONVOLT',  'DESCRIPTION', 'Photoelectron temperature.');
+            ocl2{end+1} = struct('NAME', 'Vsi',                    'UNIT', 'VOLT',          'DESCRIPTION', 'Bias potential of intersection between photoelectron and ion current.');
+            ocl2{end+1} = struct('NAME',       'Vph_knee',         'UNIT', 'VOLT',          'DESCRIPTION',                               'Potential at probe position from photoelectron current knee (gaussian fit to second derivative).');
             ocl2{end+1} = struct('NAME', 'sigma_Vph_knee',         'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Potential at probe position from photoelectron current knee (gaussian fit to second derivative).');
-            ocl2{end+1} = struct('NAME',       'Te_linear',        'UNIT', 'ELECTRONVOLT',        'DESCRIPTION',                               'Electron temperature from linear fit to electron current.');
+            ocl2{end+1} = struct('NAME',       'Te_linear',        'UNIT', 'ELECTRONVOLT',  'DESCRIPTION',                               'Electron temperature from linear fit to electron current.');
             ocl2{end+1} = struct('NAME', 'sigma_Te_linear',        'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron temperature from linear fit to electron current.');
-            ocl2{end+1} = struct('NAME',       'ne_linear',        'UNIT', 'CENTIMETER**-3',     'DESCRIPTION',                               'Electron (plasma) density from linear fit to electron current.');
+            ocl2{end+1} = struct('NAME',       'ne_linear',        'UNIT', 'CENTIMETER**-3','DESCRIPTION',                               'Electron (plasma) density from linear fit to electron current.');
             ocl2{end+1} = struct('NAME', 'sigma_ne_linear',        'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Electron (plasma) density from linear fit to electron current.');
-            ocl2{end+1} = struct('NAME',       'ion_slope',        'UNIT', 'AMPERE/VOLT',       'DESCRIPTION',                               'Slope of ion current fit as a function of absolute potential.');
+            ocl2{end+1} = struct('NAME',       'ion_slope',        'UNIT', 'AMPERE/VOLT',   'DESCRIPTION',                               'Slope of ion current fit as a function of absolute potential.');
             ocl2{end+1} = struct('NAME', 'sigma_ion_slope',        'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of ion current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME',       'ion_intersect',    'UNIT', 'AMPERE',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of absolute potential.');
+            ocl2{end+1} = struct('NAME',       'ion_intersect',    'UNIT', 'AMPERE',        'DESCRIPTION',                               'Y-intersection of ion current fit as a function of absolute potential.');
             ocl2{end+1} = struct('NAME', 'sigma_ion_intersect',    'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of ion current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME',       'e_slope',          'UNIT', 'AMPERE/VOLT',       'DESCRIPTION',                               'Slope of linear electron current fit as a function of absolute potential.');
+            ocl2{end+1} = struct('NAME',       'e_slope',          'UNIT', 'AMPERE/VOLT',   'DESCRIPTION',                               'Slope of linear electron current fit as a function of absolute potential.');
             ocl2{end+1} = struct('NAME', 'sigma_e_slope',          'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear electron current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME',       'e_intersect',      'UNIT', 'AMPERE',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of absolute potential.');
+            ocl2{end+1} = struct('NAME',       'e_intersect',      'UNIT', 'AMPERE',        'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of absolute potential.');
             ocl2{end+1} = struct('NAME', 'sigma_e_intersect',      'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of absolute potential.');
-            ocl2{end+1} = struct('NAME',       'ion_Vb_intersect', 'UNIT', 'AMPERE',         'DESCRIPTION',                               'Y-intersection of ion current fit as a function of bias potential.');
+            ocl2{end+1} = struct('NAME',       'ion_Vb_intersect', 'UNIT', 'AMPERE',        'DESCRIPTION',                               'Y-intersection of ion current fit as a function of bias potential.');
             ocl2{end+1} = struct('NAME', 'sigma_ion_Vb_intersect', 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for Y-intersection of ion current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME',       'e_Vb_intersect',   'UNIT', 'AMPERE',         'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of bias potential.');
+            ocl2{end+1} = struct('NAME',       'e_Vb_intersect',   'UNIT', 'AMPERE',        'DESCRIPTION',                               'Y-intersection of linear electron current fit as a function of bias potential.');
             ocl2{end+1} = struct('NAME', 'sigma_e_Vb_intersect',   'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear electron current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME', 'Tphc',                   'UNIT', 'ELECTRONVOLT',        'DESCRIPTION', 'Photoelectron cloud temperature (if applicable).');
-            ocl2{end+1} = struct('NAME', 'nphc',                   'UNIT', 'CENTIMETER**-3',     'DESCRIPTION', 'Photoelectron cloud density (if applicable).');
-            ocl2{end+1} = struct('NAME',       'phc_slope',        'UNIT', 'AMPERE/VOLT',       'DESCRIPTION',                               'Slope of linear photoelectron current fit as a function of bias potential.');
+            ocl2{end+1} = struct('NAME', 'Tphc',                   'UNIT', 'ELECTRONVOLT',  'DESCRIPTION', 'Photoelectron cloud temperature (if applicable).');
+            ocl2{end+1} = struct('NAME', 'nphc',                   'UNIT', 'CENTIMETER**-3','DESCRIPTION', 'Photoelectron cloud density (if applicable).');
+            ocl2{end+1} = struct('NAME',       'phc_slope',        'UNIT', 'AMPERE/VOLT',   'DESCRIPTION',                               'Slope of linear photoelectron current fit as a function of bias potential.');
             ocl2{end+1} = struct('NAME', 'sigma_phc_slope',        'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for slope of linear photoelectron current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME',       'phc_intersect',    'UNIT', 'AMPERE',         'DESCRIPTION',                               'Y-intersection of linear photoelectron current fit as a function of bias potential.');
+            ocl2{end+1} = struct('NAME',       'phc_intersect',    'UNIT', 'AMPERE',        'DESCRIPTION',                               'Y-intersection of linear photoelectron current fit as a function of bias potential.');
             ocl2{end+1} = struct('NAME', 'sigma_phc_intersect',    'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for y-intersection of linear photoelectron current fit as a function of bias potential.');
-            ocl2{end+1} = struct('NAME', 'ne_5eV',                 'UNIT', 'CENTIMETER**-3',     'DESCRIPTION', 'Electron density from linear electron current fit, assuming electron temperature Te = 5 eV.');
-            ocl2{end+1} = struct('NAME', 'ni_v_dep',               'UNIT', 'CENTIMETER**-3',     'DESCRIPTION', 'Ion density from slope of ion current fit assuming ions of a certain mass and velocity.');
-            ocl2{end+1} = struct('NAME', 'ni_v_indep',             'UNIT', 'CENTIMETER**-3',     'DESCRIPTION', 'Ion density from slope and intersect of ion current fit assuming ions of a certain mass. velocity independent estimate.');
-            ocl2{end+1} = struct('NAME', 'v_ion',                  'UNIT', 'METER/SECOND',       'DESCRIPTION', 'Ion ram velocity derived from the velocity independent and dependent ion density estimate.');
-            ocl2{end+1} = struct('NAME',       'Te_exp',           'UNIT', 'ELECTRONVOLT',        'DESCRIPTION',                               'Electron temperature from exponential fit to electron current.');
+            ocl2{end+1} = struct('NAME', 'ne_5eV',                 'UNIT', 'CENTIMETER**-3','DESCRIPTION', 'Electron density from linear electron current fit, assuming electron temperature Te = 5 eV.');
+            ocl2{end+1} = struct('NAME', 'ni_v_dep',               'UNIT', 'CENTIMETER**-3','DESCRIPTION', 'Ion density from slope of ion current fit assuming ions of a certain mass and velocity.');
+            ocl2{end+1} = struct('NAME', 'ni_v_indep',             'UNIT', 'CENTIMETER**-3','DESCRIPTION', 'Ion density from slope and intersect of ion current fit assuming ions of a certain mass. velocity independent estimate.');
+            ocl2{end+1} = struct('NAME', 'v_ion',                  'UNIT', 'METER/SECOND',  'DESCRIPTION', 'Ion ram velocity derived from the velocity independent and dependent ion density estimate.');
+            ocl2{end+1} = struct('NAME',       'Te_exp',           'UNIT', 'ELECTRONVOLT',  'DESCRIPTION',                               'Electron temperature from exponential fit to electron current.');
             ocl2{end+1} = struct('NAME', 'sigma_Te_exp',           'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for electron temperature from exponential fit to electron current.');
-            ocl2{end+1} = struct('NAME',       'ne_exp',           'UNIT', 'CENTIMETER**-3',     'DESCRIPTION',                               'Electron density derived from fit of exponential part of the thermal electron current.');
+            ocl2{end+1} = struct('NAME',       'ne_exp',           'UNIT', 'CENTIMETER**-3','DESCRIPTION',                               'Electron density derived from fit of exponential part of the thermal electron current.');
             ocl2{end+1} = struct('NAME', 'sigma_ne_exp',           'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Fractional error estimate for electron density derived from fit of exponential part of the thermal electron current.');
             
             ocl2{end+1} = struct('NAME', 'Rsquared_linear',        'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Coefficient of determination for total modelled current, where the (thermal plasma) electron current is derived from fit for the linear part of the ideal electron current.');
@@ -1042,10 +1025,10 @@ classdef definitions < handle
             ocl2{end+1} = struct('NAME',     'Vsc_ni_ne',              'UNIT', 'VOLT',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (ni_v_indep) and electron (ne_linear) densities.');
             ocl2{end+1} = struct('NAME', 'asm_Vsc_ni_ne',              'UNIT', 'VOLT',                 'DESCRIPTION', 'Spacecraft potential needed to produce identical ion (asm_ni_v_indep) and electron (asm_ne_linear) densities. Fixed photoelectron current assumption.');
             
-            ocl2{end+1} = struct('NAME', 'Vsc_aion',                  'UNIT', 'VOLT',      'DESCRIPTION', '');
+            ocl2{end+1} = struct('NAME', 'Vsc_aion',                  'UNIT', 'VOLT',            'DESCRIPTION', '');
             ocl2{end+1} = struct('NAME', 'ni_aion',                   'UNIT', 'CENTIMETER**-3',  'DESCRIPTION', '');
             ocl2{end+1} = struct('NAME', 'v_aion',                    'UNIT', 'METER/SECOND',    'DESCRIPTION', '');
-            ocl2{end+1} = struct('NAME', 'asm_Vsc_aion',              'UNIT', 'VOLT',      'DESCRIPTION', '');
+            ocl2{end+1} = struct('NAME', 'asm_Vsc_aion',              'UNIT', 'VOLT',            'DESCRIPTION', '');
             ocl2{end+1} = struct('NAME', 'asm_ni_aion',               'UNIT', 'CENTIMETER**-3',  'DESCRIPTION', '');
             ocl2{end+1} = struct('NAME', 'asm_v_aion',                'UNIT', 'METER/SECOND',    'DESCRIPTION', '');
             %---------------------------------------------------------------------------------------------------
@@ -1085,7 +1068,6 @@ classdef definitions < handle
             HeaderKvpl = createLBL.create_EST_prel_LBL_header(estTabPath, plksFileList, probeNbrList, obj.HeaderAllKvpl);
             HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
             
-            %HeaderKvpl = obj.x(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-14', 'EJ', 'First documented version'}, ...
                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
@@ -1131,7 +1113,6 @@ classdef definitions < handle
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             
-            %HeaderKvpl = obj.set_LRN(HeaderKvpl, {...
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
                 {'2018-11-14', 'EJ', 'First documented version'}, ...
                 {'2018-11-21', 'EJ', 'Update global DESCRIPTION'}, ...
@@ -1164,58 +1145,6 @@ classdef definitions < handle
 
 
     methods(Access=private)
-        
-        % Set LABEL_REVISION_NOTE (LRN) key value in KVPL.
-        % NOTE: Requires key "LABEL_REVISION_NOTE" to already pre-exist in  KVPL
-        %
-        %
-        % RATIONALE
-        % =========
-        % -- Make sure does not forget to add quotes.
-        % -- Can (potentially) force common format: ~indentation, rows, date, author.
-        % -- Can potentially limit to only the last N label revisions (items).
-        % -- Force correct spelling of LABEL_REVISION_NOTE (which would otherwise be hardcoded in multiple places, although
-        %    ".set_value" requires keyword to pre-exist in KVPL, which should help).
-        %
-        % contentCellArray{iItem} = {dateStr, author, message}
-%         function Kvpl = set_LRN(obj, Kvpl, contentCellArray)
-%             % PROPOSAL: Set "author" here. Remove as argument.
-%             
-%             LINE_BREAK  = sprintf('\r\n');
-%             INDENTATION = repmat(' ', 1, obj.indentationLength);
-%             
-%             nItems = numel(contentCellArray);
-%             
-%             rowList = {};
-%             for i = 1:nItems
-%                 % ASSERTION
-%                 assert(numel(contentCellArray{i}) == 3)
-%                 
-%                 dateStr = contentCellArray{i}{1};
-%                 author  = contentCellArray{i}{2};
-%                 message = contentCellArray{i}{3};
-%                 
-%                 % ASSERTIONS
-%                 assert(~isempty(regexp(dateStr, '^20[0-9]{2}-[0-1][0-9]-[0-3][0-9]$', 'once')))
-%                 assert(~isempty(regexp(author,  '^[A-ZÅÄÖ]+$', 'once')))
-%                 
-%                 rowList{i} = sprintf('%s, %s: %s', dateStr, author, message);
-%             end
-% 
-%             if nItems == 0
-%                 error('No info to put in LABEL_REVISION_INFO. nItems == 0.')
-%             elseif nItems == 1
-%                 rowStr = rowList{1};
-%             elseif nItems >= 2
-%                 % Do not use the first row (in the ODL file).
-%                 rowStr = EJ_library.utils.str_join(rowList, [LINE_BREAK, INDENTATION]);
-%                 rowStr = [LINE_BREAK, INDENTATION, rowStr];
-%             end
-% 
-%             Kvpl = Kvpl.set_value('LABEL_REVISION_NOTE', sprintf('"%s"', rowStr));    % NOTE: Adds quotes.
-%         end
-
-
 
         % Build basic LBL header KVPL for most data products.
         % 

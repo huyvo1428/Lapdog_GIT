@@ -646,6 +646,8 @@ function Kvpl = get_timestamps_KVPL(START_TIME, STOP_TIME, SPACECRAFT_CLOCK_STAR
         'SPACECRAFT_CLOCK_START_COUNT', interpret_arg(SPACECRAFT_CLOCK_START_COUNT); ...
         'SPACECRAFT_CLOCK_STOP_COUNT',  interpret_arg(SPACECRAFT_CLOCK_STOP_COUNT)}  );
     
+    
+    
     function str = interpret_arg(argStr)
         EJ_library.utils.assert.castring(argStr)
         if strcmp(argStr, 'not set')

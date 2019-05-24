@@ -7,8 +7,8 @@
 % FUNCTIONS
 % =========
 % The function:
-% (1) optionally saves all non-global and global Lapdog variables in the CALLER WORKSPACE (so that they can later be used to call
-% createLBL separately from Lapdog), and then
+% (1) optionally saves all non-global and global Lapdog variables in the CALLER WORKSPACE (so that they can later be
+% used to call createLBL separately from Lapdog), and then
 % (2) uses Lapdog variables in the CALLER WORKSPACE to call create_LBL_files to actually create (overwrite) LBL files.
 %
 %
@@ -31,12 +31,12 @@
 % The division between this script and the main function exists to:
 % (1) separate many ugly hacks and assumptions from the main LBL file-creating code code due to the interface between
 %     Lapdog and ~createLBL:
-%   (1a) make it explicit which of the Lapdog workspace variables are used,
+%   (1a) make it explicit which of the Lapdog workspace variables the LBL file-creating code uses,
 %   (1b) isolate/concentrate the dependence on global variables,
-%   (1c) making assumptions on where the metakernel is,
+%   (1c) isolate/concentrate the assumptions on where the metakernel is,
 %   (1d) figure out the output dataset type (EDDER, DERIV1),
-% (2) optionally save the necessary input to a .mat file to make it possible to rerun the createLBL (or its main function) separately
-%     from Lapdog (without saving Lapdog variables to .mat file).
+% (2) optionally save the necessary input to a .mat file to make it possible to rerun the createLBL (or its main
+%     function) separately from Lapdog (without saving Lapdog variables to .mat file).
 % (3) make it possible to use consistent naming conventions in the main LBL code.
 % --
 % The function uses the entire Lapdog workspace as "argument" interface" (in addition to the formal function variables)
@@ -47,11 +47,20 @@
 % (3) be able to easily save/load the entire interface (Lapdog workspace), so that when one runs createLBL separately
 % from Lapdog, it is easy to load it (the Lapdog workspace) and then call createLBL.
 % --
-% NOTE: Due to what the function needs to do, and to reduce the number of arguments (by ~15), it makes many ugly calls to
-% "evalin" for the CALLER WORKSPACE to
+% NOTE: Due to what the function needs to do, and to reduce the number of arguments (by ~15), it makes many ugly calls
+% to "evalin" for the CALLER WORKSPACE to
 % (1) declare GLOBAL variables (in the caller workspace) so that they can be accessed and saved to file,
+%     using EJ_library.utils.Vars_state,
 % (2) save the Lapdog variables (in the caller workspace),
 % (3) retrieve variable values (from the caller workspace; they are many).
+% --
+% NOTE: Some variables (both global and non-global) may be initialized during one run of Lapdog and then not be defined
+% during a later run, due to
+% (1) re-running for a different mission phase
+% (1) re-running for a different archiving level (EDDER, DERIV1)
+% (2) disabling part of Lapdog (e.g. all analysis.m, or output_science.m, or parts thereof)
+% Therefore, older versions of variables may be available when there should be no data and it is not possible for
+% the calling code to tell the difference. If possible, create_LBL_files should try to ignore these data.
 %
 %
 % Initially created (reorganized) 2018-11-01 by Erik P G Johansson, IRF Uppsala.
@@ -73,31 +82,8 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % saving (to maximize backward compatibility).
     % (NEED? : Caller decides if DERIV1 or EDDER.)
     % --
-    % PROPOSAL: Change name of Lapdog-wide variable names: usc_tabindex --> USC_tabindex, der_struct --> A1P_tabindex.
-    %
     % PROPOSAL: Save exakt metakernel used?!! De-reference symlink.
     %   TODO-DECISION: How save? Set variable in caller workspace?! Architecture not designed to save additional info.
-    %
-    % TODO-DECISION: What to do about slow save -v7.3?
-    %   PROPOSAL: Only use -v7.3 "when necessary" (ESC3, PRL).
-    %       PROPOSAL: Seems unreasonably slow even to be used once.
-    %   PROPOSAL: Split up variables into multiple files. Store "index" separately, possibly in multiple .mat files.
-    %       PROPOSAL: Stora all variables except index in one files, and index in one/several others.
-    %           Ex: save('test2.mat', '-regexp', '^(?!(index)$).')
-    %   PROPOSAL: Do not store all of "index".
-    %       PROPOSAL: Delete indices not mentioned in tabindex, an_tabindex etc.
-    %           TODO-NEED-INFO: Find out if saves any space without changing indices.
-    %       PROPOSAL: Remove index.lblfile or index.tabfile (assuming they are analogous). (Assertion?)
-    %           NOTE: create_LBL_files does not seem to use index.tabfile, .macrostr, .t0str, .t1str, sct0str, .sct1str.
-    %               NOTE: The timestamps might be useful some time though.
-    %           NOTE: Experiment: Removing .tabfile index-->index2
-    %                index       1x781078            2457080816  struct
-    %                index2      1x781078            2074399932  struct
-    %       PROPOSAL: .t0str, .t1str, .macrostr all have lot of empty whitespace that can likely be removed. Remove the
-    %                 whitespace.
-    %   PROPOSAL: Save to other data format.
-    %   PROPOSAL: Remove certain other variables from saving.
-    %       Ex: MIP
 
     
     
@@ -147,33 +133,6 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
 
 
 
-    %===================================================================================================================
-    % Set variables (local workspace) which are needed but might not be defined (in caller's workspace)
-    % -------------------------------------------------------------------------------------------------
-    % Ex: Due to different TAB files disabled inside an_outputscience.m
-    % Ex: Due to an_outputscience.m disabled
-    % Ex: Lapdog run where analysis.m is disabled (useful for CALIB2 generation)
-    % Ex: EDDER does not call analysis.m
-    % In principle, the same problem could exist for other global variables (e.g. when disabling an_outputscience) but
-    % it does not appear to do so from testing.
-    %
-    % NOTE: Can not write an (elegant) function for this, since evalin can only work on the caller's workspace, not the
-    % caller's caller.
-    %===================================================================================================================
-%     POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex', 'NED_tabindex'};   % Potentially undefined variables.
-%     for i = 1:length(POT_UNDEF_VARS)
-%         % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which the function "exist"
-%         %                      may detect/respond to if not specifying "var".
-%         if evalin(MWS, sprintf('exist(''%s'', ''var'')', POT_UNDEF_VARS{i}))
-%             temp = evalin(MWS, POT_UNDEF_VARS{i});                            % NOTE: evalin
-%         else
-%             temp = [];
-%         end
-%         WorkspaceVars.(POT_UNDEF_VARS{i}) = temp;
-%     end
-    
-    
-    
     %=====================================================================================
     % Determine what "archiving level" dataset is produced:
     %   (1) Lapdog's EDDER (for producing EDITED2), or
@@ -183,7 +142,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % ASSUMES: ldDatasetPath is ~DATA_SET_ID.
     %=====================================================================================
     datasetPathModifCell = regexp(ldDatasetPath, '.*[^/]', 'match');         % Remove trailing slashes (i.e. Linux only).
-    [parentPath, basename, suffixJunk] = fileparts(datasetPathModifCell{1});    % NOTE: fileparts interprets the period in DATA_SET_ID as separating basename from suffix.
+    [parentPathJunk, basename, suffixJunk] = fileparts(datasetPathModifCell{1});    % NOTE: fileparts interprets the period in DATA_SET_ID as separating basename from suffix.
     if strfind(basename, 'EDDER')
         generatingDeriv1 = 0;
     elseif strfind(basename, 'DERIV')
@@ -201,36 +160,28 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     
     Clfd.index             = evalin(MWS, 'index');
     Clfd.tabindex          = evalin(MWS, 'tabindex');
-    Clfd.an_tabindex       = evalin(MWS, 'get_Lapdog_var(''an_tabindex'')');     % WorkspaceVars.an_tabindex;
+    Clfd.an_tabindex       = evalin(MWS, 'get_Lapdog_var(''an_tabindex'')');
     Clfd.blockTAB          = evalin(MWS, 'blockTAB');
-    Clfd.ASW_tabindex      = evalin(MWS, 'get_Lapdog_var(''ASW_tabindex'')');    %  WorkspaceVars.ASW_tabindex;
+    Clfd.ASW_tabindex      = evalin(MWS, 'get_Lapdog_var(''ASW_tabindex'')');
     Clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');                        % Changing variable case for consistency.
-    Clfd.PHO_tabindex      = evalin(MWS, 'get_Lapdog_var(''PHO_tabindex'')');    % WorkspaceVars.PHO_tabindex;
-    Clfd.EFL_tabindex      = evalin(MWS, 'get_Lapdog_var(''efl_tabindex'')');    % WorkspaceVars.efl_tabindex;    % Changing variable case for consistency.
+    Clfd.PHO_tabindex      = evalin(MWS, 'get_Lapdog_var(''PHO_tabindex'')');
+    Clfd.EFL_tabindex      = evalin(MWS, 'get_Lapdog_var(''efl_tabindex'')');    % Changing variable case for consistency.
     Clfd.NED_tabindex      = evalin(MWS, 'get_Lapdog_var(''NED_tabindex'')');
     
-    Clfd.A1P_tabindex      = evalin(MWS, 'get_Lapdog_var(''der_struct'')');      % WorkspaceVars.der_struct;      % Changing variable name for consistency.
+    Clfd.A1P_tabindex      = evalin(MWS, 'get_Lapdog_var(''der_struct'')');      % Changing variable name for consistency.
     Clfd.C                 = C;
     Clfd.failFastDebugMode = failFastDebugMode;
     Clfd.generatingDeriv1  = generatingDeriv1;
     clear C
 
 
-
-    % NOTE: Some variables (both global and non-global) may be initialized during one run of Lapdog and then not be defined during a later run, due to
-    % (1) re-running for a different mission phase
-    % (1) re-running for a different archiving level (EDDER, DERIV1)
-    % (2) disabling part of Lapdog (e.g. all analysis.m, or output_science.m, or parts thereof)
-    % Therefore, older versions of variables may be available when there should be no data and it is not possible for the calling code to tell the difference. If possible, create_LBL_files
-    % should try to ignore these data.
-    createLBL.create_LBL_files(Clfd)
-
 end
 
 
 
 % Return
-% (a) value of named variable in caller workspace, if there is exists exactly one such among the accessible & inaccessible, global & non-global variables, or
+% (a) value of named variable in caller workspace, if there is exists exactly one such among the accessible &
+%     inaccessible, global & non-global variables, or
 % (b) a default value if the named variable does not pre-exist.
 % Assertion error, if there is both a non-global accessible variable and an inaccessible variable of the same name.
 %
@@ -252,6 +203,9 @@ function value = get_Lapdog_var(name)
     if numel(VarsInfo) < 1
         % CASE: There is no such variable.
         value = DEFAULT_VALUE;
+        
+        % Print almost-warning in case misspelling variable, leading to using default value.
+        fprintf('Note: Requested variable does not exist in the caller workspace: "%s"\n', name)
     elseif numel(VarsInfo) == 1
         if VarsInfo.global
             % CASE: There is such a global variable.

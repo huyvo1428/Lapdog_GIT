@@ -28,7 +28,6 @@
 %
 
 
-
 'LAPDOG - LAP Data Overview and Geometry'
 ''
 tic
@@ -112,7 +111,7 @@ analysis;
 
 
 'lapdog: generate LBL files....'
-createLBL(1,1)
+createLBL(1,1)    % createLBL(failFastDebugMode, saveCallerWorkspace)
 
 
 
