@@ -160,7 +160,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     % NOTE: Can not write an (elegant) function for this, since evalin can only work on the caller's workspace, not the
     % caller's caller.
     %===================================================================================================================
-%     POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex', 'NPL_tabindex'};   % Potentially undefined variables.
+%     POT_UNDEF_VARS = {'der_struct', 'an_tabindex', 'ASW_tabindex', 'PHO_tabindex', 'efl_tabindex', 'NED_tabindex'};   % Potentially undefined variables.
 %     for i = 1:length(POT_UNDEF_VARS)
 %         % IMPLEMENTATION NOTE: There are Lapdog subdirectories "index" and "an_tabindex" which the function "exist"
 %         %                      may detect/respond to if not specifying "var".
@@ -207,7 +207,7 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     Clfd.USC_tabindex      = evalin(MWS, 'usc_tabindex');                        % Changing variable case for consistency.
     Clfd.PHO_tabindex      = evalin(MWS, 'get_Lapdog_var(''PHO_tabindex'')');    % WorkspaceVars.PHO_tabindex;
     Clfd.EFL_tabindex      = evalin(MWS, 'get_Lapdog_var(''efl_tabindex'')');    % WorkspaceVars.efl_tabindex;    % Changing variable case for consistency.
-    Clfd.NPL_tabindex      = evalin(MWS, 'get_Lapdog_var(''NPL_tabindex'')');    % WorkspaceVars.NPL_tabindex;
+    Clfd.NED_tabindex      = evalin(MWS, 'get_Lapdog_var(''NED_tabindex'')');
     
     Clfd.A1P_tabindex      = evalin(MWS, 'get_Lapdog_var(''der_struct'')');      % WorkspaceVars.der_struct;      % Changing variable name for consistency.
     Clfd.C                 = C;
