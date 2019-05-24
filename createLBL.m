@@ -168,7 +168,6 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     Clfd.EFL_tabindex      = evalin(MWS, 'get_Lapdog_var(''efl_tabindex'')');    % Changing variable case for consistency.
     Clfd.NED_tabindex      = evalin(MWS, 'get_Lapdog_var(''NED_tabindex'')');
     
-    Clfd.A1P_tabindex      = evalin(MWS, 'get_Lapdog_var(''der_struct'')');      % Changing variable name for consistency.
     Clfd.C                 = C;
     Clfd.failFastDebugMode = failFastDebugMode;
     Clfd.generatingDeriv1  = generatingDeriv1;

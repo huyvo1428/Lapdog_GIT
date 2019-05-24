@@ -24,7 +24,7 @@
 %
 
 %===================================================================================================
-% PROPOSAL: Stop/disable generating AxS, EST, A1P LBL files.
+% PROPOSAL: Stop/disable generating AxS, EST LBL files.
 %   PRO: Will never be used (but lead to work).
 %   PRO: AxS are not up-to-date and generate errors/warnings which are typically ignored.
 %
@@ -60,8 +60,6 @@
 %           ALL: Has .dataType field for separating xxD, PSD+FRQ, AxS, EST
 %           EST:            Uses createLBL.create_EST_prel_LBL_header to initialize header KVPL (mixing timestamps with other keywords).
 %           ALL except EST: IDP LBL for all timestamps.
-%       der_struct: A1P
-%           Struct for timestamps.
 %       ASW_tabindex: ASW
 %           Struct for timestamps.
 %       usc_tabindex: USC
@@ -94,7 +92,7 @@ function create_LBL_files(Data)
     % ASSERTIONS
     EJ_library.utils.assert.struct(Data, {...
         'ldDatasetPath', 'pdDatasetPath', 'metakernel', 'C', 'failFastDebugMode', 'generatingDeriv1', ...
-        'index', 'blockTAB', 'tabindex', 'an_tabindex', 'A1P_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex', ...
+        'index', 'blockTAB', 'tabindex', 'an_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex', ...
         'EFL_tabindex', 'NED_tabindex'})
     if isnan(Data.failFastDebugMode)    % Check if field set to temporary value.
         error('Illegal argument Data.failFastDebugMode=%g', Data.failFastDebugMode)
@@ -225,49 +223,6 @@ function create_LBL_files(Data)
                 LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy));
         create_antabindex_files(createLblFileFuncPtr, Data.ldDatasetPath, Data.pdDatasetPath, Data.index, Stabindex, San_tabindex, ...
             LblDefs, GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY)
-
-
-
-        %=============================================================
-        %
-        % Create LBL files for files in der_struct/A1P_tabindex (A1P)
-        %
-        %=============================================================
-        if ~isempty(Data.A1P_tabindex)
-            % IMPLEMENTATION NOTE: "der_struct"/A1P_tabindex is only defined/set when
-            % (1) running Lapdog (DERIV1), not edder_lapdog, and
-            % (2) analysis.m is not disabled
-            % Since it is a global variable, it may survive from a Lapdog DERIV1 run to a run where it should not be
-            % defined. NOTE: In that case, Data.A1P_tabindex.file{iFile} will contain paths to the DERIV1-data set (the
-            % wrong data set) which may thus lead to overwriting LBL files in DERIV1 data set if called when writing
-            % EDDER data set!!! Therefore important to NOT RUN this code for EDDER.
-            % IMPLEMENTATION NOTE: "der_struct"/A1P_tabindex can be empty (size 0x0 array) and thus have no fields.
-            % ==> Must check for A1P_tabindex being empty.
-            
-            for iFile = 1:numel(Data.A1P_tabindex.file)
-                try
-                    startStopTimes = Data.A1P_tabindex.timing(iFile, :);   % NOTE: Stores UTC+SCCS.
-                    LhtKvpl        = get_timestamps_KVPL(...
-                        startStopTimes{1}, ...
-                        startStopTimes{2}, ...
-                        startStopTimes{3}, ...
-                        startStopTimes{4});
-                    
-                    iIndex  = Data.A1P_tabindex.firstind(iFile);
-                    LblData = LblDefs.get_A1P_data(LhtKvpl, Data.index(iIndex).lblfile);
-                    
-                    createLBL.create_OBJTABLE_LBL_file(...
-                        convert_LD_TAB_path(Data.ldDatasetPath, Data.A1P_tabindex.file{iFile}), ...
-                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
-                    
-                    clear   startStopTimes   LhtKvpl   iIndex   LblData
-                    
-                catch Exception
-                    EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY)
-                    fprintf(1,'Aborting A1P LBL file for A1P_tabindex - Continuing\n');
-                end
-            end
-        end
         
 
         
@@ -635,7 +590,7 @@ end
 % would otherwise trigger exceptions much later, deep down in
 % "convert_struct_to_ODL>construct_key_assignment at 183".
 % 
-% IMPLEMENTATION NOTE: From experience, Data.A1P_tabindex.timing, asw_tabindex.timing, Data.USC_tabindex.timing can have
+% IMPLEMENTATION NOTE: From experience, asw_tabindex.timing, Data.USC_tabindex.timing can have
 % UTC values with 6 decimals which DVAL-NG does not permit. Must therefore truncate or round to 3 decimals.
 % 
 function Kvpl = get_timestamps_KVPL(START_TIME, STOP_TIME, SPACECRAFT_CLOCK_START_COUNT, SPACECRAFT_CLOCK_STOP_COUNT)

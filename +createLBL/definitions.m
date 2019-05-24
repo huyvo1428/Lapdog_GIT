@@ -1105,40 +1105,6 @@ classdef definitions < handle
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
         
-        
-        
-        % NOTE: TAB+LBL files will likely not be delivered.
-        function LblData = get_A1P_data(obj, LhtKvpl, firstPlksFile)
-            
-            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
-            
-            HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
-                {'2018-11-14', 'EJ', 'First documented version'}, ...
-                {'2018-11-21', 'EJ', 'Update global DESCRIPTION'}, ...
-                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}, ...
-                {'2019-05-22', 'EJ', 'Added FORMAT keyword'}});
-            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
-            
-            DESCRIPTION = 'Analyzed probe 1 parameters.';
-            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);            
-            
-            LblData.HeaderKvpl           = HeaderKvpl;
-            LblData.OBJTABLE.DESCRIPTION = DESCRIPTION;
-            
-            %================
-            % Define columns
-            %================
-            ocl = [];
-            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',        'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
-            ocl{end+1} = struct('NAME',  'STOP_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',        'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
-            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',        'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
-            ocl{end+1} = struct('NAME',  'STOP_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',        'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', 'Quality flag from 000 (best) to 777 (worst).');
-            ocl{end+1} = struct('NAME', 'Vph_knee',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',          'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Potential at probe position from photoelectron current knee (gaussian fit of second derivative).');
-            ocl{end+1} = struct('NAME', 'Te_exp_belowVknee',  'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',  'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Electron temperature from an exponential fit to the slope of the retardation region of the electron current.');
-            LblData.OBJTABLE.OBJ_COL_list = ocl;
-        end
-        
     end    % methods(Access=public)
 
 
