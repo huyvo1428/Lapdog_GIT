@@ -72,7 +72,7 @@ else
         line = fgetl(fc);
         
         if (line == -1)
-            error('Can not identify mission phase in mission calendar.');
+            error('Can not identify mission phase in mission calendar file "%s".', missioncalendar);
         elseif ~(strcmp(line(1),'#') || isempty(line))
             % Parse a line which is neither a comment, nor empty.
             parts = textscan(line,'%s %s %*s %*s %s %s %s %s','delimiter',':');      % * means the field will be skipped.

@@ -86,8 +86,7 @@ classdef definitions < handle
         HeaderAllKvpl
         
         MC_DESC_AMENDM       % Generic description string for MISSING_CONSTANT (MC). Is added at end of DESCRIPTION.
-        %QFLAG1_DESCRIPTION = 'Quality flag constructed as the sum of multiple terms, depending on what quality related effects are present. From 00000 (best) to 77777 (worst).';
-        QFLAG1_DESCRIPTION = 'Quality flag constructed as the sum of multiple terms, depending on what quality related effects are present. Each digit is either in the range 0 (best) to 7 (worst), or 9 (not used).';
+        QFLAG1_DESCRIPTION = 'Quality flag constructed as the sum of multiple terms, depending on what quality related effects are present. Each digit is either in the range 0 (best) to 7 (worst), or 9 (not used). See documentation.';
         QVALUE_DESCRIPTION = 'Quality value in the range 0 (worst) to 1 (best). Corresponds to goodness of fit or how well the model fits the data.';
         
         DATA_DATA_TYPE

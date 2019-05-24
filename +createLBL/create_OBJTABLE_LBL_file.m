@@ -317,6 +317,10 @@ end
 % Calculates COLUMNS, START_BYTE, ROW_BYTES. Assertions.
 %
 function [OBJTABLE_data, T2pkArgsTable] = adjust_extract_OBJECT_TABLE_data(OBJTABLE_data, D)
+
+    assert(numel(OBJTABLE_data.OBJCOL_list) >= 0)
+    
+    
     
     OBJTABLE_data.COLUMNS = 0;   % NOTE: Adds new field to structure.
     OBJCOL_namesList      = {};

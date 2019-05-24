@@ -174,6 +174,16 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
     Clfd.generatingDeriv1  = generatingDeriv1;
     clear C
 
+    
+    
+    try
+        createLBL.create_LBL_files(Clfd)
+    catch Exception
+        % IMPLEMENTATION NOTE: Catching and rethrowing exception in order to better handle (better error message) for
+        % exceptions which contain cause exceptions (create_OBJTABLE_LBL_file).
+        EJ_library.utils.exception_message(Exception, 'message+stack trace')
+       rethrow(Exception)
+    end
 
 end
 
