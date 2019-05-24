@@ -189,20 +189,19 @@ switch mode
             
         end
         
-
-
-            
-end        
             NPL_tabindex(end+1).fname = NPLfname;                   % Start new line of an_tabindex, and record file name
             NPL_tabindex(end).fnameshort = NPLshort; % shortfilename
             NPL_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
             NPL_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
             NPL_tabindex(end).no_of_columns = 6;            % Number of columns
-            % NPL_tabindex{end,6] = an_ind(i);
             NPL_tabindex(end).type = 'Vz'; % Type
             NPL_tabindex(end).timing = timing;
             NPL_tabindex(end).row_byte = row_byte;
         
+
+            
+end        
+
     
 fileinfo = dir(NPLfname);
 if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
