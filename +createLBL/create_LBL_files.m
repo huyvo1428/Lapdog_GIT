@@ -131,17 +131,15 @@ function create_LBL_files(Data)
         GENERATE_FILE_FAIL_POLICY = 'message+stack trace';
         
         GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'error';
-        %AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
         AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
-        %ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
-        ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'error';
+        NED_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
     else
         GENERATE_FILE_FAIL_POLICY = 'message';
         %GENERATE_FILE_FAIL_POLICY = 'nothing';    % Somewhat misleading. Something may still be printed.
         
         GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'warning';
         AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
-        ASW_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
+        NED_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
     end
 
 
@@ -247,7 +245,7 @@ function create_LBL_files(Data)
                     
                     createLBL.create_OBJTABLE_LBL_file(...
                         convert_LD_TAB_path(Data.ldDatasetPath, Data.ASW_tabindex(iFile).fname), ...
-                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, ASW_TAB_LBL_INCONSISTENCY_POLICY);
+                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                     
                     clear   startStopTimes   LhtKvpl   LblData
                     
@@ -386,7 +384,7 @@ function create_LBL_files(Data)
                 clear   startStopTimes   LhtKvpl   LblData
                 
             catch Exception
-                EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
+                EJ_library.utils.exception_message(Exception, NED_TAB_LBL_INCONSISTENCY_POLICY);
                 fprintf(1,'Aborting LBL file for NED_tabindex - Continuing\n');
             end
         end

@@ -3,10 +3,8 @@
 % Should by itself generate no MATLAB error.
 %
 % NOTE: Recursive wrt. exception.cause{i}.
-% exception.cause is an array and in principle, .cause thus defines a tree structure. The printout does print out
-% all the nodes (Exceptions) but does not print out the relationsships between them in any clear way. The printout is
-% sensible when there is zero or one causes for an exception, but will still print every exception also when there is
-% more than one cause.
+% Exception.cause is an array and in principle, .cause thus defines a tree structure which is printed as an indented
+% tree structure.
 % NOTE: Prints all messages to stdout.
 %
 %
@@ -15,26 +13,41 @@
 %
 % ARGUMENTS
 % =========
-% policy : String constant. One of the following: 'nothing', 'message', 'message+stack trace'.
+% Exception : MException object.
+% policy    : String constant. One of the following: 'nothing', 'message', 'message+stack trace'.
+% (varargin : Only used for internal recursive calls. Do not use from outside.)
 %
 %
 % Initially created ~<2016-04-07 by Erik P G Johansson.
 % 
-function exception_message(Exception, policy)
+function exception_message(Exception, policy, varargin)
 % PROPOSAL: Implement using warnings, and MATLAB system for selecting warnings/errors (does that exist?)
 %   CON: Can not select to print/not print stack trace that way.
 %
 %
-% PROPOSAL: Use Exception.getReport?
+% PROPOSAL: Use ~Exception.getReport('extended') instead. Seems to have similar functionality.
+%   CON: Can not disable or customize own "policy".
 % PROPOSAL: Allow function to rethrow exception.
 %   PROPOSAL: Add submitted exception as cause.
 % PROPOSAL: replace policy with Settings (interpret_settings).
 % PROPOSAL: Change constant: "nothing" --> "ignore", "ignore error"
-% PROPOSAL: Use increasing indentation for cause exceptions.
 % PROPOSAL: Use print_variable_recursively.
+%   CON: Does not yet handle objects (e.g. MException).
+
+    INDENTATION_LENGTH = 4;
 
 
-    FID = 1;
+    
+    indentationLevel = 0;
+    if numel(varargin) == 0
+        % Do nothing
+    elseif numel(varargin) == 1
+        indentationLevel = varargin{1};
+    else
+        error('Illegal number of arguments')
+    end
+
+    is = repmat(' ', 1, INDENTATION_LENGTH*indentationLevel);  % is=indentation string. Short name to shorten iprint() calls.
 
 
 
@@ -44,33 +57,71 @@ function exception_message(Exception, policy)
         warning('Illegal "policy" argument.')
         policy = 'message+stack trace';
     end
-
-
-
-    if any(strcmp(policy, {'message', 'message+stack trace'}))
-        % Print error message.
-        fprintf(FID, '======== An exception has occurred ========\n')
-        fprintf(FID, 'Exception.message    = "%s"\n', Exception.message);    
-        fprintf(FID, 'Exception.identifier = "%s"\n', Exception.identifier);    
+    
+    
+    
+    switch(policy)
+        case 'nothing'
+            showMsg        = 0;
+            showStackTrace = 0;
+            showCauses     = 0;
+        case 'message'
+            showMsg        = 1;
+            showStackTrace = 0;
+            showCauses     = 1;
+        case 'message+stack trace'
+            showMsg        = 1;
+            showStackTrace = 1;
+            showCauses     = 1;
+        otherwise
+            warning('Illegal argument policy="%s".', policy)
+            
     end
 
-    if any(strcmp(policy, {'message+stack trace'}))
-        % Print stack trace (for this exception, not "cause exceptions".
-        len = length(Exception.stack);
-        if (~isempty(len))
-            for i=1:len
+    
+
+    if showMsg
+        %====================
+        % Print error message
+        %====================
+        iprint(is, '======== An exception has occurred ========\n')
+        iprint(is, 'Exception.message    = "%s"\n', Exception.message);    
+        iprint(is, 'Exception.identifier = "%s"\n', Exception.identifier);    
+    end
+
+    if showStackTrace
+        %===============================================================
+        % Print stack trace (for this exception, not "cause exceptions"
+        %===============================================================
+        stackDepth = length(Exception.stack);
+        if (~isempty(stackDepth))
+            for i=1:stackDepth
                 % NOTE: Must print .name since it could refer to an internal function, i.e. one might not be able to
                 % derive it from .file.
-                fprintf(FID,'row %3i, %s: %s\n', Exception.stack(i).line, Exception.stack(i).file, Exception.stack(i).name);
+                iprint(is,'row %3i, %s: %s\n', Exception.stack(i).line, Exception.stack(i).file, Exception.stack(i).name);
             end
         end
     end
     
-    for iCause = 1:numel(Exception.cause)
-        % NOTE: Not printing this log message as a "header" since the recursive call trigger another "header" log
-        % message (above).
-        fprintf(FID, 'Displaying cause of exception (recursive): Exception.cause{%i}\n', iCause)
-        EJ_library.utils.exception_message(Exception.cause{iCause}, policy);    % RECURSIVE CALL
+    if showCauses
+        %======================================
+        % Print "cause" exceptions RECURSIVELY
+        %======================================
+        for iCause = 1:numel(Exception.cause)
+            % NOTE: Not printing this log message as a "header" since the recursive call trigger another "header" log
+            % message (above).
+            iprint(is, 'Displaying cause(s) of exception (recursive): Exception.cause{%i}\n', iCause)
+            EJ_library.utils.exception_message(Exception.cause{iCause}, policy, indentationLevel+1);    % RECURSIVE CALL
+        end
     end
 
+end
+
+
+
+% Indented print function.
+function iprint(indentStr, varargin)
+    varargin{1} = [indentStr, varargin{1}];
+    
+    fprintf(varargin{:});
 end

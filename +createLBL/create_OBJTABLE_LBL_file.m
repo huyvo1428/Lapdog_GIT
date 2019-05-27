@@ -203,84 +203,89 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, HeaderOptions, Settings,
     lblFilename = [fileBasename, '.LBL'];
     lblFilePath = fullfile(filePath, lblFilename);
     
+    
+    
+    % IMPLEMENTATION NOTE: Catches exceptions from large parts of code to add context (e.g. LBL file) to the original
+    % exception. "Requires" that calling code prints exception causes recursively to easily understand the error though.
     try
-        % IMPLEMENTATION NOTE: Catches exceptions from this specific call to add context to the original exception (LBL
-        % file). Requires that exception cause is printed recursively to easily understand the error though.
         [LblData.OBJTABLE, T2pkArgsTable] = adjust_extract_OBJECT_TABLE_data(LblData.OBJTABLE, D);
+        
+        %==========================================
+        % Extract data from TAB file (+assertions)
+        %==========================================
+        % IMPLEMENTATION NOTE: Needs try-catch here to determine whether read_TAB_file succeeded or not, since the
+        % code/function should not automatically exit if it does fail.
+        try
+            LblData.nTabFileRows = NaN;   % Field must be created in case deriving the value later fails.
+            [firstTabRow, lastTabRow, nBytesPerRow, LblData.nTabFileRows] = read_TAB_file(tabFilePath);
+            readingTabSuccessful = true;
+        catch Exc
+            warning_error___LOCAL(Exc, tabLblInconsistencyPolicy)
+            readingTabSuccessful = false;
+        end
+        
+        %=============================================
+        % Continue extracting data from TAB file data
+        %=============================================
+        if readingTabSuccessful
+            % IMPLEMENTATION NOTE: Does not put the following code (in the "if" statement) inside the same try statement
+            % that sets readingTabSuccessful since we want errors here to NOT be caught.
+            
+            % Set FORMAT.
+            for iOBJCOL = 1:numel(LblData.OBJTABLE.OBJCOL_list)
+                LblData.OBJTABLE.OBJCOL_list{iOBJCOL} = set_FORMAT(...
+                    LblData.OBJTABLE.OBJCOL_list{iOBJCOL}, firstTabRow, lastTabRow, tabLblInconsistencyPolicy);
+            end
+            
+            % ASSERTION: Number of bytes per TAB row.
+            if nBytesPerRow ~= LblData.OBJTABLE.ROW_BYTES
+                warning_error___LOCAL(sprintf(...
+                    ['TAB file is inconsistent with LBL file. Bytes per row does not fit table description.\n', ...
+                    '    nBytesPerRow=%g\n    LblData.OBJTABLE.ROW_BYTES=%g\n', ...
+                    '    File: "%s"'], ...
+                    nBytesPerRow, LblData.OBJTABLE.ROW_BYTES, tabFilePath), tabLblInconsistencyPolicy)
+            end
+            
+            T2pkKvpl = derive_T2PK_KVPL(firstTabRow, lastTabRow, T2pkArgsTable, D);
+            
+            % Update selected PDS keyword values.
+            LblData.HeaderKvpl = LblData.HeaderKvpl.overwrite_subset(T2pkKvpl);
+            
+        end
+
+
+
+        %===================================================================
+        % Add keywords to the LBL "header" (before first OBJECT statement).
+        %===================================================================
+        LblData.HeaderKvpl = LblData.HeaderKvpl.append(EJ_library.utils.KVPL2({...
+            'RECORD_TYPE',  'FIXED_LENGTH'; ...                  % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
+            'RECORD_BYTES', sprintf( '%i',  LblData.OBJTABLE.ROW_BYTES); ...
+            'FILE_NAME',    sprintf('"%s"', lblFilename); ...    % Should be qouted.
+            '^TABLE',       sprintf('"%s"', tabFilename); ...    % Should be qouted.
+            'PRODUCT_ID',   sprintf('"%s"', fileBasename); ...   % Should be qouted.
+            'FILE_RECORDS', sprintf( '%i',  LblData.nTabFileRows) ...
+            }));   % Order not important since later reordered.
+        
+        
+        
+        %=============================================
+        % Construct SSL representing the LBL contents
+        %=============================================
+        Ssl = create_SSL_header(LblData.HeaderKvpl, HeaderOptions);
+        Ssl = add_SSL_OBJECT(Ssl, 'TABLE', create_OBJ_TABLE_content(LblData.OBJTABLE, LblData.nTabFileRows));
+        
+        
+        
+        % Log message
+        %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
+        EJ_library.PDS_utils.write_ODL_file(lblFilePath, Ssl, {}, Settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
+        
     catch Exc
-        NewExc = MException('adjust_extract_OBJECT_TABLE_data:fail', sprintf('Something wrong with OBJECT=TABLE data. lblFilePath=%s', lblFilePath));
+        NewExc = MException('create_OBJTABLE_LBL_file:fail', sprintf('Something wrong with OBJECT=TABLE data. lblFilePath=%s', lblFilePath));
         NewExc = addCause(NewExc, Exc);
         throw(NewExc)
     end
-    
-    %==========================================
-    % Extract data from TAB file (+assertions)
-    %==========================================
-    try
-        LblData.nTabFileRows = NaN;   % Field must be created in case deriving the value later fails.
-        [firstTabRow, lastTabRow, nBytesPerRow, LblData.nTabFileRows] = read_TAB_file(tabFilePath);
-        readingTabSuccessful = true;
-    catch Exc
-        warning_error___LOCAL(Exc, tabLblInconsistencyPolicy)
-        readingTabSuccessful = false;
-    end
-
-    %=============================================
-    % Continue extracting data from TAB file data
-    %=============================================
-    if readingTabSuccessful
-        % IMPLEMENTATION NOTE: Does not put the following code (in the "if" statement) inside the same try statement
-        % that sets readingTabSuccessful since we want errors here to NOT be caught.
-        
-        % Set FORMAT.
-        for iOBJCOL = 1:numel(LblData.OBJTABLE.OBJCOL_list)
-            LblData.OBJTABLE.OBJCOL_list{iOBJCOL} = set_FORMAT(...
-                LblData.OBJTABLE.OBJCOL_list{iOBJCOL}, firstTabRow, lastTabRow, tabLblInconsistencyPolicy);            
-        end
-        
-        % ASSERTION: Number of bytes per TAB row.
-        if nBytesPerRow ~= LblData.OBJTABLE.ROW_BYTES
-            warning_error___LOCAL(sprintf(...
-                ['TAB file is inconsistent with LBL file. Bytes per row does not fit table description.\n', ...
-                '    nBytesPerRow=%g\n    LblData.OBJTABLE.ROW_BYTES=%g\n', ...
-                '    File: "%s"'], ...
-                nBytesPerRow, LblData.OBJTABLE.ROW_BYTES, tabFilePath), tabLblInconsistencyPolicy)
-        end
-        
-        T2pkKvpl = derive_T2PK_KVPL(firstTabRow, lastTabRow, T2pkArgsTable, D);
-
-        % Update selected PDS keyword values.
-        LblData.HeaderKvpl = LblData.HeaderKvpl.overwrite_subset(T2pkKvpl);
-        
-    end
-
-    %################################################################################################
-
-    %===================================================================
-    % Add keywords to the LBL "header" (before first OBJECT statement).
-    %===================================================================
-    LblData.HeaderKvpl = LblData.HeaderKvpl.append(EJ_library.utils.KVPL2({...
-        'RECORD_TYPE',  'FIXED_LENGTH'; ...                  % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
-        'RECORD_BYTES', sprintf( '%i',  LblData.OBJTABLE.ROW_BYTES); ...
-        'FILE_NAME',    sprintf('"%s"', lblFilename); ...    % Should be qouted.
-        '^TABLE',       sprintf('"%s"', tabFilename); ...    % Should be qouted.
-        'PRODUCT_ID',   sprintf('"%s"', fileBasename); ...   % Should be qouted.
-        'FILE_RECORDS', sprintf( '%i',  LblData.nTabFileRows) ...
-    }));   % Order not important since later reordered.
-
-
-
-    %=============================================
-    % Construct SSL representing the LBL contents
-    %=============================================
-    Ssl = create_SSL_header(LblData.HeaderKvpl, HeaderOptions);
-    Ssl = add_SSL_OBJECT(Ssl, 'TABLE', create_OBJ_TABLE_content(LblData.OBJTABLE, LblData.nTabFileRows));
-
-
-
-    % Log message
-    %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
-    EJ_library.PDS_utils.write_ODL_file(lblFilePath, Ssl, {}, Settings.indentationLength, CONTENT_MAX_ROW_LENGTH);    % endRowsList = {};
 end
 
 

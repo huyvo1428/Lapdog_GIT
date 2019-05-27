@@ -181,7 +181,8 @@ function createLBL(failFastDebugMode, saveCallerWorkspace, varargin)
         % IMPLEMENTATION NOTE: Catching and rethrowing exception in order to better handle (better error message) for
         % exceptions which contain cause exceptions (create_OBJTABLE_LBL_file).
         EJ_library.utils.exception_message(Exception, 'message+stack trace')
-       rethrow(Exception)
+        %rethrow(Exception)    % If caught and printed, then the same exception will be printed again.
+        error('createLBL failed')
     end
 
 end
