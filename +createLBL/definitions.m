@@ -1051,60 +1051,60 @@ classdef definitions < handle
             LblData.OBJTABLE.OBJCOL_list = [ocl1, ocl2];
             
         end    % get_AxS_data()
-        
-        
-        
-        % NOTE: Label files are not delivered.
-        function LblData = get_EST_data(obj, estTabPath, plksFileList, probeNbrList)
-            
-            %===============================================================
-            % NOTE: createLBL.create_EST_prel_LBL_header(...)
-            %       sets certain LBL/ODL variables to handle collisions:
-            %    START_TIME / STOP_TIME,
-            %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
-            %    obj.HeaderAllKvpl
-            %===============================================================
-            HeaderKvpl = createLBL.create_EST_prel_LBL_header(estTabPath, plksFileList, probeNbrList, obj.HeaderAllKvpl);
-            HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
-            
-            HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
-                {'2018-11-14', 'EJ', 'First documented version'}, ...
-                {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
-                {'2019-02-04', 'EJ', 'Updated UNITs'}, ...
-                {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}}, ...
-                {'2019-05-22', 'EJ', 'Added FORMAT keyword'});
-            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
-            
-            DESCRIPTION = 'Best estimates of physical values from model fitted analysis based on sweeps.';
-            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
 
-            LblData.HeaderKvpl           = HeaderKvpl;
-            LblData.OBJTABLE.DESCRIPTION = DESCRIPTION;
 
-            %================
-            % Define columns
-            %================
-            ocl = [];
-            ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
-            ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
-            ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'npl',                'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of plasma number density.');
-            ocl{end+1} = struct('NAME', 'Te',                 'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',   'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of electron temperature.');
-            ocl{end+1} = struct('NAME', 'Vsc',                'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',           'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of spacecraft potential.');
-            ocl{end+1} = struct('NAME', 'Probe_number',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Probe number. 1 or 2.');
-            ocl{end+1} = struct('NAME', 'Direction',          'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
-            ocl{end+1} = struct('NAME', 'Illumination',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
-            ocl{end+1} = struct('NAME', 'Sweep_group_number', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', ...
-                ['Number signifying which group of sweeps the data comes from. ', ...
-                'Groups of sweeps are formed for the purpose of deriving/selecting values to be used in best estimates. ', ...
-                'All sweeps with the same group number are almost simultaneous. For every type of best estimate, at most one is chosen from each group.' ...
-                ]);  % NOTE: Making such a long line in LBL file causes trouble?!!
 
-            LblData.OBJTABLE.OBJCOL_list = ocl;
-        end
-        
+%         % NOTE: Label files are not delivered.
+%         function LblData = get_EST_data(obj, estTabPath, plksFileList, probeNbrList)
+%             
+%             %===============================================================
+%             % NOTE: createLBL.create_EST_prel_LBL_header(...)
+%             %       sets certain LBL/ODL variables to handle collisions:
+%             %    START_TIME / STOP_TIME,
+%             %    SPACECRAFT_CLOCK_START_COUNT / SPACECRAFT_CLOCK_STOP_COUNT
+%             %    obj.HeaderAllKvpl
+%             %===============================================================
+%             HeaderKvpl = createLBL.create_EST_prel_LBL_header(estTabPath, plksFileList, probeNbrList, obj.HeaderAllKvpl);
+%             HeaderKvpl = createLBL.definitions.modify_PLKS_header(HeaderKvpl);
+%             
+%             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
+%                 {'2018-11-14', 'EJ', 'First documented version'}, ...
+%                 {'2018-11-16', 'EJ', 'Removed ROSETTA:* keywords'}, ...
+%                 {'2019-02-04', 'EJ', 'Updated UNITs'}, ...
+%                 {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs'}}, ...
+%                 {'2019-05-22', 'EJ', 'Added FORMAT keyword'});
+%             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+%             
+%             DESCRIPTION = 'Best estimates of physical values from model fitted analysis based on sweeps.';
+%             HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
+% 
+%             LblData.HeaderKvpl           = HeaderKvpl;
+%             LblData.OBJTABLE.DESCRIPTION = DESCRIPTION;
+% 
+%             %================
+%             % Define columns
+%             %================
+%             ocl = [];
+%             ocl{end+1} = struct('NAME', 'START_TIME_UTC',     'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+%             ocl{end+1} = struct('NAME', 'STOP_TIME_UTC',      'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+%             ocl{end+1} = struct('NAME', 'START_TIME_OBT',     'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Start spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
+%             ocl{end+1} = struct('NAME', 'STOP_TIME_OBT',      'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION',  'Stop spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
+%             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',       'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+%             ocl{end+1} = struct('NAME', 'npl',                'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of plasma number density.');
+%             ocl{end+1} = struct('NAME', 'Te',                 'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'ELECTRONVOLT',   'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of electron temperature.');
+%             ocl{end+1} = struct('NAME', 'Vsc',                'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',           'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of spacecraft potential.');
+%             ocl{end+1} = struct('NAME', 'Probe_number',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Probe number. 1 or 2.');
+%             ocl{end+1} = struct('NAME', 'Direction',          'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
+%             ocl{end+1} = struct('NAME', 'Illumination',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
+%             ocl{end+1} = struct('NAME', 'Sweep_group_number', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', ...
+%                 ['Number signifying which group of sweeps the data comes from. ', ...
+%                 'Groups of sweeps are formed for the purpose of deriving/selecting values to be used in best estimates. ', ...
+%                 'All sweeps with the same group number are almost simultaneous. For every type of best estimate, at most one is chosen from each group.' ...
+%                 ]);  % NOTE: Making such a long line in LBL file causes trouble?!!
+% 
+%             LblData.OBJTABLE.OBJCOL_list = ocl;
+%         end
+
     end    % methods(Access=public)
 
 

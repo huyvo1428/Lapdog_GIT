@@ -14,6 +14,9 @@
 % ASSUMES: The two LBL files have identical sets of header keys.
 %
 %
+% NOTE: FUNCTION SHOULD BE OBSOLETE SINCE EST (BEST ESTIMATES) FILES ARE NO LONGER USED.
+%
+%
 % Initially created <=2017 by Erik P G Johansson, IRF Uppsala.
 %
 function EstHeaderKvpl = create_EST_prel_LBL_header(estTabPath, plksFileList, probeNbrList, OverwriteKvpl)

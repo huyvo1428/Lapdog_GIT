@@ -501,21 +501,23 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
             %=========================================
 
             if strcmp(San_tabindex(i).dataType, 'best_estimates')
-                %======================
-                % CASE: Best estimates
-                %======================
-
-                iIndexSrc    = San_tabindex(i).iIndex;
-                estTabPath   = San_tabindex(i).path;
-                probeNbrList = [index(iIndexSrc).probe];
-                plksFileList = {index(iIndexSrc).lblfile};                
-                for j = 1:numel(plksFileList)
-                    plksFileList{j} = convert_PD_TAB_path(pdDatasetPath, plksFileList{j});
-                end
-
-                LblData = LblDefs.get_EST_data(...
-                    convert_LD_TAB_path(ldDatasetPath, estTabPath), ...
-                    plksFileList, probeNbrList);
+                
+                error('Can not handle best estimates (disabled). San_tabindex(i=%i).dataType = ''best_estimates''', i)
+%                 %======================
+%                 % CASE: Best estimates
+%                 %======================
+% 
+%                 iIndexSrc    = San_tabindex(i).iIndex;
+%                 estTabPath   = San_tabindex(i).path;
+%                 probeNbrList = [index(iIndexSrc).probe];
+%                 plksFileList = {index(iIndexSrc).lblfile};                
+%                 for j = 1:numel(plksFileList)
+%                     plksFileList{j} = convert_PD_TAB_path(pdDatasetPath, plksFileList{j});
+%                 end
+% 
+%                 LblData = LblDefs.get_EST_data(...
+%                     convert_LD_TAB_path(ldDatasetPath, estTabPath), ...
+%                     plksFileList, probeNbrList);
 
             else
                 %===============================================
