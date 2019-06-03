@@ -23,11 +23,6 @@
 % Initially created 2018-08-22 by Erik P G Johansson, IRF Uppsala
 %
 classdef constants < handle
-    % PROPOSAL: Merge COTLF_HEADER_OPTIONS and ODL_INDENTATION_LENGTH (modify write_OBJTABLE_LBL_FILE accordingly).
-    %   CON: Indentation length is more fundamental. Could pop up somewhere else.
-    %   PROPOSAL: Modify write_OBJTABLE_LBL_FILE to merge header options into settings and copy the indentation length from
-    %           the separate constant ODL_INDENTATION_LENGTH.
-    %
     % NOTE: Used by non-Lapdog code: ./+EJ_library/+ro/+delivery/+geom/create_geom_TAB_LBL_from_EOG.m
     %       Might be used by future standalone, "Lapdogish" code (same git repo) for e.g. separately regenerating LBL files.
     %
@@ -42,12 +37,17 @@ classdef constants < handle
     %
     % PROPOSAL: Include metakernel_rosetta.txt
     %   PRO:/NOTE: Used by lapdog_convention_wrapper, get_lapdog_metakernel.
-    
+    %
+    % PROPOSAL: Move to EJ_library for sharing with private MATLAB directory.    
+    %   NOTE: get_state_filenaming is very much connected to Lapdog, but is also used by non-Lapdog code
+    %       rerun_analysis_createLBL which is a Lapdog utility associated with Lapdog and that requires access to Lapdog anyway.
+    %   PROPOSAL: Let get_state_filenaming be part of Lapdog/createLBL, not EJ_library.
+
     properties(Access=public)
-        ROSETTA_NAIF_ID                        = -226;     % Used by SPICE.
-        ODL_INDENTATION_LENGTH                 = 4;
-        MISSING_CONSTANT                       = -1000000000;    % Same as global variable MISSING_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
-        N_FINAL_PRESWEEP_SAMPLES               = 16;             % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
+        ROSETTA_NAIF_ID          = -226;           % Used by SPICE.
+        ODL_INDENTATION_LENGTH   = 4;
+        MISSING_CONSTANT         = -1000000000;    % Same as global variable MISSING_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
+        N_FINAL_PRESWEEP_SAMPLES = 16;             % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
 
         % When splitting "index" into multiple parts (.mat files) for saving to disk, this is how large every part
         % should be, in number of index values.
@@ -56,17 +56,17 @@ classdef constants < handle
         % possible and not possible to save it, so it is probably close to the limit.
         % NOTE: The true upper limit may depend on the length of strings, in particular paths stored in "index". Should
         % maybe therefore lower the value to have more margin.
-        %N_INDEX_INDICES_PER_PART               = 662000;       % Has failed for ESC2, ESC3 ~2019-05-15.
-        N_INDEX_INDICES_PER_PART               = 200000;
+        %N_INDEX_INDICES_PER_PART = 662000;       % Has failed for ESC2, ESC3 ~2019-05-15.
+        N_INDEX_INDICES_PER_PART = 200000;
         
-        % Used by createLBL.create_OBJTABLE_LBL_file
-        COTLF_HEADER_OPTIONS   % Set in constructor
+        % Used by createLBL.create_OBJTABLE_LBL_file (COTLF).
+        COTLF_SETTINGS   % Set in constructor
         
         % Used for PDS keywords which are added to/included in LBL files, but whose values are not set by Lapdog. In
         % practise, these should be overwritten by Erik P G Johansson's "delivery code" (not included in Lapdog) before
         % actual delivery.
         % NOTE: Not inherently quoted. Usage may require adding quotes.
-        VALUE_NOT_SET_BY_LAPDOG                = '"<UNSET>"';
+        VALUE_NOT_SET_BY_LAPDOG  = '"<UNSET>"';
     end
 
 
@@ -115,7 +115,7 @@ classdef constants < handle
             % Keywords which are quite independent of type of file.
             GENERAL_KEY_ORDER_LIST = { ...
                 'PDS_VERSION_ID', ...        % The PDS standard requires this to be first, I think.
-                'DESCRIPTION', ...
+                'DESCRIPTION', ...           % High up, so that easy to find.
                 'LABEL_REVISION_NOTE', ...   % High up, due to Review 2019 RID.
                 ...
                 'RECORD_TYPE', ...
@@ -272,10 +272,20 @@ classdef constants < handle
                 'SPACECRAFT_CLOCK_START_COUNT', ...
                 'SPACECRAFT_CLOCK_STOP_COUNT'};
             
-            obj.COTLF_HEADER_OPTIONS = struct(...
-                'keyOrderList',        {KEY_ORDER_LIST}, ...
-                'forbiddenKeysList',   {FORBIDDEN_KEYS}, ...
-                'forceQuotesKeysList', {FORCE_QUOTE_KEYS});
+            
+            
+            S = [];
+            S.indentationLength         = obj.ODL_INDENTATION_LENGTH;
+            S.spacecraftNaifSpiceId     = obj.ROSETTA_NAIF_ID;
+            S.tabLblInconsistencyPolicy = 'error';
+            S.contentRowMaxLength       = 80-2;            % Number excludes line break characters.
+            S.formatNotDerivedValue     = '<UNSET>';       % Value used to replace FORMAT, when setting automatically fails.
+            S.emptyUnitDefault          = 'N/A';           % Value used to replace empty UNIT.
+            S.nBytesBetweenColumns      = length(', ');    % ASSUMES absence of quotes in string columns. Lapdog convention.
+            S.headerKeysForbiddenList   = FORBIDDEN_KEYS;
+            S.headerKeysForceQuotesList = FORCE_QUOTE_KEYS;
+            S.headerKeysOrderList       = KEY_ORDER_LIST;
+            obj.COTLF_SETTINGS = S;
         end
         
         

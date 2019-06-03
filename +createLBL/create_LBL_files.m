@@ -120,7 +120,7 @@ function create_LBL_files(Data)
 
 
 
-    COTLF_SETTINGS = struct('indentationLength', Data.C.ODL_INDENTATION_LENGTH);
+    COTLF_SETTINGS = Data.C.COTLF_SETTINGS;
 
 
 
@@ -172,7 +172,7 @@ function create_LBL_files(Data)
     %===============================================================
     createLblFileFuncPtr = @(LblData, tabFile) (createLBL.create_OBJTABLE_LBL_file(...
         convert_LD_TAB_path(Data.ldDatasetPath, tabFile), ...
-        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY));
+        LblData, COTLF_SETTINGS, 'tabLblInconsistencyPolicy', GENERAL_TAB_LBL_INCONSISTENCY_POLICY));
     create_tabindex_files(createLblFileFuncPtr, Data.pdDatasetPath, Data.index, Stabindex, ...
         LblDefs)
     
@@ -203,7 +203,7 @@ function create_LBL_files(Data)
 
         createLBL.create_OBJTABLE_LBL_file(...
             convert_LD_TAB_path(Data.ldDatasetPath, Data.blockTAB(i).blockfile), ...
-            LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+            LblData, COTLF_SETTINGS, 'tabLblInconsistencyPolicy', GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         
         clear   START_TIME   STOP_TIME   LhtKvpl   LblData
     end   % for
@@ -218,7 +218,7 @@ function create_LBL_files(Data)
         %===============================================
         createLblFileFuncPtr = @(LblData, tabFile, tabLblInconsistencyPolicy) (createLBL.create_OBJTABLE_LBL_file(...
                 convert_LD_TAB_path(Data.ldDatasetPath, tabFile), ...
-                LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy));
+                LblData, COTLF_SETTINGS, 'tabLblInconsistencyPolicy', tabLblInconsistencyPolicy));
         create_antabindex_files(createLblFileFuncPtr, Data.ldDatasetPath, Data.pdDatasetPath, Data.index, Stabindex, San_tabindex, ...
             LblDefs, GENERATE_FILE_FAIL_POLICY, GENERAL_TAB_LBL_INCONSISTENCY_POLICY, AxS_TAB_LBL_INCONSISTENCY_POLICY)
         
@@ -245,7 +245,7 @@ function create_LBL_files(Data)
                     
                     createLBL.create_OBJTABLE_LBL_file(...
                         convert_LD_TAB_path(Data.ldDatasetPath, Data.ASW_tabindex(iFile).fname), ...
-                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                        LblData, COTLF_SETTINGS, 'tabLblInconsistencyPolicy', GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                     
                     clear   startStopTimes   LhtKvpl   LblData
                     
@@ -281,7 +281,7 @@ function create_LBL_files(Data)
                     
                     createLBL.create_OBJTABLE_LBL_file(...
                         convert_LD_TAB_path(Data.ldDatasetPath, Data.USC_tabindex(iFile).fname), ...
-                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                        LblData, COTLF_SETTINGS, 'tabLblInconsistencyPolicy', GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                     
                     clear   startStopTimes   LhtKvpl   LblData
                     
@@ -313,7 +313,7 @@ function create_LBL_files(Data)
                     
                     createLBL.create_OBJTABLE_LBL_file(...
                         convert_LD_TAB_path(Data.ldDatasetPath, Data.PHO_tabindex(iFile).fname), ...
-                        LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                        LblData, COTLF_SETTINGS, 'tabLblInconsistencyPolicy', GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                     
                     clear   LhtKvpl   LblData
                     
@@ -346,7 +346,7 @@ function create_LBL_files(Data)
                 
                 createLBL.create_OBJTABLE_LBL_file(...
                     convert_LD_TAB_path(Data.ldDatasetPath, Data.EFL_tabindex(iFile).fname), ...
-                    LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                    LblData, COTLF_SETTINGS, 'tabLblInconsistencyPolicy', GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                 
                 clear   startStopTimes   LhtKvpl   LblData
                 
@@ -379,7 +379,7 @@ function create_LBL_files(Data)
                 
                 createLBL.create_OBJTABLE_LBL_file(...
                     convert_LD_TAB_path(Data.ldDatasetPath, Data.NED_tabindex(iFile).fname), ...
-                    LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                    LblData, COTLF_SETTINGS, 'tabLblInconsistencyPolicy', GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
                 
                 clear   startStopTimes   LhtKvpl   LblData
                 

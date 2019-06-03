@@ -31,6 +31,9 @@ function FORMAT = derive_FORMAT(tabValueStr, DATA_TYPE, nBytes)
     elseif strcmp(DATA_TYPE, 'ASCII_INTEGER')
         
         if ~isempty(regexp(tabValueStr, '^ *(|-)[0-9]+ *$', 'once'))   % NOTE: Permits whitespace before and after.
+            % NOTE: Regexp permits multi-digit integers that begin with zero.
+            %   Ex: RPCLAP030101_CALIB_FINE.TAB
+            
             FORMAT = sprintf('I%i', nBytes);
         else
             error('Can not derive FORMAT from tabValueStr="%s" with DATA_TYPE=%s.', tabValueStr, DATA_TYPE)
@@ -47,8 +50,18 @@ function FORMAT = derive_FORMAT(tabValueStr, DATA_TYPE, nBytes)
             
             FORMAT = sprintf('F%i.%i', nBytes, nDecimals);
             
-        elseif ~isempty(regexp(tabValueStr, '^ *(|-)[0-9]+.[0-9]+e[+-][0-9][0-9] *$', 'once'))   % NOTE: Requires at least one decimal. Permits whitespace before and after.
-            % CASE: Exponential format.
+        elseif ~isempty(regexp(tabValueStr, '^ *(|+|-)[0-9]+.[0-9]+[eE][+-][0-9][0-9] *$', 'once'))
+            %==========================
+            % CASE: Exponential format
+            %==========================
+            % NOTE: Regexp requires at least one decimal. Permits whitespace before and after.
+            % NOTE: Regexp permits both lower case "e" and upper case "E".
+            % "Planetary Data System Standards Reference", v3.6 gives examples of both for LBL KEYWORDS (not TAB
+            % files).
+            %   Ex: Upper case: RPCLAP030101_CALIB_FINE.TAB
+            %   Ex: Lower case: RPCLAP160930_CALIB_COEFF.TAB
+            % NOTE: Regexp permits floating point number to begin with plus, minus, and a digit..
+            %   Ex: Begins with plus: RPCLAP030101_CALIB_FINE.TAB (should be the only such file in datasets).
             
             integerMatches = regexp(tabValueStr, '[0-9]+', 'match');
             nDecimals = length(integerMatches{2});
