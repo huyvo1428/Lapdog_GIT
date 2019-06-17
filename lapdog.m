@@ -113,6 +113,7 @@ save(tabindexfile,'tabindex');
 
 
 
+save_Lapdog_state(derivedpath, true, 'pre-analysis')
 analysis;
 
 
