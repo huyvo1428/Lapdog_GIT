@@ -57,11 +57,11 @@ switch mode
 
     indz_end=t_et>t_et_end;
     P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,1);
-    P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,2);
+    P_interp2(indz_end)= NED_FIT.P(NED_FIT_end,2);
     
     indz_start=t_et<t_et_min;
     P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,1);
-    P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,2);
+    P_interp2(indz_start)= NED_FIT.P(NED_FIT_start,2);
     
     
     %[junk,ind]= min(abs(NED_FIT.t_et-t_et(1)));        
@@ -172,11 +172,11 @@ switch mode
 
     indz_end=t_et>t_et_end;
     P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,1);
-    P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,2);
+    P_interp2(indz_end)= NED_FIT.P(NED_FIT_end,2);
     
     indz_start=t_et<t_et_min;
     P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,1);
-    P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,2);
+    P_interp2(indz_start)= NED_FIT.P(NED_FIT_start,2);
     
     
     %[junk,ind]= min(abs(NED_FIT.t_et-t_et(1)));        

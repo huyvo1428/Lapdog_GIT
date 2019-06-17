@@ -147,6 +147,9 @@ try
         %    inter = 1 + floor((t - tday0)/intval); %prepare subset selection to accumarray
         inter = 1 + floor((scantemp{1,2}(:) - tday0)/intval); %prepare subset selection to accumarray
 
+        %Bugfix Issue #10. 
+        inter(inter>2700)=2700;
+        
         %intervals specified from beginning of day, in intervals of intval,
         %and the variable inter marks which interval the data in the file is related to
 

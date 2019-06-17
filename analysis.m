@@ -47,6 +47,12 @@ spath=sprintf('%s/XXP_save.mat',derivedpath);
 %
 % catch err
 
+
+
+
+
+
+
 fprintf(1,'Analysing sweeps\n')
 
 if(~isempty(ind_I1S))
@@ -89,12 +95,12 @@ end
 fprintf(1,'Downsampling low frequency measurements\n')
 
 if(~isempty(ind_I1L))
-    %an_downsample(ind_I1L,tabindex,8)
+    an_NEL(ind_I1L,tabindex,index)
+
     an_downsample(ind_I1L,32,tabindex,index)
 end
 
 if(~isempty(ind_I2L))
-   % an_downsample(ind_I2L,tabindex,8)
     an_downsample(ind_I2L,32,tabindex,index)
 end
 
@@ -103,19 +109,10 @@ ind_VL=[ind_V1L;ind_V2L];
 
 if(~isempty(ind_VL))
     ind_VL=sort(ind_VL,'ascend');
-   % an_downsample(ind_V1L,tabindex,8)
     an_downsample(ind_VL,32,tabindex,index)
+    an_NEL(ind_VL,tabindex,index)
+
  %   an_NPL(ind_VL,tabindex,index);
-end
-
-if(~isempty(ind_V1L))
-   % an_downsample(ind_V1L,tabindex,8)
-%    an_downsample(ind_V1L,32,tabindex,index)
-end
-
-if(~isempty(ind_V2L))
-  %  an_downsample(ind_V2L,tabindex,8)
- %   an_downsample(ind_V2L,32,tabindex,index)
 end
 
 

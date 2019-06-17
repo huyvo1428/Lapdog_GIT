@@ -45,6 +45,29 @@ ind_I2S= find(strcmp('I2S', antype));
 ind_VL=[ind_V1L;ind_V2L];
 
 
+fprintf(1,'Downsampling low frequency measurements & Creating NEL\n')
+
+if(~isempty(ind_I1L))
+    an_NEL(ind_I1L,tabindex,index)
+
+ %   an_downsample(ind_I1L,32,tabindex,index)
+end
+
+if(~isempty(ind_I2L))
+ %   an_downsample(ind_I2L,32,tabindex,index)
+end
+
+
+
+if(~isempty(ind_VL))
+    ind_VL=sort(ind_VL,'ascend');
+    an_NEL(ind_VL,tabindex,index)
+ %   an_downsample(ind_VL,32,tabindex,index)
+
+ %   an_NPL(ind_VL,tabindex,index);
+end
+
+
 spath=sprintf('%s/XXP_save_v2.mat',derivedpath);
 %
 % try
@@ -78,38 +101,6 @@ else
     fprintf(1,'Error: an empty XXP was loaded, or no sweeps were analysed. aborting\n')
 end
 
-
-
-if(~isempty(ind_VL))
-    ind_VL=sort(ind_VL,'ascend');
-   % an_downsample(ind_V1L,tabindex,8)
-    an_downsample(ind_VL,32,tabindex,index)
-   % an_NPL(ind_VL,tabindex,index);
-end
-
-fprintf(1,'Downsampling low frequency measurements\n')
-
-if(~isempty(ind_I1L))
-    %an_downsample(ind_I1L,tabindex,8)
- %   an_downsample(ind_I1L,32,tabindex,index)
-end
-
-if(~isempty(ind_I2L))
-   % an_downsample(ind_I2L,tabindex,8)
-  %  an_downsample(ind_I2L,32,tabindex,index)
-end
-
-
-
-if(~isempty(ind_V1L))
-   % an_downsample(ind_V1L,tabindex,8)
-%    an_downsample(ind_V1L,32,tabindex,index)
-end
-
-if(~isempty(ind_V2L))
-  %  an_downsample(ind_V2L,tabindex,8)
- %   an_downsample(ind_V2L,32,tabindex,index)
-end
 
 
 
