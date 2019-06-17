@@ -82,7 +82,7 @@ classdef KVPL2
     % PROPOSAL: Assert that submitted KVPL arguments are of this same class.
     %   PRO: Can find old usages of obsoleted KVPL data struct.
     %   CON: Will generate error for mixed use of Lapdog & private KVPL2 class instances.
-    %       Ex: create_E2C2D2 calls createLBL.create_OBJTABLE_LBL_file which calls
+    %       Ex: create_E2C2D2 calls EJ_library.ro.create_OBJTABLE_LBL_file which calls
     %           LblData.HeaderKvpl = LblData.HeaderKvpl.overwrite_subset(T2pkKvpl);
     %           with mixed KVPL2 versions.
     %       PROPOSAL: Specify assertions which permit both *.util.KVPL2.

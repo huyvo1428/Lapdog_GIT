@@ -59,7 +59,7 @@ classdef constants < handle
         %N_INDEX_INDICES_PER_PART = 662000;       % Has failed for ESC2, ESC3 ~2019-05-15.
         N_INDEX_INDICES_PER_PART = 200000;
         
-        % Used by createLBL.create_OBJTABLE_LBL_file (COTLF).
+        % Used by EJ_library.ro.create_OBJTABLE_LBL_file (COTLF).
         COTLF_SETTINGS   % Set in constructor
         
         % Used for PDS keywords which are added to/included in LBL files, but whose values are not set by Lapdog. In
