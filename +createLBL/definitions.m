@@ -799,7 +799,7 @@ classdef definitions < handle
                 ['Photosaturation current derived collectively from multiple sweeps (not just an average of multiple estimates).', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'I_PH0_60M_QUALITY_VALUE', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
-            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',        'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',            'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
 

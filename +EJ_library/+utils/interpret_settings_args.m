@@ -54,6 +54,12 @@ function [Settings] = interpret_settings_args(DefaultSettings, argList)
     %   PROPOSAL: Option/flag for this behaviour.
     %   NOTE: User can easily add an assertion after:
     %       EJ_library.utils.assert.struct(Settings, fieldnames(DEFAULT_SETTINGS))
+    %
+    % PROPOSAL: Reorg algorithm to produce better error messages when using bad combinations of arguments.
+    %
+    % PROPOSAL: Argument for required settings fields (DefaultSettings contains the ones which are optional in varargin).
+    %   CON: Might have situations where the required settings fields depend on the the value of other settings fields.
+    %   PROPOSAL: User should call erikpgjohansson.utils.assert.struct instead. This is almost as succint.
     
     import EJ_library.*
     

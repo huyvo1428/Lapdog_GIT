@@ -54,7 +54,7 @@ function exception_message(Exception, policy, varargin)
     % ASSERTION
     % NOTE: Fails nicely (not error) with default setting in case "policy" is e.g. misspelled.
     if ~any(strcmp(policy, {'nothing', 'message', 'message+stack trace'}))
-        warning('Illegal "policy" argument.')
+        warning('Illegal argument policy="%s". Automatically modifying policy.', policy)
         policy = 'message+stack trace';
     end
     

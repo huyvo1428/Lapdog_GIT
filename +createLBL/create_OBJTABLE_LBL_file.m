@@ -287,6 +287,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     catch Exc
         NewExc = MException('create_OBJTABLE_LBL_file:fail', sprintf('Something wrong with OBJECT=TABLE data. lblFilePath=%s', lblFilePath));
         NewExc = addCause(NewExc, Exc);
+        Exc.getReport()
         throw(NewExc)
     end
 end

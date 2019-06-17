@@ -24,10 +24,6 @@
 %
 
 %===================================================================================================
-% PROPOSAL: Stop/disable generating AxS, EST LBL files.
-%   PRO: Will never be used (but lead to work).
-%   PRO: AxS are not up-to-date and generate errors/warnings which are typically ignored.
-%
 % PROPOSAL: Write function for obtaining number of columns in TAB file.
 %   NOTE: Bad for combining TAB file assertions and extracting values from TAB file.
 %   PRO: Can use for obtaining number of IxS columns ==> Does not need corresponding tabindex field.
@@ -467,9 +463,6 @@ function create_tabindex_files(createLblFileFuncPtr, pdDatasetPath, index, Stabi
                 isDensityMode, probeNbr, isLf);
         end
 
-        %createLBL.create_OBJTABLE_LBL_file(...
-        %    convert_LD_TAB_path(Data.ldDatasetPath, Stabindex(i).path), ...
-        %    LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
         createLblFileFuncPtr(LblData, Stabindex(i).path);
         
         clear   firstPlksSs   LhtKvpl   LblData
@@ -561,9 +554,6 @@ function create_antabindex_files(createLblFileFuncPtr, ldDatasetPath, pdDatasetP
             
             
             
-            %createLBL.create_OBJTABLE_LBL_file(...
-            %    convert_LD_TAB_path(Data.ldDatasetPath, San_tabindex(i).path), ...
-            %    LblData, Data.C.COTLF_HEADER_OPTIONS, COTLF_SETTINGS, tabLblInconsistencyPolicy);
             createLblFileFuncPtr( LblData, convert_LD_TAB_path(ldDatasetPath, San_tabindex(i).path), tabLblInconsistencyPolicy );
             clear   plksFileList   firstPlksFile   LblData   tabLblInconsistencyPolicy   HeaderKvpl
             

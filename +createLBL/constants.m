@@ -85,6 +85,7 @@ classdef constants < handle
             end
             
             % ASSERTION: Compare with global constant which should have the same value.
+            % NOTE: __Not__ intended to create a global variables that already exists.
             if ismember('MISSING_CONSTANT', who('global'))
                 % CASE: MISSING_CONSTANT is already a global constant, although it might not have been declared as
                 % such in the current workspace.
@@ -96,18 +97,6 @@ classdef constants < handle
             
             
             
-            %obj.STATE_NAMING = containers.Map()
-            %obj.STATE_FILE_NAMES('pre-createLBL') = struct(...
-            %    'accessible',   'pre_analysis_workspace.accessible.mat', ...
-            %    'inaccessible', 'pre_analysis_workspace.inaccessible.mat', ...
-            %    'indexPrefix',  'pre_analysis_workspace.accessible.mat');
-            %obj.STATE_FILE_NAMES('pre-analysis') = struct(...
-            %    'accessible',   'pre_analysis_workspace.accessible.mat', ...
-            %    'inaccessible', 'pre_analysis_workspace.accessible.mat', ...
-            %    'indexPrefix',  'pre_analysis_workspace.accessible.mat');
-            
-
-
             %==================================================================
             % LBL Header keys which should preferably come in a certain order.
             % Not all of them are required to be present.
