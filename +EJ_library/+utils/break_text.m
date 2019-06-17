@@ -91,8 +91,6 @@ function [str, strList] = break_text(str, firstRowMaxLength, midRowsMaxLength, l
 % PROPOSAL: Change algorithm to first find all LBCs, then break text.
 %   PRO: Might speed up algorithm by reducing calls to find LBCs.
 %   PRO: Might be possible to improve algorithm (speed up, clarify).
-%
-% PROPOSAL: Assertion: search string for linebreaks before algorithm.
 
     DEFAULT_SETTINGS.lineBreakCandidateRegexp    = '[\t ]*';    % \t = tab.
     DEFAULT_SETTINGS.lineBreakStr                = sprintf('\n');

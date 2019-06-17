@@ -278,5 +278,28 @@ classdef assert
             end
         end
         
+        
+        
+        % Assert that all values in a matrix are identical. Useful for e.g. checking that sizes of vectors are
+        % identical.
+        %
+        % NOTE: Empty matrices are accepted.
+        %
+        % Works on:
+        % - matrix of numbers
+        % - matrix of characters
+        % - cell array of strings
+        %
+        % Does not work on:
+        % - cell array of numbers
+        % 
+        function all_equal(v)
+           nUniques = numel(unique(v(:)));    % NOTE: Make 1D vector.
+           nTotal   = numel(v);
+           if (nUniques ~= 1) && (nTotal >= 1)
+               error('Expected vector of identical values, but found %i unique values out of a total of %i values.', nUniques, nTotal)
+           end
+        end
+        
     end    % methods
 end    % classdef

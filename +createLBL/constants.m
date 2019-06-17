@@ -59,11 +59,11 @@ classdef constants < handle
         %N_INDEX_INDICES_PER_PART = 662000;       % Has failed for ESC2, ESC3 ~2019-05-15.
         N_INDEX_INDICES_PER_PART = 200000;
         
-        % Used by EJ_library.ro.create_OBJTABLE_LBL_file (COTLF).
+        % Used as argument to EJ_library.ro.create_OBJTABLE_LBL_file (COTLF).
         COTLF_SETTINGS   % Set in constructor
         
         % Used for PDS keywords which are added to/included in LBL files, but whose values are not set by Lapdog. In
-        % practise, these should be overwritten by Erik P G Johansson's "delivery code" (not included in Lapdog) before
+        % practise, these should be overwritten by Erik P G Johansson's "Lapsus" (not included in Lapdog) before
         % actual delivery.
         % NOTE: Not inherently quoted. Usage may require adding quotes.
         VALUE_NOT_SET_BY_LAPDOG  = '"<UNSET>"';
@@ -290,7 +290,7 @@ classdef constants < handle
         % NOTE: Contains many hardcoded constants, but not only.
         % NOTE: Does not contain timestamps (START/STOP_TIME, SPACECRAFT_CLOCK_START/STOP_COUNT).
         %
-        % NOTE: Will not correctly assign all values, since they are overwritten in delivery code anyway. Simplifies
+        % NOTE: Will not correctly assign all values, since they are overwritten in Lapsus anyway. Simplifies
         % this code, and reduces the number of arguments. This however increases the number of errors if validating
         % EDDER/DERIV1 (not EDITED2/CALIB2/DERIV2) LBL files with e.g. "pvv label".
         

@@ -57,7 +57,7 @@ classdef definitions < handle
     %
     % PROPOSAL: Consistent system for lower-/uppercase for class instance fields.
     %
-    % PROPOSAL: Move keyword removal functionality from delivery code to here.
+    % PROPOSAL: Move keyword removal functionality from Lapsus to here.
     %   OhChanges.RemoveKeysList   = {'ROSETTA:LAP_P1_INITIAL_SWEEP_SMPLS', 'ROSETTA:LAP_P2_INITIAL_SWEEP_SMPLS'};   % For "all" ODL files.
     %   OhChanges.RemoveKeysListHk = {'INSTRUMENT_MODE_ID', 'INSTRUMENT_MODE_DESC'};    % Specific for HK.
     %   CON: Can not modify HK LBL in Lapdog.
@@ -406,7 +406,7 @@ classdef definitions < handle
             end
             
             % NOTE: The file referenced in column DESCRIPTION is expected to have the wrong name since files are renamed by other code
-            % before delivery. The delivery code should already correct for this.
+            % before delivery. The Lapsus should already correct for this.
             oc = struct(...
                 'NAME', sprintf('P%i_SWEEP_CURRENT', probeNbr), obj.DATA_DATA_TYPE{:}, 'ITEM_BYTES', 14, obj.DATA_UNIT_CURRENT{:}, ...
                 'ITEMS', nTabColumns - length(ocl), ...
@@ -530,7 +530,7 @@ classdef definitions < handle
             %================
             ocl = {};
             % NOTE: References file (filename) in DESCRIPTION which could potentially be wrong name in delivered
-            % data sets which uses other filenaming convention. However, the delivery code should update this string
+            % data sets which uses other filenaming convention. However, the Lapsus should update this string
             % to contain the correct filename when building final datasets for delivery.
             ocl{end+1} = struct('NAME', 'FREQUENCY_LIST', 'ITEMS', nTabColumnsTotal, 'UNIT', 'HERTZ', 'ITEM_BYTES', 14, 'DATA_TYPE', 'ASCII_REAL', ...
                 'DESCRIPTION', 'Frequency list');
@@ -860,10 +860,9 @@ classdef definitions < handle
             % MB states:
             % """"PLASMA DENSITY [cross-calibration from ion and electron density; in the label, put ELECTRON DENSITY,
             % ION DENSITY and PLASMA DENSITY]""""
-            % TODO-NEED-INFO: Use above?
             HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
-                    'DATA_SET_PARAMETER_NAME', {'"ELECTRON DENSITY"', '"ION DENSITY"', '"PLASMA DENSITY"'}'; ...    % Use all three *_DENSITY symbols?
-                    'CALIBRATION_SOURCE_ID',   {'RPCLAP', 'RPCMIP'}}));
+                    'DATA_SET_PARAMETER_NAME', {'"ELECTRON DENSITY"', '"ION DENSITY"', '"PLASMA DENSITY"'}'; ...    % OK for NED.
+                    'CALIBRATION_SOURCE_ID',   {'RPCLAP', 'RPCMIP'}}));   % OK for NED.
             
             DESCRIPTION = 'Time series of plasma density.';
             HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);

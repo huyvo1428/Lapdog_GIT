@@ -24,7 +24,7 @@
 %               .NAME
 %               .DATA_TYPE
 %               .UNIT             : Replaced by standardized default value if empty. Automatically quoted.
-%                                   (Optional by PDS, required here)
+%                                   (Optional by PDS; required here)
 %               .DESCRIPTION      : Replaced by standardized default value if empty. Must not contains quotes.
 %                                   (Automatically quoted.)
 %               .MISSING_CONSTANT : Optional
@@ -33,6 +33,8 @@
 %               or (2)
 %                 .ITEMS
 %                 .ITEM_BYTES
+%               .DATA_SET_PARAMETER_NAME : Cell array of values.
+%               .CALIBRATION_SOURCE_ID   : Cell array of values.
 %               .useFor           : Optional. Cell array of strings representing LBL header PDS keywords. Code
 %                                   contains hardcoded info on how to extract the corresponding keyword values
 %                                   from the corresponding column.
@@ -40,18 +42,24 @@
 %                                       START_STOP, STOP_TIME             : Must be UTC column (at least 3 decimals).
 %                                       SPACECRAFT_CLOCK_START/STOP_COUNT : Must be OBT column.
 %                                       STOP_TIME_from_OBT                : Must be OBT column.
+%               .preBytes         : Number of bytes to add before column data. Optional. Zero used if not present.
+%               .postBytes        : Number of bytes to add after  column data. Optional. Zero used if not present.
 % varargin : Settings as interpreted by EJ_library.utils.interpret_settings_args.
+%   OPTIONAL:
 %   .indentationLength          :
 %   .tabLblInconsistencyPolicy  : 'warning', 'error', or 'nothing'.
 %                                 Determines how to react in the event of inconsistencies between LBL and TAB file.
 %                                 NOTE: Function may abort in case of 'warning'/'nothing' if it can not recover.
 %   .spacecraftNaifSpiceId      : 
+%   .nBytesBetweenColumns       : Number of bytes to add between every column of actual data in TAB file.
+%                                 NOTE: Most RPCLAP data uses 2 bytes, but some calibration data uses 1 byte.
+%   REQUIRED:
 %   .headerKeysForbiddenList    : Cell array of ODL header keys that must not be present (assertion).
 %   .headerKeysForceQuotesList  : Cell array of ODL header keys that will be quoted, but only if not already quoted.
 %   .headerKeysOrderList        : Cell array of ODL header keys that specifies the order of the first keys (when present).
-%   .nBytesBetweenColumns       : Number of bytes between every column of actual data in TAB file.
-%                                 NOTE: Most RPCLAP data uses 2 bytes, but some calibration data uses 1 byte.
-%
+% --
+% preBytes, postBytes, nBytesBetweenColumns are all added together to obtain the number of bytes between columns.
+% 
 %
 % NOTES
 % =====
@@ -72,7 +80,7 @@
 %
 % IMPLEMENTATION NOTES
 % ====================
-% This function could possibly be useful outside of Lapdog (like in EJ's delivery code). It should therefore avoid
+% This function could possibly be useful outside of Lapdog (like in EJ's Lapsus code). It should therefore avoid
 % calling Lapdog-specific code, e.g. createLBL.constants.
 %
 %
@@ -148,12 +156,14 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     DEFAULT_SETTINGS.tabLblInconsistencyPolicy = 'error';
     DEFAULT_SETTINGS.contentRowMaxLength       = 80-2;            % Number excludes line break characters.
     DEFAULT_SETTINGS.formatNotDerivedValue     = '<UNSET>';       % Value used to replace FORMAT, when setting automatically fails.
-    DEFAULT_SETTINGS.emptyUnitDefault          = 'N/A';           % Value used to replace empty UNIT.
+    DEFAULT_SETTINGS.emptyUnitDefault          = 'N/A';           % Value used to replace empty UNIT value.
     DEFAULT_SETTINGS.nBytesBetweenColumns      = length(', ');    % ASSUMES absence of quotes in string columns. Lapdog convention.
     DEFAULT_SETTINGS.spacecraftNaifSpiceId     = -226;            % Rosetta.
     DEFAULT_SETTINGS.indentationLength         = 4;
     Settings = EJ_library.utils.interpret_settings_args(DEFAULT_SETTINGS, varargin);
-
+    EJ_library.utils.assert.struct(Settings, union(fieldnames(DEFAULT_SETTINGS), ...
+        {'headerKeysOrderList', 'headerKeysForceQuotesList', 'headerKeysForbiddenList'}))
+    
 
 
     %====================
@@ -165,7 +175,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     % NOTE: Exclude START_BYTE, ITEM_OFFSET which are derived.
     D.PERMITTED_OBJCOL_FIELD_NAMES = {...
         'NAME', 'BYTES', 'DATA_TYPE', 'UNIT', 'ITEMS', 'ITEM_BYTES', 'DESCRIPTION', ...
-        'MISSING_CONSTANT', 'DATA_SET_PARAMETER_NAME', 'CALIBRATION_SOURCE_ID', 'useFor'};
+        'MISSING_CONSTANT', 'DATA_SET_PARAMETER_NAME', 'CALIBRATION_SOURCE_ID', ...
+        'useFor', 'preBytes', 'postBytes'};
     
     % "Planetary Data Systems Standards Reference", Version 3.6, p12-11, section 12.3.4.
     % Applies to what PDS defines as identifiers, i.e. "values" without quotes.
@@ -334,22 +345,30 @@ function [OBJTABLE_data, T2pkArgsTable] = adjust_extract_OBJECT_TABLE_data(OBJTA
     OBJTABLE_data.COLUMNS = 0;   % NOTE: Adds new field to structure.
     OBJCOL_namesList      = {};
     T2pkArgsTable         = struct('argConst', {}, 'iByteFirst', {}, 'iByteLast', {});
-    PDS_START_BYTE        = 1;    % Used for deriving START_BYTE. Starts with one, not zero.
+    
+    % Index to starting row byte (as PDS counts them) of the current "padded" column, i.e. including .preBytes and .postBytes.
+    % PDS row byte indexing starts with one, not zero.
+    paddedColStartByte    = 1;
+    
     for i = 1:length(OBJTABLE_data.OBJCOL_list)
         Cd = OBJTABLE_data.OBJCOL_list{i};       % Temporarily shorten variable name: Cd = column data
-        
+
         % ASSERTION: Check common user/caller error.
         if numel(Cd) ~= 1
             error(['One column struct is a non-one size array. Guess: Caller has definied struct using the "struct"', ...
                 ' command and set a field value using cell array(s) using ~single curly brackets instead of double curly brackets.'])
         end
-        
+
         Cd = adjust_OBJECT_COLUMN_data(Cd, Settings, D);
-        Cd.START_BYTE  = PDS_START_BYTE;
+        %Cd.START_BYTE  = paddedColStartByte;
+        Cd.START_BYTE  = paddedColStartByte + Cd.preBytes;
 
         OBJCOL_namesList{end+1} = Cd.NAME;
         OBJTABLE_data.COLUMNS   = OBJTABLE_data.COLUMNS + 1;              % CORRECT according to MB email 2018-08-08 and DVALNG. ITEMS<>1 still counts as 1 column here.
-        PDS_START_BYTE = PDS_START_BYTE + Cd.BYTES + Settings.nBytesBetweenColumns;
+        
+        % Set where the next column should start counting bytes.
+        %paddedColStartByte = paddedColStartByte + Cd.BYTES + Settings.nBytesBetweenColumns;
+        paddedColStartByte = Cd.START_BYTE + Cd.BYTES + Cd.postBytes + Settings.nBytesBetweenColumns;
         
         %============================================
         % Collect information for T2PK functionality
@@ -365,7 +384,8 @@ function [OBJTABLE_data, T2pkArgsTable] = adjust_extract_OBJECT_TABLE_data(OBJTA
         OBJTABLE_data.OBJCOL_list{i} = Cd;      % Return updated info to original data structure.
         clear Cd
     end
-    OBJTABLE_data.ROW_BYTES = (PDS_START_BYTE-1) - Settings.nBytesBetweenColumns + D.BYTES_PER_LINEBREAK;   % Adds new column to struct. -1 since PDS_START_BYTE=1 refers to first byte.
+    %OBJTABLE_data.ROW_BYTES = (paddedColStartByte-1) - Settings.nBytesBetweenColumns + D.BYTES_PER_LINEBREAK;   % Adds new column to struct. -1 since PDS_START_BYTE=1 refers to first byte.
+    OBJTABLE_data.ROW_BYTES = (paddedColStartByte-1) - Settings.nBytesBetweenColumns + D.BYTES_PER_LINEBREAK;   % Adds new column to struct. -1 since PDS_START_BYTE=1 refers to first byte.
     
     %################################################################################################
     
@@ -382,8 +402,11 @@ end
 
 
 % Adjust the description of ONE column OBJECT.
+% by setting default values (UNIT, DESCRIPTION) when none exists, setting FORMAT (preliminary value later overwritten),
+% and deriving values (ITEMS, ITEM_BYTES).
 %
 % NOTE: Function name somewhat misleading since it contains a lot of useful assertions besides "adjusting".
+%
 function [ColumnData] = adjust_OBJECT_COLUMN_data(ColumnData, Settings, D)
     
     % Shorten variable name.
@@ -399,10 +422,22 @@ function [ColumnData] = adjust_OBJECT_COLUMN_data(ColumnData, Settings, D)
     % names by misspelling, or misspelling when overwriting values,
     % or adding fields that are never used by the function.
     %================================================================
-    EJ_library.utils.assert.struct(Cd, D.PERMITTED_OBJCOL_FIELD_NAMES, 'subset')
+    EJ_library.utils.assert.struct(Cd, D.PERMITTED_OBJCOL_FIELD_NAMES, 'subset')    
+    
+    
+    
+    %==========================================
+    % .preBytes and .postBytes: Default values
+    %==========================================
+    if ~isfield(Cd, 'preBytes')
+        Cd.preBytes = 0;
+    end
+    if ~isfield(Cd, 'postBytes')
+        Cd.postBytes = 0;
+    end
 
     
-    
+
     %========================================================================================
     % Handle (and assert) the cases of the OBJECT=COLUMN describing
     %   (1) one column, or
@@ -414,16 +449,20 @@ function [ColumnData] = adjust_OBJECT_COLUMN_data(ColumnData, Settings, D)
     elseif ~isfield(Cd, 'BYTES') && isfield(Cd, 'ITEMS') && isfield(Cd, 'ITEM_BYTES')
         % CASE: Does not have BYTES
         %       Has           ITEMS, ITEM_BYTES
-        nSubcolumns    = Cd.ITEMS;
-        Cd.ITEM_OFFSET = Cd.ITEM_BYTES + Settings.nBytesBetweenColumns;
-        Cd.BYTES       = nSubcolumns * Cd.ITEM_BYTES + (nSubcolumns-1) * Settings.nBytesBetweenColumns;
+        nSubcolumns          = Cd.ITEMS;
+        %Cd.ITEM_OFFSET = Cd.ITEM_BYTES + Settings.nBytesBetweenColumns;
+        nBytesBetweenColumns = Cd.preBytes + Settings.nBytesBetweenColumns + Cd.postBytes;
+        Cd.ITEM_OFFSET       = Cd.ITEM_BYTES + nBytesBetweenColumns;
+        Cd.BYTES             = nSubcolumns * Cd.ITEM_BYTES + (nSubcolumns-1) * Settings.nBytesBetweenColumns;
     else
-        error('Found disallowed combination of BYTES/ITEMS/ITEM_BYTES. NAME="%s". ABORTING creation of LBL file', Cd.NAME)
+        error('Found disallowed combination of present fields BYTES/ITEMS/ITEM_BYTES. NAME="%s". ABORTING creation of LBL file', Cd.NAME)
     end
 
-    %============
-    % Check UNIT
-    %============
+    
+
+    %=================================
+    % UNIT: Default value, assertions
+    %=================================
     if isempty(Cd.UNIT)
         Cd.UNIT = Settings.emptyUnitDefault;     % NOTE: Should add quotes later.
     end    
@@ -435,9 +474,11 @@ function [ColumnData] = adjust_OBJECT_COLUMN_data(ColumnData, Settings, D)
     end        
     assert_nonempty_unquoted(Cd.UNIT)
 
-    %============
-    % Check NAME
-    %============
+    
+    
+    %==================
+    % NAME: Assertions
+    %==================
     % ASSERTION: Not empty.
     if isempty(Cd.NAME)
         error('ERROR: Trying to use empty value for NAME.')
@@ -452,19 +493,23 @@ function [ColumnData] = adjust_OBJECT_COLUMN_data(ColumnData, Settings, D)
             usedDisallowedChars, Cd.NAME)
     end
 
-    %===================
-    % Check DESCRIPTION
-    %===================
+    
+    
+    %=======================================
+    % DESCRIPTION: Default value, assertion
+    %=======================================
     if isempty(Cd.DESCRIPTION)
-        % NOTE: Not UNIT. Therefore NOT using EMPTY_UNIT_DEFAULT.
         % NOTE: Quotes are added later. 
         Cd.DESCRIPTION = 'N/A';
     end
     % ASSERTION: Does not contain quotes.    
     assert_nonempty_unquoted(Cd.DESCRIPTION)
-    
-    
-    
+
+
+
+    %============
+    % Set FORMAT
+    %============
     % Add unset FORMAT field in case reading TAB file does not work but error/warning policy permits the code to continue.
     Cd.FORMAT = Settings.formatNotDerivedValue;
 

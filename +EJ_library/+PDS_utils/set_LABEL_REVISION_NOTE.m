@@ -1,7 +1,8 @@
 %
 % Set LABEL_REVISION_NOTE (LRN) key value in KVPL in a compact, standardized, and somewhat well-formatted way. Not properly line-broken though.
 %
-% NOTE: Requires key "LABEL_REVISION_NOTE" to already pre-exist in  KVPL
+% NOTE: Requires key "LABEL_REVISION_NOTE" to already pre-exist in KVPL (assertion).
+%
 %
 % ARGUMENTS
 % =========
