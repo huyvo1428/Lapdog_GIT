@@ -13,6 +13,8 @@
 %
 function sctStr = obt2sct(obt)
 
+%if length(obt)<2
+
     obtInt = floor(obt);
     obtFraction = obt - obtInt;
     falseDecimals = round(obtFraction*2^16);
@@ -25,4 +27,29 @@ function sctStr = obt2sct(obt)
     
     sctStr = sprintf('%i.%i', obtInt, falseDecimals);
     
+    
+    
+% else
+%     obtInt = floor(obt);
+%     obtFraction = obt - obtInt;
+%     falseDecimals = round(obtFraction*2^16);
+%     
+%     % Handle overflow (e.g. fraction = 0.999999 ==> falseDecimals = 1)
+%     if (falseDecimals >= 2^16)
+%         obtInt(falseDecimals >= 2^16) = obtInt(falseDecimals >= 2^16) + 1;
+%         falseDecimals(falseDecimals >= 2^16) = 0;
+%     end
+%     for i = 1:length( obt)
+%         
+%         sctStr{1,i}=sprintf('%i.%i', obtInt(i), falseDecimals(i));
+%     end
+%     
+% %     sctStr = sprintf('%i.%i', obtInt, falseDecimals);
+% %     sctStr = strcat(obtInt.','.',sprintf('%i',falseDecimals))
+% %     
+%     
+%     
+% end
+
+
 end
