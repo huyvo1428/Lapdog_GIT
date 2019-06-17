@@ -48,7 +48,7 @@ ind_VL=[ind_V1L;ind_V2L];
 fprintf(1,'Downsampling low frequency measurements & Creating NEL\n')
 
 if(~isempty(ind_I1L))
-    an_NEL(ind_I1L,tabindex,index)
+   an_NEL(ind_I1L,tabindex,index)
 
  %   an_downsample(ind_I1L,32,tabindex,index)
 end

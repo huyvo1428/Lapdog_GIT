@@ -40,12 +40,12 @@ try
             test_column = 3;
         end
 
-    for i=8:length(an_ind)     % Iterate over files (indices).
+    for i=1:length(an_ind)     % Iterate over files (indices).
 
 
         probenr = str2double(tabindex{an_ind(i),1}(end-5));
         macroNo=index(tabindex{an_ind(i) ,3}).macro;
-        %macroNodex=dec2hex(macroNo);
+        macroNodex=dec2hex(macroNo);
         %macroNostr=dec2hex(index(tabindex{an_ind(i) ,3}).macro);
         %          dec2hex(index(tabindex{ind_V1L(1),3}).macro)
 
@@ -295,7 +295,7 @@ try
                          data_arr.printboolean(indz)=dark_ind_2(indz);  %print boolean
                          data_arr.qf(indz)=scantemp_2{1,5}(indz);   %qflag
                          
-                         %print NED special case
+                         %print NEL special case
                          an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
                          
                          
@@ -465,8 +465,10 @@ switch mode
     %data_arr.V(~satind)=data_arr.V(~satind)*factor;
     NEL_flag=data_arr.probe;%This is the probenumber/product type flag
     %take this out of the loop
-    qvalue=max(1-abs(data_arr.V_sigma(:)./data_arr.V(:)),0.5);
-    qvalue(satind)=0;
+    qvalue=max(1-abs(2./data_arr.V(:)),0.5);
+    %qvalue(satind)=0;
+    qvalue(data_arr.N_EL<0) =0; 
+
     
     for j =1:length(data_arr.V)
         
@@ -551,6 +553,9 @@ switch mode
         NEL_flag=3*ones(1,length(data_arr.qf));
         NEL_flag(extrap_indz)=4;
         
+        
+        VS1qv(data_arr.N_EL<0) =0; 
+        
         for j = 1:length(data_arr.qf)
                         % row_byte= sprintf('%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.N_EL(j),data_arr.Vz(j,2),NED_flag(j),data_arr.qf(j));
    
@@ -603,14 +608,28 @@ switch mode
         P_interp2(indz_start)= NED_FIT.P(NED_FIT_start,2);
                 
         data_arr.N_EL(~satind)=(data_arr.I(~satind).'-P_interp2(~satind))./P_interp1(~satind);
+
         data_arr.N_EL(data_arr.dark_ind)=(data_arr.I(data_arr.dark_ind).')./P_interp1(data_arr.dark_ind);
 
         %prepare NED_flag
         NEL_flag=5;%This is the probenumber/product type flag
         
         qvalue=(data_arr.I);
-        qvalue(:)=1;
+%        qvalue(:)=1;
+        
+        %qvalue(~satind)=max(1-2*exp(-abs((data_arr.I(~satind).'./P_interp2(~satind)))),0);
+        %qv = [0-1] = 1- exp(-(I-p2)/p2);
+
+        %qvalue(~satind)=max(1-exp(1-(data_arr.I(~satind).'./P_interp2(~satind))),0);
+        width= -1e-9;%1nA?
+        qvalue(~satind)=max(1-exp(-(data_arr.I(~satind).'-P_interp2(~satind))./width),0);
+
+        
+        qvalue(data_arr.N_EL<0) =0;
         qvalue(data_arr.dark_ind)=0.1;
+        
+
+        
         
         for j =1:length(data_arr.I)
             
