@@ -199,7 +199,7 @@ classdef definitions < handle
             % Define columns and global DESCRIPTION
             %=======================================
             ocl = {};
-            ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECOND', 'BYTES', 26, 'DESCRIPTION', 'UTC time. YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl{end+1} = struct('NAME', 'TIME_UTC', 'DATA_TYPE', 'TIME',       'UNIT', 'SECOND', 'BYTES', 26, 'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
             ocl{end+1} = struct('NAME', 'TIME_OBT', 'DATA_TYPE', 'ASCII_REAL', 'UNIT', 'SECOND', 'BYTES', 16, 'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             
             if probeNbr ~=3
@@ -683,7 +683,7 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'I_PH0_S_QUALITY_VALUE',         'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QVALUE_DESCRIPTION);
 
             ocl{end+1} = struct('NAME', 'V_ION_EFF_XCAL',                'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'METER/SECOND',       ...
-                'DESCRIPTION', ['Ion bulk speed derived from individual sweep (speed; always non-negative scalar), while assuming a specific ion mass (see documentation). Cross-calibrated with RPCMIP.', obj.MC_DESC_AMENDM], ...
+                'DESCRIPTION', ['Effective ion speed derived from individual sweep (speed; always non-negative scalar), while assuming a specific ion mass (see documentation). Cross-calibrated with RPCMIP.', obj.MC_DESC_AMENDM], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DATA_SET_PARAMETER_NAME',  {{'"ION BULK VELOCITY"'}}, 'CALIBRATION_SOURCE_ID', {{'RPCLAP', 'RPCMIP'}});
             ocl{end+1} = struct('NAME', 'V_ION_EFF_XCAL_QUALITY_VALUE',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', obj.QVALUE_DESCRIPTION);
 
