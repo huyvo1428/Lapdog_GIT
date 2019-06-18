@@ -90,31 +90,31 @@ spath=sprintf('%s/XXP_save_v2.mat',derivedpath);
 %     save(spath,'XXP','XXP2');
 % end
 
-
-
-fprintf(1,'Outputting Science\n')
-if(~isempty(XXP))
-    an_outputscience(XXP);
-
-
-else
-    fprintf(1,'Error: an empty XXP was loaded, or no sweeps were analysed. aborting\n')
-end
-
-
-
-
-fprintf(1,'Generating spectra\n')
-
-if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
-if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
-if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
-
-if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
-if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
-if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
-
-
+% 
+% 
+% fprintf(1,'Outputting Science\n')
+% if(~isempty(XXP))
+%     an_outputscience(XXP);
+% 
+% 
+% else
+%     fprintf(1,'Error: an empty XXP was loaded, or no sweeps were analysed. aborting\n')
+% end
+% 
+% 
+% 
+% 
+% fprintf(1,'Generating spectra\n')
+% 
+% if(ind_I1H)        an_hf(ind_I1H,tabindex,'I1H'); end
+% if(ind_I2H)        an_hf(ind_I2H,tabindex,'I2H'); end
+% if(ind_I3H)        an_hf(ind_I3H,tabindex,'I3H'); end
+% 
+% if(ind_V1H)        an_hf(ind_V1H,tabindex,'V1H'); end
+% if(ind_V2H)        an_hf(ind_V2H,tabindex,'V2H'); end
+% if(ind_V3H)        an_hf(ind_V3H,tabindex,'V3H'); end
+% 
+% 
 
 try
     if ~isempty(usc_tabindex)  % some USC (Vz) files might be overwritten by our routine, and creates duplicate entries in usc_tabindex. We should find these and delete them
