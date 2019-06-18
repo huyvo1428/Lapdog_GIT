@@ -10,6 +10,7 @@
 *.asv
 *.mat
 !NED_FIT.mat
+!NED_I_FIT.mat
 
 gout.txt
 gtimes.txt

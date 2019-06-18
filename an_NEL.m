@@ -296,7 +296,7 @@ try
                          data_arr.qf(indz)=scantemp_2{1,5}(indz);   %qflag
                          
                          %print NEL special case
-                         an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
+                         data_arr_out=an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
                          
                          
                          clear scantemp_1 scantemp_2
@@ -328,7 +328,7 @@ try
                      data_arr.probe=dark_ind;
                      data_arr.probe(:)=1;
                      
-                     an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
+                    data_arr_out= an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
                      
                  end%problematic macros
                  
@@ -349,9 +349,82 @@ try
                  data_arr.dark_ind=dark_ind;
                  data_arr.probe(:)=1;
                  
-                 an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'Ion');
+                 data_arr_out=an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'Ion');
+                 
+                 %%PRINT DOWNSAMPLED NEL?
+                 UTCpart1 = scantemp{1,1}{1,1}(1:11);
+                 % timing={scantemp{1,1}{1,1},scantemp{1,1}{end,1},scantemp{1,2}(1),scantemp{1,2}(end)};
+                 % Set starting spaceclock time to (UTC) 00:00:00.000000
+                 ah =str2double(scantemp{1,1}{1,1}(12:13));
+                 am =str2double(scantemp{1,1}{1,1}(15:16));
+                 as =str2double(scantemp{1,1}{1,1}(18:end)); %including fractions of seconds
+                 hms = ah*3600 + am*60 + as;
+                 tday0=scantemp{1,2}(1)-hms; %%UTC and Spaceclock must be correctly defined
+                 
+                 intval=32;
+                 UTCpart2 = datestr(((1:3600*24/intval)-0.5)*intval/(24*60*60), 'HH:MM:SS.FFF'); % Calculate time of each interval, as fraction of a day
+                 tfoutarr{1,1} = strcat(UTCpart1,UTCpart2);
+                 tfoutarr{1,2} = [tday0 + ((1:3600*24/intval)-0.5)*intval];
                  
                  
+                 afname =NELfname;
+                 afname(end-10:end-8) =sprintf('%02iS',32);
+                 
+                 %affolder = strrep(tabindex{an_ind(i),1},tabindex{an_ind(i),2},'');
+                 inter = 1 + floor((scantemp{1,2}(:) - tday0)/intval); %prepare subset selection to accumarray
+                 
+                 %Bugfix Issue #10.
+                 inter(inter>2700)=2700;
+                 
+                 
+                 fprintf(1,'printing %s, mode: %s\n',afname, mode);
+                 
+                 %this @mean function will output mean even if there is a single NaN
+                 %value in the interval. This is what we want in this case, I
+                 %believe.
+                 N_ELmu = accumarray(inter,data_arr_out.N_EL,[],@mean,NaN); %select measurements during specific intervals, accumulate mean to array and print NaN otherwise
+                 N_ELsd = accumarray(inter,data_arr_out.N_EL,[],@nanstd); %select measurements during specific intervals, accumulate mean to array and print NaN otherwise
+                 N_ELqv = accumarray(inter,data_arr_out.qv,[],@mean); %select measurements during specific intervals, accumulate standard deviation to array and print zero otherwise
+                 %        qf  = accumarray(inter,scantemp{1,5}(:),[],@(x) sum(unique(x)));
+                 N_ELqf  = accumarray(inter,scantemp{1,5}(:),[],@(x) frejonbitor(x));
+                 
+                 N_ELmu(isnan(N_ELmu))=MISSING_CONSTANT;
+                 
+                 foutarr{1,3}( inter(1):inter(end), 1 ) = N_ELmu( inter(1):inter(end) ); %prepare for printing results
+                 foutarr{1,4}( inter(1):inter(end), 1 ) = N_ELsd( inter(1):inter(end) );
+                 foutarr{1,5}( inter(1):inter(end), 1 ) = N_ELqv( inter(1):inter(end) );
+                 %foutarr{1,7}( inter(1):inter(end),1 ) = 1; %%flag to determine if row should be written.
+                 foutarr{1,8}( inter(1):inter(end), 1 ) = N_ELqf(inter(1):inter(end));
+                 foutarr{1,7}(unique(inter))=1; %%flag to determine if row should be written.
+                 awID= fopen(afname,'w');
+                 for j =1:length(foutarr{1,3})
+                     
+                     if foutarr{1,7}(j)~=1 %check if measurement data exists on row
+                         %fprintf(awID,'%s, %16.6f,,,,\r\n',tfoutarr{1,1}{j,1},tfoutarr{1,2}(j));
+                         % Don't print zero values.
+                     else
+                         
+                         fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %6.4f, %03i\r\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,8}(j));
+                         
+                     end%if
+                     
+                 end%for
+                 
+                 
+                 
+                 %                  an_tabindex{end+1,1} = afname;                   % Start new line of an_tabindex, and record file name
+                 %                  an_tabindex{end,2} = strrep(afname,affolder,''); % shortfilename
+                 %                  an_tabindex{end,3} = tabindex{an_ind(i),3}; % First calib data file index
+                 %                  an_tabindex{end,4} = N_rows;                % length(foutarr{1,3}); % Number of rows
+                 %                  an_tabindex{end,5} = 7;            % Number of columns
+                 %                  an_tabindex{end,6} = an_ind(i);
+                 %                  an_tabindex{end,7} = 'downsample'; % Type
+                 %                  an_tabindex{end,8} = timing;
+                 %                  an_tabindex{end,9} = row_byte;
+                 fclose(awID);
+                 clear tfoutarr foutarr
+                 
+                 %%PRINT DOWNSAMPLED NEL?
                  
              end %if MODE == V
              
@@ -404,7 +477,7 @@ end   %function
 %Depending on the mode, pre-made fits will be applied to create a density
 %estimate. These fits should have large impact on quality values
 %
-function [] = an_NELprint(NELfname,NELshort,data_arr,t_et,index_nr_of_firstfile,timing,mode)
+function data_arr = an_NELprint(NELfname,NELshort,data_arr,t_et,index_nr_of_firstfile,timing,mode)
 
 global NEL_tabindex MISSING_CONSTANT
 fprintf(1,'printing %s, mode: %s\n',NELfname, mode);
@@ -413,7 +486,6 @@ fprintf(1,'printing %s, mode: %s\n',NELfname, mode);
 
 
 %fprintf(1,'printing: %s \r\n',NEDfname)
-NELwID= fopen(NELfname,'w');
 N_rows = 0;
 row_byte=0;
 
@@ -454,7 +526,7 @@ switch mode
     %sources here
 
     
-    data_arr.N_EL(~satind)=exp(P_interp2(~satind)).*exp(VS1(~satind).*P_interp1(~satind));
+    data_arr.N_EL(~satind)=exp(P_interp2(~satind)).*exp((VS1(~satind).').*P_interp1(~satind));
 
     data_arr.N_EL(isnan(VS1))=MISSING_CONSTANT;
    
@@ -469,7 +541,8 @@ switch mode
     %qvalue(satind)=0;
     qvalue(data_arr.N_EL<0) =0; 
 
-    
+    NELwID= fopen(NELfname,'w');
+
     for j =1:length(data_arr.V)
         
         if data_arr.printboolean(j)~=1 %check if measurement data exists on row
@@ -555,7 +628,8 @@ switch mode
         
         
         VS1qv(data_arr.N_EL<0) =0; 
-        
+        NELwID= fopen(NELfname,'w');
+
         for j = 1:length(data_arr.qf)
                         % row_byte= sprintf('%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.N_EL(j),data_arr.Vz(j,2),NED_flag(j),data_arr.qf(j));
    
@@ -569,6 +643,7 @@ switch mode
             
             
         end
+        fclose(NELwID);
         
 
             NEL_tabindex(end+1).fname = NELfname;                   % Start new line of an_tabindex, and record file name
@@ -621,7 +696,7 @@ switch mode
         %qv = [0-1] = 1- exp(-(I-p2)/p2);
 
         %qvalue(~satind)=max(1-exp(1-(data_arr.I(~satind).'./P_interp2(~satind))),0);
-        width= -1e-9;%1nA?
+        width= -2e-9;%1nA?
         qvalue(~satind)=max(1-exp(-(data_arr.I(~satind).'-P_interp2(~satind))./width),0);
 
         
@@ -629,8 +704,9 @@ switch mode
         qvalue(data_arr.dark_ind)=0.1;
         
 
-        
-        
+        data_arr.qv=qvalue;
+        NELwID= fopen(NELfname,'w');
+
         for j =1:length(data_arr.I)
             
             if data_arr.printboolean(j)~=1 %check if measurement data exists on row
