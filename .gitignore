@@ -11,6 +11,7 @@
 *.mat
 !NED_FIT.mat
 !NED_I_FIT.mat
+!WOL.mat
 
 gout.txt
 gtimes.txt
