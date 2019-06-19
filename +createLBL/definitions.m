@@ -898,6 +898,7 @@ classdef definitions < handle
         function LblData = get_NEL_data(obj, LhtKvpl, firstPlksFile)
             %====================================
             %warning('INCOMPLETE IMPLEMENTATION: Not verified top-level DESCRIPTIONs')
+            warning('Missing/uncertain N_EL column DESCRIPTION')
             %====================================
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
@@ -926,7 +927,7 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             warning('INCOMPLETE DESCRIPTION')
             ocl{end+1} = struct('NAME', 'N_EL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ...
-                ['<UNSET>.', ...
+                ['Plasma density derived from individual current measurements or floating potential measurements on one probe.', ...
                 sprintf(' A value of %g means that the corresponding sample in the source data was saturated.', obj.MISSING_CONSTANT)], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'QUALITY_VALUE',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
