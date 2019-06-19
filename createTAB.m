@@ -60,6 +60,7 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 global MISSING_CONSTANT;
 global tabindex;  %global index
 global LDLMACROS; %global constant list
+global WOL %from preamble, here's all start & stop times
 
 
 try
@@ -192,11 +193,33 @@ len = length(tabind);
 counttemp = 0;
 delfile = 1;
 
+
+
+wol_tol=195/(24*3600);%195s time width of typical WOL 
+wol_t_mid= WOL.t0+wol_tol/2; % datetime midpoint of all files
+packet_tol= max([index(tabind(:)).t1]-[index(tabind(:)).t0]);
+index_t_mid= [index(tabind(:)).t0] + 0.5*packet_tol; % datetime midpoint of all files
+% % (given that they have all have the same time width (? is this true?)
+% % it should be reasonably true since it's all the same macro and filetype
+% % the only exception is 710 & 910 V1L/V2L. in which case the longest packet
+% % length is good enough for us. (taken care of by the max argument)
+
+WOL_bool=ismemberf(index_t_mid,wol_t_mid,'tol',0.5*(wol_tol+packet_tol));
+%WOL_bool now is of length (tabind) and is 1 if any 
+%WOL.t0 or WOL.t1ma is within a
+%wol_tol from the file midpoint.
+
+
+%The accuracy of the WOL dataset limits the accuracy of the WOL detection
+% We don't have perfect durations of WOL, and we do not know if it is
+% directed by us, so we set the max duration to what MAG sees from the
+% when the disturbances of the circuitry stops.
+
     %tot_bytes = 0;
     if(~index(tabind(1)).sweep); %% if not a sweep, do:
 
         for(i=1:len);
-            qualityF = 0;     % qualityfactor initialised!
+            qualityF = 0+100*WOL_bool(i);     % qualityfactor initialised! WOL_BOOL is either 0 or 1;
             trID = fopen(index(tabind(i)).tabfile);
 
             if trID < 0
@@ -401,7 +424,9 @@ delfile = 1;
 
 
         for(i=1:len); % read&write loop iterate over all files, create B*S.TAB and I*S.TAB
-            qualityF = 0;     % qualityfactor initialised!
+            %qualityF = 0;     % qualityfactor initialised!
+            qualityF = 0+100*WOL_bool(i);     % qualityfactor initialised! WOL_BOOL is either 0 or 1;
+
             trID = fopen(index(tabind(i)).tabfile);
 
             if trID > 0

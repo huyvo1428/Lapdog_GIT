@@ -119,6 +119,9 @@ if(strcmp(shortphase,'MARS')) %bug from older mission calendar
 end
 
 
+global WOL
+
+load('WOL.mat','WOL');
 
 
 
@@ -142,7 +145,6 @@ processlevel = tmp{1};
 
 % archiveid is used internally for keeping track of index files. It is not a PDS thing.
 archiveid = sprintf('%s_%d',shortphase,processlevel);
-
 
 
 

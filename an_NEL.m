@@ -502,16 +502,18 @@ switch mode
 
     P_interp1= interp1(NED_FIT.t_et,NED_FIT.P(:,1),t_et);
     P_interp2= interp1(NED_FIT.t_et,NED_FIT.P(:,2),t_et);
+    interp_qv= interp1(NED_FIT.t_et,NED_FIT.qv,t_et);
 
     indz_end=t_et>t_et_end;
     P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,1);
     P_interp2(indz_end)= NED_FIT.P(NED_FIT_end,2);
-    
+    interp_qv(indz_end)= NED_FIT.qv(NED_FIT_end);
+
     indz_start=t_et<t_et_min;
     P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,1);
     P_interp2(indz_start)= NED_FIT.P(NED_FIT_start,2);
-    
-    
+    interp_qv(indz_start)= NED_FIT.qv(NED_FIT_start);
+
 
     data_arr.N_EL=data_arr.V;
     satind=data_arr.V==MISSING_CONSTANT;
@@ -539,7 +541,10 @@ switch mode
     %take this out of the loop
     qvalue=max(1-abs(2./data_arr.V(:)),0.5);
     %qvalue(satind)=0;
-    qvalue(data_arr.N_EL<0) =0; 
+    
+    data_arr.qv= qvalue.*interp_qv.';
+    data_arr.qv(data_arr.N_EL<0) =0; 
+    %qvalue(data_arr.N_EL<0) =0; 
 
     NELwID= fopen(NELfname,'w');
 
@@ -549,7 +554,7 @@ switch mode
             % Don't print zero values.
         else
 
-            row_byte= fprintf(NELwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc{j,1},data_arr.t_obt(j), data_arr.N_EL(j),qvalue(j),NEL_flag(j),data_arr.qf(j));
+            row_byte= fprintf(NELwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc{j,1},data_arr.t_obt(j), data_arr.N_EL(j),data_arr.qv(j),NEL_flag(j),data_arr.qf(j));
 %            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
 
             N_rows = N_rows + 1;
@@ -575,68 +580,74 @@ switch mode
         load('NED_FIT.mat', 'NED_FIT');
         [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
         [t_et_min,NED_FIT_start]=min(NED_FIT.t_et);
-
-    P_interp1= interp1(NED_FIT.t_et,NED_FIT.P(:,1),t_et);
-    P_interp2= interp1(NED_FIT.t_et,NED_FIT.P(:,2),t_et);
-
-    indz_end=t_et>t_et_end;
-    P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,1);
-    P_interp2(indz_end)= NED_FIT.P(NED_FIT_end,2);
-    
-    indz_start=t_et<t_et_min;
-    P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,1);
-    P_interp2(indz_start)= NED_FIT.P(NED_FIT_start,2);
-    
-    data_arr.N_EL=data_arr.Vz(:,1);
-    satind=data_arr.Vz(:,1)==MISSING_CONSTANT;
-    
-    
-    % Model normalizing to Vph:
-    % vs = usc_v09.usc;
-    % ind_map=(usc_v09.usc<0); %problems for usc>0, which only happens for misidentified vz
-    % vs(ind_map) = usc_v09.usc(ind_map) + 5.5*exp(usc_v09.usc(ind_map)/8);
-    % vj = -3;
-    % %vs(vz > vj) = vph(vz > vj);
-    % ind_vph= usc_v09.usc>vj&~isnan(usc_v09.Vph_knee)&usc_v09.Vph_knee_qv>0.3&usc_v09.Vph_knee>vj;
-    % vs(ind_vph) = usc_v09.Vph_knee(ind_vph);
-    VS1qv = data_arr.Vz(:,2);
-    vj = -3;
-
-    VS1 = -data_arr.Vz+5.5*exp(-data_arr.Vz/8);
-    VS1(-data_arr.Vz>0)=nan; % these will be picked up soon
-    ind_vph= data_arr.Vz(:,1)>vj&~isnan(data_arr.Vph_knee(:,1))&data_arr.Vph_knee(:,2)>0.3&data_arr.Vph_knee(:,1)>vj;
-    VS1(ind_vph)=data_arr.Vph_knee(ind_vph,1);
-    VS1qv(ind_vph) = data_arr.Vph_knee(ind_vph,2);
-    
-    data_arr.N_EL(~satind)=exp(P_interp2(~satind)).*exp(VS1(~satind).*P_interp1(~satind));
-    %data_arr.N_EL(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
-   % data_arr.N_EL(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.Vz(~satind).*P_interp1(~satind));
-    %data_arr.N_EL(~satind)=exp(p2)*exp(-data_arr.Vz(~satind,1)*p1);
-    
-    data_arr.N_EL(isnan(VS1))=MISSING_CONSTANT; %here we map them back to missing constant
-    
-    
+        
+        P_interp1= interp1(NED_FIT.t_et,NED_FIT.P(:,1),t_et);
+        P_interp2= interp1(NED_FIT.t_et,NED_FIT.P(:,2),t_et);
+        interp_qv= interp1(NED_FIT.t_et,NED_FIT.qv,t_et);
+        
+        indz_end=t_et>t_et_end;
+        P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,1);
+        P_interp2(indz_end)= NED_FIT.P(NED_FIT_end,2);
+        interp_qv(indz_end)= NED_FIT.qv(NED_FIT_end);
+        
+        indz_start=t_et<t_et_min;
+        P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,1);
+        P_interp2(indz_start)= NED_FIT.P(NED_FIT_start,2);
+        interp_qv(indz_start)= NED_FIT.qv(NED_FIT_start);
+        
+        data_arr.N_EL=data_arr.Vz(:,1);
+        satind=data_arr.Vz(:,1)==MISSING_CONSTANT;
+        
+        
+        % Model normalizing to Vph:
+        % vs = usc_v09.usc;
+        % ind_map=(usc_v09.usc<0); %problems for usc>0, which only happens for misidentified vz
+        % vs(ind_map) = usc_v09.usc(ind_map) + 5.5*exp(usc_v09.usc(ind_map)/8);
+        % vj = -3;
+        % %vs(vz > vj) = vph(vz > vj);
+        % ind_vph= usc_v09.usc>vj&~isnan(usc_v09.Vph_knee)&usc_v09.Vph_knee_qv>0.3&usc_v09.Vph_knee>vj;
+        % vs(ind_vph) = usc_v09.Vph_knee(ind_vph);
+        VS1qv = data_arr.Vz(:,2);
+        vj = -3;
+        
+        VS1 = -data_arr.Vz+5.5*exp(-data_arr.Vz/8);
+        VS1(-data_arr.Vz>0)=nan; % these will be picked up soon
+        ind_vph= data_arr.Vz(:,1)>vj&~isnan(data_arr.Vph_knee(:,1))&data_arr.Vph_knee(:,2)>0.3&data_arr.Vph_knee(:,1)>vj;
+        VS1(ind_vph)=data_arr.Vph_knee(ind_vph,1);
+        VS1qv(ind_vph) = data_arr.Vph_knee(ind_vph,2);
+        
+        data_arr.N_EL(~satind)=exp(P_interp2(~satind)).*exp(VS1(~satind).*P_interp1(~satind));
+        %data_arr.N_EL(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
+        % data_arr.N_EL(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.Vz(~satind).*P_interp1(~satind));
+        %data_arr.N_EL(~satind)=exp(p2)*exp(-data_arr.Vz(~satind,1)*p1);
+        
+        data_arr.N_EL(isnan(VS1))=MISSING_CONSTANT; %here we map them back to missing constant
+        
+        
         %find all extrapolation points: I don't want to change the an_swp
         %routine, so let's do the conversion here instead
-         extrap_indz=data_arr.Vz(:,2)==0.2;
-         data_arr.Vz(extrap_indz,2)=0.7; % change 0.2 to 0.7. I mean, it's clearly not several intersections. 
+        extrap_indz=data_arr.Vz(:,2)==0.2;
+        data_arr.Vz(extrap_indz,2)=0.7; % change 0.2 to 0.7. I mean, it's clearly not several intersections.
         %and it survived ICA validation. It's clearly not as good quality as a detected zero-crossing though
         
         %prepare NED_flag
         NEL_flag=3*ones(1,length(data_arr.qf));
         NEL_flag(extrap_indz)=4;
         
+        data_arr.qv= VS1qv.*interp_qv.';
+        VS1qv(data_arr.N_EL<0) =0;
+        data_arr.qv(data_arr.N_EL<0) =0;
         
-        VS1qv(data_arr.N_EL<0) =0; 
+        
         NELwID= fopen(NELfname,'w');
-
+        
         for j = 1:length(data_arr.qf)
-                        % row_byte= sprintf('%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.N_EL(j),data_arr.Vz(j,2),NED_flag(j),data_arr.qf(j));
-   
+            % row_byte= sprintf('%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.N_EL(j),data_arr.Vz(j,2),NED_flag(j),data_arr.qf(j));
+            
             if data_arr.lum(j) > 0.9 %shadowed probe data is not allowed
                 % NOTE: data_arr.Tarr_mid{j,1}(j,1) contains UTC strings with 6 second decimals. Truncates to have the same
                 % number of decimals as for case "vfloat". /Erik P G Johansson 2018-11-16
-                row_byte= fprintf(NELwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.N_EL(j),VS1qv(j),NEL_flag(j),data_arr.qf(j));
+                row_byte= fprintf(NELwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.N_EL(j),data_arr.qv(j),NEL_flag(j),data_arr.qf(j));
                 %row_byte= fprintf(NEDwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j),qvalue,data_arr.qf(j));
                 N_rows = N_rows + 1;
             end
@@ -673,15 +684,18 @@ switch mode
         
         P_interp1= interp1(NED_FIT.t_et,NED_FIT.P(:,1),t_et);
         P_interp2= interp1(NED_FIT.t_et,NED_FIT.P(:,2),t_et);
-        
+        interp_qv= interp1(NED_FIT.t_et,NED_FIT.qv,t_et);
+
         indz_end=t_et>t_et_end;
         P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,1);
         P_interp2(indz_end)= NED_FIT.P(NED_FIT_end,2);
-        
+        interp_qv(indz_end)= NED_FIT.qv(NED_FIT_end);
+
         indz_start=t_et<t_et_min;
         P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,1);
         P_interp2(indz_start)= NED_FIT.P(NED_FIT_start,2);
-                
+        interp_qv(indz_start)= NED_FIT.qv(NED_FIT_start);
+        
         data_arr.N_EL(~satind)=(data_arr.I(~satind).'-P_interp2(~satind))./P_interp1(~satind);
 
         data_arr.N_EL(data_arr.dark_ind)=(data_arr.I(data_arr.dark_ind).')./P_interp1(data_arr.dark_ind);
@@ -698,13 +712,11 @@ switch mode
         %qvalue(~satind)=max(1-exp(1-(data_arr.I(~satind).'./P_interp2(~satind))),0);
         width= -2e-9;%1nA?
         qvalue(~satind)=max(1-exp(-(data_arr.I(~satind).'-P_interp2(~satind))./width),0);
-
         
         qvalue(data_arr.N_EL<0) =0;
-        qvalue(data_arr.dark_ind)=0.1;
+        qvalue(data_arr.dark_ind)=0.9;
         
-
-        data_arr.qv=qvalue;
+        data_arr.qv= qvalue.*interp_qv.';
         NELwID= fopen(NELfname,'w');
 
         for j =1:length(data_arr.I)
