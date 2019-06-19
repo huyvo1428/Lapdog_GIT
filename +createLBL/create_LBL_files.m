@@ -89,7 +89,7 @@ function create_LBL_files(Data)
     EJ_library.utils.assert.struct(Data, {...
         'ldDatasetPath', 'pdDatasetPath', 'metakernel', 'C', 'failFastDebugMode', 'generatingDeriv1', ...
         'index', 'blockTAB', 'tabindex', 'an_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex', ...
-        'EFL_tabindex', 'NED_tabindex'})
+        'EFL_tabindex', 'NED_tabindex', 'NEL_tabindex'})
     if isnan(Data.failFastDebugMode)    % Check if field set to temporary value.
         error('Illegal argument Data.failFastDebugMode=%g', Data.failFastDebugMode)
     end
@@ -385,6 +385,37 @@ function create_LBL_files(Data)
             end
         end
 
+        %==========================
+        %
+        % Create LBL files for NEL
+        %
+        %==========================
+        for iFile = 1:numel(Data.NEL_tabindex)
+            try
+                startStopTimes = Data.NEL_tabindex(iFile).timing;    % NOTE: Stores UTC+OBT.
+                LhtKvpl = get_timestamps_KVPL(...
+                    startStopTimes{1}, ...
+                    startStopTimes{2}, ...
+                    obt2sctrc(strOrNbr2nbr(startStopTimes{3})), ...
+                    obt2sctrc(strOrNbr2nbr(startStopTimes{4})));
+                % NOTE: Not sure if always, or only sometimes, string instead of number.
+                
+                LblData = LblDefs.get_NEL_data(...
+                    LhtKvpl, ...
+                    convert_PD_TAB_path(Data.pdDatasetPath, Data.index(Data.NEL_tabindex(iFile).first_index).lblfile));
+                
+                EJ_library.ro.create_OBJTABLE_LBL_file(...
+                    convert_LD_TAB_path(Data.ldDatasetPath, Data.NEL_tabindex(iFile).fname), ...
+                    LblData, COTLF_SETTINGS, 'tabLblInconsistencyPolicy', GENERAL_TAB_LBL_INCONSISTENCY_POLICY);
+                
+                clear   startStopTimes   LhtKvpl   LblData
+                
+            catch Exception
+                EJ_library.utils.exception_message(Exception, NED_TAB_LBL_INCONSISTENCY_POLICY);
+                fprintf(1,'Aborting LBL file for NEL_tabindex - Continuing\n');
+            end
+        end
+        
     end    % if Data.generatingDeriv1
     
     

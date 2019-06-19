@@ -854,7 +854,8 @@ classdef definitions < handle
                 {'2019-03-15', 'EJ', 'Updated DESCRIPTION, added DATA_SOURCE column.'}, ...
                 {'2019-05-07', 'EJ', 'Updated time DESCRIPTIONs, including fixing typo'}, ...
                 {'2019-05-22', 'EJ', 'Added FORMAT keyword'}, ...
-                {'2019-05-24', 'EJ', 'Changed filename NPL->NED, variable N_PL->N_ED'}});
+                {'2019-05-24', 'EJ', 'Changed filename NPL->NED, variable N_PL->N_ED'}, ...
+                {'2019-06-19', 'EJ', 'Updated top DESCRIPTION'}});
             HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
             
             % MB states:
@@ -864,11 +865,11 @@ classdef definitions < handle
                     'DATA_SET_PARAMETER_NAME', {'"ELECTRON DENSITY"', '"ION DENSITY"', '"PLASMA DENSITY"'}'; ...    % OK for NED.
                     'CALIBRATION_SOURCE_ID',   {'RPCLAP', 'RPCMIP'}}));   % OK for NED.
             
-            DESCRIPTION = 'Time series of plasma density.';
-            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
+            DESCRIPTION = 'Time series of plasma density.';    % Better description? Same as NEL.
+            HeaderKvpl  = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
             
             LblData.HeaderKvpl           = HeaderKvpl;
-            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and an estimate of plasma density derived from individual fix-bias density mode (current) measurements.';
+            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and an estimate of plasma density derived from spacecraft potential measurements.';
             
             %================
             % Define columns
@@ -893,6 +894,54 @@ classdef definitions < handle
         end
 
 
+        
+        function LblData = get_NEL_data(obj, LhtKvpl, firstPlksFile)
+            %====================================
+            %warning('INCOMPLETE IMPLEMENTATION: Not verified top-level DESCRIPTIONs')
+            %====================================
+            
+            [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
+            HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
+                {'2019-06-19', 'EJ', 'Initial version'}});
+            HeaderKvpl = createLBL.definitions.remove_ROSETTA_keywords(HeaderKvpl);
+            
+            % MB states:
+            % """"PLASMA DENSITY [cross-calibration from ion and electron density; in the label, put ELECTRON DENSITY,
+            % ION DENSITY and PLASMA DENSITY]""""
+            HeaderKvpl = HeaderKvpl.append(EJ_library.utils.KVPL2({...
+                    'DATA_SET_PARAMETER_NAME', {'"ELECTRON DENSITY"', '"ION DENSITY"', '"PLASMA DENSITY"'}'; ...   % OK for NEL.
+                    'CALIBRATION_SOURCE_ID',   {'RPCLAP', 'RPCMIP'}}));   % OK for NEL.
+            
+            DESCRIPTION = 'Time series of plasma density.';    % Better description? Same as NED.
+            HeaderKvpl  = HeaderKvpl.set_value('DESCRIPTION', DESCRIPTION);
+            
+            LblData.HeaderKvpl           = HeaderKvpl;
+            LblData.OBJTABLE.DESCRIPTION = 'Table of timestamps and an estimate of plasma density derived from current measurements or floating potential measurements.';
+
+            %================
+            % Define columns
+            %================
+            ocl = [];
+            ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
+            ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
+            warning('INCOMPLETE DESCRIPTION')
+            ocl{end+1} = struct('NAME', 'N_EL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ...
+                ['<UNSET>.', ...
+                sprintf(' A value of %g means that the corresponding sample in the source data was saturated.', obj.MISSING_CONSTANT)], ...
+                'MISSING_CONSTANT', obj.MISSING_CONSTANT);
+            ocl{end+1} = struct('NAME', 'QUALITY_VALUE',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            ocl{end+1} = struct('NAME', 'DATA_SOURCE',    'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
+                ['Underlying source of data which the plasma density value is based upon.', ...
+                ' 1 or 2=Downsampled E field mode floating potential measurement on an illuminated probe 1 or 2 respectively.', ...
+                ' 3=The negated bias voltage in a sweep on an illuminated probe 1 for which current is zero.', ...
+                ' 4=The negated bias voltage in a sweep on an illuminated probe 1 for which the extrapolated current is zero.', ...
+                ' 5=Current from probe 1 with a bias voltage below -17 V.', ...
+                ' 6=Current from probe 2 with a bias voltage below -17 V.']);
+            ocl{end+1} = struct('NAME', 'QUALITY_FLAG',   'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
+            LblData.OBJTABLE.OBJCOL_list = ocl;
+        end
+        
+        
 
         function LblData = get_AxS_data(obj, LhtKvpl, firstPlksFile, ixsFilename)
             
