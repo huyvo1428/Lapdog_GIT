@@ -57,7 +57,6 @@ try
         if  (mode =='V' && ismember(macroNo,VFLOATMACROS{probenr}) )||  (mode =='I' && probenr)
 
 
-
         arID = fopen(tabindex{an_ind(i),1},'r');
         if arID < 0
             fprintf(1,'Error, cannot open file %s\n', tabindex{an_ind(i),1});
@@ -249,6 +248,7 @@ try
                      %then we need to save the data, wait for the next iteration (which, since it's a sorted list, will hold the corresponding probe number)
                      
                      
+                     
                      if(hold_flag) %ugh have to check which probe to use.
                          %hold_flag default is 0. So we are now in the 2nd iteration
                          
@@ -257,46 +257,20 @@ try
                          if probenr==1
                              scantemp_1=scantemp;
                              dark_ind_1=dark_ind;
+                             t_et1=t_et;
+
                          else
                              scantemp_2=scantemp;
                              dark_ind_2=dark_ind;
+                             t_et2=t_et;
+
                              %tfoutarr_2=tfoutarr; %only need this for debug
                          end
                          
                          
-                         %%% PROBLEM HERE. V1L AND V2L DOES NEED TO BE EQUALLY
-                         %%% LONG. ESPECIALLY 710, 910.
-                         replace_these_lap1= (dark_ind_1~=1);
-                         ok_tokeep_theselap2 = (dark_ind_2==1);
-                         %the indices that are ok to keep is replaceind_lap1
-                         if length(scantemp_1{1,4})~=length(scantemp_2{1,4})
-                             fprintf(1,'error wrong lengths %i vs lap2 %i',length(scantemp_1{1,4}),length(scantemp_2{1,4}))
-                         end
-                         indz=replace_these_lap1&ok_tokeep_theselap2; %only true if both lap1 in shadow and lap 2 in sunlight.
-                         
-                         if sum(indz)>0
-                             fprintf(1,'LAP1 sometimes shadowed, switching to LAP2 in file:%s \n',NELfname);
-                         end
-                         
-                         %initialise foutarr.
-                         data_arr=[];
-                         data_arr.V=scantemp_1{1,4};
-                         data_arr.t_utc=scantemp_1{1,1};
-                         data_arr.t_obt=scantemp_1{1,2};
-                         data_arr.qf=scantemp_1{1,5};
-                         data_arr.printboolean=~dark_ind_1;
-                         data_arr.probe=dark_ind_1;
-                         data_arr.probe(:)=1;
-                         
-                         %%default == probe 1.
-                         %here we went from LAP1 to LAP2,
-                         data_arr.probe(indz)=2;  %change probenumberflag
-                         data_arr.V(indz)=scantemp_2{1,4}(indz);%  %this is vf2
-                         data_arr.printboolean(indz)=dark_ind_2(indz);  %print boolean
-                         data_arr.qf(indz)=scantemp_2{1,5}(indz);   %qflag
-                         
+                         data_arr=NEL_combine_LAP1_LAP2(scantemp_1,scantemp_2,dark_ind_1,dark_ind_2,t_et1,t_et2);
                          %print NEL special case
-                         data_arr_out=an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
+                         data_arr_out=an_NELprint(NELfname,NELshort,data_arr,data_arr.t_et,tabindex{an_ind(i),3},timing,'vfloat');
                          
                          
                          clear scantemp_1 scantemp_2
@@ -307,9 +281,12 @@ try
                          if probenr==1
                              scantemp_1=scantemp;
                              dark_ind_1=dark_ind;
+                             t_et1=t_et;
                          else
                              scantemp_2=scantemp;
                              dark_ind_2=dark_ind;
+                             t_et2=t_et;
+
                          end
                          
                          hold_flag = 1;
@@ -772,4 +749,113 @@ end
 
 
 
+function data_arr=NEL_combine_LAP1_LAP2(scantemp_1,scantemp_2,dark_ind_1,dark_ind_2,t_et1,t_et2)
+data_arr=[];
+                   
+if length(scantemp_1{1,4}) < length(scantemp_2{1,4})
+    data_arr.V=scantemp_2{1,4};
+    data_arr.t_utc=scantemp_2{1,1};
+    data_arr.t_obt=scantemp_2{1,2};
+    data_arr.qf=scantemp_2{1,5};
+    data_arr.printboolean=~dark_ind_2;
+    data_arr.probe=2*ones(1,length(dark_ind_2));
+    data_arr.t_et=t_et2;
 
+ 
+    
+
+else %default to LAP1, unless LAP2 is longer
+    
+    data_arr.V=scantemp_1{1,4};
+    data_arr.t_utc=scantemp_1{1,1};
+    data_arr.t_obt=scantemp_1{1,2};
+    data_arr.qf=scantemp_1{1,5};
+    data_arr.printboolean=~dark_ind_1;
+    data_arr.probe=1*ones(1,length(dark_ind_2));
+
+    data_arr.t_et=t_et1;
+    
+
+end
+
+
+
+    if all(data_arr.printboolean)% is everything in sunlight on the longest (or default, LAP1) probe?
+        
+        return;
+        %then return
+    else
+            fprintf(1,'Probe sometimes shadowed, switching probes \n');
+
+        if length(scantemp_1{1,4}) < length(scantemp_2{1,4})
+            scantemp_short=scantemp_1;
+            dark_ind_short=dark_ind_1;
+            %t_et_short = t_et1;
+            probe_short=1;
+        else
+            scantemp_short=scantemp_2;
+            dark_ind_short=dark_ind_2;
+            %t_et_short = t_et2;
+            probe_short=2;
+
+        end
+    end
+    
+    
+    replace_these = ((~data_arr.printboolean).'&ismember(data_arr.t_obt,scantemp_short{1,2}));%  logical index of shadowed measurements, where measurements also exists in the other probe data
+    
+    %with_these= interp1(data_arr.t_et(replace_these),1:length(data_arr.t_et),t_et_short)
+    
+    %The other probe should not be in shadow if the other probe is in shadow.
+    with_these= (ismember(scantemp_short{1,2},data_arr.t_obt(replace_these)));% works if the timing is EXACT. logical index
+    %ismember gives a logical index of size(scantemp_short);
+    
+    if sum(replace_these)~=sum(with_these)
+        fprintf(1,'error wrong lengths %i vs %i, continuing anyway with longest file\n',length(with_these),length(replace_these));
+        return
+    end
+    data_arr.probe(replace_these)=probe_short;  %change probenumberflag
+    data_arr.V(replace_these)=scantemp_short{1,4}(with_these);%  %this is vf2
+    data_arr.printboolean(replace_these)=dark_ind_short(with_these);  %print boolean. It could be that both probes have invalid measurements.
+    data_arr.qf(replace_these)=scantemp_short{1,5}(with_these);   %qflag
+end
+
+%     
+% %%% PROBLEM HERE. V1L AND V2L DOES NEED TO BE EQUALLY
+% %%% LONG. ESPECIALLY 710, 910.
+% replace_these_lap1= (dark_ind_1~=1);
+% ok_tokeep_theselap2 = (dark_ind_2==1);
+% %the indices that are ok to keep is replaceind_lap1
+% if length(scantemp_1{1,4})~=length(scantemp_2{1,4})
+%     fprintf(1,'error wrong lengths %i vs lap2 %i',length(scantemp_1{1,4}),length(scantemp_2{1,4}))
+% end
+% indz=replace_these_lap1&ok_tokeep_theselap2; %only true if both lap1 in shadow and lap 2 in sunlight.
+% 
+% if sum(indz)>0
+%     fprintf(1,'LAP1 sometimes shadowed, switching to LAP2 in file:%s \n',NELfname);
+% end
+% 
+% %initialise foutarr.
+% data_arr=[];
+% data_arr.V=scantemp_1{1,4};
+% data_arr.t_utc=scantemp_1{1,1};
+% data_arr.t_obt=scantemp_1{1,2};
+% data_arr.qf=scantemp_1{1,5};
+% data_arr.printboolean=~dark_ind_1;
+% data_arr.probe=dark_ind_1;
+% data_arr.probe(:)=1;
+% 
+% %%default == probe 1.
+% %here we went from LAP1 to LAP2,
+% data_arr.probe(indz)=2;  %change probenumberflag
+% data_arr.V(indz)=scantemp_2{1,4}(indz);%  %this is vf2
+% data_arr.printboolean(indz)=dark_ind_2(indz);  %print boolean
+% data_arr.qf(indz)=scantemp_2{1,5}(indz);   %qflag
+
+%print NEL special case
+%data_arr_out=an_NELprint(NELfname,NELshort,data_arr,data_arr.t_et,tabindex{an_ind(i),3},timing,'vfloat');
+         
+%end
+
+
+                         
