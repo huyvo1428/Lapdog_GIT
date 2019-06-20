@@ -179,13 +179,13 @@ switch mode
     VS1qv = data_arr.Vz(:,2);
     vj = -3;
 
-    VS1 = -data_arr.Vz+5.5*exp(-data_arr.Vz/8);
-    VS1(-data_arr.Vz>0)=nan; % these will be picked up soon
+    VS1 = -data_arr.Vz(:,1)+5.5*exp(-data_arr.Vz(:,1)/8);
+    VS1(-data_arr.Vz(:,1)>0)=nan; % these will be picked up soon
     ind_vph= data_arr.Vz(:,1)>vj&~isnan(data_arr.Vph_knee(:,1))&data_arr.Vph_knee(:,2)>0.3&data_arr.Vph_knee(:,1)>vj;
     VS1(ind_vph)=data_arr.Vph_knee(ind_vph,1);
     VS1qv(ind_vph) = data_arr.Vph_knee(ind_vph,2);
     
-    data_arr.N_ED(~satind)=exp(P_interp2(~satind)).*exp(VS1(~satind).*P_interp1(~satind));
+    data_arr.N_ED(~satind)=exp(P_interp2(~satind)).*exp((VS1(~satind)).*P_interp1(~satind));
     %data_arr.N_ED(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
    % data_arr.N_ED(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.Vz(~satind).*P_interp1(~satind));
     %data_arr.N_ED(~satind)=exp(p2)*exp(-data_arr.Vz(~satind,1)*p1);

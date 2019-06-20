@@ -59,3 +59,7 @@ LP_Ion_curr_backup.m
 *.swp
 
 metakernel_rosetta_mounted.txt
+
+ZAC20188grep_awk.txt
+
+analysis_test.m
