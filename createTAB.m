@@ -194,8 +194,8 @@ counttemp = 0;
 delfile = 1;
 
 
-
-wol_tol=195/(24*3600);%195s time width of typical WOL 
+%wol_tol=195/(24*3600);%195s time width of typical WOL
+wol_tol=WOL.t_dur;%this is now an array of all WOL/OCM durations.
 wol_t_mid= WOL.t0+wol_tol/2; % datetime midpoint of all files
 packet_tol= max([index(tabind(:)).t1]-[index(tabind(:)).t0]);
 index_t_mid= [index(tabind(:)).t0] + 0.5*packet_tol; % datetime midpoint of all files
@@ -204,18 +204,13 @@ index_t_mid= [index(tabind(:)).t0] + 0.5*packet_tol; % datetime midpoint of all 
 % % the only exception is 710 & 910 V1L/V2L. in which case the longest packet
 % % length is good enough for us. (taken care of by the max argument)
 
-WOL_bool=ismemberf(index_t_mid,wol_t_mid,'tol',0.5*(wol_tol+packet_tol));
-%WOL_bool now is of length (tabind) and is 1 if any 
-%WOL.t0 or WOL.t1ma is within a
-%wol_tol from the file midpoint.
+%ismemberf is sufficiently smart to take an array index_t_mid (Nx1),
+%wol_t_mid (Jx1), and tolerance (Jx1) to create a boolean WOL_bool of (Nx1)
+WOL_bool=ismemberf(index_t_mid,wol_t_mid,'tol',0.5*(wol_tol+packet_tol));%check again!
+%WOL_bool now is of length (tabind) and is 1 if any
+%WOL.t0 or WOL.t1 is within wol_tol from the file midpoint.
+%tot_bytes = 0;
 
-
-%The accuracy of the WOL dataset limits the accuracy of the WOL detection
-% We don't have perfect durations of WOL, and we do not know if it is
-% directed by us, so we set the max duration to what MAG sees from the
-% when the disturbances of the circuitry stops.
-
-    %tot_bytes = 0;
     if(~index(tabind(1)).sweep); %% if not a sweep, do:
 
         for(i=1:len);

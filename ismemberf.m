@@ -266,7 +266,7 @@ function varargout = ismember1(A, S, tol, extended) %#ok
     [Su I J] = unique(S(:),'last');
     
     % Set the tolerance automatically
-    if isempty(tol) || isnan(tol)
+    if isempty(tol) | isnan(tol)
         if isempty(Su)
             tol = 0;
         else
