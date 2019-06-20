@@ -8,6 +8,7 @@
 % ARGUMENTS
 % =========
 % permitOverwrite : true/false whether to permit (no assertion) overwriting old state files.
+% stateNaming     : String as defined by createLBL.constants.get_state_filenaming
 %
 %
 % Initially created 2019-04-09 by Erik P G Johansson, IRF Uppsala.
