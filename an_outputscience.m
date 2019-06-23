@@ -174,7 +174,12 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 %
 
      %qv_Te= exp
+     %This is destructive, but is needed for NED.TAB files! I don't want to
+     %redo these qv algorithms inside the ASW code.
+     XXP(i).data.Vph_knee(:,2)=qv_Vph_knee;
+
      %%print ASW
+     
     for j = 1:len
 
         %remember i & j !!!
@@ -197,6 +202,8 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
         strtot=strcat(str1,str2,str3,str4,str5,str6,str7,str8);
         row_bytes= fprintf(twID,'%s\r\n',strtot);
     end
+    
+    
 
     ASW_tabindex(end+1).fname = filename;                   % Start new line of an_tabindex, and record file name
     ASW_tabindex(end).fnameshort = strrep(filename,folder,''); % shortfilename
@@ -244,6 +251,8 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             XXP(i).data.Vph_knee(dark,1)=MISSING_CONSTANT;
             
             
+            XXP(i).data.Vph_knee(:,2)=qv_Vph_knee;
+
             
             an_USCprint(USCfname,USCshort,NaN,XXP(i).data,XXP(i).info.firstind,XXP(i).info.timing,'vz');
             

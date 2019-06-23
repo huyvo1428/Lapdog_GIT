@@ -633,17 +633,17 @@ switch mode
         end
         fclose(NELwID);
         
-
-            NEL_tabindex(end+1).fname = NELfname;                   % Start new line of an_tabindex, and record file name
-            NEL_tabindex(end).fnameshort = NELshort; % shortfilename
-            NEL_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
-            NEL_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
-            NEL_tabindex(end).no_of_columns = 6;            % Number of columns
-            NEL_tabindex(end).type = 'Vz'; % Type
-            NEL_tabindex(end).timing = timing;
-            NEL_tabindex(end).row_byte = row_byte;
         
-      
+        NEL_tabindex(end+1).fname = NELfname;                   % Start new line of an_tabindex, and record file name
+        NEL_tabindex(end).fnameshort = NELshort; % shortfilename
+        NEL_tabindex(end).first_index = index_nr_of_firstfile; % First calib data file index
+        NEL_tabindex(end).no_of_rows = N_rows;                % length(foutarr{1,3}); % Number of rows
+        NEL_tabindex(end).no_of_columns = 6;            % Number of columns
+        NEL_tabindex(end).type = 'Vz'; % Type
+        NEL_tabindex(end).timing = timing;
+        NEL_tabindex(end).row_byte = row_byte;
+        
+        
             
             
     case 'Ion'
@@ -719,10 +719,12 @@ switch mode
         NEL_tabindex(end).type = 'Ion'; % Type
         NEL_tabindex(end).timing = timing;
         NEL_tabindex(end).row_byte = row_byte;
-        
-        
-        
+      
+    otherwise
+        fprintf(1,'Unknown Method:%s',mode);
+     
 end%switch mode        
+
 
     
 fileinfo = dir(NELfname);
@@ -735,16 +737,6 @@ if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invali
 else
 
 end
-
-
-        
-        
-
-
-%elseif  strcmp(mode,'vfloat')
-
-
-    %fprintf(1,'error, wrong mode: %s\r\n',mode');
 end
 
 

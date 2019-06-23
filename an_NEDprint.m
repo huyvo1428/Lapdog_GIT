@@ -112,7 +112,17 @@ switch mode
     NED_tabindex(end).timing = timing;
     NED_tabindex(end).row_byte = row_byte;
     
-    
+    fileinfo = dir(NEDfname);
+    if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
+        %  if N_rows > 0 %doublecheck!
+        delete(NEDfname); %will this work on any OS, any user?
+        NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
+        % end
+        
+    else
+        
+    end
+
     
     case 'vz'
         
@@ -178,10 +188,17 @@ switch mode
     % vs(ind_vph) = usc_v09.Vph_knee(ind_vph);
     VS1qv = data_arr.Vz(:,2);
     vj = -3;
+    
+    %If I want to show leniency to left-wing activists, this is where I would show it with e.g. (-1)
+    vj_vph= vj+5.5*exp(vj/8); %0.7801 needed for swap to Vphknee later.
 
+    %remember that Vz is -Vz(Vb) 
     VS1 = -data_arr.Vz(:,1)+5.5*exp(-data_arr.Vz(:,1)/8);
     VS1(-data_arr.Vz(:,1)>0)=nan; % these will be picked up soon
-    ind_vph= data_arr.Vz(:,1)>vj&~isnan(data_arr.Vph_knee(:,1))&data_arr.Vph_knee(:,2)>0.3&data_arr.Vph_knee(:,1)>vj;
+    
+    %   Vz<3 ?   &~isnan(Vphknee(:,1))?     & Vph_knee(:,2)>0.3? changed to vph_knee_qv in an_outputscience.m    &data_arr.Vph_knee(:,1)>vj;
+
+    ind_vph= -data_arr.Vz(:,1)>vj&~isnan(data_arr.Vph_knee(:,1))&data_arr.Vph_knee(:,2)>0.3&data_arr.Vph_knee(:,1)>vj_vph;
     VS1(ind_vph)=data_arr.Vph_knee(ind_vph,1);
     VS1qv(ind_vph) = data_arr.Vph_knee(ind_vph,2);
     
@@ -206,7 +223,7 @@ switch mode
         %find all extrapolation points: I don't want to change the an_swp
         %routine, so let's do the conversion here instead
          extrap_indz=data_arr.Vz(:,2)==0.2;
-         data_arr.Vz(extrap_indz,2)=0.7; % change 0.2 to 0.7. I mean, it's clearly not several intersections. 
+         %data_arr.Vz(extrap_indz,2)=0.7; % change 0.2 to 0.7. I mean, it's clearly not several intersections. 
         %and it survived ICA validation. It's clearly not as good quality as a detected zero-crossing though
         
         %prepare NED_flag
@@ -238,19 +255,34 @@ switch mode
             NED_tabindex(end).row_byte = row_byte;
         
             
+            fileinfo = dir(NEDfname);
+            if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
+                %  if N_rows > 0 %doublecheck!
+                delete(NEDfname); %will this work on any OS, any user?
+                NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
+                % end
+                
+            else
+                
+            end
+
+            
+    otherwise
+        fprintf(1,'Unknown Method:%s',mode);
+            
 end%switch mode        
 
     
-fileinfo = dir(NEDfname);
-if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
-  %  if N_rows > 0 %doublecheck!
-        delete(NEDfname); %will this work on any OS, any user?
-        NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
-   % end
-    
-else
-
-end
+% fileinfo = dir(NEDfname);
+% if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
+%   %  if N_rows > 0 %doublecheck!
+%         delete(NEDfname); %will this work on any OS, any user?
+%         NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
+%    % end
+%     
+% else
+% 
+% end
 
 
 end
