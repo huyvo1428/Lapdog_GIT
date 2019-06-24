@@ -118,9 +118,7 @@ switch mode
         delete(NEDfname); %will this work on any OS, any user?
         NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
         % end
-        
-    else
-        
+                
     end
 
     
@@ -140,23 +138,7 @@ switch mode
     %y1 = exp(p2)*exp(usc.usc(indz)*p1);
     data_arr.N_ED=data_arr.Vz;
     satind=data_arr.Vz(:,1)==MISSING_CONSTANT;
-%     
-%     
-%     P_interp1=nan(length(t_et),1);%initialise
-%     P_interp2=P_interp1;
-%     for i = 1:length(data_arr.t0)
-%         if data_arr.t0(i)>t_et_end
-%             P_interp1(i)= NED_FIT.P(NED_FIT_end,1);
-%             P_interp2(i)= NED_FIT.P(NED_FIT_end,2);
-%         elseif data_arr.t0(i)<t_et_min
-%             P_interp1(i)= NED_FIT.P(NED_FIT_start,1);
-%             P_interp2(i)= NED_FIT.P(NED_FIT_start,2);
-%         else
-%             P_interp1(i)= interp1(NED_FIT.t_et,NED_FIT.P(:,1),data_arr.t0(i)) ;
-%             P_interp2(i)= interp1(NED_FIT.t_et,NED_FIT.P(:,2),data_arr.t0(i)) ;
-%         end
-%     end
-    
+
     
     P_interp1= interp1(NED_FIT.t_et,NED_FIT.P(:,1),t_et);
     P_interp2= interp1(NED_FIT.t_et,NED_FIT.P(:,2),t_et);
@@ -261,9 +243,7 @@ switch mode
                 delete(NEDfname); %will this work on any OS, any user?
                 NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
                 % end
-                
-            else
-                
+                                
             end
 
             

@@ -260,6 +260,11 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             NEDfname(end-6:end-4)='NED';
             NEDshort = strrep(NEDfname,folder,'');
             an_NEDprint(NEDfname,NEDshort,XXP(i).data,XXP(i).data.t0,XXP(i).info.firstind,XXP(i).info.timing,'vz');
+            
+            NELfname=filename;
+            NELfname(end-6:end-4)='NEL';
+            NELshort = strrep(NELfname,folder,'');
+            data_arr=an_NELprint(NELfname,NELshort,XXP(i).data,XXP(i).data.t0,XXP(i).info.firstind,XXP(i).info.timing,'vz');
 
             
 
