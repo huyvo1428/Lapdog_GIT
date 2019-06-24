@@ -105,6 +105,8 @@ classdef definitions < handle
         % Constructor
         function obj = definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples, indentationLength, HeaderAllKvpl)
             
+            warning('NEL: Missing/uncertain N_EL column DESCRIPTION; No top-level description')
+            
             % ASSERTIONS
             assert(isscalar(nFinalPresweepSamples) && isnumeric(nFinalPresweepSamples))
             assert(isscalar(MISSING_CONSTANT)      && isnumeric(MISSING_CONSTANT))
@@ -878,7 +880,7 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.sss.');
             ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl{end+1} = struct('NAME', 'N_ED',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ...
-                ['Plasma density derived from individual E field mode floating potential LF measurements on an illuminated probe.', ...
+                ['Plasma density derived from individual spacecraft potential LF measurements on one illuminated probe.', ...
                 ' The derivation additionally uses low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', ...
                 ' If no probe is illuminated, then the corresponding row is removed.', ...
                 sprintf(' A value of %g means that the corresponding sample in the source data was saturated.', obj.MISSING_CONSTANT)], ...
@@ -890,15 +892,15 @@ classdef definitions < handle
                 ' 3=The negated bias voltage in a sweep on illuminated probe 1 for which current is zero.', ...
                 ' 4=The negated bias voltage in an EXTRAPOLATED sweep on illuminated probe 1 for which current is zero']);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',   'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
-            LblData.OBJTABLE.OBJCOL_list = ocl;            
+            LblData.OBJTABLE.OBJCOL_list = ocl;
         end
 
 
         
         function LblData = get_NEL_data(obj, LhtKvpl, firstPlksFile)
             %====================================
-            %warning('INCOMPLETE IMPLEMENTATION: Not verified top-level DESCRIPTIONs')
-            warning('Missing/uncertain N_EL column DESCRIPTION')
+            % ~BUG: Uncertain top-level DESCRIPTIONs
+            % ~BUG: Uncertain column DESCRIPTION
             %====================================
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
@@ -925,7 +927,6 @@ classdef definitions < handle
             ocl = [];
             ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 26, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.ssssss.');
             ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
-            warning('INCOMPLETE DESCRIPTION')
             ocl{end+1} = struct('NAME', 'N_EL',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ...
                 ['Plasma density derived from individual current measurements or floating potential measurements on one probe.', ...
                 sprintf(' A value of %g means that the corresponding sample in the source data was saturated.', obj.MISSING_CONSTANT)], ...
