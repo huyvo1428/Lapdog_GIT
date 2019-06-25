@@ -60,7 +60,7 @@ function []= createTAB(derivedpath,tabind,index,macrotime,fileflag,sweept)
 global MISSING_CONSTANT;
 global tabindex;  %global index
 global LDLMACROS; %global constant list
-global WOL %from preamble, here's all start & stop times
+global WOL V2C%from preamble, here's all start & stop times
 
 
 try
@@ -206,15 +206,30 @@ index_t_mid= [index(tabind(:)).t0] + 0.5*packet_tol; % datetime midpoint of all 
 
 %ismemberf is sufficiently smart to take an array index_t_mid (Nx1),
 %wol_t_mid (Jx1), and tolerance (Jx1) to create a boolean WOL_bool of (Nx1)
-WOL_bool=ismemberf(index_t_mid,wol_t_mid,'tol',0.5*(wol_tol+packet_tol));%check again!
+WOL_bool=ismemberf(index_t_mid,wol_t_mid,'tol',0.5*(wol_tol+packet_tol));%
 %WOL_bool now is of length (tabind) and is 1 if any
 %WOL.t0 or WOL.t1 is within wol_tol from the file midpoint.
 %tot_bytes = 0;
 
-    if(~index(tabind(1)).sweep); %% if not a sweep, do:
 
-        for(i=1:len);
-            qualityF = 0+100*WOL_bool(i);     % qualityfactor initialised! WOL_BOOL is either 0 or 1;
+if fileflag(1:2)=='V2' %i.e. either V2L or V2H
+    % V0*exp(-4.6052)=0.01.
+    v2c_tol=V2C.tol*4.6052;%V2C.tol is the halftime, typically V2C_tol defaults to 64 or 32 seconds, unless a very obvious contamination signature has been detected.
+    %instances where there is a macro change (or calendar day change) but
+    %no bias change (≈ 40 times during comet phase) has been removed
+    v2c_t_mid=V2C.t0+v2c_tol/2;
+    V2C_bool=ismemberf(index_t_mid,v2c_t_mid,'tol',0.5*(v2c_tol+packet_tol));%check again!
+    %V2C_bool now is of length (tabind) and is 1 if any measurement is
+    %inside the tolerance.
+else
+    V2C_bool(1:len)=0;
+end
+
+
+    if(~index(tabind(1)).sweep) %% if not a sweep, do:
+
+        for (i=1:len)
+            qualityF = 0+100*WOL_bool(i)+200*V2C_bool(i);     % qualityfactor initialised! WOL_BOOL and V2C_bool is either 0 or 1;
             trID = fopen(index(tabind(i)).tabfile);
 
             if trID < 0

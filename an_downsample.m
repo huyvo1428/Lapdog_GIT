@@ -810,9 +810,6 @@ end
 
 
 
-
-        dummy=-1000;
-        %dummyqf=1000;
         ewID= fopen(efname,'w');
         N_rows = 0;
         fprintf(1,'printing %s, macro: %s\n',efname, dec2hex(macroNo(1)));
@@ -843,15 +840,7 @@ end
         else % catalogue file
 
 
-            %         an_tabindex{end+1,1} = efname;                   % Start new line of an_tabindex, and record file name
-            %         an_tabindex{end,2} = strrep(efname,efolder,''); % shortfilename
-            %         an_tabindex{end,3} = red_tabindex{1,3}; % First calib data file index
-            %         an_tabindex{end,4} = N_rows;                % length(foutarr{1,3}); % Number of rows
-            %         an_tabindex{end,5} = 5;            % Number of columns
-            %         an_tabindex{end,6} = [];
-            %         an_tabindex{end,7} = 'Efield'; % Type
-            %         an_tabindex{end,8} = timing;
-            %         an_tabindex{end,9} = row_byte;
+
 
 
             efl_tabindex(end+1).fname = efname;                   % Start new line of an_tabindex, and record file name

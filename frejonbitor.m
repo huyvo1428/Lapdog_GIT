@@ -2,8 +2,11 @@
 %example: A = [0 40 2 40], x = 42
 %conveniently, this example fails to detect that bitor(620,10) =622, it
 %simply doesn't work on larger numbers. How I missed that is ridiculous
-function x=frejonbitor(A)
+function x=frejonbitor(A,varargin)
 x=uint32(A(1)); %make sure flags are handled as unsigned integers
+
+if isempty(varargin) %nominal method
+
 if length(A)>1
 
 
@@ -25,6 +28,30 @@ if length(A)>1
     x=x_100*100+x_10*10+x_1;
     
 end
+else %This is probably from an_downsample.m an_EFLD method
+    
+    B=varargin{1};
+    A_rem100=mod(A,100);%e.g. mod(642,100)=42
+    A_100=uint32((A-A_rem100)/100);%e.g. (642-42)/100=6
+    A_10=uint32((A_rem100-mod(A_rem100,10))/10);%e.g (42-2)/10= 4
+    A_1=uint32(mod(A,10));%e.g mod(642,100)=2;
+    
+    B_rem100=mod(B,100);%e.g. mod(642,100)=42
+    B_100=uint32((B-B_rem100)/100);%e.g. (642-42)/100=6
+    B_10=uint32((B_rem100-mod(B_rem100,10))/10);%e.g (42-2)/10= 4
+    B_1=uint32(mod(B,10));%e.g mod(642,100)=2;    
+    
+    x_100=bitor(A_100,B_100);
+    x_10=bitor(A_10,B_10);
+    x_1=bitor(A_1,B_1);
+    
+        
+    x=x_100*100+x_10*10+x_1;
+    
+    
+    
+end
+
 end
 
 %this shit works on values like 6,4,2,1

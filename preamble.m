@@ -119,11 +119,10 @@ if(strcmp(shortphase,'MARS')) %bug from older mission calendar
 end
 
 
-global WOL
+global WOL V2C
 
 load('WOL.mat','WOL');
-
-
+load('V2_contamination_times.mat','V2C');
 
 % Read info from DATASET.CAT:
 dname = strcat(archivepath,'/CATALOG/DATASET.CAT'); 
