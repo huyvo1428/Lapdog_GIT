@@ -2,7 +2,7 @@
 %frejon at irfu.se
 %Input: filename, filenameshort, time, data,
 %index_nr_of_of_first_file,timing for NPL_TABINDEX, and mode
-%mode = 'vfloat' or 'ion' or 'electron'
+%mode = 'vfloat' or 'vz'
 %Outputs USC.TAB files for the RPCLAP archive
 function [] = an_USCprint(USCfname,USCshort,time_arr,data_arr, index_nr_of_firstfile,timing,mode)
 
@@ -95,7 +95,8 @@ switch mode
             
             
         end
-        
+            fclose(USCwID);
+
 
             usc_tabindex(end+1).fname = USCfname;                   % Start new line of an_tabindex, and record file name
             usc_tabindex(end).fnameshort = USCshort; % shortfilename
@@ -105,6 +106,13 @@ switch mode
             usc_tabindex(end).type = 'Vz'; % Type
             usc_tabindex(end).timing = timing;
             usc_tabindex(end).row_byte = row_byte;         
+
+
+            
+    otherwise
+        fprintf(1,'Unknown Method:%s',mode);
+        fclose(USCwID);
+
 end%switch mode        
         
     
@@ -115,19 +123,8 @@ if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invali
         usc_tabindex(end) = []; %delete tabindex listing to prevent errors.
    % end
     
-else
-
 end
 
-
-        
-        
-
-
-%elseif  strcmp(mode,'vfloat')
-
-
-    %fprintf(1,'error, wrong mode: %s\r\n',mode');
 end
 
 

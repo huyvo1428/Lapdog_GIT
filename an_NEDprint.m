@@ -4,7 +4,7 @@
 %frejon at irfu.se
 %Input: filename, filenameshort, time, data,
 %index_nr_of_of_first_file,timing for NED_TABINDEX, and mode
-%mode = 'vfloat' or 'ion' or 'electron'
+%mode = 'vfloat' or 'vz'
 %Outputs NED.TAB files for the RPCLAP archive
 %Depending on the mode, pre-made fits will be applied to create a density
 %estimate. These fits should have large impact on quality values
@@ -13,11 +13,7 @@ function [] = an_NEDprint(NEDfname,NEDshort,data_arr,t_et,index_nr_of_firstfile,
 
 global NED_tabindex MISSING_CONSTANT
 fprintf(1,'printing %s, mode: %s\n',NEDfname, mode);
-%'hello'
-%fprintf(1,'%s',time_arr{1,1}(1,:));
 
-
-%fprintf(1,'printing: %s \r\n',NEDfname)
 NEDwID= fopen(NEDfname,'w');
 N_rows = 0;
 row_byte=0;
@@ -26,9 +22,6 @@ load('NED_FIT.mat', 'NED_FIT');
 [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
 [t_et_min,NED_FIT_start]=min(NED_FIT.t_et);
 switch mode
-                
-    
-    
         
     case 'vfloat'       
 
@@ -54,7 +47,7 @@ switch mode
     vj = -3;
 
     VS1 = -data_arr.V+5.5*exp(-data_arr.V/8); % correct USC to VS1 according to Anders' model. 
-    VS1(-data_arr.V>0)=nan;  
+    VS1(-data_arr.V>0)=nan;  %saturation and strange errors
     %del_ind=-data_arr.Vz>0;
     
     %I think we can safely assume that there are no Vph_knee data in Vfloat
@@ -65,10 +58,6 @@ switch mode
 %     VS1qv(ind_vph) = data_arr.Vph_knee(ind_vph,2);
     
     data_arr.N_ED(~satind)=exp(P_interp2(~satind)).*exp(VS1(~satind).*P_interp1(~satind));
-    %data_arr.N_ED(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
-   % data_arr.N_ED(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.Vz(~satind).*P_interp1(~satind));
-    %data_arr.N_ED(~satind)=exp(p2)*exp(-data_arr.Vz(~satind,1)*p1);
-    
     data_arr.N_ED(isnan(VS1)|(isnan(data_arr.N_ED)))=MISSING_CONSTANT;
    
     
@@ -112,23 +101,20 @@ switch mode
     NED_tabindex(end).timing = timing;
     NED_tabindex(end).row_byte = row_byte;
     
-    fileinfo = dir(NEDfname);
-    if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
-        %  if N_rows > 0 %doublecheck!
-        delete(NEDfname); %will this work on any OS, any user?
-        NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
-        % end
-                
-    end
+%     fileinfo = dir(NEDfname);
+%     if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
+%         %  if N_rows > 0 %doublecheck!
+%         delete(NEDfname); %will this work on any OS, any user?
+%         NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
+%         % end
+%                 
+%     end
 
     
     case 'vz'
         
     load('NED_FIT.mat', 'NED_FIT');
 
-    
-    
-        
     
     %BASIC SOLUTION ONLY LOOKS FOR CLOSEST POINT
     [junk,ind]= min(abs(NED_FIT.t_et-data_arr.t0(1)));
@@ -185,17 +171,10 @@ switch mode
     VS1qv(ind_vph) = data_arr.Vph_knee(ind_vph,2);
     
     data_arr.N_ED(~satind)=exp(P_interp2(~satind)).*exp((VS1(~satind)).*P_interp1(~satind));
-    %data_arr.N_ED(~satind)=exp(p2)*exp(-data_arr.V(~satind)*p1);
-   % data_arr.N_ED(~satind)=exp(P_interp2(~satind)).*exp(-data_arr.Vz(~satind).*P_interp1(~satind));
-    %data_arr.N_ED(~satind)=exp(p2)*exp(-data_arr.Vz(~satind,1)*p1);
-    
     data_arr.N_ED(isnan(VS1)|(isnan(data_arr.N_ED)))=MISSING_CONSTANT; %here we map them back to missing constant
 
     
-    %factor=1; 
-    %data_arr.V(~satind)=data_arr.V(~satind)*factor;
-   % NED_flag=data_arr.probe;%This is the probenumber/product type flag
-        
+    
       %  factor=-1; %Vz data is being outputted by bias potential it is identified on,
         %so opposite sign applies. However, if we want to change this from 
         %a proxy to a Spacecraft potential, we could manipulate this factor.
@@ -225,6 +204,8 @@ switch mode
             
             
         end
+            fclose(NEDwID);
+
         
 
             NED_tabindex(end+1).fname = NEDfname;                   % Start new line of an_tabindex, and record file name
@@ -236,33 +217,32 @@ switch mode
             NED_tabindex(end).timing = timing;
             NED_tabindex(end).row_byte = row_byte;
         
-            
-            fileinfo = dir(NEDfname);
-            if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
-                %  if N_rows > 0 %doublecheck!
-                delete(NEDfname); %will this work on any OS, any user?
-                NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
-                % end
-                                
-            end
+%             
+%             fileinfo = dir(NEDfname);
+%             if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
+%                 %  if N_rows > 0 %doublecheck!
+%                 delete(NEDfname); %will this work on any OS, any user?
+%                 NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
+%                 % end
+%                                 
+%             end
 
             
     otherwise
         fprintf(1,'Unknown Method:%s',mode);
+        fclose(NEDwID);
             
 end%switch mode        
 
     
-% fileinfo = dir(NEDfname);
-% if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
-%   %  if N_rows > 0 %doublecheck!
-%         delete(NEDfname); %will this work on any OS, any user?
-%         NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
-%    % end
-%     
-% else
-% 
-% end
+fileinfo = dir(NEDfname);
+if fileinfo.bytes ==0 %happens if the entire collected file is empty (all invalid values)
+  %  if N_rows > 0 %doublecheck!
+        delete(NEDfname); %will this work on any OS, any user?
+        NED_tabindex(end) = []; %delete tabindex listing to prevent errors.
+   % end
+    
+end
 
 
 end
