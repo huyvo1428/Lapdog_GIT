@@ -128,14 +128,12 @@ function create_LBL_files(Data)
         
         GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'error';
         AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
-        NED_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
     else
         GENERATE_FILE_FAIL_POLICY = 'message';
         %GENERATE_FILE_FAIL_POLICY = 'nothing';    % Somewhat misleading. Something may still be printed.
         
         GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'warning';
         AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
-        NED_TAB_LBL_INCONSISTENCY_POLICY     = 'warning';
     end
 
 
@@ -380,7 +378,7 @@ function create_LBL_files(Data)
                 clear   startStopTimes   LhtKvpl   LblData
                 
             catch Exception
-                EJ_library.utils.exception_message(Exception, NED_TAB_LBL_INCONSISTENCY_POLICY);
+                EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
                 fprintf(1,'Aborting LBL file for NED_tabindex - Continuing\n');
             end
         end
@@ -411,7 +409,7 @@ function create_LBL_files(Data)
                 clear   startStopTimes   LhtKvpl   LblData
                 
             catch Exception
-                EJ_library.utils.exception_message(Exception, NED_TAB_LBL_INCONSISTENCY_POLICY);
+                EJ_library.utils.exception_message(Exception, GENERATE_FILE_FAIL_POLICY);
                 fprintf(1,'Aborting LBL file for NEL_tabindex - Continuing\n');
             end
         end
