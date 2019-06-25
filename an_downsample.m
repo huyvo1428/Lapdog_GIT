@@ -748,7 +748,7 @@ end
 
             efl = efl_x10(x10_input);
             %fprintf(1,'macrono1=%s, 2=%s \n',dec2hex(macroNo(1)),dec2hex(macroNo(2)))
-            efl.qf=bitor(efl.qfraw(:,1),efl.qfraw(:,2));
+            efl.qf=frejonbitor(efl.qfraw(:,1),efl.qfraw(:,2));
         else
 
 
@@ -775,7 +775,7 @@ end
             efl.t_utc=scantemp{1,1};
             efl.t_obt=scantemp{1,2};
             %efl.qf= bitor(scantemp{1,5},scantemp2{1,5}); %qualityflag!    % Does not work on MATLAB R2009a since bitor then does not accept arguments of class/type int32 (but uint32, uint64 work).
-            efl.qf= bitor(uint64(scantemp{1,5}),uint64(scantemp2{1,5})); %qualityflag!
+            efl.qf= frejonbitor(uint64(scantemp{1,5}),uint64(scantemp2{1,5})); %qualityflag!
             %efl.ef_out = 1000*(scantemp2{1,4}-scantemp{1,4})/5;
             efl.ef_out = efl_most(efl.t_obt,scantemp{1,4},scantemp2{1,4});
 
@@ -797,6 +797,23 @@ end
         end
 
 
+        fill_indz=efl.qf>=200;
+        
+        efl.ef_out(fill_indz)=MISSING_CONSTANT;
+        %or remove it completely by using
+        %printbooleanind(fill_indz)=0;
+        
+        if any(fill_indz)
+
+             fprintf(1,'some removal of saturation or contamination signatures')
+
+             if all(fill_indz)
+              fprintf(1,'all measurements removed..This might cause problems... \n')
+
+             end
+             
+        end
+        
 
 
 %         diffI =abs((scantemp2{1,3})-(scantemp{1,3}));
