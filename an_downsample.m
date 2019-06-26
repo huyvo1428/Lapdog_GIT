@@ -834,7 +834,7 @@ end
 
             if printbooleanind(j) %
                                   %UTC   %OBT      Efield, frequencyflag, qf
-                row_byte= fprintf(ewID,'%s, %16.6f, %16.6f, %1i, %03i\r\n',efl.t_utc{j,1},efl.t_obt(j),efl.ef_out(j),efl.freq_flag(j),efl.qf(j));
+                row_byte= fprintf(ewID,'%s, %16.6f, %18.6f, %1i, %03i\r\n',efl.t_utc{j,1},efl.t_obt(j),efl.ef_out(j),efl.freq_flag(j),efl.qf(j));
                 N_rows = N_rows + 1;
             end
 
