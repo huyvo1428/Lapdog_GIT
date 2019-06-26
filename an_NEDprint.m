@@ -14,7 +14,6 @@ function [] = an_NEDprint(NEDfname,NEDshort,data_arr,t_et,index_nr_of_firstfile,
 global NED_tabindex MISSING_CONSTANT
 fprintf(1,'printing %s, mode: %s\n',NEDfname, mode);
 
-NEDwID= fopen(NEDfname,'w');
 N_rows = 0;
 row_byte=0;
 
@@ -24,7 +23,12 @@ load('NED_FIT.mat', 'NED_FIT');
 switch mode
         
     case 'vfloat'       
-
+        
+        
+        if ismember(NEDshort,{'RPCLAP_20160715_033202_417_NED.TAB','RPCLAP_20160715_020746_615_NED.TAB'})
+            fprintf(1,'skipping %s, mode: %s\n',NEDshort, mode);
+            return;
+        end
 
     P_interp1= interp1(NED_FIT.t_et,NED_FIT.P(:,1),t_et);
     P_interp2= interp1(NED_FIT.t_et,NED_FIT.P(:,2),t_et);
@@ -71,7 +75,8 @@ switch mode
     %take this out of the loop
     qvalue=max(1-abs(data_arr.V_sigma(:)./data_arr.V(:)),0.5);
     qvalue(satind)=0;
-    
+    NEDwID= fopen(NEDfname,'w');
+
     for j =1:length(data_arr.V)
         
         if data_arr.printboolean(j)~=1 %check if measurement data exists on row
@@ -190,7 +195,8 @@ switch mode
         %prepare NED_flag
         NED_flag=3*ones(1,length(data_arr.qf));
         NED_flag(extrap_indz)=4;
-        
+        NEDwID= fopen(NEDfname,'w');
+
         for j = 1:length(data_arr.qf)
                         % row_byte= sprintf('%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.N_ED(j),data_arr.Vz(j,2),NED_flag(j),data_arr.qf(j));
    
@@ -229,9 +235,7 @@ switch mode
 
             
     otherwise
-        fprintf(1,'Unknown Method:%s',mode);
-        fclose(NEDwID);
-            
+        fprintf(1,'Unknown Method:%s',mode);            
 end%switch mode        
 
     

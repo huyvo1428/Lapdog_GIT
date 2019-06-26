@@ -10,23 +10,33 @@ global usc_tabindex MISSING_CONSTANT
 
 fprintf(1,'printing %s, mode: %s\n',USCfname, mode);
 %'hello'
+
+
+
+
 %fprintf(1,'%s',time_arr{1,1}(1,:));
 
 
 %fprintf(1,'printing: %s \r\n',USCfname)
-USCwID= fopen(USCfname,'w');
 N_rows = 0;
 row_byte=0;
 switch mode
         
         
-    case 'vfloat'        
+    case 'vfloat'  
+        
+        if ismember(USCshort,{'RPCLAP_20160715_033202_417_USC.TAB','RPCLAP_20160715_020746_615_USC.TAB'})
+            fprintf(1,'skipping %s, mode: %s\n',USCfname, mode);
+            return;
+        end
 %if strcmp(mode,'vfloat')
 
     satind=data_arr{1,5}==MISSING_CONSTANT;
     factor=-1; 
     data_arr{1,5}(~satind)=data_arr{1,5}(~satind)*factor;
     usc_flag=data_arr{1,2};%This is the probenumber flag
+    USCwID= fopen(USCfname,'w');
+
     for j =1:length(data_arr{1,3})
         
         if data_arr{1,7}(j)~=1 %check if measurement data exists on row
@@ -82,7 +92,8 @@ switch mode
         %prepare usc_flag
         usc_flag=3*ones(1,length(data_arr.qf));
         usc_flag(extrap_indz)=4;
-        
+        USCwID= fopen(USCfname,'w');
+
         for j = 1:length(data_arr.qf)
             
             if data_arr.lum(j) > 0.9 %shadowed probe data is not allowed
@@ -111,7 +122,6 @@ switch mode
             
     otherwise
         fprintf(1,'Unknown Method:%s',mode);
-        fclose(USCwID);
 
 end%switch mode        
         
