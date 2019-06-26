@@ -26,7 +26,7 @@ switch mode
         
         
         if ismember(NEDshort,{'RPCLAP_20160715_033202_417_NED.TAB','RPCLAP_20160715_020746_615_NED.TAB'})
-            fprintf(1,'skipping %s, mode: %s\n',NEDshort, mode);
+            fprintf(1,'skipping %s, mode: %s\n',NEDfname, mode);
             return;
         end
 
