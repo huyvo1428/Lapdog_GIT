@@ -25,6 +25,16 @@ switch mode
   
     case 'vfloat'
         
+        if all(~data_arr.printboolean(:))
+            fprintf(1,'skipping because of bool %s, mode: %s\n',NELshort, mode);
+            return;
+        end
+        if ismember(NELshort,{'RPCLAP_20160715_033202_417_NEL.TAB','RPCLAP_20160715_020746_615_NEL.TAB'})
+            fprintf(1,'skipping specific file %s, mode: %s\n',NELshort, mode);
+            return;
+        end
+        
+
         load('NED_FIT.mat', 'NED_FIT');
         [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
         [t_et_min,NED_FIT_start]=min(NED_FIT.t_et);
