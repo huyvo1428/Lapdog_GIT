@@ -77,6 +77,17 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
 
     %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
+    
+    % -----------------find low temperature data  ----------------
+    %ne_5eV= max((1e-6*sqrt(2*pi*CO.me*Te_guess) *e_slope / (IN.probe_A*CO.e.^1.5)),0)
+    %ne_5eV(e_slope = 70nA/V) = 743.467535;
+    %for reference of 70nA, see Engelhardt 2017
+
+    cold_ind=XXP(i).data.asm_ne_5eV(:,1)> 743.467535;% find low temperature data    
+    XXP(i).data.asm_ne_5eV(cold_ind,1)=XXP(i).data.asm_ne_5eV(cold_ind,1)*sqrt(0.1)/sqrt(5);
+    
+    % -----------------find low temperature data  ----------------
+
 
 
 
@@ -162,11 +173,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 
     XCAL_struct.Te(~inside_range)=MISSING_CONSTANT;
     qv_Te_XCAL(~inside_range)=0;%qv
-    %ne_5eV= max((1e-6*sqrt(2*pi*CO.me*Te_guess) *e_slope / (IN.probe_A*CO.e.^1.5)),0)
-    %ne_5eV(e_slope = 70nA/V) = 743.467535;
-    %for reference of 70nA, see Engelhardt 2017
-
-
+    
 
 %     qv_iph0_2 =qv_iph0_test;
 %     qv_iph0_2(:) = 0.2407/XXP(i).info.diff_Vb; % this is one, 0.5, 0.33, or 0.25;
@@ -261,9 +268,9 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             NEDshort = strrep(NEDfname,folder,'');
             an_NEDprint(NEDfname,NEDshort,XXP(i).data,XXP(i).data.t0,XXP(i).info.firstind,XXP(i).info.timing,'vz');
             
-            NELfname=filename;
-            NELfname(end-6:end-4)='NEL';
-            NELshort = strrep(NELfname,folder,'');
+            %NELfname=filename;
+            %NELfname(end-6:end-4)='NEL';
+            %NELshort = strrep(NELfname,folder,'');
             %data_arr=an_NELprint(NELfname,NELshort,XXP(i).data,XXP(i).data.t0,XXP(i).info.firstind,XXP(i).info.timing,'vz');
 
             
