@@ -53,6 +53,7 @@
 %   .spacecraftNaifSpiceId      : 
 %   .nBytesBetweenColumns       : Number of bytes to add between every column of actual data in TAB file.
 %                                 NOTE: Most RPCLAP data uses 2 bytes, but some calibration data uses 1 byte.
+%   .tablePointerPdsKey
 %   REQUIRED:
 %   .headerKeysForbiddenList    : Cell array of ODL header keys that must not be present (assertion).
 %   .headerKeysForceQuotesList  : Cell array of ODL header keys that will be quoted, but only if not already quoted.
@@ -160,6 +161,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     DEFAULT_SETTINGS.nBytesBetweenColumns      = length(', ');    % ASSUMES absence of quotes in string columns. Lapdog convention.
     DEFAULT_SETTINGS.spacecraftNaifSpiceId     = -226;            % Rosetta.
     DEFAULT_SETTINGS.indentationLength         = 4;
+    DEFAULT_SETTINGS.tablePointerPdsKey        = '^TABLE';        % ABLE for regular data products, but ^INDEX_TABLE for PDS indexes.
     Settings = EJ_library.utils.interpret_settings_args(DEFAULT_SETTINGS, varargin);
     EJ_library.utils.assert.struct(Settings, union(fieldnames(DEFAULT_SETTINGS), ...
         {'headerKeysOrderList', 'headerKeysForceQuotesList', 'headerKeysForbiddenList'}))
@@ -227,11 +229,11 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
         %==========================================
         % Extract data from TAB file (+assertions)
         %==========================================
-        % IMPLEMENTATION NOTE: Needs try-catch here to determine whether read_TAB_file succeeded or not, since the
+        % IMPLEMENTATION NOTE: Needs try-catch here to determine whether read_TAB_file_info succeeded or not, since the
         % code/function should not automatically exit if it does fail.
         try
             LblData.nTabFileRows = NaN;   % Field must be created in case deriving the value later fails.
-            [firstTabRow, lastTabRow, nBytesPerRow, LblData.nTabFileRows] = read_TAB_file(tabFilePath);
+            [firstTabRow, lastTabRow, nBytesPerTabRow, LblData.nTabFileRows] = read_TAB_file_info(tabFilePath);
             readingTabSuccessful = true;
         catch Exc
             warning_error___LOCAL(Exc, Settings.tabLblInconsistencyPolicy)
@@ -245,19 +247,19 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
             % IMPLEMENTATION NOTE: Does not put the following code (in the "if" statement) inside the same try statement
             % that sets readingTabSuccessful since we want errors here to NOT be caught.
             
-            % Set FORMAT.
-            for iOBJCOL = 1:numel(LblData.OBJTABLE.OBJCOL_list)
-                LblData.OBJTABLE.OBJCOL_list{iOBJCOL} = set_FORMAT(...
-                    LblData.OBJTABLE.OBJCOL_list{iOBJCOL}, firstTabRow, lastTabRow, Settings.tabLblInconsistencyPolicy);
-            end
-            
             % ASSERTION: Number of bytes per TAB row.
-            if nBytesPerRow ~= LblData.OBJTABLE.ROW_BYTES
+            if nBytesPerTabRow ~= LblData.OBJTABLE.ROW_BYTES
                 warning_error___LOCAL(sprintf(...
                     ['TAB file is inconsistent with LBL file. Bytes per row does not fit table description.\n', ...
-                    '    nBytesPerRow=%g\n    LblData.OBJTABLE.ROW_BYTES=%g\n', ...
+                    '    nBytesPerTabRow=%g\n    LblData.OBJTABLE.ROW_BYTES=%g\n', ...
                     '    File: "%s"'], ...
-                    nBytesPerRow, LblData.OBJTABLE.ROW_BYTES, tabFilePath), Settings.tabLblInconsistencyPolicy)
+                    nBytesPerTabRow, LblData.OBJTABLE.ROW_BYTES, tabFilePath), Settings.tabLblInconsistencyPolicy)
+            end
+            
+            % Set FORMAT.
+            for iOBJCOL = 1:numel(LblData.OBJTABLE.OBJCOL_list)
+                LblData.OBJTABLE.OBJCOL_list{iOBJCOL}.FORMAT = derive_FORMAT(...
+                    LblData.OBJTABLE.OBJCOL_list{iOBJCOL}, firstTabRow, lastTabRow, Settings.tabLblInconsistencyPolicy);
             end
             
             T2pkKvpl = derive_T2PK_KVPL(firstTabRow, lastTabRow, T2pkArgsTable, D);
@@ -274,11 +276,11 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
         %===================================================================
         LblData.HeaderKvpl = LblData.HeaderKvpl.append(EJ_library.utils.KVPL2({...
             'RECORD_TYPE',  'FIXED_LENGTH'; ...                  % NOTE: Influences whether one must use RECORD_BYTES, FILE_RECORDS, LABEL_RECORDS.
-            'RECORD_BYTES', sprintf( '%i',  LblData.OBJTABLE.ROW_BYTES); ...
-            'FILE_NAME',    sprintf('"%s"', lblFilename); ...    % Should be qouted.
-            '^TABLE',       sprintf('"%s"', tabFilename); ...    % Should be qouted.
-            'PRODUCT_ID',   sprintf('"%s"', fileBasename); ...   % Should be qouted.
-            'FILE_RECORDS', sprintf( '%i',  LblData.nTabFileRows) ...
+            'RECORD_BYTES',              sprintf( '%i',  LblData.OBJTABLE.ROW_BYTES); ...
+            'FILE_NAME',                 sprintf('"%s"', lblFilename); ...    % Should be qouted.
+            Settings.tablePointerPdsKey, sprintf('"%s"', tabFilename); ...    % Should be qouted.
+            'PRODUCT_ID',                sprintf('"%s"', fileBasename); ...   % Should be qouted.
+            'FILE_RECORDS',              sprintf( '%i',  LblData.nTabFileRows) ...
             }));   % Order not important since later reordered.
         
         
@@ -298,7 +300,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     catch Exc
         NewExc = MException('create_OBJTABLE_LBL_file:fail', sprintf('Something wrong with OBJECT=TABLE data. lblFilePath=%s', lblFilePath));
         NewExc = addCause(NewExc, Exc);
-        Exc.getReport()
+        %Exc.getReport()
         throw(NewExc)
     end
 end
@@ -308,7 +310,7 @@ end
 % Derive the value of the FORMAT keyword using other PDS keywords and the first and last TAB file row.
 %
 % Implicitly also checks some of the TAB file format through assertions in EJ_library.PDS_utils.derive_FORMAT.
-function OBJCOL = set_FORMAT(OBJCOL, firstTabRow, lastTabRow, tabLblInconsistencyPolicy)
+function FORMAT = derive_FORMAT(OBJCOL, firstTabRow, lastTabRow, tabLblInconsistencyPolicy)
     % Derive nBytes taking into account the possibility of multiple columns per OBJECT=COLUMN (only use the first one).
     if isfield(OBJCOL, 'ITEM_BYTES')
         nBytes = OBJCOL.ITEM_BYTES;
@@ -327,7 +329,7 @@ function OBJCOL = set_FORMAT(OBJCOL, firstTabRow, lastTabRow, tabLblInconsistenc
         warning_error___LOCAL('First and last TAB row imply different values for FORMAT.', tabLblInconsistencyPolicy)
     end
     
-    OBJCOL.FORMAT = FORMAT_1;
+    FORMAT = FORMAT_1;
 end
 
 
@@ -529,7 +531,7 @@ end
 
 
 % NOTE: Does not work for files with first row consisting of header variable names, e.g. AxS.
-function [firstRow, lastRow, nBytesPerRow, nRows] = read_TAB_file(tabFile)
+function [firstRow, lastRow, nBytesPerRow, nRows] = read_TAB_file_info(tabFile)
     temp     = dir(tabFile);
     fileSize = temp.bytes;
 

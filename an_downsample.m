@@ -805,7 +805,7 @@ end
         
         if any(fill_indz)
 
-             fprintf(1,'some removal of saturation or contamination signatures')
+             fprintf(1,'some removal of saturation or contamination signatures. ')
 
              if all(fill_indz)
               fprintf(1,'all measurements removed..This might cause problems... \n')

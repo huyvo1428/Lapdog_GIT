@@ -26,7 +26,11 @@ function exception_message(Exception, policy, varargin)
 %
 %
 % PROPOSAL: Use ~Exception.getReport('extended') instead. Seems to have similar functionality.
+%   PRO: Hyperlinks.
 %   CON: Can not disable or customize own "policy".
+%   CON/PROBLEM: Exception.getReport('extended', 'hyperlinks', 'on');  does not work, but
+%                 Exception.getReport() does work for unknown reason.
+
 % PROPOSAL: Allow function to rethrow exception.
 %   PROPOSAL: Add submitted exception as cause.
 % PROPOSAL: replace policy with Settings (interpret_settings).
@@ -53,6 +57,7 @@ function exception_message(Exception, policy, varargin)
 
     % ASSERTION
     % NOTE: Fails nicely (not error) with default setting in case "policy" is e.g. misspelled.
+    % IMPLEMENTATION NOTE: NOT using assertion functions so that can fail nicely.
     if ~any(strcmp(policy, {'nothing', 'message', 'message+stack trace'}))
         warning('Illegal argument policy="%s". Automatically modifying policy.', policy)
         policy = 'message+stack trace';
@@ -101,8 +106,10 @@ function exception_message(Exception, policy, varargin)
                 iprint(is,'row %3i, %s: %s\n', Exception.stack(i).line, Exception.stack(i).file, Exception.stack(i).name);
             end
         end
+        %Exception.getReport('extended', 'hyperlinks', 'on');
+%         Exception.getReport();
     end
-    
+
     if showCauses
         %======================================
         % Print "cause" exceptions RECURSIVELY
