@@ -555,7 +555,10 @@ switch mode
         end
 
 
-        load('NED_FIT.mat', 'NED_FIT');
+        %load('NED_FIT.mat', 'NED_FIT');        
+        load('NEL_V_FIT.mat', 'NEL_V_FIT');
+        NED_FIT=NEL_V_FIT;
+        
         [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
         [t_et_min,NED_FIT_start]=min(NED_FIT.t_et);
 
@@ -636,7 +639,10 @@ switch mode
 
     case 'vz' %will we ever create this NEL file?
 
-        load('NED_FIT.mat', 'NED_FIT');
+
+        %load('NED_FIT.mat', 'NED_FIT');        
+        load('NEL_V_FIT.mat', 'NEL_V_FIT');
+        NED_FIT=NEL_V_FIT;
         [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
         [t_et_min,NED_FIT_start]=min(NED_FIT.t_et);
 

@@ -17,7 +17,12 @@ fprintf(1,'printing %s, mode: %s\n',NEDfname, mode);
 N_rows = 0;
 row_byte=0;
 
-load('NED_FIT.mat', 'NED_FIT');
+%load('NED_FIT.mat', 'NED_FIT');
+
+        
+load('NEL_V_FIT.mat', 'NEL_V_FIT');
+NED_FIT=NEL_V_FIT;
+
 [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
 [t_et_min,NED_FIT_start]=min(NED_FIT.t_et);
 switch mode
@@ -117,9 +122,7 @@ switch mode
 
     
     case 'vz'
-        
-    load('NED_FIT.mat', 'NED_FIT');
-
+       
     
     %BASIC SOLUTION ONLY LOOKS FOR CLOSEST POINT
     [junk,ind]= min(abs(NED_FIT.t_et-data_arr.t0(1)));
