@@ -21,12 +21,10 @@ hold_flag=0;
 i=1; %
 j=0;
 
-global MISSING_CONSTANT VFLOATMACROS
+global MISSING_CONSTANT VFLOATMACROS LAP2Ionmacros
 
 
 try
-        %fileflag = tabindex{an_ind(i),1}(end-6:end-4);
-
         mode = tabindex{an_ind(i),1}(end-6);
 
 
@@ -38,8 +36,10 @@ try
         if mode =='V'  % Voltage  data
             test_column = 4;
         else % Current  data
-            test_column = 3;
+            test_column = 3;       
         end
+        
+
 
     for i=1:length(an_ind)     % Iterate over files (indices).
 
@@ -49,13 +49,26 @@ try
         macroNodex=dec2hex(macroNo);
         %macroNostr=dec2hex(index(tabindex{an_ind(i) ,3}).macro);
         %          dec2hex(index(tabindex{ind_V1L(1),3}).macro)
+        if mode =='I' && probenr==2 % escape early?
+            %UTCstr1= '2016-05-00 00:00:00';
+            %irf_time(UTCstr1,'utc>datenum')=736451
+            if index(tabindex{an_ind(i),3}).t0>736450
+                %We do not process LAP2 after this date
+                continue; %moves to the next step in for loop
+                
+                %irf_time('2014-12-12T00:00:00','utc>datenum')=735946
+            elseif index(tabindex{an_ind(i),3}).t0<735946
+                %We do not process LAP2 before this date
+                continue; %moves to the next step in for loop
+                
+            end
+        end
 
 
 
-
-        %%%%-----------------USC/NED CHECK------------------------------------%
+        %%%%-----------------NEL CHECK------------------------------------%
         %fprintf(1,'checking %x, vs %x',macroNo,VFLOATMACROS(:,probenr))
-        if  (mode =='V' && ismember(macroNo,VFLOATMACROS{probenr}) )||  (mode =='I' && probenr)
+        if  (mode =='V' && ismember(macroNo,VFLOATMACROS{probenr}) )|| (mode =='I' && probenr==1 )|| (probenr==2 &&ismember(macroNo,LAP2Ionmacros{1}))
 
 
         arID = fopen(tabindex{an_ind(i),1},'r');
@@ -78,7 +91,7 @@ try
 
         if mode =='I'
 
-            print_bool= scantemp{1,4}(:)<-17;%V
+            print_bool= scantemp{1,4}(:)<-15;%V
 
             if sum(print_bool)==0 % no ion current?
             %if any(scantemp{1,3}<-18) % no ion current?
@@ -86,8 +99,7 @@ try
                 continue; %moves to the next step in for loop
 
             end
-
-
+            
         end
 
 
@@ -103,31 +115,6 @@ try
         NELfname=tabindex{an_ind(i),1};
         NELfname(end-6:end-4)='NEL';
         NELshort=strrep(NELfname,affolder,'');
-
-%
-%         %    inter = 1 + floor((t - tday0)/intval); %prepare subset selection to accumarray
-%         inter = 1 + floor((scantemp{1,2}(:) - tday0)/intval); %prepare subset selection to accumarray
-%
-%         %intervals specified from beginning of day, in intervals of intval,
-%         %and the variable inter marks which interval the data in the file is related to
-%
-%
-%
-% %
-% %
-%
-%
-%         %this @mean function will output mean even if there is a single NaN
-%         %value in the interval. This is what we want in this case, I
-%         %believe.
-%         imu = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN); %select measurements during specific intervals, accumulate mean to array and print NaN otherwise
-%         isd = accumarray(inter,scantemp{1,3}(:),[],@nanstd); %select measurements during specific intervals, accumulate standard deviation to array and print zero otherwise
-%
-%         vmu = accumarray(inter,scantemp{1,4}(:),[],@mean,NaN);
-%         vsd = accumarray(inter,scantemp{1,4}(:),[],@std);
-% %        qf  = accumarray(inter,scantemp{1,5}(:),[],@(x) sum(unique(x)));
-%         qf  = accumarray(inter,scantemp{1,5}(:),[],@(x) frejonbitor(x));
-%
 
         switch mode   %find bias changes and fix terrible std function
 
@@ -159,26 +146,34 @@ try
 
             t_et= cspice_str2et(scantemp{1,1}(:)); %I'll use this  in the print function later
             %New method  12/2 2019 check for all values, not just the downsampled timestamps.
-            [junk,SEA,SAA]=orbit('Rosetta',t_et,target,'ECLIPJ2000','preloaded');
+            %[junk,SEA,SAA]=orbit('Rosetta',t_et,target,'ECLIPJ2000','preloaded');
+            orbit_out=orbit_v2('Rosetta',t_et,target,'ECLIPJ2000','preloaded');
             %[junk,SEA,SAA]=orbit('Rosetta',tfoutarr{1,1},target,'ECLIPJ2000','preloaded');
-
+            %SAA=orbit.SAA;
+            
             % *Elias values* (from photoemission study):
             if probenr==1
-                Phi11 = 131.2;
-                Phi12 = 179.2;
-                illuminati = ((SAA < Phi11) | (SAA > Phi12));
+%                 Phi11 = 131.2;
+%                 Phi12 = 179.2;
+%                 illuminati = ((SAA < Phi11) | (SAA > Phi12));
                 % foutarr{1,8}=foutarr{1,8}+100;
-
+                dark_ind=orbit_out.LAP1_ill<1;
+                
             else
-                %foutarr{1,8}=foutarr{1,8}+200;
-                Phi21 = 18;
-                Phi22 = 82;
-                Phi23 = 107;
-                illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
+                
+                dark_ind=orbit_out.LAP2_ill<1;
+                
+%                 %foutarr{1,8}=foutarr{1,8}+200;
+%                 Phi21 = 18;
+%                 Phi22 = 82;
+%                 Phi23 = 107;
+                %illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
             end
-            SEA_OK = abs(SEA)<1; %  0 ?1 degree  = nominal pointing
-            illuminati(~SEA_OK)=0.3;
-            dark_ind=illuminati<1;
+ 
+%             
+%             SEA_OK = abs(SEA)<1; %  0 ?1 degree  = nominal pointing
+%             illuminati(~SEA_OK)=0.3;
+            %dark_ind=illuminati<1;
 %
 %             lum_temp = accumarray(inter,illuminati,[],@mean,NaN);
 %             %SAA_temp = accumarray(inter,SAA,[],@mean,NaN);
@@ -304,7 +299,7 @@ try
                      data_arr.qf=scantemp{1,5};
                      data_arr.printboolean=~dark_ind;
                      data_arr.probe=dark_ind;
-                     data_arr.probe(:)=1;
+                     data_arr.probe(:)=probenr;
 
                     data_arr_out= an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
 
@@ -325,7 +320,7 @@ try
                  data_arr.printboolean=print_bool;
                  %data_arr.printboolean=~dark_ind&print_bool;
                  data_arr.dark_ind=dark_ind;
-                 data_arr.probe(:)=1;
+                 data_arr.probe(:)=probenr;
 
                  data_arr_out=an_NELprint(NELfname,NELshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'Ion');
                  %%PRINT DOWNSAMPLED NEL?
@@ -761,8 +756,17 @@ switch mode
             fprintf(1,'skipping because of bool %s, mode: %s\n',NELshort, mode);
             return;
         end
-        load('NEL_I_FIT.mat');        
-        NED_FIT=NEL_I_FIT;
+
+        load('NEL_I_FIT.mat');    
+        if data_arr.probe(1)==1
+            NED_FIT=NEL_I_FIT;
+            NEL_flag=5+2*(data_arr.dark_ind);%dark_ind is 1 for a shadowed probe;
+        else 
+            
+            NED_FIT=NEL_I2_FIT;
+            NEL_flag=6+2*(data_arr.dark_ind);%dark_ind is 1 for a shadowed probe;
+        end
+        
         [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
         [t_et_min,NED_FIT_start]=min(NED_FIT.t_et);
 
@@ -775,6 +779,7 @@ switch mode
         interp_qv= interp1(NED_FIT.t_et,NED_FIT.qv,t_et);
 
         indz_end=t_et>t_et_end;
+        
         P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,1);
         P_interp2(indz_end)= NED_FIT.P(NED_FIT_end,2);
         interp_qv(indz_end)= NED_FIT.qv(NED_FIT_end);
@@ -789,7 +794,7 @@ switch mode
         data_arr.N_EL(data_arr.dark_ind)=(data_arr.I(data_arr.dark_ind).')./P_interp1(data_arr.dark_ind);
 
         %prepare NED_flag
-        NEL_flag=5;%This is the probenumber/product type flag
+        %NEL_flag=5;%This is the probenumber/product type flag
 
         qvalue=(data_arr.I);
 %        qvalue(:)=1;
@@ -802,18 +807,24 @@ switch mode
         qvalue(~satind)=max(1-exp(-(data_arr.I(~satind).'-P_interp2(~satind))./width),0);
 
         qvalue(data_arr.N_EL<0) =0;
-        qvalue(data_arr.dark_ind)=0.9;
+        %qvalue(data_arr.dark_ind)=0.9;
 
         data_arr.qv= qvalue.*interp_qv.';
         NELwID= fopen(NELfname,'w');
-
+        if data_arr.probe(1)==2
+            qvalue=qvalue*0.3;
+            qvalue(data_arr.dark_ind)=0.01;
+        end
+        
+            
+        
         for j =1:length(data_arr.I)
 
             if data_arr.printboolean(j)~=1 %check if measurement data exists on row
 
             else
 
-                row_byte= fprintf(NELwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc{j,1},data_arr.t_obt(j), data_arr.N_EL(j),qvalue(j),NEL_flag,data_arr.qf(j));
+                row_byte= fprintf(NELwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc{j,1},data_arr.t_obt(j), data_arr.N_EL(j),qvalue(j),NEL_flag(j),data_arr.qf(j));
                 %            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
                 N_rows = N_rows + 1;
             end%if

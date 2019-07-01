@@ -102,6 +102,7 @@ if(~isempty(ind_I1L))
 end
 
 if(~isempty(ind_I2L))
+    an_NEL(ind_I2L,tabindex,index)
     an_downsample(ind_I2L,32,tabindex,index)
 end
 
@@ -112,8 +113,6 @@ if(~isempty(ind_VL))
     ind_VL=sort(ind_VL,'ascend');
     an_downsample(ind_VL,32,tabindex,index)
     an_NEL(ind_VL,tabindex,index)
-
- %   an_NPL(ind_VL,tabindex,index);
 end
 
 
