@@ -146,42 +146,34 @@ try
 
             t_et= cspice_str2et(scantemp{1,1}(:)); %I'll use this  in the print function later
             %New method  12/2 2019 check for all values, not just the downsampled timestamps.
-            %[junk,SEA,SAA]=orbit('Rosetta',t_et,target,'ECLIPJ2000','preloaded');
-%             orbit_out=orbit_v2('Rosetta',t_et,target,'ECLIPJ2000');
+            [junk,SEA,SAA]=orbit('Rosetta',t_et,target,'ECLIPJ2000','preloaded');
+            %orbit_out=orbit_v2('Rosetta',t_et,target,'ECLIPJ2000','preloaded');
             %[junk,SEA,SAA]=orbit('Rosetta',tfoutarr{1,1},target,'ECLIPJ2000','preloaded');
             %SAA=orbit.SAA;
             
             % *Elias values* (from photoemission study):
             if probenr==1
-                
-                
-                 [junk,SEA,SAA]=orbit('Rosetta',t_et,target,'ECLIPJ2000','preloaded');
-
                 Phi11 = 131.2;
                 Phi12 = 179.2;
                 illuminati = ((SAA < Phi11) | (SAA > Phi12));
-                % foutarr{1,8}=foutarr{1,8}+100;
-                SEA_OK = abs(SEA)<1; %  0 ?1 degree  = nominal pointing
-                illuminati(~SEA_OK)=0.3;
+                %foutarr{1,8}=foutarr{1,8}+100;
+                %dark_ind=orbit_out.LAP1_ill<1;
                 
-                dark_ind=illuminati<1;                
             else
-                tic
-                orbit_out=orbit_v2('Rosetta',t_et,target,'ECLIPJ2000');
-                toc
-                dark_ind=orbit_out.LAP2_ill<1;
+                
+                %dark_ind=orbit_out.LAP2_ill<1;
                 
 %                 %foutarr{1,8}=foutarr{1,8}+200;
-%                 Phi21 = 18;
-%                 Phi22 = 82;
-%                 Phi23 = 107;
-                %illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
+                Phi21 = 18;
+                Phi22 = 82;
+                Phi23 = 107;
+                illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));
             end
  
-%             
-%             SEA_OK = abs(SEA)<1; %  0 ?1 degree  = nominal pointing
-%             illuminati(~SEA_OK)=0.3;
-            %dark_ind=illuminati<1;
+            
+            SEA_OK = abs(SEA)<1; %  0 ?1 degree  = nominal pointing
+            illuminati(~SEA_OK)=0.3;
+            dark_ind=illuminati<1;
 %
 %             lum_temp = accumarray(inter,illuminati,[],@mean,NaN);
 %             %SAA_temp = accumarray(inter,SAA,[],@mean,NaN);
@@ -822,6 +814,7 @@ switch mode
         if data_arr.probe(1)==2
             qvalue=qvalue*0.3;
             qvalue(data_arr.dark_ind)=0.01;
+            data_arr.printboolean(ata_arr.dark_ind)=0;
         end
         
             
