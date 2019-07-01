@@ -29,6 +29,10 @@ switch mode
         
     case 'vfloat'       
         
+        if all(~data_arr.printboolean(:))%if all 0
+            fprintf(1,'skipping because of bool %s, mode: %s\n',NEDshort, mode);
+            return;
+        end
         
         if ismember(NEDshort,{'RPCLAP_20160715_033202_417_NED.TAB','RPCLAP_20160715_020746_615_NED.TAB'})
             fprintf(1,'skipping %s, mode: %s\n',NEDfname, mode);
@@ -122,7 +126,11 @@ switch mode
 
     
     case 'vz'
-       
+        
+        if all(data_arr.lum(:) < 0.9)
+            fprintf(1,'skipping because of bool %s, mode: %s\n',NEDshort, mode);
+            return;
+        end
     
     %BASIC SOLUTION ONLY LOOKS FOR CLOSEST POINT
     [junk,ind]= min(abs(NED_FIT.t_et-data_arr.t0(1)));

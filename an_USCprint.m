@@ -23,7 +23,12 @@ row_byte=0;
 switch mode
         
         
-    case 'vfloat'  
+    case 'vfloat' 
+        
+        if all(~data_arr.printboolean(:))%if all 0
+            fprintf(1,'skipping because of bool %s, mode: %s\n',USCshort, mode);
+            return;
+        end
         
         if ismember(USCshort,{'RPCLAP_20160715_033202_417_USC.TAB','RPCLAP_20160715_020746_615_USC.TAB'})
             fprintf(1,'skipping %s, mode: %s\n',USCfname, mode);
@@ -70,6 +75,10 @@ switch mode
     
     case 'vz'
         
+        if all(data_arr.lum(:) < 0.9)
+            fprintf(1,'skipping because of bool %s, mode: %s\n',USCshort, mode);
+            return;
+        end
         
         factor=-1; %Vz data is being outputted by bias potential it is identified on,
         %so opposite sign applies. However, if we want to change this from 

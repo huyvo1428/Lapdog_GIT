@@ -535,6 +535,11 @@ fprintf(1,'printing %s, mode: %s\n',NELfname, mode);
 %'hello'
 %fprintf(1,'%s',time_arr{1,1}(1,:));
 
+load('MIPXCALintervals.mat', 'MIPXCALINT');
+
+
+
+
 
 %fprintf(1,'printing: %s \r\n',NEDfname)
 N_rows = 0;
@@ -544,8 +549,12 @@ switch mode
 
 
     case 'vfloat'
+        
+        MXI_bool=ismemberf(t_et,MIPXCALINT.t_et_mid,'tol',0.5*(MIPXCALINT.tdur));%
+        %these intervals have all been processed by MIP, ignore these
+        data_arr.printboolean(MXI_bool)=0;
 
-        if all(~data_arr.printboolean(:))
+        if all(~data_arr.printboolean(:))%if all 0
             fprintf(1,'skipping because of bool %s, mode: %s\n',NELshort, mode);
             return;
         end
@@ -639,6 +648,10 @@ switch mode
 
     case 'vz' %will we ever create this NEL file?
 
+        
+        MXI_bool=ismemberf(t_et,MIPXCALINT.t_et_mid,'tol',0.5*(MIPXCALINT.tdur));%
+        %these intervals have all been processed by MIP, ignore these
+        data_arr.lum(MXI_bool)=0; %this is a way to ignore printing these
 
         %load('NED_FIT.mat', 'NED_FIT');        
         load('NEL_V_FIT.mat', 'NEL_V_FIT');
@@ -742,7 +755,13 @@ switch mode
     case 'Ion'
 
 
-
+        MXI_bool=ismemberf(t_et,MIPXCALINT.t_et_mid,'tol',0.5*(MIPXCALINT.tdur));%
+        %these intervals have all been processed by MIP, ignore these
+        data_arr.printboolean(MXI_bool)=0;
+        if all(~data_arr.printboolean(:))%if all 0
+            fprintf(1,'skipping because of bool %s, mode: %s\n',NELshort, mode);
+            return;
+        end
         load('NED_I_FIT.mat', 'NED_I_FIT');
         NED_FIT=NED_I_FIT;
         [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
