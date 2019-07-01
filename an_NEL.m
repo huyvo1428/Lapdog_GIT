@@ -539,8 +539,6 @@ load('MIPXCALintervals.mat', 'MIPXCALINT');
 
 
 
-
-
 %fprintf(1,'printing: %s \r\n',NEDfname)
 N_rows = 0;
 row_byte=0;
