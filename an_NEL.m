@@ -760,8 +760,8 @@ switch mode
             fprintf(1,'skipping because of bool %s, mode: %s\n',NELshort, mode);
             return;
         end
-        load('NED_I_FIT.mat', 'NED_I_FIT');
-        NED_FIT=NED_I_FIT;
+        load('NEL_I_FIT.mat', 'NED_I_FIT');        
+        NED_FIT=NEL_I_FIT;
         [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
         [t_et_min,NED_FIT_start]=min(NED_FIT.t_et);
 
