@@ -25,7 +25,7 @@ switch mode
         
     case 'vfloat' 
         
-        if all(~data_arr.printboolean(:))%if all 0
+        if all(~data_arr{1,7})%if all 0
             fprintf(1,'skipping because of bool %s, mode: %s\n',USCshort, mode);
             return;
         end

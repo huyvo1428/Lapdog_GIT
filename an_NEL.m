@@ -537,7 +537,8 @@ fprintf(1,'printing %s, mode: %s\n',NELfname, mode);
 
 load('MIPXCALintervals.mat', 'MIPXCALINT');
 
-
+data_arr.N_EL=nan(length(t_et),1);
+%prep output incase we end this early
 
 %fprintf(1,'printing: %s \r\n',NEDfname)
 N_rows = 0;
