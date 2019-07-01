@@ -12,7 +12,7 @@ global target
 %antemp ='';
 
 %foutarr=cell(1,7);
-print32S =1; %enable this for 32S downsampled ion NEL files (32S_NEL.TAB)
+print32S =0; %enable this for 32S downsampled ion NEL files (32S_NEL.TAB)
 
 dynampath = strrep(mfilename('fullpath'),'/an_NEL','');
 
