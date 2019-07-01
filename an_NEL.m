@@ -537,9 +537,8 @@ fprintf(1,'printing %s, mode: %s\n',NELfname, mode);
 
 load('MIPXCALintervals.mat', 'MIPXCALINT');
 
-
-
-
+data_arr.N_EL=nan(length(t_et),1);
+%prep output incase we end this early
 
 %fprintf(1,'printing: %s \r\n',NEDfname)
 N_rows = 0;
@@ -762,8 +761,8 @@ switch mode
             fprintf(1,'skipping because of bool %s, mode: %s\n',NELshort, mode);
             return;
         end
-        load('NED_I_FIT.mat', 'NED_I_FIT');
-        NED_FIT=NED_I_FIT;
+        load('NEL_I_FIT.mat', 'NED_I_FIT');        
+        NED_FIT=NEL_I_FIT;
         [t_et_end,NED_FIT_end]=max(NED_FIT.t_et);
         [t_et_min,NED_FIT_start]=min(NED_FIT.t_et);
 
