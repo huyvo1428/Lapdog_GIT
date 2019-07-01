@@ -105,8 +105,6 @@ classdef definitions < handle
         % Constructor
         function obj = definitions(generatingDeriv1, MISSING_CONSTANT, nFinalPresweepSamples, indentationLength, HeaderAllKvpl)
             
-            warning('NEL: Missing/uncertain N_EL column DESCRIPTION; No top-level description')
-            
             % ASSERTIONS
             assert(isscalar(nFinalPresweepSamples) && isnumeric(nFinalPresweepSamples))
             assert(isscalar(MISSING_CONSTANT)      && isnumeric(MISSING_CONSTANT))
@@ -848,6 +846,7 @@ classdef definitions < handle
 
         % 2019-03-15, FJ: Might add more DATA_SOURCE values later and hence columns.
         function LblData = get_NED_data(obj, LhtKvpl, firstPlksFile)
+            % 2019-07-01: FJ has checked DESCRIPTIONS.
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
@@ -880,7 +879,7 @@ classdef definitions < handle
             ocl{end+1} = struct('NAME', 'TIME_UTC',       'DATA_TYPE', 'TIME',          'BYTES', 23, 'UNIT', 'SECOND',         'DESCRIPTION', 'UTC time YYYY-MM-DD HH:MM:SS.sss.');
             ocl{end+1} = struct('NAME', 'TIME_OBT',       'DATA_TYPE', 'ASCII_REAL',    'BYTES', 16, 'UNIT', 'SECOND',         'DESCRIPTION', 'Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl{end+1} = struct('NAME', 'N_ED',           'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'CENTIMETER**-3', 'DESCRIPTION', ...
-                ['Plasma density derived from individual spacecraft potential LF measurements on one illuminated probe.', ...
+                ['Plasma density derived from individual spacecraft potential measurements on one illuminated probe.', ...
                 ' The derivation additionally uses low time resolution estimates of the plasma density from either RPCLAP or RPCMIP (changes over time).', ...
                 ' If no probe is illuminated, then the corresponding row is removed.', ...
                 sprintf(' A value of %g means that the corresponding sample in the source data was saturated.', obj.MISSING_CONSTANT)], ...
@@ -898,10 +897,7 @@ classdef definitions < handle
 
         
         function LblData = get_NEL_data(obj, LhtKvpl, firstPlksFile)
-            %====================================
-            % ~BUG: Uncertain top-level DESCRIPTIONs
-            % ~BUG: Uncertain column DESCRIPTION
-            %====================================
+            % 2019-07-01: FJ has checked DESCRIPTIONS.
             
             [HeaderKvpl, junk] = obj.build_header_KVPL_from_single_PLKS(LhtKvpl, firstPlksFile);
             HeaderKvpl = EJ_library.PDS_utils.set_LABEL_REVISION_NOTE(HeaderKvpl, obj.indentationLength, {...
@@ -932,17 +928,18 @@ classdef definitions < handle
                 sprintf(' A value of %g means that the corresponding sample in the source data was saturated.', obj.MISSING_CONSTANT)], ...
                 'MISSING_CONSTANT', obj.MISSING_CONSTANT);
             ocl{end+1} = struct('NAME', 'QUALITY_VALUE',  'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QVALUE_DESCRIPTION);
+            % FJ 2019-07-01: DATA_SOURCE=3 or 4 will not be used in practice.
             ocl{end+1} = struct('NAME', 'DATA_SOURCE',    'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', ...
                 ['Underlying source of data which the plasma density value is based upon.', ...
                 ' 1 or 2=Downsampled E field mode floating potential measurement on an illuminated probe 1 or 2 respectively.', ...
                 ' 3=The negated bias voltage in a sweep on an illuminated probe 1 for which current is zero.', ...
                 ' 4=The negated bias voltage in a sweep on an illuminated probe 1 for which the extrapolated current is zero.', ...
-                ' 5=Current from probe 1 with a bias voltage below -17 V.', ...
-                ' 6=Current from probe 2 with a bias voltage below -17 V.']);
+                ' 5=Current from probe 1 with a bias voltage below -15 V.', ...
+                ' 6=Current from probe 2 with a bias voltage below -15 V.']);
             ocl{end+1} = struct('NAME', 'QUALITY_FLAG',   'DATA_TYPE', 'ASCII_INTEGER', 'BYTES',  3, 'UNIT', obj.NO_ODL_UNIT, 'DESCRIPTION', obj.QFLAG1_DESCRIPTION);
             LblData.OBJTABLE.OBJCOL_list = ocl;
         end
-        
+
         
 
         function LblData = get_AxS_data(obj, LhtKvpl, firstPlksFile, ixsFilename)
