@@ -542,7 +542,7 @@ if (~in_data)
             r_min_eq = NaN(3, size(Q, 3));
             fmin_eq = NaN(size(Q, 3), 1);
             eflag_eq = NaN(size(Q, 3), 1);
-            twID= fopen('/Users/frejon/Documents/MATLAB/orbit_out.txt','w')
+           % twID= fopen('/Users/frejon/Documents/MATLAB/orbit_out.txt','w')
             hga_indz= find(lap2_HGA_range);
 
             for i = 1:100:size(Q, 3)
@@ -566,21 +566,21 @@ if (~in_data)
                 [r_min_eq(:,i), fmin_eq(i), eflag_eq(i)] = fmincon(fun,x0,...
                     [],[],Aeq(:,:,i),beq(:,:,i),[],[],nonlconstr_eq,options_eq);
                 
-                fprintf(twID,'%f,%f,%f,%f,%f,%f\n',fmin,r_HGA_center(:,1,i),Phi(hga_indz(i)),Xi(hga_indz(i)));
+                %fprintf(twID,'%f,%f,%f,%f,%f,%f\n',fmin,r_HGA_center(:,1,i),Phi(hga_indz(i)),Xi(hga_indz(i)));
                 
                 
             end
-            fclose(twID);
+            %fclose(twID);
 %             r_min_proj = squeeze(reshape(r_min,3,1,size(n,3)) - dot(reshape(r_min,3,1,size(n,3))-r_LAP2, n).*n);
 %             r_min_proj_eq = squeeze(reshape(r_min_eq,3,1,size(n,3)) - dot(reshape(r_min_eq,3,1,size(n,3))-r_LAP2, n).*n);
 
             LAP2_HGA_ill = sqrt(fmin) > R_LAP;
             LAP2_HGA_full_shade = ~LAP2_HGA_ill & sqrt(fmin_eq) > R_LAP;
-            LAP2_HGA_partial_shade = ~LAP2_HGA_ill & ~LAP2_HGA_full_shade;
+           % LAP2_HGA_partial_shade = ~LAP2_HGA_ill & ~LAP2_HGA_full_shade;
             
             LAP2_HGA_ill(isnan(fmin)) = 0.4*ones(numel(find(isnan(fmin))), 1);
             LAP2_HGA_full_shade(isnan(fmin)) = 0.4*ones(numel(find(isnan(fmin))), 1);
-            LAP2_HGA_partial_shade(isnan(fmin)) = 0.4*ones(numel(find(isnan(fmin))), 1);
+           % LAP2_HGA_partial_shade(isnan(fmin)) = 0.4*ones(numel(find(isnan(fmin))), 1);
             
             lap2_ill_full(lap2_HGA_range) = LAP2_HGA_ill;
             lap2_shade_full(lap2_HGA_range) = LAP2_HGA_full_shade;
@@ -604,51 +604,51 @@ if (~in_data)
     % Several output formats are possible depending on the number of output
     % arguments given.
     out_struct = struct;
-    out_struct.('UTC') = cellstr(cspice_et2utc(et, 'ISOC', 3));
-    out_struct.('epoch') = et';
-    out_struct.('position') = state(1:3,:)';
-    out_struct.('radial_distance') = radial_distance';
-    out_struct.('latitude') = latitude';
-    out_struct.('longitude') = longitude';
-    out_struct.fmin = fmin;
-    out_struct.HGA_basis=HGA_basis;
-    if (exist('subpoint_latitude', 'var'))
-        out_struct.('subpoint_latitude') = subpoint_latitude;
-    end
-    if (exist('subpoint_longitude', 'var'))
-        out_struct.('subpoint_longitude') = subpoint_longitude;
-    end
-    [out_struct.('x_sc'), out_struct.('y_sc'), out_struct.('z_sc')] = ...
-        deal(squeeze(basis_n(:,1,:))', squeeze(basis_n(:,2,:))', squeeze(basis_n(:,3,:))');
+    %out_struct.('UTC') = cellstr(cspice_et2utc(et, 'ISOC', 3));
+    %out_struct.('epoch') = et';
+    %out_struct.('position') = state(1:3,:)';
+%     out_struct.('radial_distance') = radial_distance';
+%     out_struct.('latitude') = latitude';
+%     out_struct.('longitude') = longitude';
+%     out_struct.fmin = fmin;
+%     out_struct.HGA_basis=HGA_basis;
+%     if (exist('subpoint_latitude', 'var'))
+%         out_struct.('subpoint_latitude') = subpoint_latitude;
+%     end
+%     if (exist('subpoint_longitude', 'var'))
+%         out_struct.('subpoint_longitude') = subpoint_longitude;
+%     end
+ %   [out_struct.('x_sc'), out_struct.('y_sc'), out_struct.('z_sc')] = ...
+ %       deal(squeeze(basis_n(:,1,:))', squeeze(basis_n(:,2,:))', squeeze(basis_n(:,3,:))');
     out_struct.('SAA') = Phi';
     out_struct.('SEA') = Xi';
-    if (id_origin == cspice_bodn2c('CHURYUMOV-GERASIMENKO'))
-        out_struct.('CAA') = Psi';
-        out_struct.('CEA') = Chi';
-    end
-    if (id_origin == cspice_bodn2c('Earth'))
-        out_struct.('EAA') = Psi';
-        out_struct.('EEA') = Chi';
-    end
-    if (id_origin == cspice_bodn2c('Mars'))
-        out_struct.('MAA') = Psi';
-        out_struct.('MEA') = Chi';
-    end
-    if (id_origin == cspice_bodn2c('LUTETIA') || id_origin == cspice_bodn2c('STEINS'))
-        out_struct.('AAA') = Psi';
-        out_struct.('AEA') = Chi';
-    end
-    out_struct.('sun_position') = sun';
-    out_struct.('sun_latitude') = sun_lat';
-    out_struct.('sun_longitude') = sun_lon';
-    out_struct.('heliocentric_distance') = cspice_convrt(sun_distance, 'km', 'au')';
-    out_struct.('SZA') = sza;
-    out_struct.('LAP1_ill_lims') = [Phi11 Phi12];
-    out_struct.('LAP2_ill_lims') = [Phi21 Phi22 Phi23];
-    out_struct.('lap1_ill_full') = lap1_ill_full;
-    out_struct.('lap1_shade_full') = lap1_shade_full;
-    out_struct.('lap2_ill_full') = lap2_ill_full;
-    out_struct.('lap2_shade_full') = lap2_shade_full;
+%     if (id_origin == cspice_bodn2c('CHURYUMOV-GERASIMENKO'))
+%         out_struct.('CAA') = Psi';
+%         out_struct.('CEA') = Chi';
+%     end
+%     if (id_origin == cspice_bodn2c('Earth'))
+%         out_struct.('EAA') = Psi';
+%         out_struct.('EEA') = Chi';
+%     end
+%     if (id_origin == cspice_bodn2c('Mars'))
+%         out_struct.('MAA') = Psi';
+%         out_struct.('MEA') = Chi';
+%     end
+%     if (id_origin == cspice_bodn2c('LUTETIA') || id_origin == cspice_bodn2c('STEINS'))
+%         out_struct.('AAA') = Psi';
+%         out_struct.('AEA') = Chi';
+%     end
+%     out_struct.('sun_position') = sun';
+%     out_struct.('sun_latitude') = sun_lat';
+%     out_struct.('sun_longitude') = sun_lon';
+%     out_struct.('heliocentric_distance') = cspice_convrt(sun_distance, 'km', 'au')';
+%     out_struct.('SZA') = sza;
+%     out_struct.('LAP1_ill_lims') = [Phi11 Phi12];
+%     out_struct.('LAP2_ill_lims') = [Phi21 Phi22 Phi23];
+%     out_struct.('lap1_ill_full') = lap1_ill_full;
+%     out_struct.('lap1_shade_full') = lap1_shade_full;
+%     out_struct.('lap2_ill_full') = lap2_ill_full;
+    %out_struct.('lap2_shade_full') = lap2_shade_full;
     out_struct.('LAP1_ill') = (lap1_ill_full + 0.2*(~lap1_ill_full & ...
         ~lap1_shade_full)).*(out_struct.SEA < 1) + 0.3*(~(out_struct.SEA < 1));
     out_struct.('LAP2_ill') = (lap2_ill_full + 0.2*(~lap2_ill_full & ...
@@ -1259,36 +1259,36 @@ if (nargout == 0 || input_axes)
 
         %%%
         % Print start and stop times of illumination blocks:
-        fid = fopen(file_name, 'wt');
-        for i = 1:size(ill_blocks, 1)
-            switch ill_blocks(i,2)
-                case 1
-                    if (ill_blocks(i,4))
-                        p1_ill = 'illuminated';
-                    else
-                        p1_ill = '  shaded   ';
-                    end
-                    fprintf(fid, '%s', [cspice_et2utc(ill_blocks(i,1), 'ISOC', 0) ...
-                        ' to ' cspice_et2utc(ill_blocks(i,3), 'ISOC', 0) ' LAP 1 ' p1_ill]);
-                case 2
-                    if (ill_blocks(i,4) == 1)
-                        p2_ill = 'illuminated';
-                    elseif (ill_blocks(i,4) == 0.4)
-                        p2_ill = 'behind HGA ';
-                    else
-                        p2_ill = 'behind S/C ';
-                    end
-                    fprintf(fid, '%s', [cspice_et2utc(ill_blocks(i,1), 'ISOC', 0) ...
-                        ' to ' cspice_et2utc(ill_blocks(i,3), 'ISOC', 0) ' LAP 2 ' p2_ill]);
-            end
-            %%%
-            % Flag if both probes in sunlight:
-            if (ill_blocks(i,5))
-                fprintf(fid, '%s', [sprintf('\t') 'Both probes illuminated*' sprintf('\n')]);
-            else
-                fprintf(fid, '%s', sprintf('\n'));
-            end
-        end
+%         fid = fopen(file_name, 'wt');
+%         for i = 1:size(ill_blocks, 1)
+%             switch ill_blocks(i,2)
+%                 case 1
+%                     if (ill_blocks(i,4))
+%                         p1_ill = 'illuminated';
+%                     else
+%                         p1_ill = '  shaded   ';
+%                     end
+%                     fprintf(fid, '%s', [cspice_et2utc(ill_blocks(i,1), 'ISOC', 0) ...
+%                         ' to ' cspice_et2utc(ill_blocks(i,3), 'ISOC', 0) ' LAP 1 ' p1_ill]);
+%                 case 2
+%                     if (ill_blocks(i,4) == 1)
+%                         p2_ill = 'illuminated';
+%                     elseif (ill_blocks(i,4) == 0.4)
+%                         p2_ill = 'behind HGA ';
+%                     else
+%                         p2_ill = 'behind S/C ';
+%                     end
+%                     fprintf(fid, '%s', [cspice_et2utc(ill_blocks(i,1), 'ISOC', 0) ...
+%                         ' to ' cspice_et2utc(ill_blocks(i,3), 'ISOC', 0) ' LAP 2 ' p2_ill]);
+%             end
+%             %%%
+%             % Flag if both probes in sunlight:
+%             if (ill_blocks(i,5))
+%                 fprintf(fid, '%s', [sprintf('\t') 'Both probes illuminated*' sprintf('\n')]);
+%             else
+%                 fprintf(fid, '%s', sprintf('\n'));
+%             end
+%         end
 
 
         %%%
