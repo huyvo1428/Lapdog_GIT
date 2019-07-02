@@ -816,7 +816,7 @@ switch mode
         if data_arr.probe(1)==2
             qvalue=qvalue*0.3;
             qvalue(data_arr.dark_ind)=0.01;
-            data_arr.printboolean(ata_arr.dark_ind)=0;
+            data_arr.printboolean(data_arr.dark_ind)=0;
         end
         
             
