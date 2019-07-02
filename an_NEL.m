@@ -9,6 +9,8 @@ function []= an_NEL(an_ind,tabindex,index)
 %global an_tabindex;
 global target
 
+LAP2Ionmacros{1} = hex2dec({'515','516','525','610','624','900','904','905','926'});    % NOTE: Must use cell array with strings for hex2dec ({} not []).
+
 %antemp ='';
 
 %foutarr=cell(1,7);
@@ -21,7 +23,7 @@ hold_flag=0;
 i=1; %
 j=0;
 
-global MISSING_CONSTANT VFLOATMACROS LAP2Ionmacros
+global MISSING_CONSTANT VFLOATMACROS
 
 
 try

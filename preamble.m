@@ -48,10 +48,10 @@ VFLOATMACROS{1} = hex2dec({'410','411','412','413','416','616','710','715','716'
 %VFLOATMACROS(:,2) = hex2dec({'410','415','417','615','617','710','801','802','910'});
 VFLOATMACROS{2} = hex2dec({'415','417','615','617','710','801','802','910'});
 
-global LAP2Ionmacros;
+%global LAP2Ionmacros;
 
 %LAP2Ionmacros{1} = hex2dec({'410','411','412','413','416','515','516','525','610','624','900','904','905','926'});    % NOTE: Must use cell array with strings for hex2dec ({} not []).
-LAP2Ionmacros{1} = hex2dec({'515','516','525','610','624','900','904','905','926'});    % NOTE: Must use cell array with strings for hex2dec ({} not []).
+%LAP2Ionmacros{1} = hex2dec({'515','516','525','610','624','900','904','905','926'});    % NOTE: Must use cell array with strings for hex2dec ({} not []).
 
 
 global usc_tabindex
