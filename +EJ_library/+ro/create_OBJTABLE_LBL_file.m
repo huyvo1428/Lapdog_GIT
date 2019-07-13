@@ -161,7 +161,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     DEFAULT_SETTINGS.nBytesBetweenColumns      = length(', ');    % ASSUMES absence of quotes in string columns. Lapdog convention.
     DEFAULT_SETTINGS.spacecraftNaifSpiceId     = -226;            % Rosetta.
     DEFAULT_SETTINGS.indentationLength         = 4;
-    DEFAULT_SETTINGS.tablePointerPdsKey        = '^TABLE';        % ABLE for regular data products, but ^INDEX_TABLE for PDS indexes.
+    DEFAULT_SETTINGS.tablePointerPdsKey        = '^TABLE';        % TABLE for regular data products, but ^INDEX_TABLE for PDS indexes.
     Settings = EJ_library.utils.interpret_settings_args(DEFAULT_SETTINGS, varargin);
     EJ_library.utils.assert.struct(Settings, union(fieldnames(DEFAULT_SETTINGS), ...
         {'headerKeysOrderList', 'headerKeysForceQuotesList', 'headerKeysForbiddenList'}))
@@ -244,8 +244,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
         % Continue extracting data from TAB file data
         %=============================================
         if readingTabSuccessful
-            % IMPLEMENTATION NOTE: Does not put the following code (in the "if" statement) inside the same try statement
-            % that sets readingTabSuccessful since we want errors here to NOT be caught.
+            % IMPLEMENTATION NOTE: Does not put the following code (in the "if" statement) inside the same try-catch
+            % statement that sets readingTabSuccessful since we want errors here to NOT be caught.
             
             % ASSERTION: Number of bytes per TAB row.
             if nBytesPerTabRow ~= LblData.OBJTABLE.ROW_BYTES
@@ -257,6 +257,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
             end
             
             % Set FORMAT.
+            % NOTE: Implicit assertions on TAB first & last row.
+            % IMPLEMENTATION NOTE: Better/clearer to have this AFTER the previous assertion on bytes per TAB row.
             for iOBJCOL = 1:numel(LblData.OBJTABLE.OBJCOL_list)
                 LblData.OBJTABLE.OBJCOL_list{iOBJCOL}.FORMAT = derive_FORMAT(...
                     LblData.OBJTABLE.OBJCOL_list{iOBJCOL}, firstTabRow, lastTabRow, Settings.tabLblInconsistencyPolicy);

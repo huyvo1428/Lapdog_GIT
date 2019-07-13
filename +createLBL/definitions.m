@@ -304,7 +304,7 @@ classdef definitions < handle
                 sprintf(...
                     'Time series of %s data in %s for %s. %s.', ...
                     HF_LF_str, modeStr, probeStr, FirstPlksSs.DESCRIPTION));
-            
+
             LblData.HeaderKvpl           = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = [...
                 sprintf(...
@@ -895,7 +895,7 @@ classdef definitions < handle
         end
 
 
-        
+
         function LblData = get_NEL_data(obj, LhtKvpl, firstPlksFile)
             % 2019-07-01: FJ has checked DESCRIPTIONS.
             
@@ -975,7 +975,7 @@ classdef definitions < handle
             ocl1{end+1} = struct('NAME', 'STOP_TIME_OBT',   'UNIT', 'SECOND',        'BYTES', 16, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION',  'Stop time of sweep. Spacecraft onboard time SSSSSSSSS.ssssss (true decimal point).');
             ocl1{end+1} = struct('NAME', 'Qualityfactor',   'UNIT', obj.NO_ODL_UNIT, 'BYTES',  3, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Quality factor from 0-100.');   % TODO: Correct?
             ocl1{end+1} = struct('NAME', 'SAA',             'UNIT', 'DEGREE',        'BYTES',  7, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Solar aspect angle in spacecraft XZ plane, measured from Z+ axis.');
-            ocl1{end+1} = struct('NAME', 'Illumination',    'UNIT', obj.NO_ODL_UNIT, 'BYTES',  4, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
+            ocl1{end+1} = struct('NAME', 'Illumination',    'UNIT', obj.NO_ODL_UNIT, 'BYTES',  4, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sunlit probe indicator. 1 for illuminated, 0 for shadow, partial shadow otherwise.');
             ocl1{end+1} = struct('NAME', 'direction',       'UNIT', obj.NO_ODL_UNIT, 'BYTES',  1, 'DATA_TYPE', 'ASCII_REAL', 'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
             % ----- (NOTE: Switching from ocl1 to ocl2.) -----
             ocl2 = {};
@@ -1145,7 +1145,7 @@ classdef definitions < handle
 %             ocl{end+1} = struct('NAME', 'Vsc',                'DATA_TYPE', 'ASCII_REAL',    'BYTES', 14, 'UNIT', 'VOLT',           'MISSING_CONSTANT', obj.MISSING_CONSTANT, 'DESCRIPTION', 'Best estimate of spacecraft potential.');
 %             ocl{end+1} = struct('NAME', 'Probe_number',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Probe number. 1 or 2.');
 %             ocl{end+1} = struct('NAME', 'Direction',          'DATA_TYPE', 'ASCII_REAL',    'BYTES',  1, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Sweep bias step direction. 1 for positive bias step, 0 for negative bias step.');
-%             ocl{end+1} = struct('NAME', 'Illumination',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Sunlit probe indicator. 1 for sunlit, 0 for shadow, partial shadow otherwise.');
+%             ocl{end+1} = struct('NAME', 'Illumination',       'DATA_TYPE', 'ASCII_REAL',    'BYTES',  4, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', 'Sunlit probe indicator. 1 for illuminated, 0 for shadow, partial shadow otherwise.');
 %             ocl{end+1} = struct('NAME', 'Sweep_group_number', 'DATA_TYPE', 'ASCII_REAL',    'BYTES',  5, 'UNIT', obj.NO_ODL_UNIT,  'DESCRIPTION', ...
 %                 ['Number signifying which group of sweeps the data comes from. ', ...
 %                 'Groups of sweeps are formed for the purpose of deriving/selecting values to be used in best estimates. ', ...
