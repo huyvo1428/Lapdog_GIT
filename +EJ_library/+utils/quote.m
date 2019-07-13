@@ -7,7 +7,8 @@
 % ARGUMENTS AND RETURN VALUE
 % ==========================
 % s                 : String
-% initiallyUnquoted
+% policy            : 
+% initiallyUnquoted : 
 % 
 %
 % Initially created 2017-09-27, Erik P G Johansson.

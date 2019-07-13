@@ -66,8 +66,8 @@
 %
 %
 %
-% SHARED VARIABLE NAMES (VARIABLE NAMING CONVENTION)
-% ==================================================
+% VARIABLE NAMING CONVENTION
+% ==========================
 % rootDirPath    : Path to "root path/directory", i.e. the root of the subtree to be recursed over.
 % relativePath   : Path to a file/directory relative to "rootDirPath".
 %                  NOTE: Code uses an empty string instead of "." (or "./") to represent the root path.
@@ -167,7 +167,7 @@ function result = recurse_directory_tree(rootDirPath, FileFunc, DirFunc, ShouldR
 %       CON: Very common that call wants to do something with the full path, not just the relative path.
 % PROPOSAL: Argument för maximalt rekursionsdjup.
 %   CON: Behövs inte. ShouldRecurseFunc kan lätt implementera det om det behövs.
-% PROPOSAL: Tillåt kombination  settings.useRelativeDirectorySlash && ~settings.useRootRelativePathPeriod.
+% PROPOSAL: Tillåt kombination  Settings.useRelativeDirectorySlash && ~Settings.useRootRelativePathPeriod.
 %           Lägg då INTE till snedstreck för rootkatalogen.
 % PROPOSAL: Avskaffa useRelativeDirectorySlash. Aldrig sluta med slash.
 % Se MATLAB-anteckningsfil.
@@ -178,44 +178,23 @@ function result = recurse_directory_tree(rootDirPath, FileFunc, DirFunc, ShouldR
         error('Can not find directory "%s".', rootDirPath)
     end
 
-    
-%     % Set default settings.
-%     settings.useRelativeDirectorySlash = false;
-%     settings.useRootRelativePathPeriod = false;
-%     
-%     % Interpret varargin settings.
-%     while length(varargin) >= 2
-%         switch(varargin{1})            
-%             case 'useRelativeDirectorySlash'
-%                 settings.useRelativeDirectorySlash = varargin{2};
-%             case 'useRootRelativePathPeriod'
-%                 settings.useRootRelativePathPeriod = varargin{2};            
-%             otherwise
-%                 error('Illegal option')
-%         end
-%         varargin = varargin(3:end);
-%     end
-%     
-%     % ASSERTION
-%     if ~isempty(varargin)
-%         error('Not an even number of option arguments.')
-%     end
 
+    
     % Set default settings.
-    defaultSettings.useRelativeDirectorySlash = false;
-    defaultSettings.useRootRelativePathPeriod = false;
-    settings = EJ_library.utils.interpret_settings_args(defaultSettings, varargin);
+    DEFAULT_SETTINGS.useRelativeDirectorySlash = false;
+    DEFAULT_SETTINGS.useRootRelativePathPeriod = false;
+    Settings = EJ_library.utils.interpret_settings_args(DEFAULT_SETTINGS, varargin);
 
     % ASSERTION
-    if settings.useRelativeDirectorySlash && ~settings.useRootRelativePathPeriod
+    if Settings.useRelativeDirectorySlash && ~Settings.useRootRelativePathPeriod
         error('Illegal combination of settings.')
     end
     
     % Convert settings into values to actually use (set once here for speed; to avoid repetition).
-    if settings.useRelativeDirectorySlash ; relativeDirectoryPathSuffix = '/';
+    if Settings.useRelativeDirectorySlash ; relativeDirectoryPathSuffix = '/';
     else                                    relativeDirectoryPathSuffix = '';
     end
-    if settings.useRootRelativePathPeriod ; relativePathRoot = '.';    % Should NOT include trailing slash. Is added automatically if needed.
+    if Settings.useRootRelativePathPeriod ; relativePathRoot = '.';    % Should NOT include trailing slash. Is added automatically if needed.
     else                                    relativePathRoot = '';     % Should NOT include trailing slash. Is added automatically if needed.
     end
 

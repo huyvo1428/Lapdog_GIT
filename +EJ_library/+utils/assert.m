@@ -83,6 +83,16 @@ classdef assert
         
         
         
+        % Assert that entire string matches a regexp or any in a cell array of regular expressions.
+        % NOTE: If regex is an empty cell array, then assertion fails.
+        function castring_regexp(s, regexp)
+            if ~any(EJ_library.utils.regexpf(s, regexp))
+                error('String "%s" (in its entirety) does not match any of the specified regular expressions.', s)
+            end
+        end
+        
+        
+        
         % Cell matrix of UNIQUE strings.
         function castring_set(s)
             % NOTE: Misleading name, since does not check for strings.

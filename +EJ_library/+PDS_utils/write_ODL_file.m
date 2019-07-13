@@ -10,9 +10,9 @@
 %
 % ARGUMENTS
 % =========
-% Ssl                 : SSL data struct. See EJ_library.PDS_utils.read_ODL_file.
+% Ssl                 : SSL data struct. See EJ_library.PDS_utils.convert_ODL_to_structs.
 % endRowsList         : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
-% contentRowMaxLength : Max row length, not counting line break.
+% contentRowMaxLength : Max row length, excluding line break.
 %                       NOTE: This is not a rigorous line breaking for everything; only some things. In particular does
 %                       not even try to line break contents of endRowsList.
 %

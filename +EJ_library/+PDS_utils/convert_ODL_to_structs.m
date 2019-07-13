@@ -87,7 +87,6 @@
 % IMPLEMENTATION NOTE: This functionality is implemented separately (instead of mixed with file-reading code) to make
 % the code more easily testable.
 %
-%
 function [Ssl, Ss, endRowsList] = convert_ODL_to_structs(rowStrList)
     % PROPOSAL: Change name to "interpret_*".
     %   PRO: More consistent with other code.

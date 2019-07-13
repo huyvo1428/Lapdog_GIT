@@ -29,9 +29,7 @@ function fileStr = convert_struct_to_ODL(Ssl, endRowsList, indentationLength, co
     C.contentRowMaxLength = contentRowMaxLength;
     C.lineBreak           = lineBreak;
     
-    % ASSERTION
-    %if Ssl.keys
-    
+   
     fileStr = write_key_values(Ssl, C, 0);
     
     fileStr = [fileStr, 'END', C.lineBreak];
@@ -82,6 +80,15 @@ function fileStr = write_key_values(Ssl, C, indentationLevel)
             % CASE: non-OBJECT key
             %======================
             
+            % ASSERTION: Legal PDS key values.
+            % NOTE: Likely too constrained assertion. Adds characters as they are needed.
+            % NOTE: Only permitted linebreak is CR+LF (as a combination).
+            % IMPLEMENTATION NOTE: Not always clear what certain characters are needed for.
+            % Unquoted: +-  Floating-point numbers.
+            %           a-z create_OBJTABLE_LBL_file sets ROWS=FILE_RECORDS=NaN when it can
+            %               not set number of rows). AxS COLUMN NAME uses lower case.
+            EJ_library.utils.assert.castring_regexp(value, {'[A-Za-z0-9:._+-]*', '"([A-Za-z0-9#&:;.,''?\\/()\[\]<>_ =*+-]|(\r\n))*"'});
+            
             % How many characters shorter the current key is, compared to the longest non-OBJECT key is.
             postKeyPaddingLength = maxNonObjectKeyLength - length(key);
 
@@ -93,7 +100,8 @@ function fileStr = write_key_values(Ssl, C, indentationLevel)
         elseif strcmp(key, 'OBJECT') && ~isempty(value) && ~isempty(object) && isstruct(object)
             %==================
             % CASE: OBJECT key
-            %==================
+            %==================            
+            EJ_library.utils.assert.castring_regexp(value, '[A-Z_]*');   % NOTE: Likely too constrained assertion. Adds characters as they are needed.
             
             if ~prevRowEmpty
                 fileStr = [fileStr, C.lineBreak];    % Add extra empty row.
@@ -108,7 +116,7 @@ function fileStr = write_key_values(Ssl, C, indentationLevel)
             prevRowEmpty = true;
         else
             % ASSERTION
-            error('Inconsistent combination of key, value, and object.')
+            error('Inconsistent combination of key="%s", value="%s", and object.', key, value)
         end
     end
 end

@@ -9,8 +9,8 @@
 % =============
 % NOTE: Ssl preserves correctly formatted, non-implicit ODL contents (keys/values) "exactly", while Ss
 % does not but is easier to work with when retrieving specific values (with hard-coded "logical locations") instead.
-% Ssl         : An SSL struct
-% Ss          : An SS struct
+% Ssl         : An SSL struct. See EJ_library.PDS_utils.convert_ODL_to_structs.
+% Ss          : An SS struct.  See EJ_library.PDS_utils.convert_ODL_to_structs.
 % endRowsList : Cell array of strings, one for every line after the final "END" statement (without CR, LF).
 %
 %
