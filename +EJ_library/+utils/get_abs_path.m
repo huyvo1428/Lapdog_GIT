@@ -1,23 +1,26 @@
 %
-% Convert (relative/absolute) path to an absolute path (not necessarily canonical).
-% (MATLAB does indeed seem to NOT have a function for doing this(!).)
-% Also converts "~" to the home directory.
+% Convert (relative/absolute) path to an absolute path (not necessarily canonical without symlinks).
 %
-% IMPORTANT NOTE: Only works for objects whose parent directory exists. The object itself does not have to exist.
 %
+% NOTES
+% =====
 % NOTE: MATLAB does indeed seem to NOT have a function for getting the absolute path!
-% NOTE: Will work with ~ (home directory). Will not work with which otherwise contain ~ in directory/object names.
+% NOTE: Also converts "~" to the home directory.
 % NOTE: The resulting path will NOT end with slash/backslash unless it is the system root directory on Linux ("/").
+% NOTE: Only works with filesep = "/".
 %
-% ~BUG/NOTE: Will convert the "~" in filenames/directory names to the home directory. Such files exist on Linux.
-% NOTE: Only works with filesep = "/"
+%
+% ARGUMENT
+% ========
+% path : NOTE: Only path to object which parent directory exists. The object itself does not have to exist.
+%
 %
 % Author: Erik P G Johansson
 % First created 2016-06-09.
 %
 function path = get_abs_path(path)
 % PROPOSAL: Uses Linux's "readlink -f".
-%       CON: Platform dependent.
+%       CON: Platform-dependent.
 %
 % PROPOSAL: Use "what".
 %   NOTE: Does not work on files.
@@ -36,8 +39,10 @@ function path = get_abs_path(path)
 % PROPOSAL: Test code.
 
 try
-    homeDir = getenv('HOME');
-    path = strrep(path, '~', homeDir);
+    if strcmp(path, '~') || (length(path)>=2 && strcmp(path(1:2), ['~', filesep]))
+        homeDir = getenv('HOME');    % Not entirely sure if may have trailing slash.
+        path = fullfile(homeDir, path(2:end));
+    end
     
     if ~exist(path, 'dir')
         [dirPath, basename, suffix] = fileparts(path);   % NOTE: If ends with slash, then everything is assigned to dirPath!
@@ -57,7 +62,7 @@ try
     path = path{1};
     
 catch Exc
-    error('Failed to convert path "%s" to absolute path.\nException message: "%s"', path, Exc.message)
+    error('get_abs_path:FailedToConvertPath', 'Failed to convert path "%s" to an absolute path.\nExc.message = "%s"', path, Exc.message)
 end
 
 end

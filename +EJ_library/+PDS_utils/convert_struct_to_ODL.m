@@ -87,7 +87,13 @@ function fileStr = write_key_values(Ssl, C, indentationLevel)
             % Unquoted: +-  Floating-point numbers.
             %           a-z create_OBJTABLE_LBL_file sets ROWS=FILE_RECORDS=NaN when it can
             %               not set number of rows). AxS COLUMN NAME uses lower case.
-            EJ_library.utils.assert.castring_regexp(value, {'[A-Za-z0-9:._+-]*', '"([A-Za-z0-9#&:;.,''?\\/()\[\]<>_ =*+-]|(\r\n))*"'});
+            
+            % IMPLEMENTATION NOTE: May encounter [] (not a string) as an illegal shorthand for empty string which later then gives an odd error message.
+            assert(ischar(value))
+            % IMPLEMENTATION NOTE: Assert non-empty MATLAB value (require at least one non-quoted character). Note that
+            % the only (presumably) legal "empty" ODL value string is quoted which is represented by a non-empty MATLAB
+            % string.
+            EJ_library.utils.assert.castring_regexp(value, {'[A-Za-z0-9:._+-]+', '"([A-Za-z0-9#&:;.,''?\\/()\[\]<>_ =*+-]|(\r\n))*"'});
             
             % How many characters shorter the current key is, compared to the longest non-OBJECT key is.
             postKeyPaddingLength = maxNonObjectKeyLength - length(key);

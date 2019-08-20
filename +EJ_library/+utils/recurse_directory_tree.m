@@ -357,6 +357,10 @@ function dirCmdResult = get_dir_cmd_result_for_single_object(path)
     [junk, baseName, ext] = fileparts(absPath);   % IMPLEMENTATION NOTE: Keep compatible with MATLAB R2009a ==> Do NOT use "~" notation.
     iPath = find(strcmp({dirCmdResultsList.name}, '.'));
     dirCmdResult = dirCmdResultsList(iPath);
+    
+    % IMPLEMENTATION NOTE: Empirically, "dir" returns zero entries for non-readable directories WITHOUT THROWING ANY
+    % EXCEPTION. This can give very non-intuitive errors.
+    assert(length(dirCmdResult) == 1, '"dir" returned zero entries for "%s". Non-existent? No read permissions?', absPath)
     dirCmdResult.name = [baseName, ext];            
 end
 
