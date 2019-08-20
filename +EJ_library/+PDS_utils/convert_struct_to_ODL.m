@@ -80,21 +80,6 @@ function fileStr = write_key_values(Ssl, C, indentationLevel)
             % CASE: non-OBJECT key
             %======================
             
-            % ASSERTION: Legal PDS key values.
-            % NOTE: Likely too constrained assertion. Adds characters as they are needed.
-            % NOTE: Only permitted linebreak is CR+LF (as a combination).
-            % IMPLEMENTATION NOTE: Not always clear what certain characters are needed for.
-            % Unquoted: +-  Floating-point numbers.
-            %           a-z create_OBJTABLE_LBL_file sets ROWS=FILE_RECORDS=NaN when it can
-            %               not set number of rows). AxS COLUMN NAME uses lower case.
-            
-            % IMPLEMENTATION NOTE: May encounter [] (not a string) as an illegal shorthand for empty string which later then gives an odd error message.
-            assert(ischar(value))
-            % IMPLEMENTATION NOTE: Assert non-empty MATLAB value (require at least one non-quoted character). Note that
-            % the only (presumably) legal "empty" ODL value string is quoted which is represented by a non-empty MATLAB
-            % string.
-            EJ_library.utils.assert.castring_regexp(value, {'[A-Za-z0-9:._+-]+', '"([A-Za-z0-9#&:;.,''?\\/()\[\]<>_ =*+-]|(\r\n))*"'});
-            
             % How many characters shorter the current key is, compared to the longest non-OBJECT key is.
             postKeyPaddingLength = maxNonObjectKeyLength - length(key);
 
@@ -205,6 +190,19 @@ function [fileStr] = construct_key_assignment(key, value, postKeyPaddingLength, 
         shouldLineBreak     = true;
         
     elseif ischar(value)
+        % ASSERTION: Legal PDS key values.
+        % NOTE: Likely too constrained assertion. Add characters as they are needed.
+        % NOTE: Only permitted linebreak in quoted string is CR+LF (as a combination).
+        % IMPLEMENTATION NOTE: Not always clear what certain characters are needed for so it is best to write them down.
+        % Unquoted: +-  Floating-point numbers.
+        %           a-z create_OBJTABLE_LBL_file sets ROWS=FILE_RECORDS=NaN when it can
+        %               not set number of rows). AxS COLUMN NAME uses lower case.
+        
+        % IMPLEMENTATION NOTE: Assert non-empty MATLAB string value (require at least one non-quoted character). Note
+        % that the only (presumably) legal "empty" ODL value string is quoted which is represented by a non-empty MATLAB
+        % string.
+        EJ_library.utils.assert.castring_regexp(value, {'[A-Za-z0-9:._+-]+', '"([A-Za-z0-9#&:;.,''?\\/()\[\]<>_ =*+-]|(\r\n))*"'});
+
         %=============================================
         % CASE: String value (with or without quotes)
         %=============================================
@@ -228,7 +226,8 @@ function [fileStr] = construct_key_assignment(key, value, postKeyPaddingLength, 
         end
     else
         % ASSERTION
-        error('Illegal value. Neither cell array, nor string. key="%s", class(value)=%s', key, class(value))
+        % IMPLEMENTATION NOTE: Will catch [] (which is not an empty string).
+        error('Illegal value. Neither cell array, nor string (vector of char). key="%s", class(value)=%s', key, class(value))
     end
     
 

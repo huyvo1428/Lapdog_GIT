@@ -25,7 +25,9 @@
 function isMatch = regexpf(str, regexpPattern)
     
     % IMPLEMENTATION NOTE: Empty string must be of class char, i.e. not [] (due to function "regexp").
-    %EJ_library.utils.assert.castring(str)
+    % IMPLEMENTATION NOTE: regexp accepts cell array of strings for strings to match (not regexp) which this function is
+    % not suppoed to handle (at least not yet). Must therefore explicitly check that str is not a cell array.
+    EJ_library.utils.assert.castring(str)
     
     if iscell(regexpPattern)
         
