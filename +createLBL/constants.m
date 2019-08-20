@@ -47,7 +47,15 @@ classdef constants < handle
         ROSETTA_NAIF_ID          = -226;           % Used by SPICE.
         ODL_INDENTATION_LENGTH   = 4;
         MISSING_CONSTANT         = -1000000000;    % Same as global variable MISSING_CONSTANT. Defined here so that it can be used by code that is not run/initialized via Lapdog.
-        N_FINAL_PRESWEEP_SAMPLES = 16;             % Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
+        
+        % EDDER: Number of pre-sweep samples to have. Unused samples positions are set to MISSING_CONSTANT.
+        % Has empirically been able to process all mission phases (science+nonscience) using only
+        % N_FINAL_PRESWEEP_SAMPLES=16 
+        % except for 
+        % RO-X-RPCLAP-99-CVP2-EDDER-V1.0:RPCLAP_20040908_223514_212_I1S.LBL: ROSETTA:LAP_P1_INITIAL_SWEEP_SMPLS=0x2f(=47)
+        % Which contains one odd sweep with LAP_P1_INITIAL_SWEEP_SMPLS=47 true pre-sweep samples. Therefore using a
+        % seemingly high value.
+        N_FINAL_PRESWEEP_SAMPLES = 48;
 
         % When splitting "index" into multiple parts (.mat files) for saving to disk, this is how large every part
         % should be, in number of index values.
