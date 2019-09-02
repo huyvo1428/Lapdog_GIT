@@ -54,14 +54,16 @@ function [BxS_relativeTime, BxS_voltageArray, IxS_utc12, IxS_obt12, IxS_currentA
         nFinalPresweepSamples, MISSING_CONSTANT)
     
     % ASSERTIONS    
-    if numel(unique([numel(rawUtcArrays), numel(rawObtArrays), numel(rawVoltageArrays), numel(rawCurrentArrays), numel(INITIAL_SWEEP_SMPLS_array)])) > 1
-        error('Illegal arguments. Argument arrays have different sizes.')
-    end
+%     if numel(unique([numel(rawUtcArrays), numel(rawObtArrays), numel(rawVoltageArrays), numel(rawCurrentArrays), numel(INITIAL_SWEEP_SMPLS_array)])) > 1
+%         error('Illegal arguments. Argument arrays have different sizes.')
+%     end    
+    EJ_library.utils.assert.all_equal([numel(rawUtcArrays), numel(rawObtArrays), numel(rawVoltageArrays), numel(rawCurrentArrays), numel(INITIAL_SWEEP_SMPLS_array)])
 
     
     
-    % Correct for very rare, badly set INITIAL_SWEEP_SMPLS values due to bug in pds or bad bitstream/TM.
-    % Uses the assumption that all true sweeps should have the same length and modify the INITIAL_SWEEP_SMPLS value to fix it.
+    % Correct for very rare, badly set INITIAL_SWEEP_SMPLS values due to bug in pds or bad bitstream/TM. Uses the
+    % assumption that all true sweeps should have the same length and modify one/few diverging INITIAL_SWEEP_SMPLS
+    % value(s) to fix it.
     % NOTE: If the true sweep length is (somewhat) wrong, then that will also be inadvertantly "fixed" here by adjusting INITIAL_SWEEP_SMPLS.
     rawSweepLengthArray  = cellfun(@length, rawUtcArrays);
     trueSweepLengthArray = rawSweepLengthArray(:) - INITIAL_SWEEP_SMPLS_array(:);   % Force column array.

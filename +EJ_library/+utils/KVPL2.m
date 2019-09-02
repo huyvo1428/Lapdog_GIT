@@ -154,7 +154,7 @@ classdef KVPL2
                 obj.keys   = cell(0,1);
                 obj.values = cell(0,1);
                 
-            elseif (nargin == 1) && iscell(varargin{1})                
+            elseif (nargin == 1) && iscell(varargin{1})
                 kvplContentCellArray = KVPL2.normalize_empty(varargin{1}, cell(0,2));
                 
                 % ASSERTION

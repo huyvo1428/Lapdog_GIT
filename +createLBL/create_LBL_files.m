@@ -130,6 +130,7 @@ function create_LBL_files(Data)
         AxS_TAB_LBL_INCONSISTENCY_POLICY     = 'nothing';
     else
         GENERATE_FILE_FAIL_POLICY = 'message';
+        %GENERATE_FILE_FAIL_POLICY = 'error';
         %GENERATE_FILE_FAIL_POLICY = 'nothing';    % Somewhat misleading. Something may still be printed.
         
         GENERAL_TAB_LBL_INCONSISTENCY_POLICY = 'warning';

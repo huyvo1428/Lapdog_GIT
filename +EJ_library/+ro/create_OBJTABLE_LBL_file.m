@@ -9,12 +9,15 @@
 % =========
 % tabFilePath                     : Path to TAB file.
 % LblData                         : Struct with the following fields.
-%       .HeaderKvpl               : Key-value list describing PDS keywords in the "ODL header". Some mandatory
-%                                   keywords are added automatically by the code and must not overlap with these
-%                                   (assertion).
+%       .HeaderKvpl               : Key-value list describing PDS keywords in the "ODL header".
+%                                   Some mandatory keywords are added automatically by the code and must not overlap
+%                                   with these (assertion).
 %       .OBJTABLE                 : (OBJTABLE = "OBJECT = TABLE" segment)
 %                                   NOTE: Excludes COLUMNS, ROW_BYTES, ROWS which are under the OBJECT = TABLE segment
 %                                   since they are are automatically derived.
+%           .HeaderKvpl           : Optional. Key-value list describing PDS keywords in OBJECT = TABLE segment.
+%                                   Some mandatory keywords are added automatically by the code and must not overlap
+%                                   with these (assertion).
 %           .DESCRIPTION          : Description for entire table (PDS keyword).
 %           .OBJCOL_list{i}       : Struct containing fields corresponding to various column PDS keywords.
 %                                   (OBJCOL = "OBJECT = COLUMN" segment)
@@ -166,6 +169,7 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     DEFAULT_SETTINGS.indentationLength         = 4;
     DEFAULT_SETTINGS.tableObjectName           = 'TABLE';
     Settings = EJ_library.utils.interpret_settings_args(DEFAULT_SETTINGS, varargin);
+    % ASSERTION: Settings
     EJ_library.utils.assert.struct(Settings, union(fieldnames(DEFAULT_SETTINGS), ...
         {'headerKeysOrderList', 'headerKeysForceQuotesList', 'headerKeysForbiddenList'}))
     EJ_library.utils.assert.castring_regexp(Settings.tableObjectName, '[^^].+')    % Assertion due to change of meaning of setting. Not complete check.
@@ -207,8 +211,9 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     % Useful when changing field names.
     % ------------------------------------------------------
     EJ_library.utils.assert.struct(LblData,          {'HeaderKvpl', 'OBJTABLE'})
-    EJ_library.utils.assert.struct(LblData.OBJTABLE, {'DESCRIPTION', 'OBJCOL_list'})
-    EJ_library.utils.assert.scalar(LblData.HeaderKvpl)    % Common error to initialize empty KVPL the wrong way.
+    EJ_library.utils.assert.struct(LblData.OBJTABLE, {'DESCRIPTION', 'OBJCOL_list'},               'superset')
+    EJ_library.utils.assert.struct(LblData.OBJTABLE, {'DESCRIPTION', 'OBJCOL_list', 'HeaderKvpl'}, 'subset')
+    EJ_library.utils.assert.scalar(LblData.HeaderKvpl)    % it is a common error to initialize empty KVPL the wrong way.
 
 
 
@@ -294,10 +299,15 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
         % Construct SSL representing the LBL contents
         %=============================================
         Ssl = create_SSL_header(LblData.HeaderKvpl, Settings);
-        Ssl = add_SSL_OBJECT(Ssl, Settings.tableObjectName, create_OBJ_TABLE_content(LblData.OBJTABLE, LblData.nTabFileRows));
-        
-        
-        
+        Ssl = add_SSL_OBJECT(...
+            Ssl, ...
+            Settings.tableObjectName, ...
+            create_OBJ_TABLE_content(...
+                LblData.OBJTABLE, ...
+                LblData.nTabFileRows));
+
+
+
         % Log message
         %fprintf(1, 'Writing LBL file: "%s"\n', lblFilePath);
         EJ_library.PDS_utils.write_ODL_file(lblFilePath, Ssl, {}, Settings.indentationLength, Settings.contentRowMaxLength);    % endRowsList = {};
@@ -347,7 +357,7 @@ function [OBJTABLE_data, T2pkArgsTable] = adjust_extract_OBJECT_TABLE_data(OBJTA
 
     assert(numel(OBJTABLE_data.OBJCOL_list) >= 0)
     
-    
+
     
     OBJTABLE_data.COLUMNS = 0;   % NOTE: Adds new field to structure.
     OBJCOL_namesList      = {};
@@ -628,22 +638,49 @@ end
 
 % Create SSL for the content of the OBJECT=TABLE segment.
 function Ssl = create_OBJ_TABLE_content(OBJTABLE_data, nTabFileRows)
-    S = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
-
-    S = add_SSL_form(S, 'INTERCHANGE_FORMAT','%s',   'ASCII');
-    S = add_SSL_form(S, 'ROWS',              '%d',   nTabFileRows);
-    S = add_SSL_form(S, 'COLUMNS',           '%d',   OBJTABLE_data.COLUMNS);
-    S = add_SSL_form(S, 'ROW_BYTES',         '%d',   OBJTABLE_data.ROW_BYTES);
-    S = add_SSL_form(S, 'DESCRIPTION',       '"%s"', OBJTABLE_data.DESCRIPTION);
-
-    for i = 1:length(OBJTABLE_data.OBJCOL_list)           % Iterate over list of ODL OBJECT COLUMN
-        ColumnData = OBJTABLE_data.OBJCOL_list{i};        % Cd = column OBJTABLE_data
-        
-        S2 = create_OBJ_COLUMN_content(ColumnData);
-        S = add_SSL_OBJECT(S, 'COLUMN', S2);
-    end
+    % NEW IMPLEMENTATION:
     
-    Ssl = S;
+    Kvpl = EJ_library.utils.KVPL2({...
+        'INTERCHANGE_FORMAT', sprintf( '%s',  'ASCII'); ...
+        'ROWS',               sprintf( '%d',  nTabFileRows); ...
+        'COLUMNS',            sprintf( '%d',  OBJTABLE_data.COLUMNS); ...
+        'ROW_BYTES',          sprintf( '%d',  OBJTABLE_data.ROW_BYTES); ...
+        'DESCRIPTION',        sprintf('"%s"', OBJTABLE_data.DESCRIPTION) ...
+        });
+
+    if isfield(OBJTABLE_data, 'HeaderKvpl')
+        Kvpl = Kvpl.append(OBJTABLE_data.HeaderKvpl);
+    end
+
+    % Create SSL from KVPL.
+    Ssl = struct('keys', {Kvpl.keys}, 'values', {Kvpl.values}, 'objects', {cell(size(Kvpl.keys))});
+
+    for i = 1:length(OBJTABLE_data.OBJCOL_list)       % Iterate over list of ODL OBJECT COLUMN
+        ColumnData = OBJTABLE_data.OBJCOL_list{i};    % Cd = column OBJTABLE_data
+
+        Ssl = add_SSL_OBJECT(Ssl, 'COLUMN', ...
+            create_OBJ_COLUMN_content(ColumnData));
+    end
+
+    %======================================================================================================
+    % OLD IMPLEMENTATION:
+% 
+%     S = struct('keys', {{}}, 'values', {{}}, 'objects', {{}}) ;
+% 
+%     S = add_SSL_form(S, 'INTERCHANGE_FORMAT','%s',   'ASCII');
+%     S = add_SSL_form(S, 'ROWS',              '%d',   nTabFileRows);
+%     S = add_SSL_form(S, 'COLUMNS',           '%d',   OBJTABLE_data.COLUMNS);
+%     S = add_SSL_form(S, 'ROW_BYTES',         '%d',   OBJTABLE_data.ROW_BYTES);
+%     S = add_SSL_form(S, 'DESCRIPTION',       '"%s"', OBJTABLE_data.DESCRIPTION);
+% 
+%     for i = 1:length(OBJTABLE_data.OBJCOL_list)           % Iterate over list of ODL OBJECT COLUMN
+%         ColumnData = OBJTABLE_data.OBJCOL_list{i};        % Cd = column OBJTABLE_data
+%         
+%         S2 = create_OBJ_COLUMN_content(ColumnData);
+%         S = add_SSL_OBJECT(S, 'COLUMN', S2);
+%     end
+%     
+%     Ssl = S;
 end
 
 
