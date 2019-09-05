@@ -108,6 +108,7 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
 
 
     qv_asm_ne_5eV= exp(-XXP(i).data.asm_ne_5eV(:,2));
+    qv_asm_ne_5eV(cold_ind)=0;
     delind=isnan(qv_asm_ne_5eV)|isinf(qv_asm_ne_5eV);
     qv_asm_ne_5eV(delind)=0;
 

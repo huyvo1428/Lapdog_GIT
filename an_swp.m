@@ -180,8 +180,15 @@ else
 %             lastneg = max(find(tempip_no_nans<0));
 %         end
 %         
+
+        ip_no_nans(vb_no_nans<0)=-1*ip_no_nans(vb_no_nans<0);% vz at negative potentials have been found to be unphysical
+        lastneg = max(find(ip_no_nans<0)); %let's try this again, but ignore negative potentials
+        firstpos = min(find(ip_no_nans>0)); %let's try this again
+        if lastneg>firstpos           
+            [firstpos,lastneg,junk]=findbestzerocross(ip_no_nans);         
+        end
         
-        [firstpos,lastneg,junk]=findbestzerocross(ip_no_nans);
+        
     else
         AP.Vz(2)=0.8; %good fit might not be perfect anyway.
     end

@@ -52,7 +52,7 @@ try
         %macroNostr=dec2hex(index(tabindex{an_ind(i) ,3}).macro);
         %          dec2hex(index(tabindex{ind_V1L(1),3}).macro)
         if mode =='I' && probenr==2 % escape early?
-            %UTCstr1= '2016-05-00 00:00:00';
+            %UTCstr1= '2016-05-01 00:00:00';
             %irf_time(UTCstr1,'utc>datenum')=736451
             if index(tabindex{an_ind(i),3}).t0>736450
                 %We do not process LAP2 after this date

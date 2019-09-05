@@ -41,15 +41,18 @@ switch mode
 
     P_interp1= interp1(NED_FIT.t_et,NED_FIT.P(:,1),t_et);
     P_interp2= interp1(NED_FIT.t_et,NED_FIT.P(:,2),t_et);
+    interp_qv= interp1(NED_FIT.t_et,NED_FIT.qv,t_et);
 
     indz_end=t_et>t_et_end;
     P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,1);
     P_interp2(indz_end)= NED_FIT.P(NED_FIT_end,2);
-    
+    interp_qv(indz_end)= 0;
+
     indz_start=t_et<t_et_min;
     P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,1);
     P_interp2(indz_start)= NED_FIT.P(NED_FIT_start,2);
-    
+    interp_qv(indz_start)= 0;
+
     
     %[junk,ind]= min(abs(NED_FIT.t_et-t_et(1)));        
     %p1=NED_FIT.P(ind,1);
@@ -84,6 +87,8 @@ switch mode
     %take this out of the loop
     qvalue=max(1-abs(data_arr.V_sigma(:)./data_arr.V(:)),0.5);
     qvalue(satind)=0;
+    data_arr.qv= qvalue.*interp_qv.';
+
     NEDwID= fopen(NEDfname,'w');
 
     for j =1:length(data_arr.V)
@@ -96,7 +101,7 @@ switch mode
             %qvalue=max(1-abs((data_arr{1,6}(j)  /data_arr{1,5}(j))),0.5);
 
             %data_arr.V(j)=MISSING_CONSTANT;
-            row_byte= fprintf(NEDwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc(j,:),data_arr.t_obt(j), data_arr.N_ED(j),qvalue(j),NED_flag(j),data_arr.qf(j));
+            row_byte= fprintf(NEDwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.t_utc(j,:),data_arr.t_obt(j), data_arr.N_ED(j),data_arr.qv(j),NED_flag(j),data_arr.qf(j));
 %            row_byte= fprintf(USCwID,'%s, %16.6f, %14.7e, %3.1f, %01i, %03i\r\n',time_arr{1,1}(j,:),time_arr{1,2}(j),data_arr{1,5}(j),qvalue,usc_flag(j),data_arr{1,8}(j));
 
             N_rows = N_rows + 1;
@@ -144,15 +149,18 @@ switch mode
     
     P_interp1= interp1(NED_FIT.t_et,NED_FIT.P(:,1),t_et);
     P_interp2= interp1(NED_FIT.t_et,NED_FIT.P(:,2),t_et);
+    interp_qv= interp1(NED_FIT.t_et,NED_FIT.qv,t_et);
 
     indz_end=t_et>t_et_end;
     P_interp1(indz_end)= NED_FIT.P(NED_FIT_end,1);
     P_interp2(indz_end)= NED_FIT.P(NED_FIT_end,2);
-    
+    interp_qv(indz_end)= 0;
+
     indz_start=t_et<t_et_min;
     P_interp1(indz_start)= NED_FIT.P(NED_FIT_start,1);
     P_interp2(indz_start)= NED_FIT.P(NED_FIT_start,2);
-    
+    interp_qv(indz_start)= 0;
+
     
     %[junk,ind]= min(abs(NED_FIT.t_et-t_et(1)));        
     %p1=NED_FIT.P(ind,1);
@@ -185,7 +193,8 @@ switch mode
     ind_vph= -data_arr.Vz(:,1)>vj&~isnan(data_arr.Vph_knee(:,1))&data_arr.Vph_knee(:,2)>0.3&data_arr.Vph_knee(:,1)>vj_vph;
     VS1(ind_vph)=data_arr.Vph_knee(ind_vph,1);
     VS1qv(ind_vph) = data_arr.Vph_knee(ind_vph,2);
-    
+    data_arr.qv= VS1qv.*interp_qv;
+
     data_arr.N_ED(~satind)=exp(P_interp2(~satind)).*exp((VS1(~satind)).*P_interp1(~satind));
     data_arr.N_ED(isnan(VS1)|(isnan(data_arr.N_ED)))=MISSING_CONSTANT; %here we map them back to missing constant
 
@@ -214,7 +223,7 @@ switch mode
             if data_arr.lum(j) > 0.9 %shadowed probe data is not allowed
                 % NOTE: data_arr.Tarr_mid{j,1}(j,1) contains UTC strings with 6 second decimals. Truncates to have the same
                 % number of decimals as for case "vfloat". /Erik P G Johansson 2018-11-16
-                row_byte= fprintf(NEDwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.N_ED(j),VS1qv(j),NED_flag(j),data_arr.qf(j));
+                row_byte= fprintf(NEDwID,'%s, %16.6f, %14.7e, %4.2f, %01i, %03i\r\n',data_arr.Tarr_mid{j,1}(1:23),data_arr.Tarr_mid{j,2},data_arr.N_ED(j),data_arr.qv(j),NED_flag(j),data_arr.qf(j));
                 %row_byte= fprintf(NEDwID,'%s, %16.6f, %14.7e, %3.1f, %05i\r\n',data_arr.Tarr_mid{j,1},data_arr.Tarr_mid{j,2},factor*data_arr.Vz(j),qvalue,data_arr.qf(j));
                 N_rows = N_rows + 1;
             end

@@ -198,6 +198,7 @@ delfile = 1;
 wol_tol=WOL.t_dur;%this is now an array of all WOL/OCM durations.
 wol_t_mid= WOL.t0+wol_tol/2; % datetime midpoint of all files
 packet_tol= max([index(tabind(:)).t1]-[index(tabind(:)).t0]);
+%packet_tol*24*3600
 index_t_mid= [index(tabind(:)).t0] + 0.5*packet_tol; % datetime midpoint of all files
 % % (given that they have all have the same time width (? is this true?)
 % % it should be reasonably true since it's all the same macro and filetype
@@ -206,19 +207,46 @@ index_t_mid= [index(tabind(:)).t0] + 0.5*packet_tol; % datetime midpoint of all 
 
 %ismemberf is sufficiently smart to take an array index_t_mid (Nx1),
 %wol_t_mid (Jx1), and tolerance (Jx1) to create a boolean WOL_bool of (Nx1)
-WOL_bool=ismemberf(index_t_mid,wol_t_mid,'tol',0.5*(wol_tol+packet_tol));%
+[WOL_bool id]=ismemberf(index_t_mid,wol_t_mid,'tol',0.5*(max(wol_tol)+packet_tol));%
 %WOL_bool now is of length (tabind) and is 1 if any
 %WOL.t0 or WOL.t1 is within wol_tol from the file midpoint.
 %tot_bytes = 0;
-
+if any(WOL_bool) %bugfix for ismemberf. Sometimes only the first wol_tol is evaluated
+    WOL_boolz=WOL_bool;
+    WOL_boolz(:)=false;
+    idz= unique(id);
+    for i = 1:length(idz)
+        if idz(i)>0
+            WOL_bool_temp=ismemberf(index_t_mid,wol_t_mid(idz(i)),'tol',0.5*(wol_tol(idz(i))+packet_tol));%check again!
+            WOL_boolz=WOL_boolz|WOL_bool_temp; %save results
+        end
+    end
+    WOL_bool=WOL_boolz;
+end
 
 if fileflag(1:2)=='V2' %i.e. either V2L or V2H
     % V0*exp(-4.6052)=0.01.
     v2c_tol=V2C.tol*4.6052;%V2C.tol is the halftime, typically V2C_tol defaults to 64 or 32 seconds, unless a very obvious contamination signature has been detected.
     %instances where there is a macro change (or calendar day change) but
     %no bias change (≈ 40 times during comet phase) has been removed
+    %v2c_t_mid=V2C.t0+V2C.tol/2;%+v2c_tol/2;
     v2c_t_mid=V2C.t0+v2c_tol/2;
-    V2C_bool=ismemberf(index_t_mid,v2c_t_mid,'tol',0.5*(v2c_tol+packet_tol));%check again!
+    %V2C_bool=ismemberf(index_t_mid,v2c_t_mid,'tol',(v2c_tol+packet_tol));%check again!
+    [V2C_bool id]=ismemberf(index_t_mid,v2c_t_mid,'tol',(max(v2c_tol)+packet_tol));%check again!
+
+    if any(V2C_bool)
+       V2C_boolz=V2C_bool;
+       V2C_boolz(:)=false;
+       
+        idz= unique(id);
+        for i = 1:length(idz)
+           if idz(i)>0
+               V2C_bool_temp=ismemberf(index_t_mid,v2c_t_mid(idz(i)),'tol',0.5*(v2c_tol(idz(i))+packet_tol));%check again!
+                V2C_boolz=V2C_boolz|V2C_bool_temp; %save results
+           end
+        end
+        V2C_bool=V2C_boolz;
+    end
     %V2C_bool now is of length (tabind) and is 1 if any measurement is
     %inside the tolerance.
 else
@@ -523,75 +551,7 @@ end
                 %else
                 %  curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
                 end
-
-
-
-                if diag
-
-
-
-                    A = vec2mat(curArray,nStep,NaN); %reformat curArray to matrix, fill with NaN values if needed on last steps
-
-                    %[A,pad] = vec2mat(curArray,nSteps,NaN); %reformat curArray to matrix, fill with NaN values if needed on last steps
-
-                    curOut=A.';
-
-                    test1 = smooth(nanmean(curOut,1),0.08,'rloess').';
-                    test_std= nanstd(test1,0);
-                    largeK = 0.1;
-
-
-                    figure(164)
-
-                    plot(scantemp{1,4}(:),scantemp{1,3}(:),'g',potbias,curArray,'b',potbias,test1+test_std*largeK,'r--',potbias,test1-test_std*largeK,'r--');
-                    xlabel('Vp [V]');
-                    ylabel('I');
-                    title('LDL Sweep filtering, factor 3 & 1, std*0.2, 0.2 span');
-                    grid on;
-                    legend('input','output','cutoff from rloess smoothing','Location','North')
-
-                    figure(163);
-
-                    subplot(2,2,1)
-                    plot(scantemp{1,4}(:),scantemp{1,3}(:),'g',potbias,curArray,'b',potbias,test1+test_std*1,'r--',potbias,test1-test_std*1,'r--');
-                    xlabel('Vp [V]');
-                    ylabel('I');
-                    title('LDL Sweep filtering, factor 3 & 1, 68% confidence, 68% confidence');
-                    grid on;
-                    legend('input','output','cutoff from rloess smoothing','Location','North')
-
-                    % curTmp = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
-
-                    subplot(2,2,2)
-                    plot(scantemp{1,4}(:),scantemp{1,3}(:),'b',potbias,(mean(scantemp{1,3}(:)) + 2*std(scantemp{1,3}(:))),'r',potbias,(mean(scantemp{1,3}(:)) - 2*std(scantemp{1,3}(:))),'r')
-                    %plot(potbias,curTmp)
-
-                    %hold all
-                    %      plot(potbias,(mean(scantemp{1,3}(:)) + 3*std(scantemp{1,3}(:))));
-                    xlabel('Vp [V]');
-                    ylabel('I');
-                    title('unedited sweep, old filter');
-                    grid on;
-
-
-                    subplot(2,2,3)
-                    plot(potbias,nanmean(sweepcorrection(scantemp{1,3}(:),nStep,3,3),1))
-                    xlabel('Vp [V]');
-                    ylabel('I');
-                    title('unedited sweep, factor 3&3 99% confidence, 99%confidene ');
-                    grid on;
-
-                    subplot(2,2,4)
-                    plot(potbias,sweepcorrection(scantemp{1,3}(:),nStep,2,0.8),'bo',potbias,curArray,'r')
-                    %        plot(potbias,curArray);
-                    xlabel('Vp [V]');
-                    ylabel('I');
-                    title('unedited sweep, factor 1&0.8');
-                    grid on;
-
-
-
-                end
+       
 
             else
                 curArray = accumarray(inter,scantemp{1,3}(:),[],@mean,NaN);
