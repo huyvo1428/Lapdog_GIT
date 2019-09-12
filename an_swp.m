@@ -180,15 +180,28 @@ else
 %             lastneg = max(find(tempip_no_nans<0));
 %         end
 %         
-
-        ip_no_nans(vb_no_nans<0)=-1*ip_no_nans(vb_no_nans<0);% vz at negative potentials have been found to be unphysical
-        lastneg = max(find(ip_no_nans<0)); %let's try this again, but ignore negative potentials
-        firstpos = min(find(ip_no_nans>0)); %let's try this again
-        if lastneg>firstpos           
-            [firstpos,lastneg,junk]=findbestzerocross(ip_no_nans);         
-        end
+        [firstpos,lastneg,junk]=findbestzerocross(ip_no_nans);
+%         indz=firstpos:lastneg;
+%         posindz=indz(vb_no_nans(indz)<0); %these are not nice, we should be able to remove these
+%         
+%         if ~isempty(posindz)
+%             ip_no_nans(posindz)=-1*ip_no_nans(posindz);% vz at negative potentials have been found to be unphysical
+%             lastneg = max(find(ip_no_nans<0)); %let's try this again, but ignore crossings at negative Vb
+%             firstpos = min(find(ip_no_nans>0)); %let's try this again
+%             if lastneg>firstpos
+%                 [firstpos,lastneg,junk]=findbestzerocross(ip_no_nans);
+%             end
+%         end
         
-        
+% 
+%         ip_no_nans(vb_no_nans<0)=-1*ip_no_nans(vb_no_nans<0);% vz at negative potentials have been found to be unphysical
+%         lastneg = max(find(ip_no_nans<0)); %let's try this again, but ignore negative potentials
+%         firstpos = min(find(ip_no_nans>0)); %let's try this again
+%         if lastneg>firstpos           
+%             [firstpos,lastneg,junk]=findbestzerocross(ip_no_nans);         
+%         end
+%         
+%         
     else
         AP.Vz(2)=0.8; %good fit might not be perfect anyway.
     end

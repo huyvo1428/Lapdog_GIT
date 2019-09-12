@@ -215,12 +215,23 @@ if any(WOL_bool) %bugfix for ismemberf. Sometimes only the first wol_tol is eval
     WOL_boolz=WOL_bool;
     WOL_boolz(:)=false;
     idz= unique(id);
+    idz(idz==0)=[]; %delete these
+
     for i = 1:length(idz)
-        if idz(i)>0
             WOL_bool_temp=ismemberf(index_t_mid,wol_t_mid(idz(i)),'tol',0.5*(wol_tol(idz(i))+packet_tol));%check again!
             WOL_boolz=WOL_boolz|WOL_bool_temp; %save results
-        end
     end
+    if length(idz) ==1% Then check the one above and one below it as well, the max(v2c_tol) might have overdone it
+        
+        idmin1= max([idz-1 1]);%don't go above or below the allowed range
+        idplus1= min([idz+1 length(wol_t_mid)]);
+        
+        WOL_bool_temp=ismemberf(index_t_mid,wol_t_mid(idmin1),'tol',0.5*(wol_tol(idmin11)+packet_tol));%check again!
+        WOL_boolz=WOL_boolz|WOL_bool_temp; %save results
+        WOL_bool_temp=ismemberf(index_t_mid,wol_t_mid(idplus1),'tol',0.5*(wol_tol(idplus1)+packet_tol));%check again!
+        WOL_boolz=WOL_boolz|WOL_bool_temp; %save results
+    end
+    
     WOL_bool=WOL_boolz;
 end
 
@@ -239,12 +250,22 @@ if fileflag(1:2)=='V2' %i.e. either V2L or V2H
        V2C_boolz(:)=false;
        
         idz= unique(id);
+        idz(idz==0)=[]; %delete these
+        
         for i = 1:length(idz)
-           if idz(i)>0
                V2C_bool_temp=ismemberf(index_t_mid,v2c_t_mid(idz(i)),'tol',0.5*(v2c_tol(idz(i))+packet_tol));%check again!
                 V2C_boolz=V2C_boolz|V2C_bool_temp; %save results
-           end
         end
+        
+        if length(idz) ==1% Then check the one above and one below it as well, the max(v2c_tol) might have overdone it            
+            idmin1= max([idz-1 1]);%don't go above or below the allowed range
+            idplus1= min([idz+1 length(v2c_t_mid)]);
+            V2C_bool_temp=ismemberf(index_t_mid,v2c_t_mid(idmin1),'tol',0.5*(v2c_tol(idmin1)+packet_tol));%check again!
+            V2C_boolz=V2C_boolz|V2C_bool_temp; %save results
+            V2C_bool_temp=ismemberf(index_t_mid,v2c_t_mid(idplus1),'tol',0.5*(v2c_tol(idplus1)+packet_tol));%check again!
+            V2C_boolz=V2C_boolz|V2C_bool_temp; %save results
+        end
+        
         V2C_bool=V2C_boolz;
     end
     %V2C_bool now is of length (tabind) and is 1 if any measurement is

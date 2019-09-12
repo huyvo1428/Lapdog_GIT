@@ -87,7 +87,7 @@ switch mode
     %take this out of the loop
     qvalue=max(1-abs(data_arr.V_sigma(:)./data_arr.V(:)),0.5);
     qvalue(satind)=0;
-    data_arr.qv= qvalue.*interp_qv.';
+    data_arr.qv= qvalue.*interp_qv;
 
     NEDwID= fopen(NEDfname,'w');
 

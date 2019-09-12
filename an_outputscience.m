@@ -374,12 +374,12 @@ k=0;
 %for i = inter(1):inter(end)
 %sometimes lapstruct.t0 is not sorted...?
 %t_etz=floor(t_et0+(intval* (min(inter):max(inter)))+0.5);%maybe slightly incorrect. ugh.
-t_etz=t_et0+intval/2+(intval* (min(inter):max(inter)));%midpoint of interval
+t_etz=t_et0-intval/2+(intval* (min(inter):max(inter)));%midpoint of interval
 
 %                               ((1:3600*24/intval)-0.5)*intval
 
 
-t_obt= t_obt0 +intval/2+(intval*(min(inter):max(inter)));%midpoint of interval
+t_obt= t_obt0 -intval/2+(intval*(min(inter):max(inter)));%midpoint of interval
 t_utc= cspice_et2utc(t_etz(:).'+0.5, 'ISOC', 10);% buffer up with 0.5 second, before UTC conversion, and then round to closest second later in function
 t_matlab_date=nan(length(t_etz),1);
 for i = 1:length(t_etz)
