@@ -226,7 +226,7 @@ if any(WOL_bool) %bugfix for ismemberf. Sometimes only the first wol_tol is eval
         idmin1= max([idz-1 1]);%don't go above or below the allowed range
         idplus1= min([idz+1 length(wol_t_mid)]);
         
-        WOL_bool_temp=ismemberf(index_t_mid,wol_t_mid(idmin1),'tol',0.5*(wol_tol(idmin11)+packet_tol));%check again!
+        WOL_bool_temp=ismemberf(index_t_mid,wol_t_mid(idmin1),'tol',0.5*(wol_tol(idmin1)+packet_tol));%check again!
         WOL_boolz=WOL_boolz|WOL_bool_temp; %save results
         WOL_bool_temp=ismemberf(index_t_mid,wol_t_mid(idplus1),'tol',0.5*(wol_tol(idplus1)+packet_tol));%check again!
         WOL_boolz=WOL_boolz|WOL_bool_temp; %save results
