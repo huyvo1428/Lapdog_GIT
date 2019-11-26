@@ -91,8 +91,9 @@ function fileStr = write_key_values(Ssl, C, indentationLevel)
         elseif strcmp(key, 'OBJECT') && ~isempty(value) && ~isempty(object) && isstruct(object)
             %==================
             % CASE: OBJECT key
-            %==================            
-            EJ_library.utils.assert.castring_regexp(value, '[A-Z_]*');   % NOTE: Likely too constrained assertion. Adds characters as they are needed.
+            %==================
+            OBJECT_KEY_REGEXPS = '[A-Z][A-Z0-9_]*';   % NOTE: Likely too constrained assertion. Adds characters as they are needed.
+            EJ_library.utils.assert.castring_regexp(value, OBJECT_KEY_REGEXPS);
             
             if ~prevRowEmpty
                 fileStr = [fileStr, C.lineBreak];    % Add extra empty row.
@@ -139,7 +140,9 @@ function [fileStr] = construct_key_assignment(key, value, postKeyPaddingLength, 
     % ASSERTS: Must not be used in actual ODL array component.
     NON_BREAKING_SPACE = '~~';
     
-        
+    VALUE_CHAR_REGEXPS = {'[A-Za-z0-9:._+-]+', '"([A-Za-z0-9#&:;.,''?\\/()\[\]<>_ =*+-]|(\r\n))*"'};
+
+
 
     %==========================================================
     % Handle different cases. Determine whether to line-break.
@@ -201,7 +204,7 @@ function [fileStr] = construct_key_assignment(key, value, postKeyPaddingLength, 
         % IMPLEMENTATION NOTE: Assert non-empty MATLAB string value (require at least one non-quoted character). Note
         % that the only (presumably) legal "empty" ODL value string is quoted which is represented by a non-empty MATLAB
         % string.
-        EJ_library.utils.assert.castring_regexp(value, {'[A-Za-z0-9:._+-]+', '"([A-Za-z0-9#&:;.,''?\\/()\[\]<>_ =*+-]|(\r\n))*"'});
+        EJ_library.utils.assert.castring_regexp(value, VALUE_CHAR_REGEXPS);
 
         %=============================================
         % CASE: String value (with or without quotes)

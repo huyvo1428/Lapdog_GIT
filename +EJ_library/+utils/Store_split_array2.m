@@ -189,7 +189,7 @@ classdef Store_split_array2
                 % Save file
                 %===========
                 % ASSERTION: Check that variable names, and thus file format, have not changed by mistake.
-                EJ_library.utils.assert.struct(Fc, EJ_library.utils.Store_split_array2.FC_VARIABLE_NAME_LIST);
+                EJ_library.utils.assert.struct2(Fc, EJ_library.utils.Store_split_array2.FC_VARIABLE_NAME_LIST, {});
                 % IMPLEMENTATION NOTE: "-struct" stores the struct fields as separate variables, but since "s = load(...)"
                 % returns a struct with the variables as fields, this is "symmetric" with the load command despite that
                 % the file contains separate variables (not a single struct).

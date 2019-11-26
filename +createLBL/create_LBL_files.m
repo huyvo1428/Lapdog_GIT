@@ -85,16 +85,17 @@
 
 function create_LBL_files(Data)
     
-    % ASSERTIONS
-    EJ_library.utils.assert.struct(Data, {...
+    DATA_FIELD_NAMES = {...
         'ldDatasetPath', 'pdDatasetPath', 'metakernel', 'C', 'failFastDebugMode', 'generatingDeriv1', ...
         'index', 'blockTAB', 'tabindex', 'an_tabindex', 'PHO_tabindex', 'USC_tabindex', 'ASW_tabindex', ...
-        'EFL_tabindex', 'NED_tabindex', 'NEL_tabindex'})
+        'EFL_tabindex', 'NED_tabindex', 'NEL_tabindex'};     % Exact list of field names for "Data".
+    
+    % ASSERTIONS
+    EJ_library.utils.assert.struct2(Data, DATA_FIELD_NAMES, {})
     if isnan(Data.failFastDebugMode)    % Check if field set to temporary value.
         error('Illegal argument Data.failFastDebugMode=%g', Data.failFastDebugMode)
     end
-    
-    
+
     % ASSERTION
     % NOTE 2019-02-27: This assertion should theoretically only be triggered for macro 910 until FJ fixes USC_tabindex.
     % Macro 910 only runs 2016-07-15 and 2016-07-27.

@@ -32,6 +32,8 @@ function [Ssl, Ss, endRowsList] = read_ODL_file(filePath)
     % PROPOSAL: Have derive_SS_key also derive SS keys for "OBJECT = ..." statements.
     % PROPOSAL: Change name: read_ODL_file
     
+    ODL_FILE_LINEBREAK_REGEXP = '\r\n';
+    
     
     % ASSERTION: Check if file (not directory) exists
     % -----------------------------------------------
@@ -45,7 +47,7 @@ function [Ssl, Ss, endRowsList] = read_ODL_file(filePath)
     try
         % Read list of lines/rows. No parsing. 
         %rowStrList = read_file_to_line_list(filePath);
-        rowStrList = EJ_library.utils.read_text_file(filePath);
+        rowStrList = EJ_library.utils.read_text_file(filePath, ODL_FILE_LINEBREAK_REGEXP);
     catch Exception
         Me = MException('', sprintf('Can not read file: %s\n    Exception.message="%s"', filePath, Exception.message));
         Me = Me.addCause(Exception);    % NOTE: Assignment is necessary (immutable object?)

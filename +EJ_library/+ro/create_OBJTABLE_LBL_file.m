@@ -170,8 +170,8 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     DEFAULT_SETTINGS.tableObjectName           = 'TABLE';
     Settings = EJ_library.utils.interpret_settings_args(DEFAULT_SETTINGS, varargin);
     % ASSERTION: Settings
-    EJ_library.utils.assert.struct(Settings, union(fieldnames(DEFAULT_SETTINGS), ...
-        {'headerKeysOrderList', 'headerKeysForceQuotesList', 'headerKeysForbiddenList'}))
+    EJ_library.utils.assert.struct2(Settings, union(fieldnames(DEFAULT_SETTINGS), ...
+        {'headerKeysOrderList', 'headerKeysForceQuotesList', 'headerKeysForbiddenList'}), {})
     EJ_library.utils.assert.castring_regexp(Settings.tableObjectName, '[^^].+')    % Assertion due to change of meaning of setting. Not complete check.
     
 
@@ -210,10 +210,9 @@ function create_OBJTABLE_LBL_file(tabFilePath, LblData, varargin)
     % ASSERTIONS: Caller only uses permissible field names.
     % Useful when changing field names.
     % ------------------------------------------------------
-    EJ_library.utils.assert.struct(LblData,          {'HeaderKvpl', 'OBJTABLE'})
-    EJ_library.utils.assert.struct(LblData.OBJTABLE, {'DESCRIPTION', 'OBJCOL_list'},               'superset')
-    EJ_library.utils.assert.struct(LblData.OBJTABLE, {'DESCRIPTION', 'OBJCOL_list', 'HeaderKvpl'}, 'subset')
-    EJ_library.utils.assert.scalar(LblData.HeaderKvpl)    % it is a common error to initialize empty KVPL the wrong way.
+    EJ_library.utils.assert.struct2(LblData,          {'HeaderKvpl', 'OBJTABLE'}, {})
+    EJ_library.utils.assert.struct2(LblData.OBJTABLE, {'DESCRIPTION', 'OBJCOL_list'}, {'HeaderKvpl'})
+    EJ_library.utils.assert.scalar( LblData.HeaderKvpl)    % it is a common error to initialize empty KVPL the wrong way.
 
 
 
@@ -439,7 +438,7 @@ function [ColumnData] = adjust_OBJECT_COLUMN_data(ColumnData, Settings, D)
     % names by misspelling, or misspelling when overwriting values,
     % or adding fields that are never used by the function.
     %================================================================
-    EJ_library.utils.assert.struct(Cd, D.PERMITTED_OBJCOL_FIELD_NAMES, 'subset')    
+    EJ_library.utils.assert.struct2(Cd, {}, D.PERMITTED_OBJCOL_FIELD_NAMES)
     
     
     

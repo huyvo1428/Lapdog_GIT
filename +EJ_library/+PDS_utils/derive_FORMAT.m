@@ -60,7 +60,7 @@ function FORMAT = derive_FORMAT(tabValueStr, DATA_TYPE, nBytes)
             % files).
             %   Ex: Upper case: RPCLAP030101_CALIB_FINE.TAB
             %   Ex: Lower case: RPCLAP160930_CALIB_COEFF.TAB
-            % NOTE: Regexp permits floating point number to begin with plus, minus, and a digit..
+            % NOTE: Regexp permits floating point number to begin with plus, minus, and a digit.
             %   Ex: Begins with plus: RPCLAP030101_CALIB_FINE.TAB (should be the only such file in datasets).
             
             integerMatches = regexp(tabValueStr, '[0-9]+', 'match');

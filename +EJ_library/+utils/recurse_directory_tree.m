@@ -103,7 +103,7 @@
 %     distinguish calls to FileFunc and DirFunc). Therefore, argStruct has as many identical field names as possible.
 %
 %
-% HANDLING OF SPECIAL CASES -- SHOULD BE CONFIRMED
+% HANDLING OF SPECIAL CASES -- NEEDS TO BE CONFIRMED
 % =========================
 % Should work for:
 %    (1) rootDirPath = "/" (Linux).

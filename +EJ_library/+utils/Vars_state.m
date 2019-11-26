@@ -176,7 +176,7 @@ classdef Vars_state
             else
                 error('Illegal number of varargin.')
             end
-            EJ_library.utils.assert.struct(ignoreVarsInfo, {'name', 'global'})
+            EJ_library.utils.assert.struct2(ignoreVarsInfo, {'name', 'global'}, {})
             
             
             

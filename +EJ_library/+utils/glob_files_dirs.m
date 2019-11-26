@@ -25,8 +25,10 @@
 %                    the root directory (i.e. it generalizes nicely).
 %
 %
-% NOTE: MATLAB does not appear to have any similar functionality.
-% NOTE: "glob" in function name is deceiving since it really uses regexes.
+% NOTES
+% =====
+% MATLAB does not appear to have any similar functionality.
+% "glob" in the function name is misleading since it really uses regular expressions.
 %
 %
 % Initially created 2017-04-06 by Erik P G Johansson.

@@ -99,7 +99,7 @@ function [str, strList] = break_text(str, firstRowMaxLength, midRowsMaxLength, l
     DEFAULT_SETTINGS.nonBreakingSpace            = '';
     DEFAULT_SETTINGS.nonBreakingSpaceReplacement = ' ';
     Settings = EJ_library.utils.interpret_settings_args(DEFAULT_SETTINGS, varargin);
-    EJ_library.utils.assert.struct(Settings, fieldnames(DEFAULT_SETTINGS))
+    EJ_library.utils.assert.struct2(Settings, fieldnames(DEFAULT_SETTINGS), {})
     
     
 

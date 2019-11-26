@@ -51,7 +51,7 @@ function exception_message(Exception, policy, varargin)
         error('Illegal number of arguments')
     end
 
-    is = repmat(' ', 1, INDENTATION_LENGTH*indentationLevel);  % is=indentation string. Short name to shorten iprint() calls.
+    is = repmat(' ', 1, INDENTATION_LENGTH*indentationLevel);  % IS=Indentation String. Short name to shorten iprint() calls.
 
 
 
@@ -79,6 +79,7 @@ function exception_message(Exception, policy, varargin)
             showStackTrace = 1;
             showCauses     = 1;
         otherwise
+            % IMPLEMENTATION NOTE: NOT using assertion functions so that can fail nicely.
             warning('Illegal argument policy="%s".', policy)
             
     end
@@ -106,8 +107,7 @@ function exception_message(Exception, policy, varargin)
                 iprint(is,'row %3i, %s: %s\n', Exception.stack(i).line, Exception.stack(i).file, Exception.stack(i).name);
             end
         end
-        %Exception.getReport('extended', 'hyperlinks', 'on');
-%         Exception.getReport();
+        
     end
 
     if showCauses
