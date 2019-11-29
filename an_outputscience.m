@@ -70,13 +70,26 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
     %already well defined
 
     XXP(i).data.Iph0(isnan(XXP(i).data.Iph0(:,1)),1)=MISSING_CONSTANT;
-
     %fix contamination issues)
+
+    
+    % -----------------find shadowed  data  ----------------
+
+    dark=XXP(i).data.lum<1;
+    XXP(i).data.Vz(dark,1)=MISSING_CONSTANT;
+    XXP(i).data.Vz(dark,2)=0;
+    XXP(i).data.Vph_knee(dark,1)=MISSING_CONSTANT;
+    XXP(i).data.Vph_knee(dark,2)=0;
+    XXP(i).data.Iph0(dark,1)=MISSING_CONSTANT;
+    XXP(i).data.Iph0(dark,2)=0;
+    % -----------------find shadowed  data  ----------------
+
+    
+
     path_to_mat_file='MIP_v23_forlapdog.mat';
     %    path_to_mat_file='MIP_v23_forlapdog.mat';
     XCAL_struct=XCAL_lapdog(XXP(i).data,path_to_mat_file);
 
-    %dummy_qualityflag='XXXXXX1'; %use old flags instead of MAG
     
     % -----------------find low temperature data  ----------------
     %ne_5eV= max((1e-6*sqrt(2*pi*CO.me*Te_guess) *e_slope / (IN.probe_A*CO.e.^1.5)),0)
@@ -252,12 +265,6 @@ for i = 1:XXP(1).info.nroffiles %AXP generation!
             USCshort = strrep(USCfname,folder,'');
 
 
-            dark=XXP(i).data.lum<1;
-            XXP(i).data.Vz(dark,1)=MISSING_CONSTANT;
-              
-            dark=XXP(i).data.lum<1;
-            XXP(i).data.Vph_knee(dark,1)=MISSING_CONSTANT;
-            
             
             XXP(i).data.Vph_knee(:,2)=qv_Vph_knee;
 

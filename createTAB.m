@@ -274,11 +274,17 @@ else
     V2C_bool(1:len)=0;
 end
 
+if any(ismember(macroNo,LDLMACROS)) %if macro is any of the LDL macros
+    LDL_bool= 1; %LDL macro measurement
+else
+    LDL_bool=0;
+end
+
 
     if(~index(tabind(1)).sweep) %% if not a sweep, do:
 
         for (i=1:len)
-            qualityF = 0+100*WOL_bool(i)+200*V2C_bool(i);     % qualityfactor initialised! WOL_BOOL and V2C_bool is either 0 or 1;
+            qualityF = 0+100*WOL_bool(i)+200*V2C_bool(i)+200*LDL_bool;     % qualityfactor initialised! WOL_bool,LDL_bool and V2C_bool is either 0 or 1;
             trID = fopen(index(tabind(i)).tabfile);
 
             if trID < 0
@@ -428,7 +434,7 @@ end
                
               %nb: qf here is a vector!  in non-sweep qf is a scalar!
 %             %-------------------------------------------------------------%
-                        
+
 
                 if fileflag(2) =='3'
 
@@ -484,7 +490,7 @@ end
 
         for(i=1:len); % read&write loop iterate over all files, create B*S.TAB and I*S.TAB
             %qualityF = 0;     % qualityfactor initialised!
-            qualityF = 0+100*WOL_bool(i);     % qualityfactor initialised! WOL_BOOL is either 0 or 1;
+            qualityF = 0+100*WOL_bool(i)+200*LDL_bool;     % qualityfactor initialised! WOL_BOOL & LDL_bool is either 0 or 1;
 
             trID = fopen(index(tabind(i)).tabfile);
 
@@ -553,8 +559,9 @@ end
 
             %checks if macro is LDL macro, and downsamples current measurement
             if any(ismember(macroNo,LDLMACROS)) %if macro is any of the LDL macros
-                qualityF = qualityF+200; %LDL macro measurement
-
+                %this qf thing is done somewhere else now
+                %qualityF = qualityF+200; %LDL macro measurement
+                
                 %filter LDL sweep for noisy points. the last two number
                 %dictate how heavy filtering is needed. 3 & 1 are good from
                 %experience.

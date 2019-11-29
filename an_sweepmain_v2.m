@@ -175,7 +175,7 @@ try
             %lap1_ill = ((Phi < Phi11) | (Phi > Phi12));
 
             SAA_OK = ((SAA < Phi11) | (SAA > Phi12)); %1 = sunlit
-            illuminati = SAA_OK;
+            illuminati = double(SAA_OK);
             
 
         else %we will hopefully never have sweeps with probe number "3"
@@ -193,7 +193,7 @@ try
         end
         
         SEA_OK = abs(SEA)<1; %  <1 degree  = nominal pointing
-        illuminati=double(illuminati);
+        %illuminati=double(illuminati);
         illuminati(~SEA_OK)=0.3;%EDIT FKJN 10/09 2019. This shit couldn't handle reassigning a boolean to a double in this fashion
         %therefore, we must convert illuminati to a double before this
         %operation. i also threw no errors indicating that this was a
@@ -682,7 +682,20 @@ try
                 XXP_struct.Iph0(j,1:2)=[DP(j).Iph0 DP(j).Tph] ;
                 XXP_struct.Vph_knee(j,1:2)=DP(j).Vph_knee;
                 XXP_struct.qf(j,1)=EP(j).qf;
-                XXP_struct.lum(j,1)=EP(j).lum;
+                if EP(j).lum< 1 % if luminosity is unclear
+                    
+                    if AP(j).Vz(1)>0 & abs(DP(j).Iph0)>3e-9 %if Vz on the right side, and photoemission detected, probe is sunlit
+                        XXP_struct.lum(j,1)=1;
+                    else
+                        XXP_struct.lum(j,1)=0;
+                    end
+                    
+                
+                else
+                    XXP_struct.lum(j,1)=EP(j).lum;
+                                    
+                end
+                
                 XXP_struct.ne_5eV(j,1)=EP(j).ne_5eV;
                 XXP_struct.asm_ne_5eV(j,1)=EP(j).asm_ne_5eV; 
                 XXP_struct.asm_ne_5eV(j,2)=DP(j).e_slope(2); %fractional error of slope.
