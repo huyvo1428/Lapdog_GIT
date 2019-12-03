@@ -305,14 +305,15 @@ try
                 
                 qf_v2=qf_v2+uint32(dark_eog_ind(1:length(qf_v2)).'*20); %set qualityflag,
             case 2
+                ill2=double(eog_bool);
+                ill2(eog_bool)=eog_32S.lap2ill(id);
                 darkeog_list= find(ill2<1);
                 max_darkeog_list = unique([darkeog_list; darkeog_list-1;darkeog_list+1]);
                 max_darkeog_list(max_darkeog_list<1 | max_darkeog_list>length(qf_v2))=[];
                 ill2(max_darkeog_list)=0;
                 dark_eog_ind=ill2<1;              
                 qf_v2=qf_v2+uint32(dark_eog_ind(1:length(qf_v2)).'*20); %set qualityflag
-                ill2=double(eog_bool);
-                ill2(eog_bool)=eog_32S.lap2ill(id);
+
                 
         end
         
