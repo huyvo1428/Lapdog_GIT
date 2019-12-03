@@ -176,7 +176,6 @@ try
 
             SAA_OK = ((SAA < Phi11) | (SAA > Phi12)); %1 = sunlit
             illuminati = double(SAA_OK);
-            
 
         else %we will hopefully never have sweeps with probe number "3"
 
@@ -193,7 +192,7 @@ try
         end
         
         SEA_OK = abs(SEA)<1; %  <1 degree  = nominal pointing
-        %illuminati=double(illuminati);
+
         illuminati(~SEA_OK)=0.3;%EDIT FKJN 10/09 2019. This shit couldn't handle reassigning a boolean to a double in this fashion
         %therefore, we must convert illuminati to a double before this
         %operation. i also threw no errors indicating that this was a

@@ -6,6 +6,7 @@ function []= an_downsample(an_ind,intval,tabindex,index)
 
 global an_tabindex;
 global target
+global eog_32S
 
 %antemp ='';
 
@@ -41,8 +42,12 @@ tabfilez=([tabindex{an_ind(:) ,3}]);
 
 debug=[0 0 0];
 
+Illumination_HEAVY_FIX=false;
+
 if ~debug(1)
 
+   
+    
 while k<length(an_ind) % alternatively length(tabfilez)
     k=k+1;
 
@@ -156,9 +161,7 @@ try
 
 
 
-
-
-
+        
         %this @mean function will output mean even there is a single NaN
         %value in the interval. This is what we want in this case, I
         %believe.
@@ -271,62 +274,134 @@ try
 
 
 
-%         if intval ==0 %%analysis if
-%
-%             for j = 2: length(scantemp{1,2})-1
-%
-%                 %central difference derivative method
-%                 scantemp{1,6}(j)=scantemp{1,3}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dI/dt
-%                 scantemp{1,7}(j)=scantemp{1,4}(j-1)-scantemp{1,3}(j+1)/(scantemp{1,2}(j-1)-scantemp{1,2}(j+1));  %%dV/dt
-%
-%             end%for
-%
-%             scantemp{1,6}(1)   = scantemp{1,3}(1) - scantemp{1,3}(1+1)/(scantemp{1,2}(1) - scantemp{1,2}(1+1));  % dI/dt    forward differentiation, larger error
-%             scantemp{1,6}(j+1) = scantemp{1,3}(j) - scantemp{1,3}(j+1)/(scantemp{1,2}(j) - scantemp{1,2}(j+1));  % dI/dt   backward differentiation, larger error
-%             scantemp{1,7}(1)   = scantemp{1,4}(1) - scantemp{1,4}(1+1)/(scantemp{1,2}(1) - scantemp{1,2}(1+1));  % dV/dt    forward differentiation, larger error
-%             scantemp{1,7}(j+1) = scantemp{1,4}(j) - scantemp{1,4}(j+1)/(scantemp{1,2}(j) - scantemp{1,2}(j+1));  % dV/dt   backward differentiation, larger error
-%
-%
-%
-%
-%             dimu = accumarray(inter,scantemp{1,6}(:),[],@mean);
-%             disd = accumarray(inter,scantemp{1,6}(:),[],@std);
-%             dvmu = accumarray(inter,scantemp{1,7}(:),[],@mean);
-%             dvsd = accumarray(inter,scantemp{1,7}(:),[],@std);
-%
-%
-%             afoutarr=foutarr;
-%
-%             afoutarr{1,8}( inter(1):inter(end),1) = dimu(inter(1):inter(end));
-%             afoutarr{1,9}( inter(1):inter(end),1) = disd(inter(1):inter(end));
-%             afoutarr{1,10}(inter(1):inter(end),1) = dvmu(inter(1):inter(end));
-%             afoutarr{1,11}(inter(1):inter(end),1) = dvsd(inter(1):inter(end));
-%
-%
-%
-%
-%             if mode == 'V' %analyse electric field mode
-%
-%
-%                 an_Emode(afoutarr);
-%
-%             elseif mode == 'I' %analyse density mode
-%
-%                 an_Nmode(afoutarr);
-%
-%             end%if
-%
-%         end%if
-
-
-
-
-
-
      %   clear scantemp imu isd vmu vsd inter junk %save electricity kids!
         clear  imu isd vmu vsd  junk %save electricity kids!
 
+        %EDIT FKJN 3/12 2019
+        qf_v2= (foutarr{1,8}(:)); %new qualityfactor variable. The other was annoying
 
+        %I considered comparing OBT-> ET, but it involves a middlestep with
+        %creating SCT via string modifications, and that's just too much
+        %hassle.
+        t_et32S= cspice_str2et(tfoutarr{1,1}); % this is checking the entire file, somewhat needlessly
+        [eog_bool, id] = ismemberf(t_et32S,eog_32S.tt);
+        %eog_bool now is of length (t_et32S) and is 1 if any
+        %time stamp is within some tolerance of eachother. I can set the
+        %tolerance to 1 second by setting ,'tol',1)
+
+        
+
+        
+        switch probenr
+            
+            case 1
+                ill1=double(eog_bool);
+                ill1(eog_bool)=eog_32S.lap1ill(id);
+                darkeog_list= find(ill1<1); %look for all shadowed probe conditions
+                max_darkeog_list = unique([darkeog_list-1;darkeog_list+1]); %find neighbouring points
+                max_darkeog_list(max_darkeog_list<1 | max_darkeog_list>2700)=[]; %stay within limits of vector     
+                ill1(max_darkeog_list)=0; %set allneighbouring points as shadowed.
+                dark_eog_ind=ill1<1; %find shadowed points
+                
+                qf_v2=qf_v2+uint32(dark_eog_ind(1:length(qf_v2)).'*20); %set qualityflag,
+            case 2
+                darkeog_list= find(ill2<1);
+                max_darkeog_list = unique([darkeog_list; darkeog_list-1;darkeog_list+1]);
+                max_darkeog_list(max_darkeog_list<1 | max_darkeog_list>length(qf_v2))=[];
+                ill2(max_darkeog_list)=0;
+                dark_eog_ind=ill2<1;              
+                qf_v2=qf_v2+uint32(dark_eog_ind(1:length(qf_v2)).'*20); %set qualityflag
+                ill2=double(eog_bool);
+                ill2(eog_bool)=eog_32S.lap2ill(id);
+                
+        end
+        
+        
+        %         
+%                 %EDIT FKJN 3/12 2019
+%         %t_et32S = cspice_scs2e(-226,tfoutarr{1,2})
+%         t_et32S_temp= cspice_str2et(tfoutarr{1,1}); % this is checking the entire file, somewhat needlessly
+%         t_et32S= t_et32S_temp(1:inter(end));
+% %        t_et32S(length(foutarr{1,7})+1:end)=[]; %sadly, tampering with tfoutarr is annoying in Matlab 2015. So we reduce the array here
+%         [eog_bool, id] = ismemberf(t_et32S,eog_32S.tt);
+%         ill1=double(eog_bool);
+%         ill1(eog_bool)=eog_32S.lap1ill(id); %I hope eog_bool and id have equal lengths
+%         ill2=double(eog_bool);
+%         ill2(eog_bool)=eog_32S.lap2ill(id); %I hope eog_bool and id have equal lengths
+%         
+%         
+% 
+%         
+%         switch probenr
+%             
+%             case 1
+%                 darkeog_list= find(ill1<1); %look for all shadowed probe conditions
+%                 max_darkeog_list = unique([darkeog_list-1;darkeog_list+1]); %find neighbouring points
+%                 max_darkeog_list(max_darkeog_list<inter(1) | max_darkeog_list>inter(end))=[]; %stay within limits of vector     
+%                 ill1(max_darkeog_list)=0; %set allneighbouring points as shadowed.
+%                 dark_eog_ind=ill1<1; %find shadowed points
+%                 %qf_v2=qf_v2+dark_eog_ind.'*20; %set qualityflag
+%                 %qf_v2=qf_v2+uint32(dark_eog_ind(1:length(qf_v2)).'*20); %set qualityflag,
+%                 qf_v2=qf_v2+uint32(dark_eog_ind.'*20); %set qualityflag,
+%             case 2
+%                 darkeog_list= find(ill2<1);
+%                 max_darkeog_list = unique([darkeog_list; darkeog_list-1;darkeog_list+1]);
+%                 % max_darkeog_list(max_darkeog_list<1 | max_darkeog_list>length(qf_v2))=[];
+%                 max_darkeog_list(max_darkeog_list<inter(1) | max_darkeog_list>inter(end))=[]; %stay within limits of vector     
+% 
+%                 ill2(max_darkeog_list)=0;
+%                 dark_eog_ind=ill2<1;
+%                 
+%                 qf_v2=qf_v2+dark_eog_ind*20; %set qualityflag
+% 
+%         end
+
+        
+        %eog_bool is now of length (t_et32S) and is true if t_et32S is
+        %within some tolerance from eog_32S.tt. I can set the tolerance to
+        %1 second by adding: by,'tol,1)
+
+        
+        
+if Illumination_HEAVY_FIX && probenr==1
+            t_etfull= cspice_str2et(scantemp{1,1}(:)); %I'll use this  in the print function later
+
+            %New method  12/2 2019 check for all values, not just the downsampled timestamps.
+            [junk,SEA,SAA]=orbit('Rosetta',t_etfull,target,'ECLIPJ2000','preloaded');
+%             lent = length(foutarr{1,7});
+%             SEA=SEA(1:lent); %fix
+%             SAA=SAA(1:lent);
+
+         % *Elias values* (from photoemission study):
+            %if probenr==1
+                Phi11 = 131.2;
+                Phi12 = 179.2;
+                illuminati = ((SAA < Phi11) | (SAA > Phi12));
+              % foutarr{1,8}=foutarr{1,8}+100;
+% 
+%             else
+%                 %foutarr{1,8}=foutarr{1,8}+200;
+%                 Phi21 = 18;
+%                 Phi22 = 82;
+%                 Phi23 = 107;
+%                 illuminati = ((SAA < Phi21) | (SAA > Phi22)) - 0.6*((SAA > Phi22) & (SAA < Phi23));             
+            %end
+            SEA_OK = abs(SEA)<1; %  0 ?1 degree  = nominal pointing
+            illuminati(~SEA_OK)=0.3;
+
+
+             lum_temp  = accumarray(inter,illuminati,[],@mean,NaN);
+             t_et_temp = accumarray(inter,t_etfull,[],@mean,NaN);
+             %SAA_temp = accumarray(inter,SAA,[],@mean,NaN);
+             lum_mu(inter(1):inter(end),1) = lum_temp(inter(1):inter(end));
+            %SEA_mu(inter(1):inter(end),1) = SEA_temp(inter(1):inter(end));
+             t_et(inter(1):inter(end),1) = t_et_temp(inter(1):inter(end));
+
+            dark_ind=lum_mu<1; 
+
+            qf_v2(dark_ind)=qf_v2+20;
+            
+end
 
 
 
@@ -339,7 +414,7 @@ try
                 % Don't print zero values.
             else
 
-                row_byte= fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e, %03i\r\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j),sum(foutarr{1,8}(j)));
+                row_byte= fprintf(awID,'%s, %16.6f, %14.7e, %14.7e, %14.7e, %14.7e, %03i\r\n',tfoutarr{1,1}(j,:),tfoutarr{1,2}(j),foutarr{1,3}(j),foutarr{1,4}(j),foutarr{1,5}(j),foutarr{1,6}(j),qf_v2(j));
 
                 N_rows = N_rows + 1;
             end%if
@@ -367,7 +442,7 @@ try
             %%% ALGORITHM. SO WE CAN PUT SHADOW CONDITIONS IN QUALITYFLAG
             %%% 13/2 2019 FKJN
 
-
+if ~(Illumination_HEAVY_FIX && probenr==1)
 %             tfoutarr
 %             foutarr
             t_etfull= cspice_str2et(scantemp{1,1}(:)); %I'll use this  in the print function later
@@ -410,7 +485,9 @@ try
             %clear scantemp inter; % i don't remember why I need to clear this anymore, but let's do it for the kids
 
             dark_ind=lum_mu<1; %   I HAVE TO DELETE LUM_MU AFTER THIS
+end
             foutarr{1,7}(dark_ind)=0; %won't be printed.
+
             %%%----------------------------------------------%%%
 
 
@@ -553,7 +630,8 @@ try
 
 
 
-
+        else    
+            clear dark_ind lum_mu t_et %These are important
         end
 
 

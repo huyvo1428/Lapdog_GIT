@@ -16,6 +16,7 @@
 !NEL_V_FIT.mat
 !NEL_I_FIT.mat
 !MIPXCALintervals.mat
+!eog_minimal.mat
 
 gout.txt
 gtimes.txt
@@ -67,3 +68,5 @@ metakernel_rosetta_mounted.txt
 ZAC20188grep_awk.txt
 
 analysis_test.m
+
+readUSCH.m
