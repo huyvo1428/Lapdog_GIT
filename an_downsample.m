@@ -628,6 +628,7 @@ end
             an_NEDprint(NEDfname,NEDshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
 
             end
+            clear dark_ind lum_mu t_et %These are important
 
 
 
