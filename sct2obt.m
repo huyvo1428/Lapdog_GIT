@@ -21,28 +21,40 @@
 %
 function varargout= sct2obt(str)
 
-str = strtrim(strrep(str, '"', ' '));    % Remove quotes and trim whitespace.
+% Remove quotes and trim whitespace.
+str = strtrim(strrep(str, '"', ' '));
 
-reset = str2double(str(1));
+% ASSERTIONS: Verify the very constrained assumptions made by the old code below.
+% assert(str( 2) == '/')
+% assert(str(13) == '.')
+%
+% resetCounter = str2double(str(1));
+% 
+% obtsec  = str2double(str(3:12));
+% sctfrac = str(14:end); % don't know how long string it is, but fake decimal at pos 14, and integer afterwards
+% 
+% frac = str2double(sctfrac);
+% 
+% frac = frac/2^16;
+% 
+% obt = obtsec+frac;
 
 
-obtsec = str2double(str(3:12));
-sctfrac = str(14:end); % don't know how long string it is, but fake decimal at pos 14, and integer afterwards
-
-frac = str2double(sctfrac);
-
-frac = frac/2^16;
-
-obt = obtsec+frac;
+s1   = strsplit(str, '/');
+s2   = strsplit(s1{2}, '.');
+assert(numel(s1) == 2)
+assert(numel(s2) == 2)
+resetCounter = str2double(s1{1});
+obt          = str2double(s2{1}) + str2double(s2{2})/2^16;
 
 
 if (nargout == 1)
 
-    varargout= {obt};
+    varargout = {obt};
     
 else 
     
-    varargout={obt,reset};
+    varargout = {obt, resetCounter};
 end
 
 end
