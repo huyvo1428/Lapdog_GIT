@@ -99,7 +99,6 @@ try
 
 
 
-
         arID = fopen(tabindex{an_ind(i),1},'r');
         if arID < 0
             fprintf(1,'Error, cannot open file %s\n', tabindex{an_ind(i),1});
@@ -518,10 +517,12 @@ end
                         foutarr_1=foutarr;
                         tfoutarr_1=tfoutarr;
                         dark_ind_1=dark_ind;
+                        t_et_1=t_et;
 
                     else
                         foutarr_2=foutarr;
                         dark_ind_2=dark_ind;
+                        t_et_2=t_et; %maybe I won't need this?
 
                         %tfoutarr_2=tfoutarr; %only need this for debug
                     end
@@ -573,24 +574,29 @@ end
                         data_arr.t_obt=tfoutarr{1,2};
                         data_arr.qf=foutarr{1,8};
                         data_arr.printboolean=foutarr{1,7};
-                        data_arr.probe=dark_ind_1;
-                        data_arr.probe(:)=1;%qflag
-
+                        data_arr.probe=foutarr{1,2}.'; %change probenumberflag
+                        %data_arr.probe(:)=1;%qflag
                         %%default == probe 1.
                         %here we went from LAP1 to LAP2,
-                        data_arr.probe(indz)=2;  %change probenumberflag
+                        %data_arr.probe(indz)=2;  %change probenumberflag
+                        %%the command above does absolutely nothing. I
+                        %%don't understand why.
                         data_arr.V(indz)=foutarr_2{1,5}(indz);%  %this is vf2
                         data_arr.V_sigma(indz)=foutarr_2{1,6}(indz);%  %this is sigma vf2
                         data_arr.printboolean(indz)=foutarr_2{1,7}(indz);  %print boolean
                         data_arr.qf(indz)=foutarr_2{1,8}(indz);   %qflag
-
+                        
+                        %On rare (12) occasions, t_et/t_et_2 (from Lap2) has more
+                        %holes that t_et_1, and this needs to be filled too.
+                        t_et_1(indz)=t_et_2(indz);
+                        t_et=t_et_1;
                     %print USC special case
                     an_USCprint(USCfname,USCshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
                    % an_NEDprint(NEDfname,NEDshort,tfoutarr,foutarr,tabindex{an_ind(i),3},timing,'vfloat');
                     an_NEDprint(NEDfname,NEDshort,data_arr,t_et,tabindex{an_ind(i),3},timing,'vfloat');
 
                     %clear scantemp_1 scantemp_2
-                    clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 data_arr dark_ind lum_mu t_et %These are important
+                    clear foutarr_2 tfoutarr_2 foutarr_1 tfoutarr_1 data_arr dark_ind lum_mu t_et t_et1 t_et2 %These are important
  
                 else% hold_flag
                     %hold_flag default is 0. So this is 1st iteration
@@ -599,10 +605,12 @@ end
                         foutarr_1=foutarr;
                         tfoutarr_1=tfoutarr;
                         dark_ind_1=dark_ind;
-
+                        t_et_1=t_et;
                     else
                         foutarr_2=foutarr;
                         dark_ind_2=dark_ind;
+                        t_et_2=t_et; %maybe I won't need this?
+
                        % tfoutarr_2=tfoutarr; %I only need this to debug
                     end
                     hold_flag = 1;
@@ -649,7 +657,6 @@ end
 
 
         clear foutarr tfoutarr %not really needed, will not exist outside of function anyway.
-
 
     end%for main loop
 
