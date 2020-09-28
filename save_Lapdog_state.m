@@ -34,12 +34,12 @@ function save_Lapdog_state(saveDir, permitOverwrite, stateNaming)
     % SAVE STATE
     % ----------
     % IMPLEMENTATION NOTE: It has been observed (2018-12-01) that variable "index" can be too large to save to
-    % disk for PRL, ESC3, ESC2, thus generating a warning message
+    % disk for PRL, ESC3, ESC2, thus generating a WARNING message
     %   "Warning: Variable 'index' cannot be saved to a MAT-file whose version is older than 7.3."
     % . Note that it is a warning, not an error. Lapdog continues to
     % execute, but the .mat file saved to disk simply does not contain the "index" variable. One should in
     % principle be able to solve this by using flag "-v7.3" but experience shows that this is (1) impractically
-    % slow (by factor of ~1000!), and (2) results in much-much larger .mat files (by factor ~100!).
+    % slow (by a factor of ~1000!), and (2) results in much-much larger .mat files (by a factor ~100!).
     %==========================================================================================================
     try
         

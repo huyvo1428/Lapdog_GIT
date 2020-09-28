@@ -1,4 +1,3 @@
-
 %
 % DESIGN INTENT
 % =============
@@ -117,16 +116,18 @@ classdef definitions < handle
             obj.generatingDeriv1      = generatingDeriv1;
             obj.HeaderAllKvpl         = HeaderAllKvpl;
             
-            obj.MC_DESC_AMENDM        = sprintf(' A value of %g refers to that there is no value.', obj.MISSING_CONSTANT);    % Amendment to other strings. Therefore begins with whitespace.
+            % Amendment to other strings. Therefore begins with whitespace.
+            obj.MC_DESC_AMENDM        = sprintf(' A value of %g refers to that there is no value.', obj.MISSING_CONSTANT);
             
             % Set PDS keywords to use for column descriptions which differ between EDDER and DERIV1
             % -------------------------------------------------------------------------------------
-            % IMPLEMENTATION NOTE: Some are meant to be used on the form obj.DATA_UNIT_CURRENT{:} in object column description struct declaration/assignment, "... = struct(...)".
-            % This makes it possible to optionally omit the keyword, besides shortening the assignment when non-empty. This is not
-            % currently used though.
+            % IMPLEMENTATION NOTE: Some are meant to be used on the form obj.DATA_UNIT_CURRENT{:} in object column
+            % description struct declaration/assignment, "... = struct(...)". This makes it possible to optionally omit
+            % the keyword, besides shortening the assignment when non-empty. This is not currently used though.
             %       TODO-NEED-INFO: Are constants these really used in a ways such that the form DATA_UNIT_CURRENT{:} is
             %                       needed/useful?
-            % NOTE: Also useful for standardizing the values used, even for values which are only used for e.g. DERIV1 but not EDDER.
+            % NOTE: Also useful for standardizing the values used, even for values which are only used for e.g. DERIV1
+            % but not EDDER.
             if obj.generatingDeriv1
                 obj.DATA_DATA_TYPE    = {'DATA_TYPE', 'ASCII_REAL'};
                 obj.DATA_UNIT_CURRENT = {'UNIT', 'AMPERE'};
@@ -240,7 +241,6 @@ classdef definitions < handle
                 %==========
                 % CASE: P3
                 %==========
-                %error('This code segment has not yet been completed for LAP3. Can not create LBL file for "%s".', stabindex(i).path)
                 if isDensityMode
                     %====================
                     % CASE: Density mode
@@ -575,7 +575,9 @@ classdef definitions < handle
                 'DATA_SET_PARAMETER_NAME', DATA_SET_PARAMETER_NAME; ...
                 'CALIBRATION_SOURCE_ID',   {'RPCLAP'}}));
 
-            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', sprintf('PSD spectra of HF %s data (snapshots) on probe %i for the frequencies described in file %s.', modeStr, probeNbr, frqTabFilename));
+            HeaderKvpl = HeaderKvpl.set_value('DESCRIPTION', ...
+                sprintf('PSD spectra of HF %s data (snapshots) on probe %i for the frequencies described in file %s.', ...
+                    modeStr, probeNbr, frqTabFilename));
             
             LblData.HeaderKvpl           = HeaderKvpl;
             LblData.OBJTABLE.DESCRIPTION = sprintf(...
