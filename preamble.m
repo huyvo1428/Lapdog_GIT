@@ -13,7 +13,10 @@ CO=[];
 CO.e = 1.60217657E-19;
 CO.me = 9.10938291E-31;
 CO.mp = 1.67262178E-27;
-CO.kb = 8.6173324E-5; %eV/K
+CO.kb = 8.6173324E-5; %eV/K (remember that T(in eV)*Co.e = J
+CO.mu0 =pi*4E-7;%H/m  
+CO.e0=8.85e-12;
+
 
 IN.probe_r = 0.025; %rosetta probe radius.
 IN.probe_A = 4*pi*IN.probe_r^2;
@@ -113,6 +116,8 @@ switch target
         target = '2867 STEINS';
     case 'LUTETIA'
         target = '21 LUTETIA';
+    case 'CHECK'
+        target = 'SUN';%Revert to this default for commissioning 
     otherwise
         %do nothing      
 end
