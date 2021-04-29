@@ -116,8 +116,10 @@ switch target
         target = '2867 STEINS';
     case 'LUTETIA'
         target = '21 LUTETIA';
-    case 'CHECK'
-        target = 'SUN';%Revert to this default for commissioning 
+    case 'CHECK' 
+        target = 'SUN';%Revert to Sun for the commissioning phase
+    case 'CHECKOUT' 
+        target = 'SUN';%Revert to Sun for the commissioning phase
     otherwise
         %do nothing      
 end
