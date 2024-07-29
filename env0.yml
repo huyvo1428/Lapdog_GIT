@@ -2,7 +2,7 @@ version: 2
 
 deploy:
   steps:
-    terraformPlan:
+    terraformInit:
       before:
         - name: Using plugin
           use: https://github.com/huyvo1428/iac-security-plugin
