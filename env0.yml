@@ -1,0 +1,12 @@
+version: 2
+
+deploy:
+  steps:
+    terraformPlan:
+      before:
+        - name: Using plugin
+          use: https://github.com/huyvo1428/iac-security-plugin
+          inputs:
+            directory: .
+            flags: --framework terraform
+ 
